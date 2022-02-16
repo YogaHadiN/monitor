@@ -190,10 +190,8 @@ class AntrianController extends Controller
 								->where('antriable_type', 'not like', 'App\Periksa')
 								->orderBy('id')
 								->get();
-		$jenis_antrian  = JenisAntrian::with(
-			'antrian_terakhir.jenis_antrian', 
-			'antrian_terakhir.antriable'
-		)->orderBy('updated_at', 'desc')->get();
+		$jenis_antrian  = JenisAntrian::with( 'antrian_terakhir.jenis_antrian', 'antrian_terakhir.antriable')->orderBy('updated_at', 'desc')->get();
+		dd( $jenis_antrian );
 
 
 		$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
