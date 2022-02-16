@@ -194,10 +194,6 @@ class AntrianController extends Controller
 		dd( 
 			'$jenis_antrian->first()',
 			$jenis_antrian->first(),
-			'$jenis_antrian->first()->antrian_terakhir',
-			$jenis_antrian->first()->antrian_terakhir,
-			'$jenis_antrian->first()->antrian_terakhir->antriable_type',
-			$jenis_antrian->first()->antrian_terakhir->antriable_type,
 		);
 
 
