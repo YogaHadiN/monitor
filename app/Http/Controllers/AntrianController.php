@@ -187,7 +187,7 @@ class AntrianController extends Controller
 									'jenis_antrian.antrian_terakhir'
 								)
 								->whereRaw('created_at between "' . $today . ' 00:00:00" and "' .$today. ' 23:59:59"')
-								->where('antriable_type', 'not like', 'App\Periksa')
+								->where('antriable_type', 'not like', 'App\Models\Periksa')
 								->orderBy('id')
 								->get();
 		$jenis_antrian  = JenisAntrian::with( 'antrian_terakhir.jenis_antrian', 'antrian_terakhir.antriable')->orderBy('updated_at', 'desc')->get();
@@ -204,10 +204,10 @@ class AntrianController extends Controller
 
 		foreach ($antrians as $ant) {
 			if (
-				$ant->antriable_type !== 'App\AntrianApotek' &&
-				$ant->antriable_type !== 'App\Antrian' &&
-				$ant->antriable_type !== 'App\AntrianKasir' &&
-				$ant->antriable_type !== 'App\AntrianFarmasi' &&
+				$ant->antriable_type !== 'App\Models\AntrianApotek' &&
+				$ant->antriable_type !== 'App\Models\Antrian' &&
+				$ant->antriable_type !== 'App\Models\AntrianKasir' &&
+				$ant->antriable_type !== 'App\Models\AntrianFarmasi' &&
 				$ant->antriable->dipanggil > 0
 			) {
 				$data['antrian_terakhir_per_poli'][$ant->jenis_antrian_id] = $ant->nomor_antrian;
@@ -215,8 +215,8 @@ class AntrianController extends Controller
 
 			if (
 				( 
-					$ant->antriable_type == 'App\AntrianApotek' || 
-					$ant->antriable_type == 'App\AntrianKasir' 
+					$ant->antriable_type == 'App\Models\AntrianApotek' || 
+					$ant->antriable_type == 'App\Models\AntrianKasir' 
 				) &&
 				$ant->antriable->dipanggil > 0
 			) {
@@ -224,7 +224,7 @@ class AntrianController extends Controller
 			}
 
 			if (
-				( $ant->antriable_type == 'App\AntrianFarmasi' ) &&
+				( $ant->antriable_type == 'App\Models\AntrianFarmasi' ) &&
 				$ant->antriable->dipanggil > 0
 			) {
 				/* dd( $ant ); */
@@ -237,16 +237,16 @@ class AntrianController extends Controller
 			$antrian_dipanggil = $antrians->sortByDesc('updated_at')->first();
 			$data['panggilan']['nomor_antrian'] = $antrian_dipanggil->nomor_antrian;
 			if (
-				$antrian_dipanggil->antriable_type == 'App\Antrian'
+				$antrian_dipanggil->antriable_type == 'App\Models\Antrian'
 			) {
 				$data['panggilan']['poli'] = 'Pendaftaran';
 			} else if (
-				$antrian_dipanggil->antriable_type == 'App\AntrianApotek' || 
-				$antrian_dipanggil->antriable_type == 'App\AntrianKasir'
+				$antrian_dipanggil->antriable_type == 'App\Models\AntrianApotek' || 
+				$antrian_dipanggil->antriable_type == 'App\Models\AntrianKasir'
 			) {
 				$data['panggilan']['poli']                          = 'Antrian Kasir';
 			} else if (
-				$antrian_dipanggil->antriable_type == 'App\AntrianFarmasi'
+				$antrian_dipanggil->antriable_type == 'App\Models\AntrianFarmasi'
 			){
 				$data['panggilan']['poli'] = 'Antrian Farmasi';
 			} else {
@@ -256,10 +256,10 @@ class AntrianController extends Controller
 
 		foreach ($antrians as $antrian) {
 			if (
-				$antrian->antriable_type !== 'App\Antrian' &&
-				$antrian->antriable_type !== 'App\AntrianApotek' &&
-				$antrian->antriable_type !== 'App\AntrianKasir' &&
-				$antrian->antriable_type !== 'App\AntrianFarmasi'
+				$antrian->antriable_type !== 'App\Models\Antrian' &&
+				$antrian->antriable_type !== 'App\Models\AntrianApotek' &&
+				$antrian->antriable_type !== 'App\Models\AntrianKasir' &&
+				$antrian->antriable_type !== 'App\Models\AntrianFarmasi'
 			) {
 				if (
 					isset($antrian->jenis_antrian->antrian_terakhir)
@@ -273,7 +273,7 @@ class AntrianController extends Controller
 
 		foreach ($antrians as $antrian) {
 			if (
-				$antrian->antriable_type == 'App\Antrian'
+				$antrian->antriable_type == 'App\Models\Antrian'
 			) {
 				if (
 					isset($antrian->jenis_antrian->antrian_terakhir)
@@ -283,8 +283,8 @@ class AntrianController extends Controller
 					$data['data']['antrian_pendaftaran']['nomor_antrian_terakhir'] = '-';
 				}
 			} else if (
-				$antrian->antriable_type == 'App\AntrianApotek' &&
-				$antrian->antriable_type == 'App\AntrianKasir'
+				$antrian->antriable_type == 'App\Models\AntrianApotek' &&
+				$antrian->antriable_type == 'App\Models\AntrianKasir'
 			){
 				if (
 					isset($antrian->jenis_antrian->antrian_terakhir)
@@ -294,7 +294,7 @@ class AntrianController extends Controller
 					$data['data']['antrian_kasir']['nomor_antrian_terakhir'] = '-';
 				}
 			} else if (
-				$antrian->antriable_type == 'App\AntrianFarmasi'
+				$antrian->antriable_type == 'App\Models\AntrianFarmasi'
 			){
 				if (
 					isset($antrian->jenis_antrian->antrian_terakhir)
@@ -337,9 +337,9 @@ class AntrianController extends Controller
 		foreach ($antrians as $ant) {
 			if (!in_array( $ant->nomor_antrian, $include_only)) {
 				if (
-					$ant->antriable_type == 'App\Antrian' ||
-					$ant->antriable_type == 'App\AntrianPeriksa' ||
-					$ant->antriable_type == 'App\AntrianPoli'
+					$ant->antriable_type == 'App\Models\Antrian' ||
+					$ant->antriable_type == 'App\Models\AntrianPeriksa' ||
+					$ant->antriable_type == 'App\Models\AntrianPoli'
 				) {
 					$data['antrian_by_type']['antrian_periksa'][$ant->jenis_antrian_id][] = [
 						'nomor_antrian'  => $ant->nomor_antrian,
@@ -347,8 +347,8 @@ class AntrianController extends Controller
 					];
 				} else if (
 					(
-						$ant->antriable_type == 'App\AntrianApotek' ||
-						$ant->antriable_type == 'App\AntrianKasir'
+						$ant->antriable_type == 'App\Models\AntrianApotek' ||
+						$ant->antriable_type == 'App\Models\AntrianKasir'
 					) && $ant->antriable->periksa->asuransi_id == '0'
 				) {
 					$data['antrian_by_type']['antrian_kasir'][] = [
@@ -357,7 +357,7 @@ class AntrianController extends Controller
 						'selesai_periksa' => $ant->antriable->periksa->created_at
 					];
 				} else if (
-					$ant->antriable_type == 'App\AntrianFarmasi'
+					$ant->antriable_type == 'App\Models\AntrianFarmasi'
 				) {
 					$data['antrian_by_type']['antrian_farmasi'][] = [
 						'nomor_antrian'   => $ant->nomor_antrian,
