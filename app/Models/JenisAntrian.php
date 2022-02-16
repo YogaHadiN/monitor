@@ -10,6 +10,6 @@ class JenisAntrian extends Model
 		return $this->hasMany(PoliAntrian::class);
 	}
 	public function antrian_terakhir(){
-		return $this->belongsTo(Antrian::class, 'antrian_terakhir_i');
+		return $this->belongsTo(Antrian::class, 'antrian_terakhir_id');
 	}
 }
