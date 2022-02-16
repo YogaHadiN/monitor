@@ -18,7 +18,7 @@ class AntrianController extends Controller
         $this->middleware('avail')->only('antri');
     }
 	  public function index(){
-		  return dd( date('Y-m-d H:i:s') );
+		  dd( Antrian::orderBy('id', 'desc')->first() );
 	  }
 	  
 	public function antri($id){
