@@ -18,7 +18,7 @@ class AntrianController extends Controller
         $this->middleware('avail')->only('antri');
     }
 	  public function index(){
-		  return Antrian::find(60207);
+		  return dd( date('Y-m-d H:i:s') );
 	  }
 	  
 	public function antri($id){
