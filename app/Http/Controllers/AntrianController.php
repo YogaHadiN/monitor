@@ -203,6 +203,11 @@ class AntrianController extends Controller
 		$data['antrian_terakhir_per_poli']['antrian_farmasi'] = '-';
 
 		foreach ($antrians as $ant) {
+			try {
+				$a = $ant->antriable->dipanggil;
+			} catch (\Exception $e) {
+				dd( $ant );
+			}
 			if (
 				$ant->antriable_type !== 'App\Models\AntrianApotek' &&
 				$ant->antriable_type !== 'App\Models\Antrian' &&
