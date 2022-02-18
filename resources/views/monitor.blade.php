@@ -332,7 +332,7 @@
 
 <script>
 	{{-- var base = "{{ secure_url('/') }}"; --}}
-	var base = "{{ flex_url('/') }}";
+	var base = "{{ secure_url('/') }}";
 	var hitung = 0
 	setInterval(function(){
 		var d = new Date(); // for now
