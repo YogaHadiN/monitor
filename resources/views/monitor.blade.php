@@ -139,7 +139,7 @@
 <body>
   <!-- Page Content -->
   <div class="container">
-    <div class="row text-center">
+    <div class="text-center row">
 		<div class="full-width">
 			<div class="text-center">
 				<div class="text-orange"> <strong>Pasien Dipanggil</strong> </div>
@@ -150,7 +150,7 @@
 			</div>
 		</div>
     </div>
-	<div class="row2 text-center">
+	<div class="text-center row2">
 		<div class="column2 no-float">
 			<div class="text-orange">Poli Umum</div>
 			<div id="antrian_terakhir_poli_umum" class="big">-</div>
@@ -332,7 +332,7 @@
 
 <script>
 	{{-- var base = "{{ secure_url('/') }}"; --}}
-	var base = "{{ url('/') }}";
+	var base = "{{ secure_url('/') }}";
 	var hitung = 0
 	setInterval(function(){
 		var d = new Date(); // for now
