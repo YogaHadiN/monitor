@@ -359,11 +359,6 @@ class AntrianController extends Controller
 				} else if (
 					$ant->antriable_type == 'App\Models\AntrianFarmasi'
 				) {
-					try {
-						$ant->antriable->periksa->created_at;
-					} catch (\Exception $e) {
-						dd( $ant );
-					}
 					$data['antrian_by_type']['antrian_farmasi'][] = [
 						'nomor_antrian'   => $ant->nomor_antrian,
 						'antriable_type'  => $ant->antriable_type,
