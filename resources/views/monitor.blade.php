@@ -13,7 +13,7 @@
   <!-- Bootstrap core CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
   />
 <style type="text/css" media="all">
 	.animate__animated.animate__bounce {
@@ -332,7 +332,7 @@
 
 <script>
 	{{-- var base = "{{ secure_url('/') }}"; --}}
-	var base = "{{ secure_url('/') }}";
+	var base = "{{ url('/') }}";
 	var hitung = 0
 	setInterval(function(){
 		var d = new Date(); // for now

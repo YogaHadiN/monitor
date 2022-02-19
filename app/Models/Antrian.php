@@ -16,7 +16,7 @@ class Antrian extends Model
 	}
 
 	public function antriable(){
-		return $this->morphto();
+		return $this->morphto()->withDefault();
 	}
 
 	public function getNomorAntrianAttribute(){
