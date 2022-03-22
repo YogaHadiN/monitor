@@ -10,6 +10,7 @@ use App\Models\JenisAntrian;
 use App\Models\Periksa;
 use App\Models\User;
 use Input;
+use Log;
 
 class AntrianController extends Controller
 {
