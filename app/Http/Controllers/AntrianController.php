@@ -387,6 +387,10 @@ class AntrianController extends Controller
 		Log::info('===================================================');
 		Log::info('This is webhook okeeee');
 		Log::info('===================================================');
-		echo 'nih gue balikin';
+		if($_POST['message'] == 'hello') {
+			echo "Hello too.";
+		} else {
+			echo "hello no";
+		}
 	}
 }
