@@ -191,7 +191,6 @@ class AntrianController extends Controller
 								->orderBy('id')
 								->get();
 		$jenis_antrian  = JenisAntrian::with( 'antrian_terakhir.jenis_antrian', 'antrian_terakhir.antriable')->orderBy('updated_at', 'desc')->get();
-
 		$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
 		$jenis_antrians = JenisAntrian::all();
 		foreach ($jenis_antrians as $jt) {
@@ -382,5 +381,10 @@ class AntrianController extends Controller
 		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['antrian_farmasi']);
 
 		return $data;
+	}
+	public function webhook(){
+		Log::info('===================================================');
+		Log::info('This is webhook okeeee');
+		Log::info('===================================================');
 	}
 }
