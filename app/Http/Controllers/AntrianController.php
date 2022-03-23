@@ -384,6 +384,6 @@ class AntrianController extends Controller
 		return $data;
 	}
 	public function webhook(){
-		dd(request()->all());
+		Log::info(request()->all());
 	}
 }
