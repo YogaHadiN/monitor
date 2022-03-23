@@ -387,12 +387,56 @@ class AntrianController extends Controller
 		Log::info('===================================================');
 		Log::info('This is webhook 3234234xxxx');
 		Log::info('===================================================');
+
 		header("Content-Type: text/plain");
-		$pesan = $_POST['message'];
+
+		/* Masuk dengan kode unik. 2 angka acak di depan dan 2 angka acak di belakang dengan id antrian di tengahnya */
+
+		$pesan      = $_POST['message'];
+		$antrian_id = substr(substr($pesan, 2), 0, -2);
+		$antrian    = Antrian::where('id', $antrian_id)->where('created_at', date('Y-m-d H:i:s'))->first();
 		if ( 
-			substr(substr($pesan, 2), 0, -2)
+			!is_null($antrian)
 		) {
-			echo $pesan . ' substraksi '.  substr(substr($pesan, 2), 0, -2);
+			echo 'antrian dengan id ' . $antrian->id . ' ditemukan';
 		}
+		/* Konfirmasi mengantri berapa orang lagi sebelum didaftarkan dan perkiraan jam berapa dipanggil untuk masuk ruang dokter */
+
+		/* Pilihan untuk pembayaran */
+		/* Biaya pribadi, BPJS , pembayaran lainnya */
+
+		/* Biaya pribadi : */
+		/* Nama : */
+		/* Tanggal Lahir : */
+		/* Alamat jika tanggal lahir tidak ditemukan */
+
+		/* Bpjs : */
+		/* Nomor BPJS: */
+		/* Jika tidak ditemukan */
+		/* Nama : */
+		/* Tanggal Lahir : */
+		/* Alamat jika tanggal lahir tidak ditemukan */
+
+		/* Pembayaran Lainnya: */
+		/* Nomor Asuransi : */
+		/* Nama : */
+		/* Tanggal Lahir : */
+		/* Nama Pembayar : */
+
+		/* Untuk pembayaran pribadi poli rapid */
+		/* Nama : */
+		/* Alamat : */
+		/* Tanggal Lahir : */
+		/* No KTP : */
+		/* Pilihan untuk dikirim lewat WA atau email atau diambil langsung (menunggu 30 menit untuk hasil) */
+
+		/* Mengingatkan 1 antrian sebelumnya */
+
+		/* Pilihan untuk transfer langsung untuk pembayaran tunai (menunggu untuk antrian kasir) */
+
+		/* Setelah pemeriksaan pasien akan diinformasikan mengenai waktu tunggu apotek dan informasi total biaya, pilihan untuk pembayaran tunai atau transfer */
+
+		/* Survey kepuasan pelanggan pada akhir pemeriksaan */
+
 	}
 }
