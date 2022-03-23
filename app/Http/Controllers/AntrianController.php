@@ -743,4 +743,167 @@ class AntrianController extends Controller
 		}
 		return strtolower( trim($param) );
 	}
+
+	private function botKirim($whatsapp_registration)
+	{
+		if ( is_null( $whatsapp_registration->poli ) ) {
+			$text  = 'Terima kasih telah mendaftar sebagai pasien di' ;
+			$text .= PHP_EOL;
+			$text .= '*KLINIK JATI ELOK*' ;
+			$text .= PHP_EOL;
+			$text .= 'Dengan senang hati kami akan siap membantu Anda.';
+			$text .= PHP_EOL;
+			$text .= "==============";
+			$text .= PHP_EOL;
+			$text .= $this->harus_di_klinik;
+			$text .= PHP_EOL;
+			$text .= "==============";
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Bisa dibantu berobat ke dokter apa?';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *A* untuk *Dokter Umum*, ';
+			$text .= PHP_EOL;
+			if ( $this->gigi_buka ) {
+				$text .= PHP_EOL;
+				$text .= 'Balas *B* untuk *Dokter Gigi*, ';
+				$text .= PHP_EOL;
+			}
+			$text .= PHP_EOL;
+			$text .= 'Balas *C* untuk *Suntik KB/Periksa Hamil*.';
+			if ( $this->estetika_buka ) {
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+				$text .= 'Balas *D* untuk *Dokter Estetika/Kecantikan*';
+			}
+			/* $text .= PHP_EOL; */
+			/* $text .= PHP_EOL; */
+			/* $text .= 'Balas *E* untuk USG Kebidanan'; */
+			return $text;
+
+		}
+		if ( is_null( $whatsapp_registration->pembayaran ) ) {
+			$text = 'Bisa dibantu pembayaran menggunakan apa? ';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *A* untuk *Biaya Pribadi*, '  ;
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *B* untuk *BPJS*, ';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *C* untuk *Asuransi/Pembayaran Lain*';
+			$text .= PHP_EOL;
+			return $text;
+		}
+		if ( is_null( $whatsapp_registration->nomor_bpjs ) ) {
+			$text = 'Bisa dibantu *Nomor BPJS* pasien? ';
+			return $text;
+		}
+		if ( is_null( $whatsapp_registration->nama_asuransi ) ) {
+			return  'Bisa dibantu *Nama Asuransi Yang Digunakan* pasien?';
+		}
+		if ( is_null( $whatsapp_registration->nama ) ) {
+			return  'Bisa dibantu *Nama Lengkap* pasien?';
+		}
+		if ( is_null( $whatsapp_registration->tanggal_lahir ) ) {
+			return  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
+		}
+		/* if ( is_null( $whatsapp_registration->demam ) ) { */
+		/* 	return 'Apakah pasien memiliki keluhan demam?' . PHP_EOL . PHP_EOL .  'Balas *ya/tidak*'; */
+		/* } */
+		/* if ( is_null( $whatsapp_registration->batuk_pilek ) ) { */
+		/* 	return 'Apakah pasien memiliki keluhan batuk pilek? ' . PHP_EOL .  PHP_EOL . 'Balas *ya/tidak*'; */
+		/* } */
+		/* if ( is_null( $whatsapp_registration->nyeri_menelan ) ) { */
+		/* 	return 'Apakah pasien memiliki keluhan nyeri menelan? ' . PHP_EOL .   PHP_EOL .'Balas *ya/tidak*'; */
+		/* } */
+		/* if ( is_null( $whatsapp_registration->sesak_nafas ) ) { */
+		/* 	return 'Apakah pasien memiliki keluhan sesak nafas? ' . PHP_EOL .   PHP_EOL .'Balas *ya/tidak*'; */
+		/* } */
+		/* if ( is_null( $whatsapp_registration->kontak_covid ) ) { */
+
+		/* 	$text = 'Apakah pasien memiliki riwayat kontak dengan seseorang yang terkonfirmasi/ positif COVID 19 ?' ; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= '*Kontak Berarti :*'; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= '- Tinggal serumah'; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= '- Kontak tatap muka, misalnya : bercakap-cakap selama beberapa menit'; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= '- Terkena Batuk pasien terkontaminasi'; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= '- Berada dalam radius 2 meter selama lebih dari 15 menit dengan kasus terkonfirmasi'; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= '- Kontak dengan cairan tubuh kasus terkonfirmasi'; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= PHP_EOL; */
+		/* 	$text .= 'Balas *ya/tidak*'; */
+
+		/* 	return $text; */
+		/* } */
+
+
+		$jenis_antrian_id = null;
+		if ( $whatsapp_registration->poli == 'a'	) {
+			$jenis_antrian_id = 1;
+		} else if ( $whatsapp_registration->poli == 'b'	){
+			$jenis_antrian_id = 2;
+		} else if ( $whatsapp_registration->poli == 'c'	){
+			$jenis_antrian_id = 3;
+		} else if ( $whatsapp_registration->poli == 'd'	){
+			$jenis_antrian_id = 4;
+		} else if ( $whatsapp_registration->poli == 'e'	){
+			$jenis_antrian_id = 5;
+		}
+
+		if ( is_null( Antrian::where('whatsapp_registration_id', $whatsapp_registration->id)->first() ) ) {
+			$fasilitas                         = new FasilitasController;
+			$antrian                           = $fasilitas->antrianPost( $jenis_antrian_id );
+			$nomor_antrian                     = $antrian->nomor_antrian;
+			$antrian->whatsapp_registration_id = $whatsapp_registration->id;
+			$antrian->save();
+			$whatsapp_registration->antrian_id = $antrian->id;
+			$whatsapp_registration->save();
+		}		
+
+		$text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
+		$text .= PHP_EOL;
+		$text .= "Anda telah terdaftar dengan Nomor Antrian";
+		$text .= PHP_EOL;
+		$text .= PHP_EOL;
+		$text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```";
+		$text .= PHP_EOL;
+		$text .= PHP_EOL;
+		if (
+			is_null(Pasien::where('nomor_asuransi_bpjs',$whatsapp_registration->nomor_bpjs)->first()) &&
+			$whatsapp_registration->pembayaran == 'b'
+		){
+			$text .= "Mohon kesediaannya untuk mengirimkan *foto kartu BPJS, foto Kartu Tanda Penduduk, dan Foto Wajah Pasien* ke nomor ini";
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= "*- Foto kartu BPJS*";
+			$text .= PHP_EOL;
+			$text .= "*- Foto Kartu Tanda Penduduk*";
+			$text .= PHP_EOL;
+			$text .= "*- Foto Wajah Pasien* ke nomor ini";
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= "ke nomor ini";
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+		}
+		$text .= "Silahkan menunggu untuk dilayani";
+		$text .= PHP_EOL;
+		$text .= PHP_EOL;
+		$text .= "==============";
+		$text .= PHP_EOL;
+		$text .= $this->harus_di_klinik;
+		return $text;
+	}
+
 }
