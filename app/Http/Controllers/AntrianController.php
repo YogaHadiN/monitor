@@ -760,10 +760,6 @@ class AntrianController extends Controller
 			$text .= PHP_EOL;
 			$text .= "==============";
 			$text .= PHP_EOL;
-			$text .= $this->harus_di_klinik;
-			$text .= PHP_EOL;
-			$text .= "==============";
-			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= 'Bisa dibantu berobat ke dokter apa?';
 			$text .= PHP_EOL;
@@ -779,8 +775,8 @@ class AntrianController extends Controller
 			$text .= PHP_EOL;
 			$text .= 'Balas *C* untuk *Suntik KB/Periksa Hamil*.';
 			if ( $this->estetika_buka ) {
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
+				$text .= PHP_EOL;
+				$text .= PHP_EOL;
 				$text .= 'Balas *D* untuk *Dokter Estetika/Kecantikan*';
 			}
 			/* $text .= PHP_EOL; */
