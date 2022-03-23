@@ -394,7 +394,7 @@ class AntrianController extends Controller
 		/* Masuk dengan kode unik. 2 angka acak di depan dan 2 angka acak di belakang dengan id antrian di tengahnya */
 
 		$antrian_id = substr(substr($pesan, 2), 0, -2);
-		$antrian    = Antrian::where('id', $antrian_id)->where('created_at', date('Y-m-d H:i:s'))->first();
+		$antrian    = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
 		if ( 
 			!is_null($antrian)
 		) {
