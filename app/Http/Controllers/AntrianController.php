@@ -384,15 +384,15 @@ class AntrianController extends Controller
 		return $data;
 	}
 	public function webhook(){
+		$pesan      = $_POST['message'];
 		Log::info('===================================================');
-		Log::info('This is webhook 3234234xxxx');
+		Log::info('This is webhook ' . $pesan);
 		Log::info('===================================================');
 
 		header("Content-Type: text/plain");
 
 		/* Masuk dengan kode unik. 2 angka acak di depan dan 2 angka acak di belakang dengan id antrian di tengahnya */
 
-		$pesan      = $_POST['message'];
 		$antrian_id = substr(substr($pesan, 2), 0, -2);
 		$antrian    = Antrian::where('id', $antrian_id)->where('created_at', date('Y-m-d H:i:s'))->first();
 		if ( 
