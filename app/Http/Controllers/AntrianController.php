@@ -384,16 +384,6 @@ class AntrianController extends Controller
 		return $data;
 	}
 	public function webhook(){
-		Log::info('===================================================');
-		Log::info('This is webhook 081381912803' . date('Y-m-d H:i:s'));
-		Log::info('===================================================');
-
-		header("Content-Type: text/plain");
-
-		if($_POST['message'] == 'hello') {
-			echo "Hello too.";
-		} else {
-			echo "hello no";
-		}
+		echo request()->all();
 	}
 }
