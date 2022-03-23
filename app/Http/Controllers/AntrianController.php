@@ -15,6 +15,11 @@ use Log;
 
 class AntrianController extends Controller
 {
+
+	public $harus_di_klinik = '```Mohon kehadiran Anda di Klinik saat memanfaatkan fasilitas ini```';
+	public $gigi_buka = true;
+	public $estetika_buka = true;
+
 	  public function __construct()
     {
         $this->middleware('avail')->only('antri');
@@ -905,5 +910,4 @@ class AntrianController extends Controller
 		$text .= $this->harus_di_klinik;
 		return $text;
 	}
-
 }
