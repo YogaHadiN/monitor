@@ -7,6 +7,7 @@ use App\Models\AntrianPeriksa;
 use App\Models\AntrianPoli;
 use App\Models\Antrian;
 use App\Models\JenisAntrian;
+use App\Models\WhatsappRegistration;
 use App\Models\Periksa;
 use App\Models\User;
 use Input;
@@ -384,22 +385,317 @@ class AntrianController extends Controller
 		return $data;
 	}
 	public function webhook(){
-		$pesan      = $_POST['message'];
-		$no_telp      = $_POST['phone'];
-		Log::info('===================================================');
-		Log::info('This is webhook ' . $pesan);
-		Log::info('===================================================');
-
 		header("Content-Type: text/plain");
 
 		/* Masuk dengan kode unik. 2 angka acak di depan dan 2 angka acak di belakang dengan id antrian di tengahnya */
 
-		$antrian_id = substr(substr($pesan, 2), 0, -2);
-		$antrian    = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
-		if ( 
-			!is_null($antrian)
-		) {
-			echo 'antrian dengan id ' . $antrian->id . ' ditemukan ' . $no_telp;
+		/* if ( */ 
+		/* 	!is_null($antrian) */
+		/* ) { */
+		/* 	$whatsapp_registration = WhatsappRegistration::where('no_telp', $no_telp) */
+		/* 												->whereRaw("DATE_ADD( updated_at, interval 6 hour ) > '" . date('Y-m-d H:i:s') . "'") */
+		/* 												->first(); */
+
+		/* 	if ( is_null($whatsapp_registration) ) { */
+		/* 		$wa       = new WhatsappRegistration; */
+		/* 		$wa->no_telp   = $no_telp ; */
+		/* 		$wa->save(); */
+		/* 	} */
+
+		/* 	echo 'antrian dengan id ' . $antrian->id . ' ditemukan ' . $no_telp; */
+		/* } */
+
+		$message    = $this->clean($_POST['message']);
+		if(isset($message)) {
+			$no_telp               = $_POST['phone'];
+			$antrian_id            = substr(substr($pesan, 2), 0, -2);
+
+			$antrian               = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
+
+			$whatsapp_registration = WhatsappRegistration::where('no_telp', $no_telp)
+														->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+														->first();
+			$response              = '';
+			$input_tidak_tepat     = false;
+			if ( !is_null($antrian) ) {
+				if ( is_null( $whatsapp_registration ) ) {
+					$whatsapp_registration            = new WhatsappRegistration;
+					$whatsapp_registration->no_telp   = $no_telp;
+					$whatsapp_registration->save();
+				}
+			} else if (  
+				substr($this->clean($message), 0, 5) == 'ulang' &&
+				!is_null( $whatsapp_registration ) 
+			) {
+				$columns = array_keys( $whatsapp_registration->getOriginal() );
+				foreach ($columns as $column) {
+					if (
+						!(
+							 $column == 'id' ||
+							 $column == 'created_at' ||
+							 $column == 'antrian_id' ||
+							 $column == 'updated_at' ||
+							 $column == 'no_telp'
+						)
+					) {
+						$whatsapp_registration->$column = null;
+					}
+				}
+				$whatsapp_registration->save();
+			} else if ( 
+					!is_null( $whatsapp_registration ) &&
+					is_null( $whatsapp_registration->poli ) 
+			) {
+				if (
+					$this->clean($message) == 'a' ||
+					$this->clean($message) == 'b' ||
+					$this->clean($message) == 'c' ||
+					$this->clean($message) == 'd' || //estetika
+					$this->clean($message) == 'e'
+				) {
+					if ( $this->clean($message) == 'b' ) {
+						if ( $this->gigi_buka) {
+							$this->input_poli($whatsapp_registration, $message);
+						} else {
+							echo 'Mohon Maaf Pendaftaran ke Poli Gigi saat ini tutup, Silahkan coba lagi pada hari *Senin - Jumat jam 15.00 - 20.00*';
+							echo PHP_EOL;
+							echo '===========================';
+							echo PHP_EOL;
+						}
+					}
+					else if ( $this->clean($message) == 'd' ) {
+						if ( $this->estetika_buka) {
+							$this->input_poli($whatsapp_registration, $message);
+						} else {
+							echo 'Mohon Maaf Pendaftaran ke Poli Estetika /Kecantikan saat ini tutup, Silahkan coba lagi pada hari *Senin - Jumat jam 11.00 - 17.00*';
+							echo PHP_EOL;
+							echo '===========================';
+							echo PHP_EOL;
+						}
+					} else {
+						$this->input_poli($whatsapp_registration, $message);
+					}
+				} else {
+					$input_tidak_tepat = true;
+				}
+			} else if ( 
+					!is_null( $whatsapp_registration ) &&
+					is_null( $whatsapp_registration->pembayaran ) 
+			){
+				if (
+					$this->clean($message) == 'a' ||
+					$this->clean($message) == 'b' ||
+					$this->clean($message) == 'c'
+				) {
+					$whatsapp_registration->pembayaran  = $this->clean($message);
+					if ( $this->clean($message) != 'b' ) {
+						$whatsapp_registration->nomor_bpjs = '000';
+					}
+					if ( $this->clean($message) != 'c' ) {
+						$whatsapp_registration->nama_asuransi = $this->clean($message);
+					}
+					$whatsapp_registration->save();
+				} else {
+					$input_tidak_tepat = true;
+				}
+			} else if ( 
+					!is_null( $whatsapp_registration ) &&
+					is_null( $whatsapp_registration->nama_asuransi ) 
+			){
+				$whatsapp_registration->nama_asuransi  = $this->clean($message);
+				$whatsapp_registration->save();
+			} else if ( 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->nomor_bpjs ) 
+			) {
+
+				$whatsapp_registration->nomor_bpjs = $this->clean($message);
+				$whatsapp_registration->save();
+				$pesertaBpjs                       = $this->pesertaBpjs($this->clean($message));
+
+				if ( isset( $pesertaBpjs['response'] )&& isset( $pesertaBpjs['response']['nama'] )  ) {
+					$whatsapp_registration->nama          = ucfirst(strtolower($pesertaBpjs['response']['nama']));
+					$whatsapp_registration->tanggal_lahir = Carbon::CreateFromFormat('d-m-Y',$pesertaBpjs['response']['tglLahir'])->format('Y-m-d');
+
+					/* if (  !$pesertaBpjs['response']['aktif'] ) { */
+					/* 	$whatsapp_registration->pembayaran          = null; */
+					/* 	$whatsapp_registration->nomor_bpjs          = null; */
+					/* 	echo "Status Kepesertaan BPJS Anda *Tidak Aktif*"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "Mohon gunakan pembayaran yang lainnya selain BPJS"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "Apabila Anda yakin ini adalah kesalahan, silahkan mendaftar secara manual"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "==================="; */
+					/* 	echo PHP_EOL; */
+					/* } else { */
+					/* 	echo "Status Kepesertaan BPJS Anda *Aktif*"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "==================="; */
+					/* 	echo PHP_EOL; */
+					/* } */
+					$whatsapp_registration->save();
+				}
+
+			} else if ( 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->nama ) 
+			) {
+				$whatsapp_registration->nama  = ucfirst(strtolower($this->clean($message)));;
+				$whatsapp_registration->save();
+				Log::info(json_encode($whatsapp_registration));
+			} else if ( 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->tanggal_lahir ) 
+			) 
+			{
+				if ( $this->validateDate($this->clean($message), $format = 'd-m-Y') ) {
+					$whatsapp_registration->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->clean($message))->format('Y-m-d');
+					$whatsapp_registration->save();
+				} else {
+					$input_tidak_tepat = true;
+				}
+			}
+		/* } else if ( */ 
+		/* 	!is_null( $whatsapp_registration ) && */
+		/* 	is_null( $whatsapp_registration->demam ) */ 
+		/* ) */ 
+		/* { */
+		/* 	if ( $this->clean($message) == 'ya')  { */
+			/* 		$whatsapp_registration->demam  = 1; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else if ( $this->clean($message) == 'tidak') { */
+			/* 		$whatsapp_registration->demam  = 0; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else { */
+			/* 		$input_tidak_tepat = true; */
+			/* 	} */
+			/* } else if ( */ 
+			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	is_null( $whatsapp_registration->batuk_pilek ) */ 
+			/* ) */ 
+			/* { */
+			/* 	if ( $this->clean($message) == 'ya')  { */
+			/* 		$whatsapp_registration->batuk_pilek  = 1; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else if ( $this->clean($message) == 'tidak')  { */
+			/* 		$whatsapp_registration->batuk_pilek  = 0; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else { */
+			/* 		$input_tidak_tepat = true; */
+			/* 	} */
+			/* } else if ( */ 
+			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	is_null( $whatsapp_registration->nyeri_menelan ) */ 
+			/* ) */ 
+			/* { */
+			/* 	if ( $this->clean($message) == 'ya')  { */
+			/* 		$whatsapp_registration->nyeri_menelan  = 1; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else if ( $this->clean($message) == 'tidak')  { */
+			/* 		$whatsapp_registration->nyeri_menelan  = 0; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else { */
+			/* 		$input_tidak_tepat = true; */
+			/* 	} */
+			/* } else if ( */ 
+			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	is_null( $whatsapp_registration->sesak_nafas ) */ 
+			/* ) { */
+			/* 	Log::info('============================ sesak nafas =========================================='); */
+			/* 	if ( $this->clean($message)             == 'ya')  { */
+			/* 		$whatsapp_registration->sesak_nafas  = 1; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else if ( $this->clean($message)      == 'tidak')  { */
+			/* 		$whatsapp_registration->sesak_nafas  = 0; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else { */
+			/* 		$input_tidak_tepat = true; */
+			/* 	} */
+			/* } else if ( */ 
+			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	is_null( $whatsapp_registration->kontak_covid ) */ 
+			/* ) { */
+			/* 	if ( $this->clean($message) == 'ya')  { */
+			/* 		$whatsapp_registration->kontak_covid  = 1; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else if ( $this->clean($message) == 'tidak')  { */
+			/* 		$whatsapp_registration->kontak_covid  = 0; */
+			/* 		$whatsapp_registration->save(); */
+			/* 	} else { */
+			/* 		$input_tidak_tepat = true; */
+			/* 	} */
+			/* } */
+
+			Log::info('whatsapp_registration');
+			Log::info( json_encode($whatsapp_registration) );
+			if (
+				!is_null( $whatsapp_registration ) 
+			) {
+				if (
+				 !is_null( $whatsapp_registration->nama ) ||
+				 !is_null( $whatsapp_registration->poli ) ||
+				 !is_null( $whatsapp_registration->pembayaran ) ||
+				 !is_null( $whatsapp_registration->tanggal_lahir )
+				) {
+					$response .=    "*Uraian Pengisian Anda*";
+					$response .= PHP_EOL;
+					$response .= PHP_EOL;
+				}
+				if ( !is_null( $whatsapp_registration->nama ) ) {
+					$response .= 'Nama Pasien: ' . ucwords($whatsapp_registration->nama)  ;
+					$response .= PHP_EOL;
+				}
+				if ( !is_null( $whatsapp_registration->poli ) ) {
+					$response .= 'Poli Tujuan : ';
+					$response .= $this->formatPoli( $whatsapp_registration->poli );
+					$response .= PHP_EOL;
+				}
+				if ( !is_null( $whatsapp_registration->pembayaran ) ) {
+					$response .= 'Pembayaran : ';
+					$response .= ucwords($whatsapp_registration->nama_pembayaran);
+					$response .= PHP_EOL;
+				}
+				if ( !is_null( $whatsapp_registration->tanggal_lahir ) ) {
+					$response .= 'Tanggal Lahir : '.  Carbon::CreateFromFormat('Y-m-d',$whatsapp_registration->tanggal_lahir)->format('d M Y');;
+					$response .= PHP_EOL;
+				}
+				if (
+				 !is_null( $whatsapp_registration->nama ) ||
+				 !is_null( $whatsapp_registration->poli ) ||
+				 !is_null( $whatsapp_registration->pembayaran ) ||
+				 !is_null( $whatsapp_registration->tanggal_lahir )
+				) {
+					$response .= PHP_EOL;
+					$response .=    "==================";
+					$response .= PHP_EOL;
+					$response .= PHP_EOL;
+				}
+			}
+
+
+			if ( !is_null($whatsapp_registration) ) {
+				$response .=  $this->botKirim($whatsapp_registration);
+				$response .=  PHP_EOL;
+				$response .=  PHP_EOL;
+				$response .= "==============";
+				$response .=  PHP_EOL;
+				$response .=  PHP_EOL;
+				$response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
+				if ( $input_tidak_tepat ) {
+					$response .=  PHP_EOL;
+					$response .=  PHP_EOL;
+				$response .=    "==================";
+					$response .= PHP_EOL;
+					$response .= '```Input yang anda masukkan salah```';
+					$response .= PHP_EOL;
+					$response .= '```Mohon Diulangi```';
+					$response .= PHP_EOL;
+				}
+				$input_tidak_tepat = false;
+				echo $response;
+			}
+			/* Sms::send($no_telp, $response); */
 		}
 		/* Konfirmasi mengantri berapa orang lagi sebelum didaftarkan dan perkiraan jam berapa dipanggil untuk masuk ruang dokter */
 
@@ -439,5 +735,12 @@ class AntrianController extends Controller
 
 		/* Survey kepuasan pelanggan pada akhir pemeriksaan */
 
+	}
+	private function clean($param)
+	{
+		if (empty( trim($param) )) {
+			return null;
+		}
+		return strtolower( trim($param) );
 	}
 }
