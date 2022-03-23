@@ -385,6 +385,7 @@ class AntrianController extends Controller
 	}
 	public function webhook(){
 		$pesan      = $_POST['message'];
+		$no_telp      = $_POST['phone'];
 		Log::info('===================================================');
 		Log::info('This is webhook ' . $pesan);
 		Log::info('===================================================');
@@ -398,7 +399,7 @@ class AntrianController extends Controller
 		if ( 
 			!is_null($antrian)
 		) {
-			echo 'antrian dengan id ' . $antrian->id . ' ditemukan';
+			echo 'antrian dengan id ' . $antrian->id . ' ditemukan ' . $no_telp;
 		}
 		/* Konfirmasi mengantri berapa orang lagi sebelum didaftarkan dan perkiraan jam berapa dipanggil untuk masuk ruang dokter */
 
