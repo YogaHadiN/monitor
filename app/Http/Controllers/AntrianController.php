@@ -352,10 +352,17 @@ class AntrianController extends Controller
 						'antriable_type' => $ant->antriable_type
 					];
 				} else if (
-					(
-						$ant->antriable_type == 'App\Models\AntrianApotek' ||
-						$ant->antriable_type == 'App\Models\AntrianKasir'
-					) && $ant->antriable->periksa->asuransi_id == '0'
+					$ant->antriable_type                  == 'App\Models\AntrianKasir' &&
+					$ant->antriable->periksa->asuransi_id == '0'
+				) {
+					$data['antrian_by_type']['antrian_kasir'][] = [
+						'nomor_antrian'   => $ant->nomor_antrian,
+						'antriable_type'  => $ant->antriable_type,
+						'selesai_periksa' => $ant->antriable->periksa->created_at
+					];
+				} else if (
+					$ant->antriable_type                  == 'App\Models\AntrianApotek' &&
+					$ant->antriable->periksa->asuransi_id == '0'
 				) {
 					$data['antrian_by_type']['antrian_kasir'][] = [
 						'nomor_antrian'   => $ant->nomor_antrian,
