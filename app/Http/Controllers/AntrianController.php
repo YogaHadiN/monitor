@@ -198,7 +198,14 @@ class AntrianController extends Controller
 								->orderBy('id')
 								->get();
 		$jenis_antrian  = JenisAntrian::with( 'antrian_terakhir.jenis_antrian', 'antrian_terakhir.antriable')->orderBy('updated_at', 'desc')->get();
-		$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
+		try {
+			$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
+		} catch (\Exception $e) {
+			Log::info('========================================');
+			Log::info('jenis_antrian');
+			Log::info($jenis_antrian);
+			Log::info('========================================');
+		}
 		$jenis_antrians = JenisAntrian::all();
 		foreach ($jenis_antrians as $jt) {
 			$data['antrian_terakhir_per_poli'][$jt->id] = '-';
