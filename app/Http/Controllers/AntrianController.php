@@ -463,6 +463,26 @@ class AntrianController extends Controller
 				$whatsapp_registration->save();
 			} else if ( 
 					!is_null( $whatsapp_registration ) &&
+					is_null( $whatsapp_registration->pembayaran ) 
+			){
+				if (
+					$this->clean($message) == 'a' ||
+					$this->clean($message) == 'b' ||
+					$this->clean($message) == 'c'
+				) {
+					$whatsapp_registration->pembayaran  = $this->clean($message);
+					if ( $this->clean($message) != 'b' ) {
+						$whatsapp_registration->nomor_bpjs = '000';
+					}
+					if ( $this->clean($message) != 'c' ) {
+						$whatsapp_registration->nama_asuransi = $this->clean($message);
+					}
+					$whatsapp_registration->save();
+				} else {
+					$input_tidak_tepat = true;
+				}
+			} else if ( 
+					!is_null( $whatsapp_registration ) &&
 					is_null( $whatsapp_registration->poli ) 
 			) {
 				if (
@@ -494,26 +514,6 @@ class AntrianController extends Controller
 					} else {
 						$this->input_poli($whatsapp_registration, $message);
 					}
-				} else {
-					$input_tidak_tepat = true;
-				}
-			} else if ( 
-					!is_null( $whatsapp_registration ) &&
-					is_null( $whatsapp_registration->pembayaran ) 
-			){
-				if (
-					$this->clean($message) == 'a' ||
-					$this->clean($message) == 'b' ||
-					$this->clean($message) == 'c'
-				) {
-					$whatsapp_registration->pembayaran  = $this->clean($message);
-					if ( $this->clean($message) != 'b' ) {
-						$whatsapp_registration->nomor_bpjs = '000';
-					}
-					if ( $this->clean($message) != 'c' ) {
-						$whatsapp_registration->nama_asuransi = $this->clean($message);
-					}
-					$whatsapp_registration->save();
 				} else {
 					$input_tidak_tepat = true;
 				}
@@ -765,6 +765,21 @@ class AntrianController extends Controller
 
 	private function botKirim($whatsapp_registration)
 	{
+		if ( is_null( $whatsapp_registration->pembayaran ) ) {
+			$text = 'Bisa dibantu pembayaran menggunakan apa? ';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *A* untuk *Biaya Pribadi*, '  ;
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *B* untuk *BPJS*, ';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *C* untuk *Asuransi/Pembayaran Lain*';
+			$text .= PHP_EOL;
+			return $text;
+		}
 		if ( is_null( $whatsapp_registration->poli ) ) {
 			$text  = 'Terima kasih telah mendaftar sebagai pasien di' ;
 			$text .= PHP_EOL;
@@ -798,21 +813,6 @@ class AntrianController extends Controller
 			/* $text .= 'Balas *E* untuk USG Kebidanan'; */
 			return $text;
 
-		}
-		if ( is_null( $whatsapp_registration->pembayaran ) ) {
-			$text = 'Bisa dibantu pembayaran menggunakan apa? ';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *A* untuk *Biaya Pribadi*, '  ;
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *B* untuk *BPJS*, ';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *C* untuk *Asuransi/Pembayaran Lain*';
-			$text .= PHP_EOL;
-			return $text;
 		}
 		if ( is_null( $whatsapp_registration->nomor_bpjs ) ) {
 			$text = 'Bisa dibantu *Nomor BPJS* pasien? ';
