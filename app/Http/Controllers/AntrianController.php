@@ -470,17 +470,53 @@ class AntrianController extends Controller
 					$this->clean($message) == 'b' ||
 					$this->clean($message) == 'c'
 				) {
+					if ($this->clean($message) == 'a') {
+						$whatsapp_registration->nama_asuransi  = 'biaya_pribadi';
+						$whatsapp_registration->nomor_asuransi  = '0000';
+					}
+					if ($this->clean($message) == 'b') {
+						$whatsapp_registration->nama_asuransi  = 'BPJS';
+					}
 					$whatsapp_registration->pembayaran  = $this->clean($message);
-					if ( $this->clean($message) != 'b' ) {
-						$whatsapp_registration->nomor_bpjs = '000';
-					}
-					if ( $this->clean($message) != 'c' ) {
-						$whatsapp_registration->nama_asuransi = $this->clean($message);
-					}
 					$whatsapp_registration->save();
 				} else {
 					$input_tidak_tepat = true;
 				}
+			} else if ( 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->nama_asuransi ) 
+			){
+				$whatsapp_registration->nama_asuransi  = $this->clean($message);
+				$whatsapp_registration->save();
+			} else if ( 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->nomor_asuransi ) 
+			) {
+				$whatsapp_registration->nomor_asuransi = $this->clean($message);
+				$whatsapp_registration->save();
+				/* $pesertaBpjs                       = $this->pesertaBpjs($this->clean($message)); */
+				/* if ( isset( $pesertaBpjs['response'] )&& isset( $pesertaBpjs['response']['nama'] )  ) { */
+				/* 	$whatsapp_registration->nama          = ucfirst(strtolower($pesertaBpjs['response']['nama'])); */
+				/* 	$whatsapp_registration->tanggal_lahir = Carbon::CreateFromFormat('d-m-Y',$pesertaBpjs['response']['tglLahir'])->format('Y-m-d'); */
+					/* if (  !$pesertaBpjs['response']['aktif'] ) { */
+					/* 	$whatsapp_registration->pembayaran          = null; */
+					/* 	$whatsapp_registration->nomor_asuransi          = null; */
+					/* 	echo "Status Kepesertaan BPJS Anda *Tidak Aktif*"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "Mohon gunakan pembayaran yang lainnya selain BPJS"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "Apabila Anda yakin ini adalah kesalahan, silahkan mendaftar secara manual"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "==================="; */
+					/* 	echo PHP_EOL; */
+					/* } else { */
+					/* 	echo "Status Kepesertaan BPJS Anda *Aktif*"; */
+					/* 	echo PHP_EOL; */
+					/* 	echo "==================="; */
+					/* 	echo PHP_EOL; */
+					/* } */
+					/* $whatsapp_registration->save(); */
+				/* } */
 			} else if ( 
 					!is_null( $whatsapp_registration ) &&
 					is_null( $whatsapp_registration->poli ) 
@@ -501,8 +537,7 @@ class AntrianController extends Controller
 							echo '===========================';
 							echo PHP_EOL;
 						}
-					}
-					else if ( $this->clean($message) == 'd' ) {
+					} else if ( $this->clean($message) == 'd' ) {
 						if ( $this->estetika_buka) {
 							$this->input_poli($whatsapp_registration, $message);
 						} else {
@@ -517,45 +552,6 @@ class AntrianController extends Controller
 				} else {
 					$input_tidak_tepat = true;
 				}
-			} else if ( 
-					!is_null( $whatsapp_registration ) &&
-					is_null( $whatsapp_registration->nama_asuransi ) 
-			){
-				$whatsapp_registration->nama_asuransi  = $this->clean($message);
-				$whatsapp_registration->save();
-			} else if ( 
-				!is_null( $whatsapp_registration ) &&
-				is_null( $whatsapp_registration->nomor_bpjs ) 
-			) {
-
-				$whatsapp_registration->nomor_bpjs = $this->clean($message);
-				$whatsapp_registration->save();
-				$pesertaBpjs                       = $this->pesertaBpjs($this->clean($message));
-
-				if ( isset( $pesertaBpjs['response'] )&& isset( $pesertaBpjs['response']['nama'] )  ) {
-					$whatsapp_registration->nama          = ucfirst(strtolower($pesertaBpjs['response']['nama']));
-					$whatsapp_registration->tanggal_lahir = Carbon::CreateFromFormat('d-m-Y',$pesertaBpjs['response']['tglLahir'])->format('Y-m-d');
-
-					/* if (  !$pesertaBpjs['response']['aktif'] ) { */
-					/* 	$whatsapp_registration->pembayaran          = null; */
-					/* 	$whatsapp_registration->nomor_bpjs          = null; */
-					/* 	echo "Status Kepesertaan BPJS Anda *Tidak Aktif*"; */
-					/* 	echo PHP_EOL; */
-					/* 	echo "Mohon gunakan pembayaran yang lainnya selain BPJS"; */
-					/* 	echo PHP_EOL; */
-					/* 	echo "Apabila Anda yakin ini adalah kesalahan, silahkan mendaftar secara manual"; */
-					/* 	echo PHP_EOL; */
-					/* 	echo "==================="; */
-					/* 	echo PHP_EOL; */
-					/* } else { */
-					/* 	echo "Status Kepesertaan BPJS Anda *Aktif*"; */
-					/* 	echo PHP_EOL; */
-					/* 	echo "==================="; */
-					/* 	echo PHP_EOL; */
-					/* } */
-					$whatsapp_registration->save();
-				}
-
 			} else if ( 
 				!is_null( $whatsapp_registration ) &&
 				is_null( $whatsapp_registration->nama ) 
@@ -780,6 +776,18 @@ class AntrianController extends Controller
 			$text .= PHP_EOL;
 			return $text;
 		}
+		if ( is_null( $whatsapp_registration->nama_asuransi ) {
+			$text = 'Bisa dibantu sebutkan *Nama Asuransi* yang akan digunakan? ';
+			return $text;
+		}
+		if ( is_null( $whatsapp_registration->nomor_asuransi ) ) {
+			if ( $whatsapp_registration->pembayaran == 'b' ) {
+				$text = 'Bisa dibantu *Nomor BPJS* pasien? ';
+			} else if ( $whatsapp_registration->pembayaran == 'c' ){
+				$text = 'Bisa dibantu *Nomor Asuransi* pasien? ';
+			}
+			return $text;
+		}
 		if ( is_null( $whatsapp_registration->poli ) ) {
 			$text  = 'Terima kasih telah mendaftar sebagai pasien di' ;
 			$text .= PHP_EOL;
@@ -796,27 +804,22 @@ class AntrianController extends Controller
 			$text .= PHP_EOL;
 			$text .= 'Balas *A* untuk *Dokter Umum*, ';
 			$text .= PHP_EOL;
-			if ( $this->gigi_buka ) {
-				$text .= PHP_EOL;
-				$text .= 'Balas *B* untuk *Dokter Gigi*, ';
-				$text .= PHP_EOL;
-			}
+			$text .= PHP_EOL;
+			$text .= 'Balas *B* untuk *Dokter Gigi*, ';
+			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= 'Balas *C* untuk *Suntik KB/Periksa Hamil*.';
-			if ( $this->estetika_buka ) {
-				$text .= PHP_EOL;
-				$text .= PHP_EOL;
-				$text .= 'Balas *D* untuk *Dokter Estetika/Kecantikan*';
-			}
-			/* $text .= PHP_EOL; */
-			/* $text .= PHP_EOL; */
-			/* $text .= 'Balas *E* untuk USG Kebidanan'; */
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *D* untuk *Dokter Estetika/Kecantikan*';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *E* untuk USG Kebidanan';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *F* untuk USG Kebidanan';
 			return $text;
 
-		}
-		if ( is_null( $whatsapp_registration->nomor_bpjs ) ) {
-			$text = 'Bisa dibantu *Nomor BPJS* pasien? ';
-			return $text;
 		}
 		if ( is_null( $whatsapp_registration->nama_asuransi ) ) {
 			return  'Bisa dibantu *Nama Asuransi Yang Digunakan* pasien?';
@@ -895,7 +898,7 @@ class AntrianController extends Controller
 		$text .= PHP_EOL;
 		$text .= PHP_EOL;
 		if (
-			is_null(Pasien::where('nomor_asuransi_bpjs',$whatsapp_registration->nomor_bpjs)->first()) &&
+			is_null(Pasien::where('nomor_asuransi_bpjs',$whatsapp_registration->nomor_asuransi)->first()) &&
 			$whatsapp_registration->pembayaran == 'b'
 		){
 			$text .= "Mohon kesediaannya untuk mengirimkan *foto kartu BPJS, foto Kartu Tanda Penduduk, dan Foto Wajah Pasien* ke nomor ini";
@@ -919,5 +922,13 @@ class AntrianController extends Controller
 		$text .= PHP_EOL;
 		$text .= $this->harus_di_klinik;
 		return $text;
+	}
+
+	private function input_poli( $whatsapp_registration, $message ){
+		$whatsapp_registration->poli   = $this->clean($message);
+		if ( $this->clean($message) == 'd' ) {
+			$whatsapp_registration->pembayaran   = 'a';
+		}
+		$whatsapp_registration->save();
 	}
 }
