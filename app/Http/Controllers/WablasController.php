@@ -450,10 +450,13 @@ class WablasController extends Controller
 			$text .= 'Balas *D* untuk *Dokter Estetika/Kecantikan*';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *E* untuk USG Kebidanan';
+			$text .= 'Balas *E* untuk *USG Kebidanan*';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *F* untuk USG Kebidanan';
+			$text .= 'Balas *F* untuk *Rapid Test Antibodi / Antigen*';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *G* untuk *Cek Rutin gula darah / tekanan darah Prolanis BPJS*';
 			return $text;
 
 		}
@@ -566,5 +569,73 @@ class WablasController extends Controller
 			$whatsapp_registration->pembayaran   = 'a';
 		}
 		$whatsapp_registration->save();
+	}
+	private function formatPoli($param)
+	{
+		if ( $this->clean($param) == 'a' ) {
+			return ' Dokter Umum';
+		} else if (  $this->clean($param) == 'b'  ){
+			return ' Dokter Gigi';
+		} else if (  $this->clean($param) == 'c'  ){
+			return ' Suntik KB / Periksa Hamil';
+		} else if (  $this->clean($param) == 'd'  ){
+			return ' Dokter Estetik / Kecantikan';
+		} else if (  $this->clean($param) == 'e'  ){
+			return 'USG Kebidanan';
+		}
+	}
+	/**
+	* undocumented function
+	*
+	* @return void
+	*/
+	private function formatPembayaran($param)
+	{
+		if ( $this->clean($param) == 'a' ) {
+			return 'Biaya Pribadi';
+		} else if (  $this->clean($param) == 'b'  ){
+			return 'BPJS';
+		} else if (  $this->clean($param) == 'c'  ){
+			return 'Asuransi Lain';
+		}
+	}
+	public function pesertaBpjs($nomor_bpjs){
+		/* $uri="https://dvlp.bpjs-kesehatan.go.id:9081/pcare-rest-v3.0/dokter/0/13"; //url web service bpjs; */
+		/* $uri="https://dvlp.bpjs-kesehatan.go.id:9081/pcare-rest-v3.0/provider/0/3"; //url web service bpjs; */
+		$uri="https://dvlp.bpjs-kesehatan.go.id:9081/pcare-rest-v3.0/peserta/" . $nomor_bpjs; //url web service bpjs;
+
+		$consID 	= env('CUSTOMER_KEY_BPJS');//"27802"; customer ID anda
+		$secretKey 	= env('SECRET_KEY_BPJS');//"6nNF409D69"; secretKey anda
+
+		$pcareUname = env('PCARE_USERNAME_BPJS');// "klinik_jatielok"; //username pcare
+		$pcarePWD 	= env('PASSWORD_BPJS');// "*Bpjs2020"; //password pcare anda
+		$kdAplikasi	= env('KODE_APLIKASI_BPJS');// "095"; //kode aplikasi
+
+		/* dd( $consID, $secretKey, $pcareUname, $pcarePWD, $kdAplikasi ); */
+
+		$stamp		= time();
+		$data 		= $consID.'&'.$stamp;
+
+		$signature            = hash_hmac('sha256', $data, $secretKey, true);
+		$encodedSignature     = base64_encode($signature);
+		$encodedAuthorization = base64_encode($pcareUname.':'.$pcarePWD.':'.$kdAplikasi);
+
+		$headers = array( 
+					"Accept: application/json", 
+					"X-cons-id:".$consID, 
+					"X-timestamp: ".$stamp, 
+					"X-signature: ".$encodedSignature, 
+					"X-authorization: Basic " .$encodedAuthorization 
+				); 
+
+		$ch = curl_init($uri);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); 
+		$data = curl_exec($ch);
+		curl_close($ch);
+		return json_decode($data, true);
+
 	}
 }
