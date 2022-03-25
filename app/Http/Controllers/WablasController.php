@@ -76,8 +76,8 @@ class WablasController extends Controller
 				}
 				$whatsapp_registration->save();
 			} else if ( 
-					!is_null( $whatsapp_registration ) &&
-					is_null( $whatsapp_registration->konfirmasi_nomor_antrian ) 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->konfirmasi_nomor_antrian ) 
 			){
 				if (
 					$this->clean($message) == 'a'
@@ -438,10 +438,11 @@ class WablasController extends Controller
 			$text .= 'Apakah nomor antrian tersebut sama dengan nomor antrian anda?';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *A* untuk *Bila Sama*, ';
+			$text .= PHP_EOL;
+			$text .= 'Balas *A* bila nomor antrian anda  *'.$this->antrian->nomor_antrian. '*';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *B* untuk *Bila Beda*, ';
+			$text .= 'Balas *B* bila nomor antrian anda  *BUKAN '.$this->antrian->nomor_antrian. '*';
 			$text .= PHP_EOL;
 			return $text;
 		}
