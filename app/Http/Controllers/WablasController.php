@@ -3,7 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App\Models\AntrianPeriksa;
+use App\Models\AntrianPoli;
+use App\Models\Antrian;
+use App\Models\JenisAntrian;
+use App\Models\WhatsappRegistration;
+use App\Models\Periksa;
+use App\Models\User;
+use Input;
+use Log;
 class WablasController extends Controller
 {
 	public function webhook(){
