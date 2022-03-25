@@ -9,6 +9,7 @@ use App\Models\Antrian;
 use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
 use App\Models\Periksa;
+use App\Models\Pasien;
 use App\Models\User;
 use Input;
 use Log;
