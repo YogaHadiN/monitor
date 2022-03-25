@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Log;
 class WablasController extends Controller
 {
+	public $antrian;
 	public function webhook(){
 		header("Content-Type: text/plain");
 
@@ -42,14 +43,14 @@ class WablasController extends Controller
 			$no_telp               = $_POST['phone'];
 			$antrian_id            = substr(substr($message, 2), 0, -2);
 
-			$antrian               = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
+			$this->antrian               = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
 
 			$whatsapp_registration = WhatsappRegistration::where('no_telp', $no_telp)
 														->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 														->first();
 			$response              = '';
 			$input_tidak_tepat     = false;
-			if ( !is_null($antrian) ) {
+			if ( !is_null($this->antrian) ) {
 				if ( is_null( $whatsapp_registration ) ) {
 					$whatsapp_registration            = new WhatsappRegistration;
 					$whatsapp_registration->no_telp   = $no_telp;
@@ -83,11 +84,15 @@ class WablasController extends Controller
 				) {
 					$whatsapp_registration->konfirmasi_nomor_antrian  = 1;
 					$whatsapp_registration->save();
+
+					$this->antrian->whatsapp_registration_id = $whatsapp_registration->id;
+					$this->antrian->save();
+
 				} else if (
 					$this->clean($message) == 'b'
 				) {
 					$whatsapp_registration->delete();
-					$response .=    "Silahkan kirimkan nomor yang tertera di tiket antrian atau scan *QR Code*";
+					$response .=    "Silahkan kirimkan nomor yang tertera di tiket antrian atau scan *QR Code* yang tertera di tiket antrian";
 				} else {
 					$input_tidak_tepat = true;
 				}
