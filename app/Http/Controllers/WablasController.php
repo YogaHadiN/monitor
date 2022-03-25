@@ -12,6 +12,7 @@ use App\Models\Periksa;
 use App\Models\Pasien;
 use App\Models\User;
 use Input;
+use Carbon\Carbon;
 use Log;
 class WablasController extends Controller
 {
