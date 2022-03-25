@@ -776,8 +776,10 @@ class AntrianController extends Controller
 			$text .= PHP_EOL;
 			return $text;
 		}
-		if ( is_null( $whatsapp_registration->nama_asuransi ) {
-			$text = 'Bisa dibantu informasikan *Nama Asuransi* yang akan digunakan? ';
+		if ( 
+			is_null ($whatsapp_registration->nama_asuransi )
+		) {
+			$text = 'Bisa dibantu informasikan *Nama Asuransi* yang akan digunakan?';
 			return $text;
 		}
 		if ( is_null( $whatsapp_registration->nomor_asuransi ) ) {
