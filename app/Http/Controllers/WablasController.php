@@ -76,6 +76,23 @@ class WablasController extends Controller
 				$whatsapp_registration->save();
 			} else if ( 
 					!is_null( $whatsapp_registration ) &&
+					is_null( $whatsapp_registration->konfirmasi_nomor_antrian ) 
+			){
+				if (
+					$this->clean($message) == 'a'
+				) {
+					$whatsapp_registration->konfirmasi_nomor_antrian  = 1;
+					$whatsapp_registration->save();
+				} else if (
+					$this->clean($message) == 'b'
+				) {
+					$whatsapp_registration->delete();
+					$response .=    "Silahkan kirimkan nomor yang tertera di tiket antrian atau scan *QR Code*";
+				} else {
+					$input_tidak_tepat = true;
+				}
+			} else if ( 
+					!is_null( $whatsapp_registration ) &&
 					is_null( $whatsapp_registration->pembayaran ) 
 			){
 				if (
@@ -395,6 +412,34 @@ class WablasController extends Controller
 
 	private function botKirim($whatsapp_registration)
 	{
+		if ( is_null( $whatsapp_registration->konfirmasi_nomor_antrian ) ) {
+			$text  = 'Terima kasih telah mendaftar sebagai pasien di' ;
+			$text .= PHP_EOL;
+			$text .= '*KLINIK JATI ELOK*' ;
+			$text .= PHP_EOL;
+			$text .= 'Dengan senang hati kami akan siap membantu Anda.';
+			$text .= PHP_EOL;
+			$text .= "==============";
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text = 'Fasilitas ini akan memproses nomor antrian';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= '*'.$this->antrian->nomor_antrian. '*';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Apakah nomor antrian tersebut sama dengan nomor antrian anda?';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *A* untuk *Bila Sama*, ';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *B* untuk *Bila Beda*, ';
+			$text .= PHP_EOL;
+			return $text;
+		}
 		if ( is_null( $whatsapp_registration->pembayaran ) ) {
 			$text = 'Bisa dibantu pembayaran menggunakan apa? ';
 			$text .= PHP_EOL;
@@ -425,15 +470,6 @@ class WablasController extends Controller
 			return $text;
 		}
 		if ( is_null( $whatsapp_registration->poli ) ) {
-			$text  = 'Terima kasih telah mendaftar sebagai pasien di' ;
-			$text .= PHP_EOL;
-			$text .= '*KLINIK JATI ELOK*' ;
-			$text .= PHP_EOL;
-			$text .= 'Dengan senang hati kami akan siap membantu Anda.';
-			$text .= PHP_EOL;
-			$text .= "==============";
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
 			$text .= 'Bisa dibantu berobat ke dokter apa?';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
