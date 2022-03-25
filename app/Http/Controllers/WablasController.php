@@ -17,7 +17,16 @@ use Log;
 class WablasController extends Controller
 {
 	public $antrian;
+	/**
+	* @param 
+	*/
+	public function __construct()
+	{
+		$this->antrian = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
+	}
+	
 	public function webhook(){
+
 		header("Content-Type: text/plain");
 
 		/* Masuk dengan kode unik. 2 angka acak di depan dan 2 angka acak di belakang dengan id antrian di tengahnya */
@@ -43,7 +52,6 @@ class WablasController extends Controller
 			$no_telp               = $_POST['phone'];
 			$antrian_id            = substr(substr($message, 2), 0, -2);
 
-			$this->antrian               = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
 
 			$whatsapp_registration = WhatsappRegistration::where('no_telp', $no_telp)
 														->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
