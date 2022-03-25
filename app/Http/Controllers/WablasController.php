@@ -104,6 +104,28 @@ class WablasController extends Controller
 				is_null( $whatsapp_registration->nomor_asuransi ) 
 			) {
 				$whatsapp_registration->nomor_asuransi = $this->clean($message);
+				//jika pembayaran menggunakan BPJS
+				if ($whatsapp_registration->pembayaran == 'b') { //BPJS
+					//cari pasien dengan nomor_asuransi_bpjs tersebut
+					$pasien = Pasien::where('nomor_asuransi_bpjs', $this->clean($message))->first();
+					if (!is_null($pasien)) {
+						$whatsapp_registration->nama           = $pasien->nama;
+						$whatsapp_registration->nomor_asuransi = $this->clean($message);
+						$whatsapp_registration->tanggal_lahir  = $pasien->tanggal_lahir;
+						$whatsapp_registration->pasien_id      = $pasien->pasien_id;
+					}
+					//apabila menggunakan asuransi lain
+				} else if ( $whatsapp_registration->pembayaran == 'c' ){ //asuransi lain
+					//cari pasien dengan nomor_asuransi tersebut
+					$pasiens = Pasien::where('nomor_asuransi', $this->clean($message))->get();
+					if ($pasiens->count() == 1) {
+						$pasien = $pasiens->first();
+						$whatsapp_registration->nama           = $pasien->nama;
+						$whatsapp_registration->nomor_asuransi = $this->clean($message);
+						$whatsapp_registration->tanggal_lahir  = $pasien->tanggal_lahir;
+						$whatsapp_registration->pasien_id      = $pasien->pasien_id;
+					}
+				}
 				$whatsapp_registration->save();
 				/* $pesertaBpjs                       = $this->pesertaBpjs($this->clean($message)); */
 				/* if ( isset( $pesertaBpjs['response'] )&& isset( $pesertaBpjs['response']['nama'] )  ) { */
@@ -169,7 +191,6 @@ class WablasController extends Controller
 			) {
 				$whatsapp_registration->nama  = ucfirst(strtolower($this->clean($message)));;
 				$whatsapp_registration->save();
-				Log::info(json_encode($whatsapp_registration));
 			} else if ( 
 				!is_null( $whatsapp_registration ) &&
 				is_null( $whatsapp_registration->tanggal_lahir ) 
@@ -390,14 +411,14 @@ class WablasController extends Controller
 		if ( 
 			is_null ($whatsapp_registration->nama_asuransi )
 		) {
-			$text = 'Bisa dibantu informasikan *Nama Asuransi* yang akan digunakan?';
+			$text = 'Bisa dibantu informasikan *Nama Asuransi / Nama Perusahaan* yang akan digunakan?';
 			return $text;
 		}
 		if ( is_null( $whatsapp_registration->nomor_asuransi ) ) {
 			if ( $whatsapp_registration->pembayaran == 'b' ) {
 				$text = 'Bisa dibantu *Nomor BPJS* pasien? ';
 			} else if ( $whatsapp_registration->pembayaran == 'c' ){
-				$text = 'Bisa dibantu *Nomor Asuransi* pasien? ';
+				$text = 'Bisa dibantu *Nomor Asuransi* pasien? (kosongkan bila pembayar tidak ada nomor asuransi) ';
 			}
 			return $text;
 		}
