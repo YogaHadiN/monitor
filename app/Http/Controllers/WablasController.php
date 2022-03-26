@@ -445,7 +445,7 @@ class WablasController extends Controller
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= '*'.$this->antrian->nomor_antrian. '*';
+			$text .= '*'.$whatsapp_registration->antrian->nomor_antrian. '*';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
