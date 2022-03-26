@@ -22,7 +22,12 @@ class WablasController extends Controller
 	*/
 	public function __construct()
 	{
-		$this->antrian = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
+		$message    = $this->clean($_POST['message']);
+		if(isset($message)) {
+			$no_telp       = $_POST['phone'];
+			$antrian_id    = substr(substr($message, 2), 0, -2);
+			$this->antrian = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
+		}
 	}
 	
 	public function webhook(){
