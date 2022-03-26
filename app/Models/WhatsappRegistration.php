@@ -8,4 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class WhatsappRegistration extends Model
 {
     use HasFactory;
+    public function antrian(){
+        return $this->belongsTo(Antrian::class);
+    }
 }
