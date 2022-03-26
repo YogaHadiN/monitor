@@ -247,7 +247,7 @@ class WablasController extends Controller
 					$this->clean($message) == 'd' || //estetika
 					$this->clean($message) == 'e'
 				) {
-					if ( $this->clean($message) == 'b' ) {
+					if ($whatsapp_registration->poli == 'gigi') {
 						if ( $this->gigi_buka) {
 							$this->input_poli($whatsapp_registration, $message);
 						} else {
@@ -256,7 +256,7 @@ class WablasController extends Controller
 							echo '===========================';
 							echo PHP_EOL;
 						}
-					} else if ( $this->clean($message) == 'd' ) {
+					} else if ($whatsapp_registration->poli == 'estetika') {
 						if ( $this->estetika_buka) {
 							$this->input_poli($whatsapp_registration, $message);
 						} else {
