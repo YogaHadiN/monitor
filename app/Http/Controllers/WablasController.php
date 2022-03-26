@@ -617,7 +617,6 @@ class WablasController extends Controller
 		$text .= PHP_EOL;
 		$text .= "==============";
 		$text .= PHP_EOL;
-		$text .= $this->harus_di_klinik;
 		return $text;
 	}
 
