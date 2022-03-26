@@ -460,10 +460,10 @@ class WablasController extends Controller
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *A* bila nomor antrian anda  *'.$this->antrian->nomor_antrian. '*';
+			$text .= 'Balas *A* bila nomor antrian anda  *'.$whatsapp_registration->antrian->nomor_antrian. '*';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *B* bila nomor antrian anda  *BUKAN '.$this->antrian->nomor_antrian. '*';
+			$text .= 'Balas *B* bila nomor antrian anda  *BUKAN '.$whatsapp_registration->antrian->nomor_antrian. '*';
 			$text .= PHP_EOL;
 			return $text;
 		}
