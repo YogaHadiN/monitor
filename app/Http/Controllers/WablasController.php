@@ -356,7 +356,10 @@ class WablasController extends Controller
 			}
 
 
+			Log::info('$whatsapp_registration');
+			Log::info($whatsapp_registration);
 			if ( !is_null($whatsapp_registration) ) {
+
 				$response .=  $this->botKirim($whatsapp_registration);
 				$response .=  PHP_EOL;
 				$response .=  PHP_EOL;
