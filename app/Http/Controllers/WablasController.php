@@ -186,6 +186,22 @@ class WablasController extends Controller
 					/* $whatsapp_registration->save(); */
 				/* } */
 			} else if ( 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->nama ) 
+			) {
+				$whatsapp_registration->nama  = ucfirst(strtolower($this->clean($message)));;
+				$whatsapp_registration->save();
+			} else if ( 
+				!is_null( $whatsapp_registration ) &&
+				is_null( $whatsapp_registration->tanggal_lahir ) 
+			) {
+				if ( $this->validateDate($this->clean($message), $format = 'd-m-Y') ) {
+					$whatsapp_registration->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->clean($message))->format('Y-m-d');
+					$whatsapp_registration->save();
+				} else {
+					$input_tidak_tepat = true;
+				}
+			} else if ( 
 					!is_null( $whatsapp_registration ) &&
 					is_null( $whatsapp_registration->poli ) 
 			) {
@@ -217,23 +233,6 @@ class WablasController extends Controller
 					} else {
 						$this->input_poli($whatsapp_registration, $message);
 					}
-				} else {
-					$input_tidak_tepat = true;
-				}
-			} else if ( 
-				!is_null( $whatsapp_registration ) &&
-				is_null( $whatsapp_registration->nama ) 
-			) {
-				$whatsapp_registration->nama  = ucfirst(strtolower($this->clean($message)));;
-				$whatsapp_registration->save();
-			} else if ( 
-				!is_null( $whatsapp_registration ) &&
-				is_null( $whatsapp_registration->tanggal_lahir ) 
-			) 
-			{
-				if ( $this->validateDate($this->clean($message), $format = 'd-m-Y') ) {
-					$whatsapp_registration->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->clean($message))->format('Y-m-d');
-					$whatsapp_registration->save();
 				} else {
 					$input_tidak_tepat = true;
 				}
@@ -333,7 +332,7 @@ class WablasController extends Controller
 				}
 				if ( !is_null( $whatsapp_registration->pembayaran ) ) {
 					$response .= 'Pembayaran : ';
-					$response .= ucwords($whatsapp_registration->nama_pembayaran);
+					$response .= ucwords($whatsapp_registration->nama_asuransi);
 					$response .= PHP_EOL;
 				}
 				if ( !is_null( $whatsapp_registration->tanggal_lahir ) ) {
@@ -489,6 +488,15 @@ class WablasController extends Controller
 			}
 			return $text;
 		}
+		if ( is_null( $whatsapp_registration->nama_asuransi ) ) {
+			return  'Bisa dibantu *Nama Asuransi Yang Digunakan* pasien?';
+		}
+		if ( is_null( $whatsapp_registration->nama ) ) {
+			return  'Bisa dibantu *Nama Lengkap* pasien?';
+		}
+		if ( is_null( $whatsapp_registration->tanggal_lahir ) ) {
+			return  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
+		}
 		if ( is_null( $whatsapp_registration->poli ) ) {
 			$text = 'Bisa dibantu berobat ke dokter apa?';
 			$text .= PHP_EOL;
@@ -515,15 +523,6 @@ class WablasController extends Controller
 			$text .= 'Balas *G* untuk *Cek Rutin gula darah / tekanan darah Prolanis BPJS*';
 			return $text;
 
-		}
-		if ( is_null( $whatsapp_registration->nama_asuransi ) ) {
-			return  'Bisa dibantu *Nama Asuransi Yang Digunakan* pasien?';
-		}
-		if ( is_null( $whatsapp_registration->nama ) ) {
-			return  'Bisa dibantu *Nama Lengkap* pasien?';
-		}
-		if ( is_null( $whatsapp_registration->tanggal_lahir ) ) {
-			return  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
 		}
 		/* if ( is_null( $whatsapp_registration->demam ) ) { */
 		/* 	return 'Apakah pasien memiliki keluhan demam?' . PHP_EOL . PHP_EOL .  'Balas *ya/tidak*'; */
