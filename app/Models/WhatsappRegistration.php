@@ -11,4 +11,7 @@ class WhatsappRegistration extends Model
     public function antrian(){
         return $this->belongsTo(Antrian::class);
     }
+    public function poli(){
+        return $this->belongsTo(Poli::class);
+    }
 }

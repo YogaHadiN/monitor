@@ -19,10 +19,12 @@ use App\Models\Sms;
 /* use App\Http\Controllers\FasilitasController; */
 class WablasController extends Controller
 {
-	public $antrian;
 	/**
 	* @param 
 	*/
+	public $antrian;
+	public $gigi_buka     = true;
+	public $estetika_buka = true;
 	public function __construct()
 	{
 		$message    = $this->clean($_POST['message']);
@@ -30,6 +32,29 @@ class WablasController extends Controller
 			$no_telp       = $_POST['phone'];
 			$antrian_id    = substr(substr($message, 2), 0, -2);
 			$this->antrian = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
+		}
+
+		// gigi buka
+		if ( 
+			( date('w') < 1 ||  date('w') > 5)
+		) {
+			$this->gigi_buka = false;
+		}
+
+		if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
+			$this->gigi_buka = false;
+		}
+
+
+		//estetika_buka
+		if ( 
+			( date('w') < 1 ||  date('w') > 5)
+		) {
+			$this->estetika_buka = false;
+		}
+
+		if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
+			$this->estetika_buka = false;
 		}
 	}
 	
@@ -61,7 +86,8 @@ class WablasController extends Controller
 			$antrian_id            = substr(substr($message, 2), 0, -2);
 
 
-			$whatsapp_registration = WhatsappRegistration::where('no_telp', $no_telp)
+			$whatsapp_registration = WhatsappRegistration::with('poli', 'antrian')
+														->where('no_telp', $no_telp)
 														->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 														->first();
 			$response              = '';
@@ -521,7 +547,10 @@ class WablasController extends Controller
 				if ($whatsapp_registration->nama_asuransi == 'Bpjs') {
 					$text .= PHP_EOL;
 					$text .= PHP_EOL;
-					$text .= 'Balas *D* untuk *Cek Rutin gula darah / tekanan darah Prolanis BPJS*';
+					$text .= 'Balas *D* untuk *Cek Rutin tekanan darah Prolanis BPJS*';
+					$text .= PHP_EOL;
+					$text .= PHP_EOL;
+					$text .= 'Balas *D* untuk *Cek Rutin gula darah Prolanis BPJS*';
 				}
 			} else if ($whatsapp_registration->antrian->jenis_antrian_id == 3) {
 				$text .= 'Balas *A* untuk *Periksa Hamil*, ';
@@ -625,10 +654,33 @@ class WablasController extends Controller
 	}
 
 	private function input_poli( $whatsapp_registration, $message ){
-		$whatsapp_registration->poli   = $this->clean($message);
-		if ( $this->clean($message) == 'd' ) {
-			$whatsapp_registration->pembayaran   = 'a';
-			$whatsapp_registration->nama_asuransi   = 'Biaya Pribadi';
+		if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
+			if ( $this->clean($message) == 'a' ) {
+				$whatsapp_registration->poli    = 'Dokter Umum';
+			} else if ( $this->clean($message) == 'b'   ){
+				$whatsapp_registration->poli    = 'sks';
+			} else if ( $this->clean($message) == 'c'   ){
+				$whatsapp_registration->poli    = 'rapid test';
+			} else if ( 
+				$this->clean($message)                == 'd' &&
+				$whatsapp_registration->nama_asuransi == 'bpjs';
+			){
+				$whatsapp_registration->poli    = 'prolanis_ht';
+			} else if ( 
+				$this->clean($message)                == 'e' &&
+				$whatsapp_registration->nama_asuransi == 'bpjs';
+			){
+				$whatsapp_registration->poli    = 'prolanis_dm';
+			}
+		}
+		if ($whatsapp_registration->antrian->jenis_antrian_id == 3) {
+			if ( $this->clean($message) == 'a' ) {
+				$whatsapp_registration->poli    = 'anc';
+			} else if ( $this->clean($message) == 'b'   ){
+				$whatsapp_registration->poli    = 'kb 1 bulan';
+			} else if ( $this->clean($message) == 'c'   ){
+				$whatsapp_registration->poli    = 'kb 3 bulan';
+			}
 		}
 		$whatsapp_registration->save();
 	}
