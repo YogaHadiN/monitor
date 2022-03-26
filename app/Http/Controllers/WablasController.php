@@ -663,12 +663,12 @@ class WablasController extends Controller
 				$whatsapp_registration->poli    = 'rapid test';
 			} else if ( 
 				$this->clean($message)                == 'd' &&
-				$whatsapp_registration->nama_asuransi == 'bpjs';
+				$whatsapp_registration->nama_asuransi == 'bpjs'
 			){
 				$whatsapp_registration->poli    = 'prolanis_ht';
 			} else if ( 
 				$this->clean($message)                == 'e' &&
-				$whatsapp_registration->nama_asuransi == 'bpjs';
+				$whatsapp_registration->nama_asuransi == 'bpjs'
 			){
 				$whatsapp_registration->poli    = 'prolanis_dm';
 			}
