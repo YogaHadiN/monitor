@@ -311,8 +311,6 @@ class WablasController extends Controller
 			/* 	} */
 			/* } */
 
-			Log::info('whatsapp_registration');
-			Log::info( json_encode($whatsapp_registration) );
 			if (
 				!is_null( $whatsapp_registration ) 
 			) {
