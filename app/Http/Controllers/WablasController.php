@@ -14,6 +14,9 @@ use App\Models\User;
 use Input;
 use Carbon\Carbon;
 use Log;
+use DateTime;
+use App\Models\Sms;
+/* use App\Http\Controllers\FasilitasController; */
 class WablasController extends Controller
 {
 	public $antrian;
@@ -573,15 +576,15 @@ class WablasController extends Controller
 			$jenis_antrian_id = 5;
 		}
 
-		if ( is_null( Antrian::where('whatsapp_registration_id', $whatsapp_registration->id)->first() ) ) {
-			$fasilitas                         = new FasilitasController;
-			$antrian                           = $fasilitas->antrianPost( $jenis_antrian_id );
-			$nomor_antrian                     = $antrian->nomor_antrian;
-			$antrian->whatsapp_registration_id = $whatsapp_registration->id;
-			$antrian->save();
-			$whatsapp_registration->antrian_id = $antrian->id;
-			$whatsapp_registration->save();
-		}		
+		/* if ( is_null( Antrian::where('whatsapp_registration_id', $whatsapp_registration->id)->first() ) ) { */
+		/* 	$fasilitas                         = new FasilitasController; */
+		/* 	$antrian                           = $fasilitas->antrianPost( $jenis_antrian_id ); */
+		/* 	$nomor_antrian                     = $antrian->nomor_antrian; */
+		/* 	$antrian->whatsapp_registration_id = $whatsapp_registration->id; */
+		/* 	$antrian->save(); */
+		/* 	$whatsapp_registration->antrian_id = $antrian->id; */
+		/* 	$whatsapp_registration->save(); */
+		/* } */		
 
 		$text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
 		$text .= PHP_EOL;
