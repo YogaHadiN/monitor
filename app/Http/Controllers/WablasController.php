@@ -65,8 +65,9 @@ class WablasController extends Controller
 			$input_tidak_tepat     = false;
 			if ( !is_null($this->antrian) ) {
 				if ( is_null( $whatsapp_registration ) ) {
-					$whatsapp_registration            = new WhatsappRegistration;
-					$whatsapp_registration->no_telp   = $no_telp;
+					$whatsapp_registration             = new WhatsappRegistration;
+					$whatsapp_registration->no_telp    = $no_telp;
+					$whatsapp_registration->antrian_id = $antrian_id;
 					$whatsapp_registration->save();
 				}
 			} else if (  
@@ -97,10 +98,6 @@ class WablasController extends Controller
 				) {
 					$whatsapp_registration->konfirmasi_nomor_antrian  = 1;
 					$whatsapp_registration->save();
-
-					$this->antrian->whatsapp_registration_id = $whatsapp_registration->id;
-					$this->antrian->save();
-
 				} else if (
 					$this->clean($message) == 'b'
 				) {
