@@ -104,6 +104,9 @@ class WablasController extends Controller
 				} else if (
 					$this->clean($message) == 'b'
 				) {
+					Log::info('===============================');
+					Log::info('b is chosen');
+					Log::info('===============================');
 					$whatsapp_registration->delete();
 					$response .=    "Silahkan kirimkan nomor yang tertera di tiket antrian atau scan *QR Code* yang tertera di tiket antrian";
 				} else {
