@@ -656,30 +656,30 @@ class WablasController extends Controller
 	private function input_poli( $whatsapp_registration, $message ){
 		if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
 			if ( $this->clean($message) == 'a' ) {
-				$whatsapp_registration->poli    = 'Dokter Umum';
+				$whatsapp_registration->poli_id    = 'Umum';
 			} else if ( $this->clean($message) == 'b'   ){
-				$whatsapp_registration->poli    = 'sks';
+				$whatsapp_registration->poli_id    = 'sks';
 			} else if ( $this->clean($message) == 'c'   ){
-				$whatsapp_registration->poli    = 'rapid test';
+				$whatsapp_registration->poli_id    = 'rapid test';
 			} else if ( 
 				$this->clean($message)                == 'd' &&
 				$whatsapp_registration->nama_asuransi == 'bpjs'
 			){
-				$whatsapp_registration->poli    = 'prolanis_ht';
+				$whatsapp_registration->poli_id    = 'prolanis_ht';
 			} else if ( 
 				$this->clean($message)                == 'e' &&
 				$whatsapp_registration->nama_asuransi == 'bpjs'
 			){
-				$whatsapp_registration->poli    = 'prolanis_dm';
+				$whatsapp_registration->poli_id    = 'prolanis_dm';
 			}
 		}
 		if ($whatsapp_registration->antrian->jenis_antrian_id == 3) {
 			if ( $this->clean($message) == 'a' ) {
-				$whatsapp_registration->poli    = 'anc';
+				$whatsapp_registration->poli_id    = 'anc';
 			} else if ( $this->clean($message) == 'b'   ){
-				$whatsapp_registration->poli    = 'kb 1 bulan';
+				$whatsapp_registration->poli_id    = 'kb 1 bulan';
 			} else if ( $this->clean($message) == 'c'   ){
-				$whatsapp_registration->poli    = 'kb 3 bulan';
+				$whatsapp_registration->poli_id    = 'kb 3 bulan';
 			}
 		}
 		$whatsapp_registration->save();
