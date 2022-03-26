@@ -109,6 +109,9 @@ class WablasController extends Controller
 					Log::info('===============================');
 					$whatsapp_registration->delete();
 					$response .=    "Silahkan kirimkan nomor yang tertera di tiket antrian atau scan *QR Code* yang tertera di tiket antrian";
+					Log::info(' whatsapp_registration b is chosen');
+					Log::info($whatsapp_registration);
+					Log::info('===============================');
 				} else {
 					$input_tidak_tepat = true;
 				}
