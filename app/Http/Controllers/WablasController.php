@@ -71,6 +71,12 @@ class WablasController extends Controller
 					$whatsapp_registration             = new WhatsappRegistration;
 					$whatsapp_registration->no_telp    = $no_telp;
 					$whatsapp_registration->antrian_id = $antrian_id;
+					if ( $this->antrian->jenis_antrian_id == 2  ) {
+						$whatsapp_registration->poli = 'gigi';
+					} else if (  $this->antrian->jenis_antrian_id == 7   ){
+						$whatsapp_registration->poli = 'rapid test';
+					}
+					$whatsapp_registration->antrian_id = $antrian_id;
 					$whatsapp_registration->save();
 				}
 			} else if (  
@@ -120,7 +126,7 @@ class WablasController extends Controller
 					$this->clean($message) == 'c'
 				) {
 					if ($this->clean($message) == 'a') {
-						$whatsapp_registration->nama_asuransi  = 'biaya_pribadi';
+						$whatsapp_registration->nama_asuransi  = 'biaya pribadi';
 						$whatsapp_registration->nomor_asuransi  = '0000';
 					}
 					if ($this->clean($message) == 'b') {
@@ -359,7 +365,6 @@ class WablasController extends Controller
 			Log::info('$whatsapp_registration');
 			Log::info($whatsapp_registration);
 			if ( !is_null($whatsapp_registration) ) {
-
 				$response .=  $this->botKirim($whatsapp_registration);
 				$response .=  PHP_EOL;
 				$response .=  PHP_EOL;
@@ -508,22 +513,25 @@ class WablasController extends Controller
 			$text .= 'Balas *A* untuk *Dokter Umum*, ';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *B* untuk *Dokter Gigi*, ';
+			$text .= 'Balas *B* untuk pembuatan *Surat Keterangan Sehat*, ';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *C* untuk *Suntik KB/Periksa Hamil*.';
+			$text .= 'Balas *C* untuk *Dokter Gigi*, ';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *D* untuk *Dokter Estetika/Kecantikan*';
+			$text .= 'Balas *D* untuk *Suntik KB/Periksa Hamil*.';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *E* untuk *USG Kebidanan*';
+			$text .= 'Balas *E* untuk *Dokter Estetika/Kecantikan*';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *F* untuk *Rapid Test Antibodi / Antigen*';
+			$text .= 'Balas *F* untuk *USG Kebidanan*';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *G* untuk *Cek Rutin gula darah / tekanan darah Prolanis BPJS*';
+			$text .= 'Balas *G* untuk *Rapid Test Antibodi / Antigen*';
+			$text .= PHP_EOL;
+			$text .= PHP_EOL;
+			$text .= 'Balas *H* untuk *Cek Rutin gula darah / tekanan darah Prolanis BPJS*';
 			return $text;
 
 		}
@@ -620,6 +628,7 @@ class WablasController extends Controller
 		$whatsapp_registration->poli   = $this->clean($message);
 		if ( $this->clean($message) == 'd' ) {
 			$whatsapp_registration->pembayaran   = 'a';
+			$whatsapp_registration->nama_asuransi   = 'Biaya Pribadi';
 		}
 		$whatsapp_registration->save();
 	}
