@@ -238,7 +238,7 @@ class WablasController extends Controller
 				}
 			} else if ( 
 					!is_null( $whatsapp_registration ) &&
-					is_null( $whatsapp_registration->poli ) 
+					is_null( $whatsapp_registration->poli_id ) 
 			) {
 				if (
 					$this->clean($message) == 'a' ||
@@ -656,7 +656,7 @@ class WablasController extends Controller
 	private function input_poli( $whatsapp_registration, $message ){
 		if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
 			if ( $this->clean($message) == 'a' ) {
-				$whatsapp_registration->poli_id    = 'Umum';
+				$whatsapp_registration->poli_id    = 'umum';
 			} else if ( $this->clean($message) == 'b'   ){
 				$whatsapp_registration->poli_id    = 'sks';
 			} else if ( $this->clean($message) == 'c'   ){
