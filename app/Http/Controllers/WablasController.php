@@ -372,6 +372,8 @@ class WablasController extends Controller
 					$response .= PHP_EOL;
 				}
 				$input_tidak_tepat = false;
+			}
+			if (!empty($response)) {
 				echo $response;
 			}
 			/* Sms::send($no_telp, $response); */
