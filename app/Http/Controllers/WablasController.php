@@ -613,10 +613,6 @@ class WablasController extends Controller
 			$text .= PHP_EOL;
 		}
 		$text .= "Silahkan menunggu untuk dilayani";
-		$text .= PHP_EOL;
-		$text .= PHP_EOL;
-		$text .= "==============";
-		$text .= PHP_EOL;
 		return $text;
 	}
 
