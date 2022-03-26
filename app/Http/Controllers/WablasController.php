@@ -510,28 +510,28 @@ class WablasController extends Controller
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Balas *A* untuk *Dokter Umum*, ';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *B* untuk pembuatan *Surat Keterangan Sehat*, ';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *C* untuk *Dokter Gigi*, ';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *D* untuk *Suntik KB/Periksa Hamil*.';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *E* untuk *Dokter Estetika/Kecantikan*';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *F* untuk *USG Kebidanan*';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *G* untuk *Rapid Test Antibodi / Antigen*';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= 'Balas *H* untuk *Cek Rutin gula darah / tekanan darah Prolanis BPJS*';
+			if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
+				$text .= 'Balas *A* untuk *Dokter Umum*, ';
+				$text .= PHP_EOL;
+				$text .= PHP_EOL;
+				$text .= 'Balas *B* untuk pembuatan *Surat Keterangan Sehat*, ';
+				$text .= PHP_EOL;
+				$text .= PHP_EOL;
+				$text .= 'Balas *C* untuk *Rapid Test Antibodi / Antigen*';
+				if ($whatsapp_registration->nama_asuransi == 'Bpjs') {
+					$text .= PHP_EOL;
+					$text .= PHP_EOL;
+					$text .= 'Balas *D* untuk *Cek Rutin gula darah / tekanan darah Prolanis BPJS*';
+				}
+			} else if ($whatsapp_registration->antrian->jenis_antrian_id == 3) {
+				$text .= 'Balas *A* untuk *Periksa Hamil*, ';
+				$text .= PHP_EOL;
+				$text .= PHP_EOL;
+				$text .= 'Balas *B* untuk *Suntik KB 1 bulan*, ';
+				$text .= PHP_EOL;
+				$text .= PHP_EOL;
+				$text .= 'Balas *C* untuk *Suntik KB 3 bulan*';
+			}
 			return $text;
 
 		}
