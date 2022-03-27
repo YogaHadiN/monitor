@@ -632,24 +632,6 @@ class WablasController extends Controller
 		$text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```";
 		$text .= PHP_EOL;
 		$text .= PHP_EOL;
-		if (
-			is_null(Pasien::where('nomor_asuransi_bpjs',$whatsapp_registration->nomor_asuransi)->first()) &&
-			$whatsapp_registration->pembayaran == 'b'
-		){
-			$text .= "Mohon kesediaannya untuk mengirimkan *foto kartu BPJS, foto Kartu Tanda Penduduk, dan Foto Wajah Pasien* ke nomor ini";
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= "*- Foto kartu BPJS*";
-			$text .= PHP_EOL;
-			$text .= "*- Foto Kartu Tanda Penduduk*";
-			$text .= PHP_EOL;
-			$text .= "*- Foto Wajah Pasien* ke nomor ini";
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-			$text .= "ke nomor ini";
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
-		}
 		$text .= "Silahkan menunggu untuk dilayani";
 		return $text;
 	}
