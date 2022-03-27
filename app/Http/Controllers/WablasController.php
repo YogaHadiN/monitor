@@ -98,9 +98,9 @@ class WablasController extends Controller
 					$whatsapp_registration->no_telp    = $no_telp;
 					$whatsapp_registration->antrian_id = $antrian_id;
 					if ( $this->antrian->jenis_antrian_id == 2  ) {
-						$whatsapp_registration->poli = 'gigi';
+						$whatsapp_registration->poli_id = 'gigi';
 					} else if (  $this->antrian->jenis_antrian_id == 7   ){
-						$whatsapp_registration->poli = 'rapid test';
+						$whatsapp_registration->poli_id = 'rapid test';
 					}
 					$whatsapp_registration->antrian_id = $antrian_id;
 					$whatsapp_registration->save();
@@ -326,7 +326,7 @@ class WablasController extends Controller
 			) {
 				if (
 				 !is_null( $whatsapp_registration->nama ) ||
-				 !is_null( $whatsapp_registration->poli ) ||
+				 !is_null( $whatsapp_registration->poli_id ) ||
 				 !is_null( $whatsapp_registration->pembayaran ) ||
 				 !is_null( $whatsapp_registration->tanggal_lahir )
 				) {
@@ -338,9 +338,9 @@ class WablasController extends Controller
 					$response .= 'Nama Pasien: ' . ucwords($whatsapp_registration->nama)  ;
 					$response .= PHP_EOL;
 				}
-				if ( !is_null( $whatsapp_registration->poli ) ) {
+				if ( !is_null( $whatsapp_registration->poli_id ) ) {
 					$response .= 'Poli Tujuan : ';
-					$response .= $this->formatPoli( $whatsapp_registration->poli->poli );
+					$response .= $this->formatPoli( $whatsapp_registration->poli->poli_id );
 					$response .= PHP_EOL;
 				}
 				if ( !is_null( $whatsapp_registration->pembayaran ) ) {
@@ -354,7 +354,7 @@ class WablasController extends Controller
 				}
 				if (
 				 !is_null( $whatsapp_registration->nama ) ||
-				 !is_null( $whatsapp_registration->poli ) ||
+				 !is_null( $whatsapp_registration->poli_id ) ||
 				 !is_null( $whatsapp_registration->pembayaran ) ||
 				 !is_null( $whatsapp_registration->tanggal_lahir )
 				) {
@@ -509,7 +509,7 @@ class WablasController extends Controller
 		if ( is_null( $whatsapp_registration->tanggal_lahir ) ) {
 			return  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
 		}
-		if ( is_null( $whatsapp_registration->poli ) ) {
+		if ( is_null( $whatsapp_registration->poli_id ) ) {
 			$text = 'Bisa dibantu berobat ke dokter apa?';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
@@ -579,15 +579,15 @@ class WablasController extends Controller
 
 
 		$jenis_antrian_id = null;
-		if ( $whatsapp_registration->poli == 'a'	) {
+		if ( $whatsapp_registration->poli_id == 'a'	) {
 			$jenis_antrian_id = 1;
-		} else if ( $whatsapp_registration->poli == 'b'	){
+		} else if ( $whatsapp_registration->poli_id == 'b'	){
 			$jenis_antrian_id = 2;
-		} else if ( $whatsapp_registration->poli == 'c'	){
+		} else if ( $whatsapp_registration->poli_id == 'c'	){
 			$jenis_antrian_id = 3;
-		} else if ( $whatsapp_registration->poli == 'd'	){
+		} else if ( $whatsapp_registration->poli_id == 'd'	){
 			$jenis_antrian_id = 4;
-		} else if ( $whatsapp_registration->poli == 'e'	){
+		} else if ( $whatsapp_registration->poli_id == 'e'	){
 			$jenis_antrian_id = 5;
 		}
 
