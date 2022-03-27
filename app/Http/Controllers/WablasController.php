@@ -340,7 +340,7 @@ class WablasController extends Controller
 				}
 				if ( !is_null( $whatsapp_registration->poli_id ) ) {
 					$response .= 'Poli Tujuan : ';
-					$response .= $this->formatPoli( $whatsapp_registration->poli->poli_id );
+					$response .= $this->formatPoli( $whatsapp_registration->poli->poli );
 					$response .= PHP_EOL;
 				}
 				if ( !is_null( $whatsapp_registration->pembayaran ) ) {
