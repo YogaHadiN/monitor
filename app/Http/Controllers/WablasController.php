@@ -454,7 +454,7 @@ class WablasController extends Controller
 	}
 	private function clean($param)
 	{
-		if (empty( trim($param) )) {
+		if (empty( trim($param) ) && trim($param) != '0') {
 			return null;
 		}
 		return strtolower( trim($param) );
