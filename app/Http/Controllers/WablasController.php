@@ -504,7 +504,9 @@ class WablasController extends Controller
 			if ( $whatsapp_registration->pembayaran == 'b' ) {
 				$text = 'Bisa dibantu *Nomor BPJS* pasien? ';
 			} else if ( $whatsapp_registration->pembayaran == 'c' ){
-				$text = 'Bisa dibantu *Nomor Asuransi* pasien? (kosongkan bila pembayar tidak ada nomor asuransi) ';
+				$text = 'Bisa dibantu *Nomor Asuransi* pasien?';
+				$text .= PHP_EOL;
+				$text .= 'Balas *0* (nol) jika tidak tahu atau tidak ada nomor asuransi';
 			}
 			return $text;
 		}
