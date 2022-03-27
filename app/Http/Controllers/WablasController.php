@@ -183,7 +183,10 @@ class WablasController extends Controller
 				if ($whatsapp_registration->pembayaran == 'b') { //BPJS
 					//cari pasien dengan nomor_asuransi_bpjs tersebut
 					$pasien = Pasien::where('nomor_asuransi_bpjs', $this->clean($message))->first();
-					if (!is_null($pasien)) {
+					if (
+						!is_null($pasien) && 
+						strlen($this->clean($message)) > 4
+					) {
 						$whatsapp_registration->nama           = $pasien->nama;
 						$whatsapp_registration->nomor_asuransi = $this->clean($message);
 						$whatsapp_registration->tanggal_lahir  = $pasien->tanggal_lahir;
@@ -195,7 +198,10 @@ class WablasController extends Controller
 				} else if ( $whatsapp_registration->pembayaran == 'c' ){ //asuransi lain
 					//cari pasien dengan nomor_asuransi tersebut
 					$pasiens = Pasien::where('nomor_asuransi', $this->clean($message))->get();
-					if ($pasiens->count() == 1) {
+					if (
+						$pasiens->count() == 1 &&
+						strlen($this->clean($message)) > 4
+					) {
 						$pasien = $pasiens->first();
 						$whatsapp_registration->nama           = $pasien->nama;
 						$whatsapp_registration->nomor_asuransi = $this->clean($message);
