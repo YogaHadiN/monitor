@@ -99,7 +99,7 @@ class WablasController extends Controller
 											->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 											->exists()
 					) {
-						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah diproses oleh nomor lain";
+						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah diproses oleh *nomor whatsapp* lain";
 						$response .= PHP_EOL;
 						$response .= "===============";
 						$response .= PHP_EOL;
@@ -663,28 +663,16 @@ class WablasController extends Controller
 	}
 
 	private function input_poli( $whatsapp_registration, $message ){
-		Log::info('================');
-		Log::info('input poli');
-		Log::info('================');
 		if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
 			if ( $this->clean($message) == 'a' ) {
-				Log::info('================');
-				Log::info('input poli a');
-				Log::info('================');
 				$whatsapp_registration->poli_id    = 'umum';
 			} else if ( $this->clean($message) == 'b'   ){
-				Log::info('================');
-				Log::info('input poli b');
-				Log::info('================');
 				if ($whatsapp_registration->nama_asuransi == 'BPJS') {
 					$whatsapp_registration->poli_id    = 'prolanis_ht';
 				} else {
 					$whatsapp_registration->poli_id    = 'sks';
 				}
 			} else if ( $this->clean($message) == 'c'   ){
-				Log::info('================');
-				Log::info('input poli c');
-				Log::info('================');
 				if ($whatsapp_registration->nama_asuransi == 'BPJS') {
 					$whatsapp_registration->poli_id    = 'prolanis_dm';
 				} else {
@@ -702,6 +690,7 @@ class WablasController extends Controller
 			}
 		}
 		$whatsapp_registration->save();
+		$this->updateAntrianAndDeleteRegis($whatsapp_registration);
 	}
 	/**
 	* undocumented function
@@ -761,5 +750,24 @@ class WablasController extends Controller
 		$d = DateTime::createFromFormat($format, $date);
 		// The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
 		return $d && $d->format($format) === $date;
+	}
+	/**
+	* undocumented function
+	*
+	* @return void
+	*/
+	private function updateAntrianAndDeleteRegis($whatsapp_registration)
+	{
+		$antrian                 = $whatsapp_registration->antrian;
+		$antrian->no_telp        = $whatsapp_registration->no_telp;
+		$antrian->poli_id        = $whatsapp_registration->poli_id;
+		$antrian->nama_asuransi  = $whatsapp_registration->nama_asuransi;
+		$antrian->nama           = $whatsapp_registration->nama;
+		$antrian->tanggal_lahir  = $whatsapp_registration->tanggal_lahir;
+		$antrian->nomor_asuransi = $whatsapp_registration->nomor_asuransi;
+		$antrian->pasien_id      = $whatsapp_registration->pasien_id;
+		if ($antrian->save()) {
+			$whatsapp_registration->delete();
+		}
 	}
 }
