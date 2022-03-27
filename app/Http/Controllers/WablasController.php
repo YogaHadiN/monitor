@@ -177,12 +177,15 @@ class WablasController extends Controller
 				//jika pembayaran menggunakan BPJS
 				if ($whatsapp_registration->pembayaran == 'b') { //BPJS
 					//cari pasien dengan nomor_asuransi_bpjs tersebut
+					$ditemukan = true;
 					$pasien = Pasien::where('nomor_asuransi_bpjs', $this->clean($message))->first();
 					if (!is_null($pasien)) {
 						$whatsapp_registration->nama           = $pasien->nama;
 						$whatsapp_registration->nomor_asuransi = $this->clean($message);
 						$whatsapp_registration->tanggal_lahir  = $pasien->tanggal_lahir;
 						$whatsapp_registration->pasien_id      = $pasien->pasien_id;
+					} else {
+						$ditemukan = false;
 					}
 					//apabila menggunakan asuransi lain
 				} else if ( $whatsapp_registration->pembayaran == 'c' ){ //asuransi lain
@@ -194,7 +197,12 @@ class WablasController extends Controller
 						$whatsapp_registration->nomor_asuransi = $this->clean($message);
 						$whatsapp_registration->tanggal_lahir  = $pasien->tanggal_lahir;
 						$whatsapp_registration->pasien_id      = $pasien->pasien_id;
+					} else {
+						$ditemukan = false;
 					}
+				}
+				if (!$ditemukan) {
+					$whatsapp_registration->nomor_asuransi = '-';
 				}
 				$whatsapp_registration->save();
 				/* $pesertaBpjs                       = $this->pesertaBpjs($this->clean($message)); */
