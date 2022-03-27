@@ -94,16 +94,24 @@ class WablasController extends Controller
 			$input_tidak_tepat     = false;
 			if ( !is_null($this->antrian) ) {
 				if ( is_null( $whatsapp_registration ) ) {
-					$whatsapp_registration             = new WhatsappRegistration;
-					$whatsapp_registration->no_telp    = $no_telp;
-					$whatsapp_registration->antrian_id = $antrian_id;
-					if ( $this->antrian->jenis_antrian_id == 2  ) {
-						$whatsapp_registration->poli_id = 'gigi';
-					} else if (  $this->antrian->jenis_antrian_id == 7   ){
-						$whatsapp_registration->poli_id = 'rapid test';
+					if (
+						WhatsappRegistration::where('antrian_id', $this->antrian->id)
+											->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+											->exists()
+					) {
+						$response .= "Nomor antrian *" . $this->antrian->nomor_antrian. "* sudah diproses oleh nomor lain";
+					} else {
+						$whatsapp_registration             = new WhatsappRegistration;
+						$whatsapp_registration->no_telp    = $no_telp;
+						$whatsapp_registration->antrian_id = $antrian_id;
+						if ( $this->antrian->jenis_antrian_id == 2  ) {
+							$whatsapp_registration->poli_id = 'gigi';
+						} else if (  $this->antrian->jenis_antrian_id == 7   ){
+							$whatsapp_registration->poli_id = 'rapid test';
+						}
+						$whatsapp_registration->antrian_id = $antrian_id;
+						$whatsapp_registration->save();
 					}
-					$whatsapp_registration->antrian_id = $antrian_id;
-					$whatsapp_registration->save();
 				}
 			} else if (  
 				substr($this->clean($message), 0, 5) == 'ulang' &&
