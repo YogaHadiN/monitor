@@ -668,29 +668,21 @@ class WablasController extends Controller
 				Log::info('================');
 				Log::info('input poli b');
 				Log::info('================');
-				$whatsapp_registration->poli_id    = 'sks';
+				if ($whatsapp_registration->nama_asuransi == 'BPJS') {
+					$whatsapp_registration->poli_id    = 'prolanis_ht';
+				} else {
+					$whatsapp_registration->poli_id    = 'sks';
+				}
 			} else if ( $this->clean($message) == 'c'   ){
 				Log::info('================');
 				Log::info('input poli c');
 				Log::info('================');
-				$whatsapp_registration->poli_id    = 'rapid test';
-			} else if ( 
-				$this->clean($message)                == 'd' &&
-				$whatsapp_registration->nama_asuransi == 'bpjs'
-			){
-				Log::info('================');
-				Log::info('input poli d');
-				Log::info('================');
-				$whatsapp_registration->poli_id    = 'prolanis_ht';
-			} else if ( 
-				$this->clean($message)                == 'e' &&
-				$whatsapp_registration->nama_asuransi == 'bpjs'
-			){
-				Log::info('================');
-				Log::info('input poli e');
-				Log::info('================');
-				$whatsapp_registration->poli_id    = 'prolanis_dm';
-			}
+				if ($whatsapp_registration->nama_asuransi == 'BPJS') {
+					$whatsapp_registration->poli_id    = 'prolanis_dm';
+				} else {
+					$whatsapp_registration->poli_id    = 'rapid test';
+				}
+			} 
 		}
 		if ($whatsapp_registration->antrian->jenis_antrian_id == 3) {
 			if ( $this->clean($message) == 'a' ) {
