@@ -31,7 +31,9 @@ class WablasController extends Controller
 		if(isset($message)) {
 			$no_telp       = $_POST['phone'];
 			$antrian_id    = substr(substr($message, 2), 0, -2);
-			$this->antrian = Antrian::where('id', $antrian_id)->where('created_at', 'like', date('Y-m-d') . '%')->first();
+			$this->antrian = Antrian::where('id', $antrian_id)
+									->where('created_at', 'like', date('Y-m-d') . '%')
+									->first();
 		}
 
 		// gigi buka
@@ -99,7 +101,15 @@ class WablasController extends Controller
 											->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 											->exists()
 					) {
-						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah diproses oleh *nomor whatsapp* lain";
+						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sedang diproses oleh *nomor whatsapp* lain";
+						$response .= PHP_EOL;
+						$response .= "===============";
+						$response .= PHP_EOL;
+						$response .= "Jika menurut anda ini kesalahan, silahkan hubungi petugas";
+					} else if(
+						!is_null($this->antrian->no_telp)
+					){
+						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah selesai diproses oleh *nomor whatsapp* lain";
 						$response .= PHP_EOL;
 						$response .= "===============";
 						$response .= PHP_EOL;
