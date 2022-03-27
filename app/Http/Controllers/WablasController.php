@@ -486,7 +486,7 @@ class WablasController extends Controller
 			$text .= "==============";
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text = 'Fasilitas ini akan memproses nomor antrian';
+			$text .= 'Fasilitas ini akan memproses nomor antrian';
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
