@@ -243,31 +243,9 @@ class WablasController extends Controller
 				if (
 					$this->clean($message) == 'a' ||
 					$this->clean($message) == 'b' ||
-					$this->clean($message) == 'c' ||
-					$this->clean($message) == 'd' || //estetika
-					$this->clean($message) == 'e'
+					$this->clean($message) == 'c'
 				) {
-					if ($whatsapp_registration->poli == 'gigi') {
-						if ( $this->gigi_buka) {
-							$this->input_poli($whatsapp_registration, $message);
-						} else {
-							echo 'Mohon Maaf Pendaftaran ke Poli Gigi saat ini tutup, Silahkan coba lagi pada hari *Senin - Jumat jam 15.00 - 20.00*';
-							echo PHP_EOL;
-							echo '===========================';
-							echo PHP_EOL;
-						}
-					} else if ($whatsapp_registration->poli == 'estetika') {
-						if ( $this->estetika_buka) {
-							$this->input_poli($whatsapp_registration, $message);
-						} else {
-							echo 'Mohon Maaf Pendaftaran ke Poli Estetika /Kecantikan saat ini tutup, Silahkan coba lagi pada hari *Senin - Jumat jam 11.00 - 17.00*';
-							echo PHP_EOL;
-							echo '===========================';
-							echo PHP_EOL;
-						}
-					} else {
-						$this->input_poli($whatsapp_registration, $message);
-					}
+					$this->input_poli($whatsapp_registration, $message);
 				} else {
 					$input_tidak_tepat = true;
 				}
@@ -654,22 +632,40 @@ class WablasController extends Controller
 	}
 
 	private function input_poli( $whatsapp_registration, $message ){
+		Log::info('================');
+		Log::info('input poli');
+		Log::info('================');
 		if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
 			if ( $this->clean($message) == 'a' ) {
+				Log::info('================');
+				Log::info('input poli a');
+				Log::info('================');
 				$whatsapp_registration->poli_id    = 'umum';
 			} else if ( $this->clean($message) == 'b'   ){
+				Log::info('================');
+				Log::info('input poli b');
+				Log::info('================');
 				$whatsapp_registration->poli_id    = 'sks';
 			} else if ( $this->clean($message) == 'c'   ){
+				Log::info('================');
+				Log::info('input poli c');
+				Log::info('================');
 				$whatsapp_registration->poli_id    = 'rapid test';
 			} else if ( 
 				$this->clean($message)                == 'd' &&
 				$whatsapp_registration->nama_asuransi == 'bpjs'
 			){
+				Log::info('================');
+				Log::info('input poli d');
+				Log::info('================');
 				$whatsapp_registration->poli_id    = 'prolanis_ht';
 			} else if ( 
 				$this->clean($message)                == 'e' &&
 				$whatsapp_registration->nama_asuransi == 'bpjs'
 			){
+				Log::info('================');
+				Log::info('input poli e');
+				Log::info('================');
 				$whatsapp_registration->poli_id    = 'prolanis_dm';
 			}
 		}
