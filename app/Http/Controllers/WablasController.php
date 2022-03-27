@@ -99,7 +99,10 @@ class WablasController extends Controller
 											->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 											->exists()
 					) {
-						$response .= "Nomor antrian *" . $this->antrian->nomor_antrian. "* sudah diproses oleh nomor lain";
+						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah diproses oleh nomor lain";
+						$response .= PHP_EOL;
+						$response .= "===============";
+						$response .= "Jika menurut anda ini kesalahan, silahkan hubungi petugas";
 					} else {
 						$whatsapp_registration             = new WhatsappRegistration;
 						$whatsapp_registration->no_telp    = $no_telp;
