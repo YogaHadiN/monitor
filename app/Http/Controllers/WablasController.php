@@ -538,19 +538,20 @@ class WablasController extends Controller
 			$text .= PHP_EOL;
 			if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
 				$text .= 'Balas *A* untuk *Dokter Umum*, ';
-				$text .= PHP_EOL;
-				$text .= PHP_EOL;
-				$text .= 'Balas *B* untuk pembuatan *Surat Keterangan Sehat*, ';
-				$text .= PHP_EOL;
-				$text .= PHP_EOL;
-				$text .= 'Balas *C* untuk *Rapid Test Antibodi / Antigen*';
-				if ($whatsapp_registration->nama_asuransi == 'Bpjs') {
+				if (!$whatsapp_registration->nama_asuransi == 'BPJS') {
 					$text .= PHP_EOL;
 					$text .= PHP_EOL;
-					$text .= 'Balas *D* untuk *Cek Rutin tekanan darah Prolanis BPJS*';
+					$text .= 'Balas *B* untuk pembuatan *Surat Keterangan Sehat*, ';
 					$text .= PHP_EOL;
 					$text .= PHP_EOL;
-					$text .= 'Balas *D* untuk *Cek Rutin gula darah Prolanis BPJS*';
+					$text .= 'Balas *C* untuk *Rapid Test Antibodi / Antigen*';
+				} else {
+					$text .= PHP_EOL;
+					$text .= PHP_EOL;
+					$text .= 'Balas *B* untuk *Cek Rutin tekanan darah Prolanis BPJS*';
+					$text .= PHP_EOL;
+					$text .= PHP_EOL;
+					$text .= 'Balas *C* untuk *Cek Rutin gula darah Prolanis BPJS*';
 				}
 			} else if ($whatsapp_registration->antrian->jenis_antrian_id == 3) {
 				$text .= 'Balas *A* untuk *Periksa Hamil*, ';
