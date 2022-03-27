@@ -345,6 +345,8 @@ class WablasController extends Controller
 					Log::info($whatsapp_registration->poli_id);
 					Log::info("whatsapp_registration->poli");
 					Log::info($whatsapp_registration->poli);
+					Log::info("whatsapp_registration->poli->poli");
+					Log::info($whatsapp_registration->poli->poli);
 					Log::info("========================");
 					$response .= $this->formatPoli( $whatsapp_registration->poli->poli );
 					$response .= PHP_EOL;
