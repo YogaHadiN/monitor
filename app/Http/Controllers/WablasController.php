@@ -175,6 +175,10 @@ class WablasController extends Controller
 			) {
 				$whatsapp_registration->nomor_asuransi = $this->clean($message);
 				//jika pembayaran menggunakan BPJS
+					Log::info('===========================');
+					Log::info('Input nomor asuransi');
+					Log::info( $this->clean($message) );
+					Log::info('===========================');
 				if ($whatsapp_registration->pembayaran == 'b') { //BPJS
 					//cari pasien dengan nomor_asuransi_bpjs tersebut
 					$ditemukan = true;
