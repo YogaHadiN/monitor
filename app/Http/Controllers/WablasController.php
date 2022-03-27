@@ -173,6 +173,7 @@ class WablasController extends Controller
 				!is_null( $whatsapp_registration ) &&
 				is_null( $whatsapp_registration->nomor_asuransi ) 
 			) {
+				$ditemukan = true;
 				$whatsapp_registration->nomor_asuransi = $this->clean($message);
 				//jika pembayaran menggunakan BPJS
 					Log::info('===========================');
@@ -181,7 +182,6 @@ class WablasController extends Controller
 					Log::info('===========================');
 				if ($whatsapp_registration->pembayaran == 'b') { //BPJS
 					//cari pasien dengan nomor_asuransi_bpjs tersebut
-					$ditemukan = true;
 					$pasien = Pasien::where('nomor_asuransi_bpjs', $this->clean($message))->first();
 					if (!is_null($pasien)) {
 						$whatsapp_registration->nama           = $pasien->nama;
