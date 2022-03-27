@@ -341,6 +341,8 @@ class WablasController extends Controller
 				if ( !is_null( $whatsapp_registration->poli_id ) ) {
 					$response .= 'Poli Tujuan : ';
 					Log::info("========================");
+					Log::info("whatsapp_registration->poli_id");
+					Log::info($whatsapp_registration->poli_id);
 					Log::info("whatsapp_registration->poli");
 					Log::info($whatsapp_registration->poli);
 					Log::info("========================");
