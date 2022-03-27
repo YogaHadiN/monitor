@@ -348,7 +348,7 @@ class WablasController extends Controller
 					Log::info("whatsapp_registration->poli->poli");
 					Log::info($whatsapp_registration->poli->poli);
 					Log::info("========================");
-					$response .= $this->formatPoli( $whatsapp_registration->poli->poli );
+					$response .= $whatsapp_registration->poli->poli;
 					$response .= PHP_EOL;
 				}
 				if ( !is_null( $whatsapp_registration->pembayaran ) ) {
@@ -687,20 +687,6 @@ class WablasController extends Controller
 			}
 		}
 		$whatsapp_registration->save();
-	}
-	private function formatPoli($param)
-	{
-		if ( $this->clean($param) == 'a' ) {
-			return ' Dokter Umum';
-		} else if (  $this->clean($param) == 'b'  ){
-			return ' Dokter Gigi';
-		} else if (  $this->clean($param) == 'c'  ){
-			return ' Suntik KB / Periksa Hamil';
-		} else if (  $this->clean($param) == 'd'  ){
-			return ' Dokter Estetik / Kecantikan';
-		} else if (  $this->clean($param) == 'e'  ){
-			return 'USG Kebidanan';
-		}
 	}
 	/**
 	* undocumented function
