@@ -102,6 +102,7 @@ class WablasController extends Controller
 						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah diproses oleh nomor lain";
 						$response .= PHP_EOL;
 						$response .= "===============";
+						$response .= PHP_EOL;
 						$response .= "Jika menurut anda ini kesalahan, silahkan hubungi petugas";
 					} else {
 						$whatsapp_registration             = new WhatsappRegistration;
