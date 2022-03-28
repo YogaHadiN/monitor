@@ -420,22 +420,24 @@ class WablasController extends Controller
 					$response .= PHP_EOL;
 				}
 			}
-
-
-			Log::info('$whatsapp_registration');
-			Log::info($whatsapp_registration);
-			if ( !is_null($whatsapp_registration) ) {
+			if ( 
+				!is_null($whatsapp_registration)
+			) {
 				$response .=  $this->botKirim($whatsapp_registration);
-				$response .=  PHP_EOL;
-				$response .=  PHP_EOL;
-				$response .= "==============";
-				$response .=  PHP_EOL;
-				$response .=  PHP_EOL;
-				$response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
+				if (
+					!is_null($whatsapp_registration->poli_id)
+				) {
+					$response .=  PHP_EOL;
+					$response .=  PHP_EOL;
+					$response .= "==============";
+					$response .=  PHP_EOL;
+					$response .=  PHP_EOL;
+					$response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
+				}
 				if ( $input_tidak_tepat ) {
 					$response .=  PHP_EOL;
 					$response .=  PHP_EOL;
-				$response .=    "==================";
+					$response .=    "==================";
 					$response .= PHP_EOL;
 					$response .= '```Input yang anda masukkan salah```';
 					$response .= PHP_EOL;
