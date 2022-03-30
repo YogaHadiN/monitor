@@ -99,6 +99,7 @@ class WablasController extends Controller
 			$input_tidak_tepat     = false;
 			if ( !is_null($this->antrian) ) {
 				if ( is_null( $whatsapp_registration ) ) {
+					Log::info('whatsapp_is_null');
 					if (
 						WhatsappRegistration::where('antrian_id', $this->antrian->id)
 											->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
@@ -123,6 +124,7 @@ class WablasController extends Controller
 				} else if (
 					$whatsapp_registration->antrian_id != $this->antrian->id
 				){
+					Log::info('whatsapp_is_not_null');
 					$whatsapp_registration->delete();
 					$this->createWAregis();
 				}
