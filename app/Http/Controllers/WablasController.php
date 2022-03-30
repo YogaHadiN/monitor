@@ -425,7 +425,7 @@ class WablasController extends Controller
 			) {
 				$response .=  $this->botKirim($whatsapp_registration);
 				if (
-					is_null($whatsapp_registration->poli_id)
+					!is_null($whatsapp_registration)
 				) {
 
 					Log::info('===================');
