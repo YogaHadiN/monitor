@@ -786,6 +786,7 @@ class WablasController extends Controller
 		$antrian->tanggal_lahir  = $whatsapp_registration->tanggal_lahir;
 		$antrian->nomor_asuransi = $whatsapp_registration->nomor_asuransi;
 		$antrian->pasien_id      = $whatsapp_registration->pasien_id;
+		$antrian->save();
 	}
 	/**
 	* undocumented function
