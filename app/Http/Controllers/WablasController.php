@@ -803,6 +803,7 @@ class WablasController extends Controller
 			$whatsapp_registration->poli_id = 'rapid test';
 		}
 		$whatsapp_registration->save();
+		return $whatsapp_registration;
 	}
 	
 }
