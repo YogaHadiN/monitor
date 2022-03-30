@@ -121,14 +121,14 @@ class WablasController extends Controller
 						$response .= PHP_EOL;
 						$response .= "Jika menurut anda ini kesalahan, silahkan hubungi petugas";
 					} else {
-						$this->createWAregis();
+						$whatsapp_registration = $this->createWAregis();
 					}
 				} else if (
 					$whatsapp_registration->antrian_id != $this->antrian->id
 				){
 					Log::info('whatsapp_is_not_null');
 					$whatsapp_registration->delete();
-					$this->createWAregis();
+					$whatsapp_registration = $this->createWAregis();
 				}
 			} else if (  
 				substr($this->clean($message), 0, 5) == 'ulang' &&
