@@ -25,11 +25,15 @@ class WablasController extends Controller
 	public $antrian;
 	public $gigi_buka     = true;
 	public $estetika_buka = true;
+	public $no_telp;
+
 	public function __construct()
 	{
+
+		$this->no_telp               = $_POST['phone'];
 		$message    = $this->clean($_POST['message']);
 		if(isset($message)) {
-			$no_telp       = $_POST['phone'];
+			$this->no_telp       = $_POST['phone'];
 			$antrian_id    = substr(substr($message, 2), 0, -2);
 			$this->antrian = Antrian::where('id', $antrian_id)
 									->where('created_at', 'like', date('Y-m-d') . '%')
@@ -69,27 +73,26 @@ class WablasController extends Controller
 		/* if ( */ 
 		/* 	!is_null($antrian) */
 		/* ) { */
-		/* 	$whatsapp_registration = WhatsappRegistration::where('no_telp', $no_telp) */
+		/* 	$whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp) */
 		/* 												->whereRaw("DATE_ADD( updated_at, interval 6 hour ) > '" . date('Y-m-d H:i:s') . "'") */
 		/* 												->first(); */
 
 		/* 	if ( is_null($whatsapp_registration) ) { */
 		/* 		$wa       = new WhatsappRegistration; */
-		/* 		$wa->no_telp   = $no_telp ; */
+		/* 		$wa->no_telp   = $this->no_telp ; */
 		/* 		$wa->save(); */
 		/* 	} */
 
-		/* 	echo 'antrian dengan id ' . $antrian->id . ' ditemukan ' . $no_telp; */
+		/* 	echo 'antrian dengan id ' . $antrian->id . ' ditemukan ' . $this->no_telp; */
 		/* } */
 
 		$message    = $this->clean($_POST['message']);
 		if(isset($message)) {
-			$no_telp               = $_POST['phone'];
 			$antrian_id            = substr(substr($message, 2), 0, -2);
 
 
 			$whatsapp_registration = WhatsappRegistration::with('antrian')
-														->where('no_telp', $no_telp)
+														->where('no_telp', $this->no_telp)
 														->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 														->first();
 			$response              = '';
@@ -115,17 +118,13 @@ class WablasController extends Controller
 						$response .= PHP_EOL;
 						$response .= "Jika menurut anda ini kesalahan, silahkan hubungi petugas";
 					} else {
-						$whatsapp_registration             = new WhatsappRegistration;
-						$whatsapp_registration->no_telp    = $no_telp;
-						$whatsapp_registration->antrian_id = $antrian_id;
-						if ( $this->antrian->jenis_antrian_id == 2  ) {
-							$whatsapp_registration->poli_id = 'gigi';
-						} else if (  $this->antrian->jenis_antrian_id == 7   ){
-							$whatsapp_registration->poli_id = 'rapid test';
-						}
-						$whatsapp_registration->antrian_id = $antrian_id;
-						$whatsapp_registration->save();
+						$this->createWAregis();
 					}
+				} else if (
+					$whatsapp_registration->antrian_id != $this->antrian->id
+				){
+					$whatsapp_registration->delete();
+					$this->createWAregis();
 				}
 			} else if (  
 				substr($this->clean($message), 0, 5) == 'ulang' &&
@@ -454,7 +453,7 @@ class WablasController extends Controller
 			if (!empty($response)) {
 				echo $response;
 			}
-			/* Sms::send($no_telp, $response); */
+			/* Sms::send($this->no_telp, $response); */
 		}
 		/* Konfirmasi mengantri berapa orang lagi sebelum didaftarkan dan perkiraan jam berapa dipanggil untuk masuk ruang dokter */
 
@@ -784,4 +783,22 @@ class WablasController extends Controller
 		$antrian->nomor_asuransi = $whatsapp_registration->nomor_asuransi;
 		$antrian->pasien_id      = $whatsapp_registration->pasien_id;
 	}
+	/**
+	* undocumented function
+	*
+	* @return void
+	*/
+	private function createWAregis()
+	{
+		$whatsapp_registration             = new WhatsappRegistration;
+		$whatsapp_registration->no_telp    = $this->no_telp;
+		$whatsapp_registration->antrian_id = $this->antrian->id;
+		if ( $this->antrian->jenis_antrian_id == 2  ) {
+			$whatsapp_registration->poli_id = 'gigi';
+		} else if (  $this->antrian->jenis_antrian_id == 7   ){
+			$whatsapp_registration->poli_id = 'rapid test';
+		}
+		$whatsapp_registration->save();
+	}
+	
 }
