@@ -105,6 +105,7 @@ class WablasController extends Controller
 											->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 											->exists()
 					) {
+						Log::info('antrian_id');
 						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sedang diproses oleh *nomor whatsapp* lain";
 						$response .= PHP_EOL;
 						$response .= "===============";
@@ -113,6 +114,7 @@ class WablasController extends Controller
 					} else if(
 						!is_null($this->antrian->no_telp)
 					){
+						Log::info('no_antrian_id');
 						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah selesai diproses oleh *nomor whatsapp* lain";
 						$response .= PHP_EOL;
 						$response .= "===============";
