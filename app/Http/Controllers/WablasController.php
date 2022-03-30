@@ -198,21 +198,21 @@ class WablasController extends Controller
 				$ditemukan = true;
 				$whatsapp_registration->nomor_asuransi = $this->clean($message);
 				//jika pembayaran menggunakan BPJS
-				if ($whatsapp_registration->pembayaran == 'b') { //BPJS
+				/* if ($whatsapp_registration->pembayaran == 'b') { //BPJS */
 					//cari pasien dengan nomor_asuransi_bpjs tersebut
-					$pasien = Pasien::where('nomor_asuransi_bpjs', $this->clean($message))->first();
-					if (
-						!is_null($pasien) && 
-						strlen($this->clean($message)) > 4
-					) {
-						$whatsapp_registration->nama           = $pasien->nama;
-						$whatsapp_registration->nomor_asuransi = $this->clean($message);
-						$whatsapp_registration->tanggal_lahir  = $pasien->tanggal_lahir;
-						$whatsapp_registration->pasien_id      = $pasien->pasien_id;
-					} else {
-						$ditemukan = false;
-					}
-				} 
+					/* $pasien = Pasien::where('nomor_asuransi_bpjs', $this->clean($message))->first(); */
+					/* if ( */
+					/* 	!is_null($pasien) && */ 
+					/* 	strlen($this->clean($message)) > 4 */
+					/* ) { */
+					/* 	$whatsapp_registration->nama           = $pasien->nama; */
+					/* 	$whatsapp_registration->nomor_asuransi = $this->clean($message); */
+					/* 	$whatsapp_registration->tanggal_lahir  = $pasien->tanggal_lahir; */
+					/* 	$whatsapp_registration->pasien_id      = $pasien->pasien_id; */
+					/* } else { */
+					/* 	$ditemukan = false; */
+					/* } */
+				/* } */ 
 				//apabila menggunakan asuransi lain
 				/* else if ( $whatsapp_registration->pembayaran == 'c' ){ //asuransi lain */
 				/* 	//cari pasien dengan nomor_asuransi tersebut */
@@ -230,9 +230,9 @@ class WablasController extends Controller
 				/* 		$ditemukan = false; */
 				/* 	} */
 				/* } */
-				if (!$ditemukan) {
-					$whatsapp_registration->nomor_asuransi = '-';
-				}
+				/* if (!$ditemukan) { */
+				/* 	$whatsapp_registration->nomor_asuransi = '-'; */
+				/* } */
 				$whatsapp_registration->save();
 				/* $pesertaBpjs                       = $this->pesertaBpjs($this->clean($message)); */
 				/* if ( isset( $pesertaBpjs['response'] )&& isset( $pesertaBpjs['response']['nama'] )  ) { */
@@ -264,15 +264,15 @@ class WablasController extends Controller
 				if ( $this->validateDate($this->clean($message), $format = 'd-m-Y') ) {
 					$whatsapp_registration->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->clean($message))->format('Y-m-d');
 					if ( $whatsapp_registration->pembayaran == 'c' ) {
-						$pasien = Pasien::where('nomor_asuransi', $whatsapp_registration->nomor_asuransi)
-										->where('tanggal_lahir', $whatsapp_registration->tanggal_lahir)
-										->first();
-						if (
-							!is_null($pasien) &&
-							strlen($whatsapp_registration->nomor_asuransi) > 4
-						) {
-							$whatsapp_registration->nama = $pasien->nama;
-						}
+						/* $pasien = Pasien::where('nomor_asuransi', $whatsapp_registration->nomor_asuransi) */
+						/* 				->where('tanggal_lahir', $whatsapp_registration->tanggal_lahir) */
+						/* 				->first(); */
+						/* if ( */
+							/* !is_null($pasien) && */
+							/* strlen($whatsapp_registration->nomor_asuransi) > 4 */
+						/* ) { */
+							/* $whatsapp_registration->nama = $pasien->nama; */
+						/* } */
 					}
 					$whatsapp_registration->save();
 				} else {
@@ -427,6 +427,10 @@ class WablasController extends Controller
 				if (
 					!is_null($whatsapp_registration->poli_id)
 				) {
+					Log::info('===================');
+					Log::info('whatsapp_registration');
+					Log::info($whatsapp_registration);
+					Log::info('===================');
 					$response .=  PHP_EOL;
 					$response .=  PHP_EOL;
 					$response .= "==============";
