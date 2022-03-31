@@ -178,7 +178,7 @@ class WablasController extends Controller
 						$whatsapp_registration->antrian->nomor_asuransi  = '0000';
 					}
 					if ($this->clean($message) == 'b') {
-						$whatsapp_registration->nama_asuransi  = 'BPJS';
+						$whatsapp_registration->antrian->nama_asuransi  = 'BPJS';
 					}
 					$whatsapp_registration->antrian->pembayaran  = $this->clean($message);
 					$whatsapp_registration->antrian->save();
@@ -573,7 +573,7 @@ class WablasController extends Controller
 			return $text;
 		}
 		if ( is_null( $whatsapp_registration->antrian->nomor_asuransi ) ) {
-			if ( $whatsapp_registration->pembayaran == 'b' ) {
+			if ( $whatsapp_registration->antrian->pembayaran == 'b' ) {
 				$text = 'Bisa dibantu *Nomor BPJS* pasien? ';
 			} else if ( $whatsapp_registration->antrian->pembayaran == 'c' ){
 				$text = 'Bisa dibantu *Nomor Asuransi* pasien?';
