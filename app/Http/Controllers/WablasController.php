@@ -566,7 +566,7 @@ class WablasController extends Controller
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			if ($whatsapp_registration->antrian->antrian->jenis_antrian_id == 1) {
+			if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
 				$text .= 'Balas *A* untuk *Konsultasi ke Dokter Umum*, ';
 				if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') {
 					$text .= PHP_EOL;
