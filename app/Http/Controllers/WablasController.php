@@ -667,6 +667,7 @@ class WablasController extends Controller
 	}
 
 	private function input_poli( $whatsapp_registration, $message ){
+		Log::info('input_poli');
 		if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
 			if ( $this->clean($message) == 'a' ) {
 				$whatsapp_registration->antrian->poli_id    = 'umum';
@@ -693,6 +694,7 @@ class WablasController extends Controller
 				$whatsapp_registration->antrian->poli_id    = 'kb 3 bulan';
 			}
 		}
+		Log::info('input_poli_saved');
 		$whatsapp_registration->antrian->save();
 	}
 	/**
