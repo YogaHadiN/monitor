@@ -287,11 +287,14 @@ class WablasController extends Controller
 					!is_null( $whatsapp_registration ) &&
 					is_null( $whatsapp_registration->antrian->poli_id ) 
 			) {
+
+				Log::info('poli null');
 				if (
 					$this->clean($message) == 'a' ||
 					$this->clean($message) == 'b' ||
 					$this->clean($message) == 'c'
 				) {
+					Log::info('poli null abc');
 					$this->input_poli($whatsapp_registration, $message);
 				} else {
 					$input_tidak_tepat = true;
