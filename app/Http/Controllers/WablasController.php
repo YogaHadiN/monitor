@@ -308,6 +308,13 @@ class WablasController extends Controller
 				} else {
 					$input_tidak_tepat = true;
 				}
+			} else if ( 
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
+				is_null( $whatsapp_registration->antrian->alamat ) 
+			) {
+				 $whatsapp_registration->antrian->alamat  = $this->clean($message);
+				 $whatsapp_registration->antrian->save();
 			}
 		/* } else if ( */ 
 		/* 	
@@ -427,6 +434,10 @@ class WablasController extends Controller
 				}
 				if ( !is_null( $whatsapp_registration->antrian->tanggal_lahir ) ) {
 					$response .= 'Tanggal Lahir : '.  Carbon::CreateFromFormat('Y-m-d',$whatsapp_registration->antrian->tanggal_lahir)->format('d M Y');;
+					$response .= PHP_EOL;
+				}
+				if ( !is_null( $whatsapp_registration->antrian->alamat ) ) {
+					$response .= 'Alamat : '. $whatsapp_registration->antrian->alamat;
 					$response .= PHP_EOL;
 				}
 				if (
@@ -624,6 +635,9 @@ class WablasController extends Controller
 			}
 			return $text;
 
+		}
+		if ( is_null( $whatsapp_registration->antrian->alamat ) ) {
+			return  'Bisa dibantu informasikan *Alamat Lengkap* pasien?';
 		}
 		/* if ( is_null( $whatsapp_registration->demam ) ) { */
 		/* 	return 'Apakah pasien memiliki keluhan demam?' . PHP_EOL . PHP_EOL .  'Balas *ya/tidak*'; */
