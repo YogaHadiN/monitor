@@ -132,20 +132,15 @@ class WablasController extends Controller
 				!is_null($whatsapp_registration->antrian)
 			) {
 				Log::info('antrian');
-				$columns = array_keys( $whatsapp_registration->getOriginal() );
-				foreach ($columns as $column) {
-					if (
-						!(
-							 $column == 'id' ||
-							 $column == 'created_at' ||
-							 $column == 'antrian_id' ||
-							 $column == 'updated_at' ||
-							 $column == 'no_telp'
-						)
-					) {
-						$whatsapp_registration->antrian->$column = null;
-					}
-				}
+				$whatsapp_registration->antrian->no_telp                  = null;
+				$whatsapp_registration->antrian->poli_id                  = null;
+				$whatsapp_registration->antrian->nama_asuransi            = null;
+				$whatsapp_registration->antrian->nama                     = null;
+				$whatsapp_registration->antrian->tanggal_lahir            = null;
+				$whatsapp_registration->antrian->nomor_asuransi           = null;
+				$whatsapp_registration->antrian->pasien_id                = null;
+				$whatsapp_registration->antrian->konfirmasi_nomor_antrian = null;
+				$whatsapp_registration->antrian->pembayaran               = null;
 				$whatsapp_registration->antrian->save();
 			} else if ( 
 				isset( $whatsapp_registration ) &&
