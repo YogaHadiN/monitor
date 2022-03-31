@@ -128,8 +128,10 @@ class WablasController extends Controller
 				}
 			} else if (  
 				substr($this->clean($message), 0, 5) == 'ulang' &&
-				!is_null( $whatsapp_registration ) 
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian)
 			) {
+				Log::info('antrian');
 				$columns = array_keys( $whatsapp_registration->getOriginal() );
 				foreach ($columns as $column) {
 					if (
@@ -146,9 +148,12 @@ class WablasController extends Controller
 				}
 				$whatsapp_registration->antrian->save();
 			} else if ( 
-				!is_null( $whatsapp_registration ) &&
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
 				is_null( $whatsapp_registration->antrian->konfirmasi_nomor_antrian ) 
 			){
+
+				Log::info('konfirmasi_nomor_antrian');
 				if (
 					$this->clean($message) == 'a'
 				) {
@@ -164,9 +169,11 @@ class WablasController extends Controller
 					$input_tidak_tepat = true;
 				}
 			} else if ( 
-					!is_null( $whatsapp_registration ) &&
-					is_null( $whatsapp_registration->antrian->pembayaran ) 
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
+				is_null( $whatsapp_registration->antrian->pembayaran ) 
 			){
+				Log::info('pembayaran');
 				if (
 					$this->clean($message) == 'a' ||
 					$this->clean($message) == 'b' ||
@@ -185,17 +192,21 @@ class WablasController extends Controller
 					$input_tidak_tepat = true;
 				}
 			} else if ( 
-				!is_null( $whatsapp_registration ) &&
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
 				is_null( $whatsapp_registration->antrian->nama_asuransi ) 
 			){
+				Log::info('nama_asuransi');
 				$whatsapp_registration->antrian->nama_asuransi  = $this->clean($message);
 				$whatsapp_registration->antrian->save();
 			} else if ( 
-				!is_null( $whatsapp_registration ) &&
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
 				is_null( $whatsapp_registration->antrian->nomor_asuransi ) 
 			) {
-				$ditemukan = true;
+				Log::info('nomor_asuransi');
 				$whatsapp_registration->antrian->nomor_asuransi = $this->clean($message);
+				/* $ditemukan = true; */
 				//jika pembayaran menggunakan BPJS
 				/* if ($whatsapp_registration->pembayaran == 'b') { //BPJS */
 					//cari pasien dengan nomor_asuransi_bpjs tersebut
@@ -257,9 +268,11 @@ class WablasController extends Controller
 					/* $whatsapp_registration->save(); */
 				/* } */
 			} else if ( 
-				!is_null( $whatsapp_registration ) &&
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
 				is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
 			) {
+				Log::info('tanggal_lahir');
 				if ( $this->validateDate($this->clean($message), $format = 'd-m-Y') ) {
 					$whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->clean($message))->format('Y-m-d');
 					if ( $whatsapp_registration->antrian->pembayaran == 'c' ) {
@@ -278,16 +291,18 @@ class WablasController extends Controller
 					$input_tidak_tepat = true;
 				}
 			} else if ( 
-				!is_null( $whatsapp_registration ) &&
-				is_null( $whatsapp_registration->nama ) 
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
+				is_null( $whatsapp_registration->antrian->nama ) 
 			) {
+				Log::info('nama');
 				$whatsapp_registration->antrian->nama  = ucfirst(strtolower($this->clean($message)));;
 				$whatsapp_registration->antrian->save();
 			} else if ( 
-					!is_null( $whatsapp_registration ) &&
-					is_null( $whatsapp_registration->antrian->poli_id ) 
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian) &&
+				is_null( $whatsapp_registration->antrian->poli_id ) 
 			) {
-
 				Log::info('poli null');
 				if (
 					$this->clean($message) == 'a' ||
@@ -301,7 +316,10 @@ class WablasController extends Controller
 				}
 			}
 		/* } else if ( */ 
-		/* 	!is_null( $whatsapp_registration ) && */
+		/* 	
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian)
+ && */
 		/* 	is_null( $whatsapp_registration->demam ) */ 
 		/* ) */ 
 		/* { */
@@ -315,7 +333,10 @@ class WablasController extends Controller
 			/* 		$input_tidak_tepat = true; */
 			/* 	} */
 			/* } else if ( */ 
-			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian)
+ && */
 			/* 	is_null( $whatsapp_registration->batuk_pilek ) */ 
 			/* ) */ 
 			/* { */
@@ -329,7 +350,10 @@ class WablasController extends Controller
 			/* 		$input_tidak_tepat = true; */
 			/* 	} */
 			/* } else if ( */ 
-			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian)
+ && */
 			/* 	is_null( $whatsapp_registration->nyeri_menelan ) */ 
 			/* ) */ 
 			/* { */
@@ -343,7 +367,10 @@ class WablasController extends Controller
 			/* 		$input_tidak_tepat = true; */
 			/* 	} */
 			/* } else if ( */ 
-			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian)
+ && */
 			/* 	is_null( $whatsapp_registration->sesak_nafas ) */ 
 			/* ) { */
 			/* 	Log::info('============================ sesak nafas =========================================='); */
@@ -357,7 +384,10 @@ class WablasController extends Controller
 			/* 		$input_tidak_tepat = true; */
 			/* 	} */
 			/* } else if ( */ 
-			/* 	!is_null( $whatsapp_registration ) && */
+			/* 	
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian)
+ && */
 			/* 	is_null( $whatsapp_registration->kontak_covid ) */ 
 			/* ) { */
 			/* 	if ( $this->clean($message) == 'ya')  { */
@@ -372,7 +402,10 @@ class WablasController extends Controller
 			/* } */
 
 			if (
-				!is_null( $whatsapp_registration ) 
+				
+				isset( $whatsapp_registration ) &&
+				!is_null($whatsapp_registration->antrian)
+ 
 			) {
 				if (
 				 !is_null( $whatsapp_registration->antrian->nama ) ||
