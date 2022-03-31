@@ -39,4 +39,7 @@ class Antrian extends Model
 	{
 		return $date->format('Y-m-d H:i:s');
 	}
+	public function poli(){
+		return $this->belongsTo('App\Models\Poli');
+	}
 }
