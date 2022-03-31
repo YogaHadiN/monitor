@@ -99,13 +99,11 @@ class WablasController extends Controller
 			$input_tidak_tepat     = false;
 			if ( !is_null($this->antrian) ) {
 				if ( is_null( $whatsapp_registration ) ) {
-					Log::info('whatsapp_is_null');
 					if (
 						WhatsappRegistration::where('antrian_id', $this->antrian->id)
 											->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
 											->exists()
 					) {
-						Log::info('antrian_id');
 						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sedang diproses oleh *nomor whatsapp* lain";
 						$response .= PHP_EOL;
 						$response .= "===============";
@@ -114,7 +112,6 @@ class WablasController extends Controller
 					} else if(
 						!is_null($this->antrian->no_telp)
 					){
-						Log::info('no_antrian_id');
 						$response .= "Nomor antrian *" .$this->antrian->nomor_antrian. "* sudah selesai diproses oleh *nomor whatsapp* lain";
 						$response .= PHP_EOL;
 						$response .= "===============";
@@ -126,7 +123,6 @@ class WablasController extends Controller
 				} else if (
 					$whatsapp_registration->antrian_id != $this->antrian->id
 				){
-					Log::info('whatsapp_is_not_null');
 					$whatsapp_registration->delete();
 					$whatsapp_registration = $this->createWAregis();
 				}
@@ -391,14 +387,6 @@ class WablasController extends Controller
 				}
 				if ( !is_null( $whatsapp_registration->antrian->poli_id ) ) {
 					$response .= 'Poli Tujuan : ';
-					Log::info("========================");
-					Log::info("whatsapp_registration->antrian->poli_id");
-					Log::info($whatsapp_registration->antrian->poli_id);
-					Log::info("whatsapp_registration->antrian->poli");
-					Log::info($whatsapp_registration->antrian->poli);
-					Log::info("whatsapp_registration->antrian->poli->poli");
-					Log::info($whatsapp_registration->antrian->poli->poli);
-					Log::info("========================");
 					$response .= $whatsapp_registration->antrian->poli->poli;
 					$response .= PHP_EOL;
 				}
@@ -408,7 +396,7 @@ class WablasController extends Controller
 					$response .= PHP_EOL;
 				}
 				if ( !is_null( $whatsapp_registration->antrian->tanggal_lahir ) ) {
-					$response .= 'Tanggal Lahir : '.  Carbon::CreateFromFormat('Y-m-d',$whatsapp_registration->tanggal_lahir)->format('d M Y');;
+					$response .= 'Tanggal Lahir : '.  Carbon::CreateFromFormat('Y-m-d',$whatsapp_registration->antrian->tanggal_lahir)->format('d M Y');;
 					$response .= PHP_EOL;
 				}
 				if (
@@ -431,10 +419,6 @@ class WablasController extends Controller
 					!is_null($whatsapp_registration)
 				) {
 
-					Log::info('===================');
-					Log::info('whatsapp_registration');
-					Log::info($whatsapp_registration);
-					Log::info('===================');
 					$response .=  PHP_EOL;
 					$response .=  PHP_EOL;
 					$response .= "==============";
