@@ -360,6 +360,7 @@ class AntrianController extends Controller
 					];
 				} else if (
 					$ant->antriable_type                  == 'App\Models\AntrianKasir' &&
+					!is_null($ant->antriable->periksa) &&
 					$ant->antriable->periksa->asuransi_id == '0'
 				) {
 					$data['antrian_by_type']['antrian_kasir'][] = [
@@ -369,6 +370,7 @@ class AntrianController extends Controller
 					];
 				} else if (
 					$ant->antriable_type                  == 'App\Models\AntrianApotek' &&
+					!is_null($ant->antriable->periksa) &&
 					$ant->antriable->periksa->asuransi_id == '0'
 				) {
 					$data['antrian_by_type']['antrian_kasir'][] = [
