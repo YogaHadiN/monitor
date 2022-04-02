@@ -315,6 +315,22 @@ class WablasController extends Controller
 			) {
 				 $whatsapp_registration->antrian->alamat  = $this->clean($message);
 				 $whatsapp_registration->antrian->save();
+			} else if (
+				!is_null($whatsapp_registration->periksa_id) &&
+				!is_null($whatsapp_registration->periksa)
+			){
+				if (
+					$this->clean($message) == '1' ||
+					$this->clean($message) == '2' ||
+					$this->clean($message) == '3' ||
+					$this->clean($message) == '4' ||
+					$this->clean($message) == '5'
+				) {
+					$whatsapp_registration->periksa->satisfaction_index = $this->clean($message);
+					$whatsapp_registration->periksa->save();
+				} else {
+					$input_tidak_tepat = true;
+				}
 			}
 		/* } else if ( */ 
 		/* 	
@@ -457,7 +473,8 @@ class WablasController extends Controller
 			) {
 				$response .=  $this->botKirim($whatsapp_registration);
 				if (
-					!is_null($whatsapp_registration)
+					!is_null($whatsapp_registration) &&
+					!is_null($whatsapp_registration->antrian_id)
 				) {
 
 					$response .=  PHP_EOL;
@@ -467,6 +484,16 @@ class WablasController extends Controller
 					$response .=  PHP_EOL;
 					$response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
 				}
+
+				if (
+					!is_null($whatsapp_registration) &&
+					!is_null($whatsapp_registration->periksa_id) &&
+					!is_null($whatsapp_registration->periksa) &&
+					!is_null($whatsapp_registration->periksa->satisfaction_index)
+				) {
+					$response .=  "Terima kasih sudah menjawab pertanyaan kami. Masukan Anda sangat berarti untuk kemajuan pelayanan kami";
+				}
+
 				if ( $input_tidak_tepat ) {
 					$response .=  PHP_EOL;
 					$response .=  PHP_EOL;
