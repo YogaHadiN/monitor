@@ -212,8 +212,8 @@ class AntrianController extends Controller
 		}
 		$exclude_from_type                                    = [];
 		$reversed_antrians                                    = $antrians->reverse();
-		$data['antrian_terakhir_per_poli']['antrian_kasir']   = '-';
-		$data['antrian_terakhir_per_poli']['antrian_farmasi'] = '-';
+		$data['antrian_terakhir_per_poli']['pendaftaran']   = '-';
+		$data['antrian_terakhir_per_poli']['timbang_tensi'] = '-';
 
 		foreach ($antrians as $ant) {
 			if (
@@ -228,20 +228,18 @@ class AntrianController extends Controller
 
 			if (
 				( 
-					$ant->antriable_type == 'App\Models\AntrianApotek' || 
-					$ant->antriable_type == 'App\Models\AntrianKasir' 
+					$ant->antriable_type == 'App\Models\Antrian'
 				) &&
 				$ant->antriable->dipanggil > 0
 			) {
-				$data['antrian_terakhir_per_poli']['antrian_kasir'] =  $ant->nomor_antrian;
+				$data['antrian_terakhir_per_poli']['pendaftaran'] =  $ant->nomor_antrian;
 			}
-
 			if (
-				( $ant->antriable_type == 'App\Models\AntrianFarmasi' ) &&
+				( $ant->antriable_type == 'App\Models\AntrianPoli' ) &&
 				$ant->antriable->dipanggil > 0
 			) {
 				/* dd( $ant ); */
-				$data['antrian_terakhir_per_poli']['antrian_farmasi'] =  $ant->nomor_antrian;
+				$data['antrian_terakhir_per_poli']['timbang_tensi'] =  $ant->nomor_antrian;
 			}
 		}
 		/* dd('data'); */
@@ -291,30 +289,19 @@ class AntrianController extends Controller
 				if (
 					isset($antrian->jenis_antrian->antrian_terakhir)
 				) {
-					$data['data']['antrian_pendaftaran']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
+					$data['data']['pendaftaran']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
 				} else {
-					$data['data']['antrian_pendaftaran']['nomor_antrian_terakhir'] = '-';
+					$data['data']['pendaftaran']['nomor_antrian_terakhir'] = '-';
 				}
 			} else if (
-				$antrian->antriable_type == 'App\Models\AntrianApotek' &&
-				$antrian->antriable_type == 'App\Models\AntrianKasir'
+				$antrian->antriable_type == 'App\Models\AntrianPoli'
 			){
 				if (
 					isset($antrian->jenis_antrian->antrian_terakhir)
 				) {
-					$data['data']['antrian_kasir']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
+					$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
 				} else {
-					$data['data']['antrian_kasir']['nomor_antrian_terakhir'] = '-';
-				}
-			} else if (
-				$antrian->antriable_type == 'App\Models\AntrianFarmasi'
-			){
-				if (
-					isset($antrian->jenis_antrian->antrian_terakhir)
-				) {
-					$data['data']['antrian_farmasi']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-				} else {
-					$data['data']['antrian_farmasi']['nomor_antrian_terakhir'] = '-';
+					$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = '-';
 				}
 			}
 		}
@@ -336,8 +323,8 @@ class AntrianController extends Controller
 			}
 		}
 
-		$data['antrian_by_type']['antrian_kasir']   = [];
-		$data['antrian_by_type']['antrian_farmasi']   = [];
+		$data['antrian_by_type']['pendaftaran']   = [];
+		$data['antrian_by_type']['timbang_tensi']   = [];
 		$data['antrian_by_type']['antrian_periksa'] = [];
 
 
@@ -350,41 +337,27 @@ class AntrianController extends Controller
 		foreach ($antrians as $ant) {
 			if (!in_array( $ant->nomor_antrian, $include_only)) {
 				if (
-					$ant->antriable_type == 'App\Models\Antrian' ||
-					$ant->antriable_type == 'App\Models\AntrianPeriksa' ||
-					$ant->antriable_type == 'App\Models\AntrianPoli'
+					$ant->antriable_type == 'App\Models\AntrianPeriksa'
 				) {
 					$data['antrian_by_type']['antrian_periksa'][$ant->jenis_antrian_id][] = [
 						'nomor_antrian'  => $ant->nomor_antrian,
 						'antriable_type' => $ant->antriable_type
 					];
 				} else if (
-					$ant->antriable_type                  == 'App\Models\AntrianKasir' &&
-					!is_null($ant->antriable->periksa) &&
-					$ant->antriable->periksa->asuransi_id == '0'
+					$ant->antriable_type == 'App\Models\Antrian'
 				) {
-					$data['antrian_by_type']['antrian_kasir'][] = [
+					$data['antrian_by_type']['pendaftaran'][] = [
 						'nomor_antrian'   => $ant->nomor_antrian,
 						'antriable_type'  => $ant->antriable_type,
-						'selesai_periksa' => $ant->antriable->periksa->created_at
+						'selesai_periksa' => $ant->created_at
 					];
 				} else if (
-					$ant->antriable_type                  == 'App\Models\AntrianApotek' &&
-					!is_null($ant->antriable->periksa) &&
-					$ant->antriable->periksa->asuransi_id == '0'
+					$ant->antriable_type == 'App\Models\AntrianPoli'
 				) {
-					$data['antrian_by_type']['antrian_kasir'][] = [
+					$data['antrian_by_type']['timbang_tensi'][] = [
 						'nomor_antrian'   => $ant->nomor_antrian,
 						'antriable_type'  => $ant->antriable_type,
-						'selesai_periksa' => $ant->antriable->periksa->created_at
-					];
-				} else if (
-					$ant->antriable_type == 'App\Models\AntrianFarmasi'
-				) {
-					$data['antrian_by_type']['antrian_farmasi'][] = [
-						'nomor_antrian'   => $ant->nomor_antrian,
-						'antriable_type'  => $ant->antriable_type,
-						'selesai_periksa' => $ant->antriable->periksa->created_at
+						'selesai_periksa' => $ant->antriable->created_at
 					];
 				} else {
 					if (!isset($data['antrian_by_type'][$ant->antriable_type])) {
@@ -397,11 +370,11 @@ class AntrianController extends Controller
 				}
 		    }
 		}
-		$columns = array_column($data['antrian_by_type']['antrian_kasir'], 'selesai_periksa');
-		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['antrian_kasir']);
+		$columns = array_column($data['antrian_by_type']['pendaftaran'], 'selesai_periksa');
+		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['pendaftaran']);
 
-		$columns = array_column($data['antrian_by_type']['antrian_farmasi'], 'selesai_periksa');
-		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['antrian_farmasi']);
+		$columns = array_column($data['antrian_by_type']['timbang_tensi'], 'selesai_periksa');
+		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['timbang_tensi']);
 
 		return $data;
 	}

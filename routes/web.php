@@ -27,5 +27,6 @@ Route::get('validasi/antibodi/{id}', [ValidateController::class, 'antibodi']);
 Route::get('validasi/surat_sakit/{id}', [ValidateController::class, 'surat_sakit']);
 Route::get('antrianperiksa/fail', [AntrianController::class, 'fail']);
 Route::get('antrianperiksa/{id}', [AntrianController::class, 'antri']);
+Route::get('eksklusi/{id}', [PasienController::class, 'eksklusi']);
 Route::get('antrianperiksa/monitor/getData/{panggil_pasien}', [AntrianController::class, 'updateJumlahAntrian']);
 

@@ -152,14 +152,19 @@
     </div>
 	<div class="text-center row2">
 		<div class="column2 no-float">
+			<div class="text-orange">Pendaftaran</div>
+			<div id="antrian_terakhir_pendaftaran" class="big">-</div>
+			<div class="antrian" id="pendaftaran"></div>
+		</div>
+		<div class="column2 no-float">
+			<div class="text-orange">Timbang Tensi</div>
+			<div id="antrian_terakhir_timbang_tensi" class="big">-</div>
+			<div class="antrian" id="timbang_tensi"></div>
+		</div>
+		<div class="column2 no-float">
 			<div class="text-orange">Poli Umum</div>
 			<div id="antrian_terakhir_poli_umum" class="big">-</div>
 			<div class="antrian" id="antrian_poli_1"></div>
-		</div>
-		<div class="column2 no-float">
-			<div class="text-orange">Rapid Test</div>
-			<div id="antrian_terakhir_poli_rapid_test" class="big">-</div>
-			<div class="antrian" id="antrian_poli_7"></div>
 		</div>
 		<div class="column2 no-float">
 			<div class="text-orange">Poli Kebidanan</div>
@@ -167,14 +172,9 @@
 			<div class="antrian" id="antrian_poli_3"></div>
 		</div>
 		<div class="column2 no-float">
-			<div class="text-orange">Antrian Kasir</div>
-			<div id="antrian_terakhir_kasir" class="big">-</div>
-			<div class="antrian" id="antrian_kasir"></div>
-		</div>
-		<div class="column2 no-float">
-			<div class="text-orange">Antrian Farmasi</div>
-			<div id="antrian_terakhir_farmasi" class="big">-</div>
-			<div class="antrian" id="antrian_farmasi"></div>
+			<div class="text-orange">Rapid Test</div>
+			<div id="antrian_terakhir_poli_rapid_test" class="big">-</div>
+			<div class="antrian" id="antrian_poli_7"></div>
 		</div>
 	</div>
 <p id="hitung">
@@ -379,8 +379,8 @@
 				$("#antrian_terakhir_poli_rapid_test").html(antrian_terakhir_per_poli[7]);
 				$("#antrian_terakhir_poli_mcu").html(antrian_terakhir_per_poli[8]);
 
-				$("#antrian_terakhir_kasir").html(antrian_terakhir_per_poli['antrian_kasir']);
-				$("#antrian_terakhir_farmasi").html(antrian_terakhir_per_poli['antrian_farmasi']);
+				$("#antrian_terakhir_kasir").html(antrian_terakhir_per_poli['pendaftaran']);
+				$("#antrian_terakhir_farmasi").html(antrian_terakhir_per_poli['timbang_tensi']);
 
 				var jenis_antrian_ids = data.jenis_antrian_ids;
 
@@ -397,26 +397,26 @@
 					}
 				}
 
-				var antrian_kasir = antrian_by_type.antrian_kasir
-				if (typeof antrian_kasir !== 'undefined') {
+				var pendaftaran = antrian_by_type.pendaftaran
+				if (typeof pendaftaran !== 'undefined') {
 					var temp = '';
-					for (let a = 0; a < antrian_kasir.length; a++) {
+					for (let a = 0; a < pendaftaran.length; a++) {
 						temp += '<div>';
-						temp += ' ' + antrian_kasir[a].nomor_antrian + '';
+						temp += ' ' + pendaftaran[a].nomor_antrian + '';
 						temp += '</div>';
 					}
-					$("#antrian_kasir").html(temp);
+					$("#pendaftaran").html(temp);
 				}
 
-				var antrian_farmasi = antrian_by_type['antrian_farmasi'];
-				if (typeof antrian_farmasi !== 'undefined') {
+				var timbang_tensi = antrian_by_type['timbang_tensi'];
+				if (typeof timbang_tensi !== 'undefined') {
 					var temp = '';
-					for (let a = 0; a < antrian_farmasi.length; a++) {
+					for (let a = 0; a < timbang_tensi.length; a++) {
 						temp += '<div>';
-						temp += ' ' + antrian_farmasi[a].nomor_antrian + '';
+						temp += ' ' + timbang_tensi[a].nomor_antrian + '';
 						temp += '</div>';
 					}
-					$("#antrian_farmasi").html(temp);
+					$("#timbang_tensi").html(temp);
 				}
 				if(typeof panggilan !== 'undefined'){
 					refreshElement('#dipanggil');
@@ -474,13 +474,13 @@
 		$("#antrian_terakhir_poli_prolanis").html('-');
 		$("#antrian_terakhir_poli_rapid_test").html('-');
 		$("#antrian_terakhir_poli_mcu").html('-');
-		$("#antrian_terakhir_kasir").html('-');
-		$("#antrian_terakhir_farmasi").html('-');
+		$("#antrian_terakhir_pendaftaran").html('-');
+		$("#antrian_terakhir_timbang_tensi").html('-');
 		$("#antrian_poli_1").html('');
 		$("#antrian_poli_7").html('');
 		$("#antrian_poli_3").html('');
-		$("#antrian_kasir").html('');
-		$("#antrian_farmasi").html('');
+		$("#pendaftaran").html('');
+		$("#timbang_tensi").html('');
 	}
 	function pglPasien(sound){
 		var x     = document.getElementById("myAudio");
@@ -569,7 +569,5 @@
 		);
 	}
 </script>
-
 </body>
-
 </html>
