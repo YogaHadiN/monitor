@@ -23,7 +23,7 @@ class PasienController extends Controller
      *
      * @return void
      */
-    private function name($param)
+    private function decrypt_string($encryption)
     {
         // Non-NULL Initialization Vector for decryption
         $decryption_iv = '1234567891011121';
