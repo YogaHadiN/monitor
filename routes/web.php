@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\ValidateController;
+use App\Http\Controllers\PasienController;
 
 /*
 |--------------------------------------------------------------------------

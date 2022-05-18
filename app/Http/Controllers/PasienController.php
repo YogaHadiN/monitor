@@ -8,7 +8,6 @@ class PasienController extends Controller
 {
     //
     function eksklusi($id){
-        //decrypt encrypted id
         $id     = decrypt_string($id);
         $pasien = Pasien::where('id', $id)->first();
         $pasien->jangan_disms = 1;
