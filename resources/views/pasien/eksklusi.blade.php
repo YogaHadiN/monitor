@@ -19,7 +19,13 @@
 </head>
 <body class="text-center">
 	<div class="alert alert-info">
-		<h2>Nomor telepon {{ $pasien->no_telp }} telah dieksklusi. Mohon maaf atas ketidaknyamanannya.</h2>
+		<h2>Nomor telepon
+            <br>
+            {{ $pasien->no_telp }} 
+            </br>
+            telah dieksklusi
+            <br></br>
+            Mohon maaf atas ketidaknyamanannya.</h2>
 	</div>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 </body>
