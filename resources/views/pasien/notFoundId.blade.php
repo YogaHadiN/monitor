@@ -21,7 +21,10 @@
 	<div class="alert alert-danger">
 		<h2>
             Mohon maaf data tidak ditemukan
-            Silahkan hubungi (021) 597-7529
+            Silahkan hubungi 
+            <br></br>
+            (021) 597-7529
+            <br></br>
             apabla anda yakin bahwa ini kesalahan
         </h2>
 	</div>
