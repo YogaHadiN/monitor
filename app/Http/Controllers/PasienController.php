@@ -11,7 +11,6 @@ class PasienController extends Controller
     public function eksklusi($encrypted_id){
         $id     = $this->decrypt_string($encrypted_id);
         $pasien = Pasien::where('id', $id)->first();
-        dd( $id, $encrypted_id );
         $pasien->jangan_disms = 1;
         $pasien->save();
         return view('pasien.eksklusi', compact(
