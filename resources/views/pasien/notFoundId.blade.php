@@ -20,7 +20,7 @@
 <body class="text-center">
 	<div class="alert alert-danger">
 		<h2>
-            Mohon maaf data tidak ditemukan
+            Mohon maaf data tidak ditemukan.
             Silahkan hubungi 
             <br></br>
             (021) 597-7529
