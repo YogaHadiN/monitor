@@ -12,10 +12,13 @@ class PasienController extends Controller
         $id     = $this->decrypt_string($encrypted_id);
         $pasien = Pasien::where('id', $id)->first();
         $pasien->jangan_disms = 1;
-        $pasien->save();
-        return view('pasien.eksklusi', compact(
-            'pasien'
-        ));
+        if ($pasien->save()) {
+            return view('pasien.eksklusi', compact(
+                'pasien'
+            ));
+        } else {
+            return view('pasien.notFoundId');
+        }
     }
 
     /**
