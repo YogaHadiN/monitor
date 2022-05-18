@@ -30,53 +30,46 @@ class WablasController extends Controller
 	public function __construct()
 	{
 
-		/* if ( */
-		/*  isset($_POST['phone']) && */
-		/*  isset($_POST['message']) */
-		/* ) { */
-		/* 	$this->no_telp = $_POST['phone']; */
-		/* 	$message       = $this->clean($_POST['message']); */
-		/* 	if(isset($message)) { */
-		/* 		$this->no_telp = $_POST['phone']; */
-		/* 		$antrian_id    = substr(substr($message, 2), 0, -2); */
-		/* 		$this->antrian = Antrian::where('id', $antrian_id) */
-		/* 								->where('created_at', 'like', date('Y-m-d') . '%') */
-		/* 								->first(); */
-		/* 	} */
+		if (
+		 isset($_POST['phone']) &&
+		 isset($_POST['message'])
+		) {
+			$this->no_telp = $_POST['phone'];
+			$message       = $this->clean($_POST['message']);
+			if(isset($message)) {
+				$this->no_telp = $_POST['phone'];
+				$antrian_id    = substr(substr($message, 2), 0, -2);
+				$this->antrian = Antrian::where('id', $antrian_id)
+										->where('created_at', 'like', date('Y-m-d') . '%')
+										->first();
+			}
 
-		/* 	// gigi buka */
-		/* 	if ( */ 
-		/* 		( date('w') < 1 ||  date('w') > 5) */
-		/* 	) { */
-		/* 		$this->gigi_buka = false; */
-		/* 	} */
+			// gigi buka
+			if ( 
+				( date('w') < 1 ||  date('w') > 5)
+			) {
+				$this->gigi_buka = false;
+			}
 
-		/* 	if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam */ 
-		/* 		$this->gigi_buka = false; */
-		/* 	} */
+			if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
+				$this->gigi_buka = false;
+			}
 
 
-		/* 	//estetika_buka */
-		/* 	if ( */ 
-		/* 		( date('w') < 1 ||  date('w') > 5) */
-		/* 	) { */
-		/* 		$this->estetika_buka = false; */
-		/* 	} */
+			//estetika_buka
+			if ( 
+				( date('w') < 1 ||  date('w') > 5)
+			) {
+				$this->estetika_buka = false;
+			}
 
-		/* 	if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore */ 
-		/* 		$this->estetika_buka = false; */
-		/* 	} */
-		/* } */
+			if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
+				$this->estetika_buka = false;
+			}
+		}
 	}
-
+	
 	public function webhook(){
-		Log::info('===================================================');
-		Log::info('This is webhook 3234234xxxx');
-		Log::info('===================================================');
-	}
-	
-	
-	public function webhookDefinitif(){
 
 		header("Content-Type: text/plain");
 
