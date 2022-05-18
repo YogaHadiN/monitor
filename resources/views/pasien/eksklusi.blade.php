@@ -23,7 +23,7 @@
             <br>
             {{ $pasien->no_telp }} 
             </br>
-            akan dieksklusi dari jadwal reminder berikutnya
+            telah dieksklusi dari jadwal pengingat berikutnya
             <br></br>
             Mohon maaf atas ketidaknyamanannya</h2>
 	</div>
