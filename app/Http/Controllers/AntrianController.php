@@ -319,17 +319,17 @@ class AntrianController extends Controller
 		foreach ($data['data'] as $x) {
 			$antrian_dipanggils[] = $x['nomor_antrian_terakhir'];
 		}
-		dd( $antrian_dipanggils );
 
 		/* dd( $data['antrian_terakhir_per_poli'] ); */
 		$include_only = $data['antrian_terakhir_per_poli'];
-		dd( $include_only, 'ooooo', $data['data'] );
+		/* dd( $include_only, 'ooooo', $data['data'] ); */
 		/* dd('include_only1', $include_only ); */
 		unset( $include_only['antrian_pendaftaran'] );
 		/* dd('include_only', $include_only ); */
 
 		foreach ($antrians as $ant) {
-			if (!in_array( $ant->nomor_antrian, $include_only)) {
+			if (!in_array( $ant->nomor_antrian, $antrian_dipanggils)) {
+			/* if (!in_array( $ant->nomor_antrian, $include_only)) { */
 				if (
 					$ant->antriable_type == 'App\Models\AntrianPeriksa'
 				) {
