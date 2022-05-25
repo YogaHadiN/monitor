@@ -379,9 +379,9 @@
 				$("#antrian_terakhir_poli_bidan").html(dt[3].nomor_antrian_terakhir);
 				$("#antrian_terakhir_poli_estetik").html(dt[4].nomor_antrian_terakhir);
 
-				$("#antrian_terakhir_poli_prolanis").html(dt[6].nomor_antrian_terakhir);
+				//$("#antrian_terakhir_poli_prolanis").html(dt[6].nomor_antrian_terakhir);
 				$("#antrian_terakhir_poli_rapid_test").html(dt[7].nomor_antrian_terakhir);
-				$("#antrian_terakhir_poli_mcu").html(dt[8].nomor_antrian_terakhir);
+				//$("#antrian_terakhir_poli_mcu").html(dt[8].nomor_antrian_terakhir);
 
 				$("#antrian_terakhir_kasir").html(dt['pendaftaran'].nomor_antrian_terakhir);
 				$("#antrian_terakhir_farmasi").html(dt['timbang_tensi'].nomor_antrian_terakhir);
