@@ -317,7 +317,7 @@ class AntrianController extends Controller
 
 		/* dd( $data['antrian_terakhir_per_poli'] ); */
 		$include_only = $data['antrian_terakhir_per_poli'];
-		dd( $include_only );
+		dd( $include_only, 'ooooo', $data['data'] );
 		/* dd('include_only1', $include_only ); */
 		unset( $include_only['antrian_pendaftaran'] );
 		/* dd('include_only', $include_only ); */
