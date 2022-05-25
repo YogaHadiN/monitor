@@ -372,6 +372,7 @@
 
 				console.log(data);
 				console.log(dt);
+				console.log(dt[1]);
 
 				$("#antrian_terakhir_poli_umum").html(antrian_terakhir_per_poli[1]);
 				$("#antrian_terakhir_poli_gigi").html(antrian_terakhir_per_poli[2]);
