@@ -271,6 +271,8 @@ class AntrianController extends Controller
 			}
 		}
 
+		$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = '-';
+		$data['data']['pendaftaran']['nomor_antrian_terakhir'] = '-';
 		foreach ($antrians as $antrian) {
 			if (
 				$antrian->antriable_type == 'App\Models\Antrian'
@@ -279,8 +281,6 @@ class AntrianController extends Controller
 					isset($antrian->jenis_antrian->antrian_terakhir)
 				) {
 					$data['data']['pendaftaran']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-				} else {
-					$data['data']['pendaftaran']['nomor_antrian_terakhir'] = '-';
 				}
 			} else if (
 				$antrian->antriable_type == 'App\Models\AntrianPoli'
@@ -289,9 +289,7 @@ class AntrianController extends Controller
 					isset($antrian->jenis_antrian->antrian_terakhir)
 				) {
 					$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-				} else {
-					$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = '-';
-				}
+				} 
 			}
 		}
 
