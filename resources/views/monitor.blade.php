@@ -369,6 +369,7 @@
 				var antrian_terakhir_per_poli = data.antrian_terakhir_per_poli;
 				var antrian_by_type           = data.antrian_by_type;
 				clear(panggilan);
+				console.log(data);
 
 				$("#antrian_terakhir_poli_umum").html(antrian_terakhir_per_poli[1]);
 				$("#antrian_terakhir_poli_gigi").html(antrian_terakhir_per_poli[2]);
