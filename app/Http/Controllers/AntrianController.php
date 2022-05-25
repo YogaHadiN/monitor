@@ -205,7 +205,6 @@ class AntrianController extends Controller
 		foreach ($jenis_antrians as $jt) {
 			$data['antrian_terakhir_per_poli'][$jt->id] = '-';
 		}
-		$exclude_from_type                                    = [];
 		$reversed_antrians                                    = $antrians->reverse();
 		$data['antrian_terakhir_per_poli']['pendaftaran']   = '-';
 		$data['antrian_terakhir_per_poli']['timbang_tensi'] = '-';
