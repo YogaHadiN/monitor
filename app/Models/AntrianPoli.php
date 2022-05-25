@@ -26,8 +26,11 @@ class AntrianPoli extends Model{
 	}
 
 	public function pasien(){
-
 		return $this->belongsTo('App\Models\Pasien');
+	}
+
+	public function antrian(){
+        return $this->morphOne(Antrian::class, 'antriable');
 	}
 
 	public function asuransi(){
@@ -49,5 +52,4 @@ class AntrianPoli extends Model{
 						->where('poli', 'gigi')
 						->get();
 	}
-	
 }

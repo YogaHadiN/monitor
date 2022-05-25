@@ -198,14 +198,9 @@ class AntrianController extends Controller
 								->orderBy('id')
 								->get();
 		$jenis_antrian  = JenisAntrian::with( 'antrian_terakhir.jenis_antrian', 'antrian_terakhir.antriable')->orderBy('updated_at', 'desc')->get();
-		try {
-			$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
-		} catch (\Exception $e) {
-			Log::info('========================================');
-			Log::info('jenis_antrian');
-			Log::info($jenis_antrian);
-			Log::info('========================================');
-		}
+
+		$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
+
 		$jenis_antrians = JenisAntrian::all();
 		foreach ($jenis_antrians as $jt) {
 			$data['antrian_terakhir_per_poli'][$jt->id] = '-';
@@ -224,18 +219,13 @@ class AntrianController extends Controller
 				$ant->antriable->dipanggil > 0
 			) {
 				$data['antrian_terakhir_per_poli'][$ant->jenis_antrian_id] = $ant->nomor_antrian;
-			}
-
-			if (
-				( 
-					$ant->antriable_type == 'App\Models\Antrian'
-				) &&
+			} else if (
+				$ant->antriable_type == 'App\Models\Antrian' &&
 				$ant->antriable->dipanggil > 0
 			) {
 				$data['antrian_terakhir_per_poli']['pendaftaran'] =  $ant->nomor_antrian;
-			}
-			if (
-				( $ant->antriable_type == 'App\Models\AntrianPoli' ) &&
+			} else if (
+				$ant->antriable_type == 'App\Models\AntrianPoli' &&
 				$ant->antriable->dipanggil > 0
 			) {
 				/* dd( $ant ); */
