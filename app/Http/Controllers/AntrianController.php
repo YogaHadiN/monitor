@@ -314,6 +314,12 @@ class AntrianController extends Controller
 		$data['antrian_by_type']['timbang_tensi']   = [];
 		$data['antrian_by_type']['antrian_periksa'] = [];
 
+		$antrian_dipanggils = [];
+
+		foreach ($data['data'] as $x) {
+			$antrian_dipanggils[] = $x['nomor_antrian_terakhir'];
+		}
+		dd( $antrian_dipanggils );
 
 		/* dd( $data['antrian_terakhir_per_poli'] ); */
 		$include_only = $data['antrian_terakhir_per_poli'];
