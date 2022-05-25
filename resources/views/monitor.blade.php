@@ -370,16 +370,20 @@
 				var antrian_by_type           = data.antrian_by_type;
 				clear(panggilan);
 
+				console.log(data);
+				console.log(dt);
 
-				$("#antrian_terakhir_poli_umum").html(dt.nomor_antrian_terakhir[1]);
-				$("#antrian_terakhir_poli_gigi").html(dt.nomor_antrian_terakhir[2]);
-				$("#antrian_terakhir_poli_bidan").html(dt.nomor_antrian_terakhir[3]);
-				$("#antrian_terakhir_poli_estetik").html(dt.nomor_antrian_terakhir[4]);
+				$("#antrian_terakhir_poli_umum").html(antrian_terakhir_per_poli[1]);
+				$("#antrian_terakhir_poli_gigi").html(antrian_terakhir_per_poli[2]);
+				$("#antrian_terakhir_poli_bidan").html(antrian_terakhir_per_poli[3]);
+				$("#antrian_terakhir_poli_estetik").html(antrian_terakhir_per_poli[4]);
 
-				$("#antrian_terakhir_poli_rapid_test").html(dt.nomor_antrian_terakhir[7]);
+				$("#antrian_terakhir_poli_prolanis").html(antrian_terakhir_per_poli[6]);
+				$("#antrian_terakhir_poli_rapid_test").html(antrian_terakhir_per_poli[7]);
+				$("#antrian_terakhir_poli_mcu").html(antrian_terakhir_per_poli[8]);
 
-				$("#antrian_terakhir_kasir").html(dt.nomor_antrian_terakhir['pendaftaran']);
-				$("#antrian_terakhir_farmasi").html(dt.nomor_antrian_terakhir['timbang_tensi']);
+				$("#antrian_terakhir_kasir").html(antrian_terakhir_per_poli['pendaftaran']);
+				$("#antrian_terakhir_farmasi").html(antrian_terakhir_per_poli['timbang_tensi']);
 
 				var jenis_antrian_ids = data.jenis_antrian_ids;
 
