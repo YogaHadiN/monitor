@@ -291,8 +291,6 @@ class AntrianController extends Controller
 			$antrian_dipanggils[] = $x['nomor_antrian_terakhir'];
 		}
 
-		$include_only = $data['antrian_terakhir_per_poli'];
-		unset( $include_only['antrian_pendaftaran'] );
 
 		foreach ($antrians as $ant) {
 			if (!in_array( $ant->nomor_antrian, $antrian_dipanggils)) {
