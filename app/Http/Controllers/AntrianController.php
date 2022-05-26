@@ -202,37 +202,8 @@ class AntrianController extends Controller
 		$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
 
 		$jenis_antrians = JenisAntrian::all();
-		foreach ($jenis_antrians as $jt) {
-			$data['antrian_terakhir_per_poli'][$jt->id] = '-';
-		}
 		$reversed_antrians                                    = $antrians->reverse();
-		$data['antrian_terakhir_per_poli']['pendaftaran']   = '-';
-		$data['antrian_terakhir_per_poli']['timbang_tensi'] = '-';
 
-		foreach ($antrians as $ant) {
-			if (
-				$ant->antriable_type !== 'App\Models\AntrianApotek' &&
-				$ant->antriable_type !== 'App\Models\Antrian' &&
-				$ant->antriable_type !== 'App\Models\AntrianKasir' &&
-				$ant->antriable_type !== 'App\Models\AntrianFarmasi' &&
-				$ant->antriable->dipanggil > 0
-			) {
-				$data['antrian_terakhir_per_poli'][$ant->jenis_antrian_id] = $ant->nomor_antrian;
-			} else if (
-				$ant->antriable_type == 'App\Models\Antrian' &&
-				$ant->antriable->dipanggil > 0
-			) {
-				$data['antrian_terakhir_per_poli']['pendaftaran'] =  $ant->nomor_antrian;
-			} else if (
-				$ant->antriable_type == 'App\Models\AntrianPoli' &&
-				$ant->antriable->dipanggil > 0
-			) {
-				/* dd( $ant ); */
-				$data['antrian_terakhir_per_poli']['timbang_tensi'] =  $ant->nomor_antrian;
-			}
-		}
-		/* dd('data'); */
-		/* dd($data['antrian_terakhir_per_poli']); */
 		if ( $panggil_pasien ) {
 			$antrian_dipanggil = $antrians->sortByDesc('updated_at')->first();
 			$data['panggilan']['nomor_antrian'] = $antrian_dipanggil->nomor_antrian;
@@ -320,16 +291,11 @@ class AntrianController extends Controller
 			$antrian_dipanggils[] = $x['nomor_antrian_terakhir'];
 		}
 
-		/* dd( $data['antrian_terakhir_per_poli'] ); */
 		$include_only = $data['antrian_terakhir_per_poli'];
-		/* dd( $include_only, 'ooooo', $data['data'] ); */
-		/* dd('include_only1', $include_only ); */
 		unset( $include_only['antrian_pendaftaran'] );
-		/* dd('include_only', $include_only ); */
 
 		foreach ($antrians as $ant) {
 			if (!in_array( $ant->nomor_antrian, $antrian_dipanggils)) {
-			/* if (!in_array( $ant->nomor_antrian, $include_only)) { */
 				if (
 					$ant->antriable_type == 'App\Models\AntrianPeriksa'
 				) {

@@ -22,7 +22,6 @@
 	* {
 		box-sizing: border-box;
 		text-align: center;
-		{{-- background-image: url("green-mint.jpeg"); --}}
 		background-color: #3BAE85;
 	}
 	.column2 {
@@ -96,7 +95,7 @@
 	}
 	@media (min-width: 1px){
 		.container {
-			width: 970px;
+			width: 1200px;
 			height: 100vh;
 		}
 	}
@@ -366,7 +365,6 @@
 			function (data, textStatus, jqXHR) {
 				var panggilan                 = data.panggilan;
 				var dt                        = data.data;
-				var antrian_terakhir_per_poli = data.antrian_terakhir_per_poli;
 				var antrian_by_type           = data.antrian_by_type;
 				clear(panggilan);
 
