@@ -95,7 +95,7 @@
 	}
 	@media (min-width: 1px){
 		.container {
-			width: 1200px;
+			width: 1270px;
 			height: 100vh;
 		}
 	}
