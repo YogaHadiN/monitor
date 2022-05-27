@@ -453,6 +453,7 @@
 					} else if (panggilan.poli == 'Antrian Farmasi'){
 						ruangan = 'farmasi';
 					}
+					console.log('ruangan',ruangan);
 					panggilPasien(ruangan);
 				}
 			}
