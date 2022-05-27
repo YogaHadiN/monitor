@@ -199,8 +199,6 @@ class AntrianController extends Controller
 								->get();
 		$jenis_antrian  = JenisAntrian::with( 'antrian_terakhir.jenis_antrian', 'antrian_terakhir.antriable')->orderBy('updated_at', 'desc')->get();
 
-		$antriable_type = $jenis_antrian->first()->antrian_terakhir->antriable_type;
-
 		$jenis_antrians = JenisAntrian::all();
 		$reversed_antrians                                    = $antrians->reverse();
 
