@@ -383,10 +383,7 @@
 				var dt                        = data.data;
 				var antrian_by_type           = data.antrian_by_type;
 				clear(panggilan);
-
-				console.log(data);
-				console.log(dt);
-				console.log(dt[1].nomor_antrian_terakhir);
+				console.log('data', data);
 
 				$("#antrian_terakhir_poli_umum").html(dt[1].nomor_antrian_terakhir);
 				$("#antrian_terakhir_poli_gigi").html(dt[2].nomor_antrian_terakhir);
@@ -453,7 +450,6 @@
 					} else if (panggilan.poli == 'Antrian Farmasi'){
 						ruangan = 'farmasi';
 					}
-					console.log('ruangan',ruangan);
 					panggilPasien(ruangan);
 				}
 			}
