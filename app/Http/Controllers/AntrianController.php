@@ -242,6 +242,11 @@ class AntrianController extends Controller
 
 		$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = '-';
 		$data['data']['pendaftaran']['nomor_antrian_terakhir'] = '-';
+		$data['data'][1]['nomor_antrian_terakhir'] = '-';
+		$data['data'][2]['nomor_antrian_terakhir'] = '-';
+		$data['data'][3]['nomor_antrian_terakhir'] = '-';
+		$data['data'][4]['nomor_antrian_terakhir'] = '-';
+		$data['data'][7]['nomor_antrian_terakhir'] = '-';
 		foreach ($antrians as $antrian) {
 			if (
 				$antrian->antriable_type == 'App\Models\Antrian'
