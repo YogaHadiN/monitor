@@ -372,7 +372,7 @@
 	channel.bind(event_name, function(data) {
 		console.log('ini ni datanya yang baru');
 		console.log(data);
-		if( data.text ){
+		if( data.panggil ){
 			var panggil_pasien = 1;
 		} else {
 			var panggil_pasien = 0;
@@ -434,24 +434,12 @@
 					}
 					$("#timbang_tensi").html(temp);
 				}
-				if(typeof panggilan !== 'undefined'){
+				if(typeof data.ruangan !== 'undefined'){
 					refreshElement('#dipanggil');
 					$('#nomor_panggilan').html(panggilan.nomor_antrian);
 					$('#poli_panggilan').html(panggilan.poli);
 					$('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
-					var ruangan = '';
-					if( panggilan.poli == 'Poli Umum' ){
-						ruangan = 'ruangperiksasatu';
-					} else if ( panggilan.poli == 'Pendaftaran' ){
-						ruangan = 'pendaftaran';
-					} else if (panggilan.poli == 'Antrian Kasir'){
-						ruangan = 'kasir';
-					} else if (panggilan.poli == 'Rapid Test'){
-						ruangan = 'rapidtest';
-					} else if (panggilan.poli == 'Antrian Farmasi'){
-						ruangan = 'farmasi';
-					}
-					panggilPasien(ruangan);
+					panggilPasien(data.ruangan);
 				}
 			}
 		);
