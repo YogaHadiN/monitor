@@ -381,6 +381,8 @@
 		} else {
 			var panggil_pasien = 0;
 		}
+		var ruangan = data.ruangan;
+
 		$.get(base + '/antrianperiksa/monitor/getData/' + panggil_pasien,
 			{
 			},
@@ -441,14 +443,14 @@
 				console.log('data.ruangan');
 				console.log(data.ruangan);
 				if(
-					typeof data.ruangan !== 'undefined' 
-					&& data.ruangan !== ''
+					typeof ruangan !== 'undefined' 
+					&& ruangan !== ''
 				){
 					refreshElement('#dipanggil');
 					$('#nomor_panggilan').html(panggilan.nomor_antrian);
-					$('#poli_panggilan').html( displayRuangan(data.ruangan) );
+					$('#poli_panggilan').html( displayRuangan(ruangan) );
 					$('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
-					panggilPasien(data.ruangan);
+					panggilPasien(ruangan);
 				}
 			}
 		);
