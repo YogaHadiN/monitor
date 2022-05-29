@@ -434,6 +434,8 @@
 					}
 					$("#timbang_tensi").html(temp);
 				}
+				console.log('data.ruangan');
+				console.log(data.ruangan);
 				if(
 					typeof data.ruangan !== 'undefined' 
 					&& data.ruangan !== ''
