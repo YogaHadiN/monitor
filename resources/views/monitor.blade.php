@@ -372,6 +372,10 @@
 	channel.bind(event_name, function(data) {
 		console.log('ini ni datanya yang baru');
 		console.log(data);
+		console.log('data.panggil');
+		console.log(data.panggil);
+		console.log('data.ruangan');
+		console.log(data.ruangan);
 		if( data.panggil ){
 			var panggil_pasien = 1;
 		} else {
