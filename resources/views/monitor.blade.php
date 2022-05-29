@@ -384,7 +384,8 @@
 				var dt                        = data.data;
 				var antrian_by_type           = data.antrian_by_type;
 				clear(panggilan);
-				console.log('data', data);
+				console.log('ini ni datanya');
+				console.log(data);
 
 				$("#antrian_terakhir_poli_umum").html(dt[1].nomor_antrian_terakhir);
 				$("#antrian_terakhir_poli_gigi").html(dt[2].nomor_antrian_terakhir);
