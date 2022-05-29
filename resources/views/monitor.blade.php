@@ -434,10 +434,13 @@
 					}
 					$("#timbang_tensi").html(temp);
 				}
-				if(typeof data.ruangan !== 'undefined'){
+				if(
+					typeof data.ruangan !== 'undefined' 
+					&& data.ruangan !== ''
+				){
 					refreshElement('#dipanggil');
 					$('#nomor_panggilan').html(panggilan.nomor_antrian);
-					$('#poli_panggilan').html(panggilan.poli);
+					$('#poli_panggilan').html( displayRuangan(data.ruangan) );
 					$('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
 					panggilPasien(data.ruangan);
 				}
@@ -571,6 +574,19 @@
 				pglPasien(data);
 			}
 		);
+	}
+	function displayRuangan( ruangan ){
+		if( ruangan == 'ruangperiksasatu' ){
+			return 'Ruang Periksa 1';
+		} else if ( ruangan == 'ruangperiksadua' ){
+			return 'Ruang Periksa 2';
+		} else if ( ruangan == 'loketsatu' ){
+			return 'Loket Satu';
+		} else if ( ruangan == 'loketdua' ){
+			return 'Loket Dua';
+		} else if ( ruangan == 'ruangperiksagigi' ){
+			return 'Ruang Periksa Gigi';
+		}
 	}
 </script>
 </body>
