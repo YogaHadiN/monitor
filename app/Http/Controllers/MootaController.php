@@ -13,9 +13,8 @@ class MootaController extends Controller
         Log::info('Ada uang masuk nih');
         Log::info('====================================');
         Log::info('apaain sih ini');
-        Log::info( Input::get(0));
+        Log::info( Input::all());
         Log::info('id');
-        Log::info( Input::get(0)['id']);
     }
     
 }
