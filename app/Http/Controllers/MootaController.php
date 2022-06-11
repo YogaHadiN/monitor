@@ -12,11 +12,12 @@ class MootaController extends Controller
         Log::info('====================================');
         Log::info('Ada uang masuk nih');
         Log::info('====================================');
+        Log::info('Waktu ' . date('Y-m-d H:i:s'));
+        Log::info('====================================');
         Log::info('ditemukan berapa array?');
         Log::info( count( Input::all() ));
         Log::info('====================================');
         Log::info('Isi dari array tersebut adalah');
         Log::info( Input::all());
     }
-    
 }
