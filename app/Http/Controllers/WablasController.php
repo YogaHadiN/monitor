@@ -70,8 +70,19 @@ class WablasController extends Controller
 
         Log::info("=========================================");
         Log::info("This is Spartaaaaa");
+        Log::info("This is Spartaaaaa");
+        Log::info("This is Spartaaaaa");
+        Log::info("This is Spartaaaaa");
         Log::info("=========================================");
 
+        if (
+            isset($_POST['message']) &&
+        ) {
+            Log::info("=========================================");
+            Log::info("Message");
+            Log::info($_POST['message']);
+            Log::info("=========================================");
+        }
 		header("Content-Type: text/plain");
 
         if (
