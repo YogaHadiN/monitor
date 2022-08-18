@@ -31,12 +31,12 @@ class WablasController extends Controller
 	{
 
 		if (
-		 isset($_POST['phone']) &&
-		 isset($_POST['message'])
+		 isset(Input::get('phone')) &&
+		 isset(Input::get('message'))
 		) {
-			$this->no_telp = $_POST['phone'];
-			$message       = $this->clean($_POST['message']);
-            $this->no_telp = $_POST['phone'];
+			$this->no_telp = Input::get('phone');
+			$message       = $this->clean(Input::get('message'));
+            $this->no_telp = Input::get('phone');
             $this->antrian = Antrian::where('kode_unik', $message)
                                     ->where('created_at', 'like', date('Y-m-d') . '%')
                                     ->first();
@@ -68,34 +68,17 @@ class WablasController extends Controller
 	
 	public function webhook(){
 
-        Log::info("=========================================");
-        Log::info("This is Spartaaaaa");
-        Log::info("This is Spartaaaaa");
-        Log::info("This is Spartaaaaa");
-        Log::info("This is Spartaaaaa");
-        Log::info(json_encode(Input::all()));
-        Log::info(Input::get('phone'));
-        Log::info(Input::get('message'));
-        Log::info("=========================================");
-
-        if (
-            isset($_POST['message'])
-        ) {
-            Log::info("=========================================");
-            Log::info("Message");
-            Log::info($_POST['message']);
-            Log::info("=========================================");
-        }
 		header("Content-Type: text/plain");
 
+        Input::get('message');
         if (
-		 isset($_POST['phone']) &&
-		 isset($_POST['message'])
+		 isset(Input::get('phone')) &&
+		 isset(Input::get('message'))
         ) {
             Log::info("=========================================");
-            Log::info($_POST['message']);
+            Log::info(Input::get('message'));
             Log::info("=========================================");
-            $message               = $this->clean($_POST['message']);
+            $message               = $this->clean(Input::get('message'));
             $whatsapp_registration = WhatsappRegistration::with('antrian')
                                         ->where('no_telp', $this->no_telp)
                                         ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
