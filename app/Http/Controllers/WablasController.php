@@ -76,7 +76,7 @@ class WablasController extends Controller
         Log::info("=========================================");
 
         if (
-            isset($_POST['message']) &&
+            isset($_POST['message'])
         ) {
             Log::info("=========================================");
             Log::info("Message");
