@@ -29,6 +29,9 @@ class WablasController extends Controller
 
 	public function __construct()
 	{
+        Log::info("=========================================");
+        Log::info("This is Spartaaaaa");
+        Log::info("=========================================");
 
 		if (
 		 isset($_POST['phone']) &&
