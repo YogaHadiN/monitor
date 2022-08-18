@@ -31,8 +31,8 @@ class WablasController extends Controller
 	{
 
 		if (
-		 isset(Input::get('phone')) &&
-		 isset(Input::get('message'))
+		 !is_null(Input::get('phone')) &&
+		 !is_null(Input::get('message'))
 		) {
 			$this->no_telp = Input::get('phone');
 			$message       = $this->clean(Input::get('message'));
