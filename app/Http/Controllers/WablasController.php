@@ -72,8 +72,8 @@ class WablasController extends Controller
 
         Input::get('message');
         if (
-		 isset(Input::get('phone')) &&
-		 isset(Input::get('message'))
+		 !is_null(Input::get('phone')) &&
+		 !is_null(Input::get('message'))
         ) {
             Log::info("=========================================");
             Log::info(Input::get('message'));
