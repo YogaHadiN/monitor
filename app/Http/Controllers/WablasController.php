@@ -73,6 +73,7 @@ class WablasController extends Controller
         Log::info("This is Spartaaaaa");
         Log::info("This is Spartaaaaa");
         Log::info("This is Spartaaaaa");
+        Log::info(json_encode(Input::all()));
         Log::info("=========================================");
 
         if (
