@@ -29,9 +29,6 @@ class WablasController extends Controller
 
 	public function __construct()
 	{
-        Log::info("=========================================");
-        Log::info("This is Spartaaaaa");
-        Log::info("=========================================");
 
 		if (
 		 isset($_POST['phone']) &&
@@ -70,6 +67,10 @@ class WablasController extends Controller
 	}
 	
 	public function webhook(){
+
+        Log::info("=========================================");
+        Log::info("This is Spartaaaaa");
+        Log::info("=========================================");
 
 		header("Content-Type: text/plain");
 
