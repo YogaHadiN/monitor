@@ -70,6 +70,13 @@ class WablasController extends Controller
 
 		header("Content-Type: text/plain");
 
+        return [
+            'buttons' => ["Biaya Pribadi","BPJS", "Lainnya"],
+            'content' => 'Bisa dibantu sebutkan menggunakan Pembayaran apa?',
+            'footer' => '',
+        ];
+
+
         Input::get('message');
         if (
 		 !is_null(Input::get('phone')) &&
