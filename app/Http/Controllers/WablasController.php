@@ -78,6 +78,9 @@ class WablasController extends Controller
 		 isset($_POST['phone']) &&
 		 isset($_POST['message'])
         ) {
+            Log::info("=========================================");
+            Log::info($_POST['message']);
+            Log::info("=========================================");
             $message               = $this->clean($_POST['message']);
             $whatsapp_registration = WhatsappRegistration::with('antrian')
                                         ->where('no_telp', $this->no_telp)
