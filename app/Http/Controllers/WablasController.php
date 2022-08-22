@@ -296,6 +296,10 @@ class WablasController extends Controller
 		if (empty( trim($param) ) && trim($param) != '0') {
 			return null;
 		}
+
+        if ( str_contains($param, "<~ ") ) {
+            $param = explode( "<~ ", $param)[1];
+        }
 		return strtolower( trim($param) );
 	}
 
