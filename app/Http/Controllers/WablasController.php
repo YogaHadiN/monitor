@@ -70,6 +70,8 @@ class WablasController extends Controller
         header('Content-Type: application/json');
 
         Log::info( Input::all() );
+        Log::info("isFromMe");
+        Log::info( Input::get('isFromMe') );
 
         if (
 		 !is_null( $this->no_telp ) &&
