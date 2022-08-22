@@ -380,11 +380,9 @@ class WablasController extends Controller
 			return $payload;
 		}
 		if ( is_null( $whatsapp_registration->nama ) ) {
-			$text =  'Bisa dibantu *Nama Lengkap* pasien?';
-            $message =  $text;
             $payload[] = [
                 'category' => 'text',
-                'message' => $message
+                'message' =>   'Bisa dibantu *Nama Lengkap* pasien?'
             ];
 
 			return $payload;
@@ -487,10 +485,6 @@ class WablasController extends Controller
 
         $antrian = Antrian::createFromWhatsappRegistration($whatsapp_registration);
 
-        Log::info("==============================");
-        Log::info("ANTRIAAAAAAAANNNNN");
-        Log::info($antrian);
-        Log::info("==============================");
 		$text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
 		$text .= PHP_EOL;
 		$text .= "Anda telah terdaftar dengan Nomor Antrian";
@@ -500,7 +494,13 @@ class WablasController extends Controller
 		$text .= PHP_EOL;
 		$text .= PHP_EOL;
 		$text .= "Silahkan menunggu untuk dilayani";
-		return $text;
+
+        $payload[] = [
+            'category' => 'text',
+            'message' => $text
+        ];
+
+        return $payload;
 	}
 
 	/*private function input_poli( $whatsapp_registration, $message ){ */
