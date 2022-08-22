@@ -164,20 +164,7 @@ class FasilitasController extends Controller
      *
      * @return void
      */
-    public static function nomorAntrian()
-    {
-		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', date('Y-m-d') . '%')
-							->where('jenis_antrian_id',$id)
-							->orderBy('nomor', 'desc')
-							->first();
 
-		if ( is_null( $antrians ) ) {
-            return 1;
-
-		} else {
-			return $antrians->nomor + 1;
-		}
-    }
     
 }
 
