@@ -270,20 +270,15 @@ class WablasController extends Controller
                             'footer'  => ''
                         ];
 
+                        return response()->json([
+                            'status' => true,
+                            'data' => $payload
+                        ])->header('Content-Type', 'application/json');
+
                     } else if ( $category == 'text' ){
-                        $reply  = $payload['message'] . ' ' . $response;
-                        $payload[] = [
-                            'category' => 'text',
-                            'message'  => $reply
-                        ];
-                        Log::info('paypay2');
-                        Log::info($payload);
+                        echo $response;
                     }
 
-                    return response()->json([
-                        'status' => true,
-                        'data' => $payload
-                    ])->header('Content-Type', 'application/json');
                 }
             }   
         }
