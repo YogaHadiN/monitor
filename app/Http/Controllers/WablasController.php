@@ -100,9 +100,10 @@ class WablasController extends Controller
                 $whatsapp_registration->save();
             } else if ( 
                 isset( $whatsapp_registration ) &&
-                !$whatsapp_registration->registering_confirmation 
+                $whatsapp_registration->registering_confirmation < 1
             ){
                 Log::info('registering_confirmation');
+                Log::info( $this->messag );
                 if (
                     $this->message == 'Lanjutkan'
                 ) {
@@ -354,13 +355,6 @@ class WablasController extends Controller
                         'message'  => json_encode($message),
                         'footer'  => ''
                     ];
-                    /* $payload[] = [ */
-                    /*     'category' => 'button', */
-                    /*     'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}' */
-                    /* ]; */
-
-                    Log::info('tess');
-                    Log::info($payload);
 
                 } else if ( $category == 'text' ){
                     $reply  = $payload['message'] . ' ' . $response;
