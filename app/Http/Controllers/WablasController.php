@@ -333,6 +333,8 @@ class WablasController extends Controller
 			return $payload;
 		}
 		if ( is_null( $whatsapp_registration->registrasi_pembayaran_id ) ) {
+            Log::info("whatsapp_registration cheeeeck");
+            Log::info($whatsapp_registration->registrasi_pembayaran_id);
 			$text = 'Bisa dibantu pembayaran menggunakan apa? ';
 
             $message = [
