@@ -52,7 +52,7 @@ class FasilitasController extends Controller
 	public function antrianPost($id){
 
         $antrian                   = new Antrian;
-        $antrian->nomor            = Antrian::nomorAntrian() ;
+        $antrian->nomor            = Antrian::nomorAntrian($id) ;
         $antrian->nomor_bpjs       = $this->input_nomor_bpjs;
         $antrian->jenis_antrian_id = $id ;
         $antrian->save();

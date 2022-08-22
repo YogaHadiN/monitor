@@ -46,7 +46,7 @@ class Antrian extends Model
     public static function createFromWhatsappRegistration($whatsapp_registration){
         $antrian                           = new Antrian;
         $antrian->jenis_antrian_id         = 1;
-        $antrian->nomor                    = Antrian::nomorAntrian();
+        $antrian->nomor                    = Antrian::nomorAntrian(1);
         $antrian->no_telp                  = $whatsapp_registration->no_telp;
         $antrian->nama                     = $whatsapp_registration->nama;
         $antrian->tanggal_lahir            = $whatsapp_registration->tanggal_lahir;
@@ -59,7 +59,7 @@ class Antrian extends Model
         return $antrian;
     }
     
-    public static function nomorAntrian()
+    public static function nomorAntrian($id)
     {
 		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', date('Y-m-d') . '%')
 							->where('jenis_antrian_id',$id)
