@@ -14,3 +14,4 @@ class Periksa extends Model
         return $this->morphOne('App\Models\Antrian', 'antriable');
 	}
 }
+
