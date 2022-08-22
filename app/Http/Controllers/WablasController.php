@@ -69,9 +69,6 @@ class WablasController extends Controller
 
 		header("Content-Type: text/plain");
 
-        echo 'oke';
-
-
         if (
 		 !is_null( $this->no_telp ) &&
 		 !is_null( $this->message )
@@ -399,7 +396,7 @@ class WablasController extends Controller
 
 	private function botKirim($whatsapp_registration)
 	{
-		if ( is_null( $whatsapp_registration->registering_confirmation ) ) {
+		if ( $whatsapp_registration->registering_confirmation ) {
 			$text  = 'Terima kasih telah mendaftar sebagai pasien di' ;
 			$text .= PHP_EOL;
 			$text .= '*KLINIK JATI ELOK*' ;
