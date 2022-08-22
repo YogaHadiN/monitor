@@ -226,8 +226,7 @@ class WablasController extends Controller
                     $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
                     if (
-                        !is_null($whatsapp_registration) &&
-                        !is_null($whatsapp_registration->antrian_id)
+                        !is_null($whatsapp_registration)
                     ) {
 
                         $response .=  PHP_EOL;
@@ -333,7 +332,7 @@ class WablasController extends Controller
 
 			return $payload;
 		}
-		if ( is_null( $whatsapp_registration->pembayaran ) ) {
+		if ( is_null( $whatsapp_registration->registrasi_pembayaran_id ) ) {
 			$text = 'Bisa dibantu pembayaran menggunakan apa? ';
 
             $message = [
