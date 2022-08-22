@@ -633,10 +633,6 @@ class WablasController extends Controller
 	/*	$whatsapp_registration->antrian->save(); */
 	/*} */
 	/*/1** */
-	* undocumented function
-	*
-	* @return void
-	*/
 	private function formatPembayaran($param)
 	{
 		if ( $this->clean($param) == 'a' ) {
