@@ -352,6 +352,7 @@ class WablasController extends Controller
                     /*     'message'  => json_encode($message), */
                     /*     'footer'  => '' */
                     /* ]; */
+                    $payload = null;
 
                     $payload[] = [
                         'category' => 'button',
