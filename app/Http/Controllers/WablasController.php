@@ -590,7 +590,7 @@ class WablasController extends Controller
 		/* 	$whatsapp_registration->save(); */
 		/* } */		
 
-        $antrian = Antrian::createFromWhatsappRegistration(WhatsappRegistration $whatsapp_registration);
+        $antrian = Antrian::createFromWhatsappRegistration($whatsapp_registration);
 
 		$text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
 		$text .= PHP_EOL;
