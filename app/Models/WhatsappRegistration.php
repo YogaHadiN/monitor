@@ -14,4 +14,8 @@ class WhatsappRegistration extends Model
     public function poli(){
         return $this->belongsTo(Poli::class);
     }
+
+    public function registrasiPembayaran(){
+        return $this->belongsTo(RegistrasiPembayaran::class);
+    }
 }

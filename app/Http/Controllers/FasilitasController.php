@@ -50,24 +50,12 @@ class FasilitasController extends Controller
 	}
 	
 	public function antrianPost($id){
-		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', date('Y-m-d') . '%')
-							->where('jenis_antrian_id',$id)
-							->orderBy('nomor', 'desc')
-							->first();
 
-		if ( is_null( $antrians ) ) {
-			$antrian                   = new Antrian;
-			$antrian->nomor            = 1 ;
-			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->jenis_antrian_id = $id ;
-
-		} else {
-			$antrian_terakhir          = $antrians->nomor + 1;
-			$antrian                   = new Antrian;
-			$antrian->nomor            = $antrian_terakhir ;
-			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->jenis_antrian_id = $id ;
-		}
+        $antrian                   = new Antrian;
+        $antrian->nomor            = Antrian::nomorAntrian() ;
+        $antrian->nomor_bpjs       = $this->input_nomor_bpjs;
+        $antrian->jenis_antrian_id = $id ;
+        $antrian->save();
 		$antrian->antriable_id   = $antrian->id;
 		$antrian->antriable_type = 'App\\Models\\Antrian';
 		$antrian->save();
@@ -171,5 +159,25 @@ class FasilitasController extends Controller
 
 		return redirect()->back()->withPesan($pesan);
 	}
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    public static function nomorAntrian()
+    {
+		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', date('Y-m-d') . '%')
+							->where('jenis_antrian_id',$id)
+							->orderBy('nomor', 'desc')
+							->first();
+
+		if ( is_null( $antrians ) ) {
+            return 1;
+
+		} else {
+			return $antrians->nomor + 1;
+		}
+    }
+    
 }
 
