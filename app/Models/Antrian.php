@@ -51,6 +51,7 @@ class Antrian extends Model
         $antrian->nama                     = $whatsapp_registration->nama;
         $antrian->tanggal_lahir            = $whatsapp_registration->tanggal_lahir;
         $antrian->tenant_id                = 1;
+        $antrian->kode_unik                = Antrian::kodeUnik();
         $antrian->registrasi_pembayaran_id = $whatsapp_registration->registrasi_pembayaran_id;
         $antrian->save();
         $antrian->antriable_id             = $antrian->id;
@@ -73,4 +74,12 @@ class Antrian extends Model
 			return $antrians->nomor + 1;
 		}
     }
+    public static function kodeUnik(){
+        $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
+        while (Antrian::where('created_at', 'like', date('Y-m-d') . '%')->where('kode_unik', $kode_unik)->exists()) {
+            $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
+        }
+        return $kode_unik;
+    }
+    
 }
