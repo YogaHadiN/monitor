@@ -100,7 +100,7 @@ class WablasController extends Controller
                 $whatsapp_registration->save();
             } else if ( 
                 isset( $whatsapp_registration ) &&
-                is_null( $whatsapp_registration->registering_confirmation ) 
+                !$whatsapp_registration->registering_confirmation 
             ){
                 Log::info('registering_confirmation');
                 if (
@@ -428,20 +428,12 @@ class WablasController extends Controller
 	private function botKirim($whatsapp_registration)
 	{
 		if ( !$whatsapp_registration->registering_confirmation ) {
-			$text  = 'Terima kasih telah mendaftar sebagai pasien di' ;
-			$text .= PHP_EOL;
 			$text .= '*KLINIK JATI ELOK*' ;
-			$text .= PHP_EOL;
-			$text .= 'Dengan senang hati kami akan siap membantu Anda.';
 			$text .= PHP_EOL;
 			$text .= "==============";
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
-			$text .= 'Fasilitas ini akan memproses antrian anda di Klinik Jati Elok';
-			$text .= PHP_EOL;
-			$text .= 'Untuk berkonsultasi ke Dokter Umum';
-			$text .= PHP_EOL;
-			$text .= PHP_EOL;
+			$text .= 'Fasilitas ini akan memproses antrian Untuk berkonsultasi ke *Dokter Umum*';
 			$text .= PHP_EOL;
 			$text .= 'Apakah Anda ingin melanjutkan?';
 			$text .= PHP_EOL;
