@@ -306,7 +306,8 @@ class WablasController extends Controller
                 !is_null($whatsapp_registration)
             ) {
                 $payload   = $this->botKirim($whatsapp_registration)[0];
-                $response .= $payload['category'] == 'button' ? $payload['message']['content'] : $payload['message'];
+                $category = $payload['category'];
+                $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
                 if (
                     !is_null($whatsapp_registration) &&
@@ -343,7 +344,16 @@ class WablasController extends Controller
                 $input_tidak_tepat = false;
             }
             if (!empty($response)) {
-                echo $response;
+                if ( $category == 'button' ) {
+                    $buttons = $payload['buttons'];
+                    $reply['category'] = 'button';
+                    $reply['message']['buttons'] = $buttons;
+                    $reply['message']['content'] = $response;
+                } else if ( $category == 'text' ){
+                    $reply ['category'] = 'text';
+                    $reply ['message'] = $payload['message'] . ' ' . $response;
+                }
+                echo $reply;
             }
                 /* Sms::send($this->no_telp, $response); */
 		/* Konfirmasi mengantri berapa orang lagi sebelum didaftarkan dan perkiraan jam berapa dipanggil untuk masuk ruang dokter */
