@@ -738,12 +738,5 @@ class WablasController extends Controller
         }
     }
     public function wablas2(){
-		header("Content-Type: text/plain");
-        $payload[] = [
-            'category' => 'button',
-            'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}'
-        ];
-
-        echo json_encode(['data' => $payload]);
     }
 }
