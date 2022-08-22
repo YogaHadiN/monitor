@@ -362,7 +362,7 @@ class WablasController extends Controller
 
                 return response()->json([
                     'status' => true,
-                    'data' => json_encode($reply)
+                    'data' => $payload
                 ])->header('Content-Type', 'application/json');
             }
                 /* Sms::send($this->no_telp, $response); */
