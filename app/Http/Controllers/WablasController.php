@@ -106,12 +106,12 @@ class WablasController extends Controller
                 ){
                     Log::info('registering_confirmation');
                     if (
-                        $this->message == 'Lanjutkan'
+                        $this->message == 'lanjutkan'
                     ) {
                         $whatsapp_registration->registering_confirmation  = 1;
                         $whatsapp_registration->save();
                     } else if (
-                        $this->message == 'Jangan Lanjutkan'
+                        $this->message == 'jangan lanjutkan'
                     ) {
                         $whatsapp_registration->delete();
                         $whatsapp_registration = null;
@@ -125,17 +125,17 @@ class WablasController extends Controller
                 ){
                     Log::info('pembayaran');
                     if (
-                        $this->message == 'Biaya Pribadi' ||
-                        $this->message == 'BPJS' ||
-                        $this->message == 'Lainnya'
+                        $this->message == 'biaya pribadi' ||
+                        $this->message == 'bpjs' ||
+                        $this->message == 'lainnya'
                     ) {
-                        if ($this->message == 'Biaya Pribadi') {
+                        if ($this->message == 'biaya pribadi') {
                             $whatsapp_registration->registrasi_pembayaran_id  = 1;
                         }
-                        if ($this->message == 'BPJS') {
+                        if ($this->message == 'bpjs') {
                             $whatsapp_registration->registrasi_pembayaran_id  = 2;
                         }
-                        if ($this->message == 'Lainnya') {
+                        if ($this->message == 'lainnya') {
                             $whatsapp_registration->registrasi_pembayaran_id  = 3;
                         }
                         $whatsapp_registration->save();
