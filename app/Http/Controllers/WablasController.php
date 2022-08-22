@@ -91,7 +91,7 @@ class WablasController extends Controller
                     $whatsapp_registration = $this->createWAregis();
                 }
             } else if (  
-                substr($this->clean($message), 0, 5) == 'ulang' &&
+                substr($this->message, 0, 5) == 'ulang' &&
                 isset( $whatsapp_registration ) &&
                 !is_null($whatsapp_registration->antrian)
             ) {
@@ -107,12 +107,12 @@ class WablasController extends Controller
             ){
                 Log::info('registering_confirmation');
                 if (
-                    $this->clean($message) == 'Lanjutkan'
+                    $this->message == 'Lanjutkan'
                 ) {
                     $whatsapp_registration->registering_confirmation  = 1;
                     $whatsapp_registration->save();
                 } else if (
-                    $this->clean($message) == 'Jangan Lanjutkan'
+                    $this->message == 'Jangan Lanjutkan'
                 ) {
                     $whatsapp_registration->delete();
                     $whatsapp_registration = null;
@@ -126,17 +126,17 @@ class WablasController extends Controller
             ){
                 Log::info('pembayaran');
                 if (
-                    $this->clean($message) == 'Biaya Pribadi' ||
-                    $this->clean($message) == 'BPJS' ||
-                    $this->clean($message) == 'Lainnya'
+                    $this->message == 'Biaya Pribadi' ||
+                    $this->message == 'BPJS' ||
+                    $this->message == 'Lainnya'
                 ) {
-                    if ($this->clean($message) == 'Biaya Pribadi') {
+                    if ($this->message == 'Biaya Pribadi') {
                         $whatsapp_registration->registrasi_pembayaran_id  = 1;
                     }
-                    if ($this->clean($message) == 'BPJS') {
+                    if ($this->message == 'BPJS') {
                         $whatsapp_registration->registrasi_pembayaran_id  = 2;
                     }
-                    if ($this->clean($message) == 'Lainnya') {
+                    if ($this->message == 'Lainnya') {
                         $whatsapp_registration->registrasi_pembayaran_id  = 3;
                     }
                     $whatsapp_registration->save();
@@ -148,8 +148,8 @@ class WablasController extends Controller
                 is_null( $whatsapp_registration->tanggal_lahir ) 
             ) {
                 Log::info('tanggal_lahir');
-                if ( $this->validateDate($this->clean($message), $format = 'd-m-Y') ) {
-                    $whatsapp_registration->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->clean($message))->format('Y-m-d');
+                if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
+                    $whatsapp_registration->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                     $whatsapp_registration->save();
                 } else {
                     $input_tidak_tepat = true;
@@ -159,13 +159,13 @@ class WablasController extends Controller
                 is_null( $whatsapp_registration->nama ) 
             ) {
                 Log::info('nama');
-                $whatsapp_registration->nama  = ucfirst(strtolower($this->clean($message)));;
+                $whatsapp_registration->nama  = ucfirst(strtolower($this->message));;
                 $whatsapp_registration->save();
             /* } else if ( */ 
             /*     isset( $whatsapp_registration ) && */
             /*     is_null( $whatsapp_registration->alamat ) */ 
             /* ) { */
-            /*      $whatsapp_registration->alamat  = $this->clean($message); */
+            /*      $whatsapp_registration->alamat  = $this->message; */
             /*      $whatsapp_registration->save(); */
             } else if (
                 isset( $whatsapp_registration ) &&
@@ -173,9 +173,9 @@ class WablasController extends Controller
                 !is_null($whatsapp_registration->periksa)
             ){
                 if (
-                    !is_null($this->satisfactionIndex($this->clean($message)))
+                    !is_null($this->satisfactionIndex($this->message))
                 ) {
-                    $whatsapp_registration->satisfaction_index_id = $this->satisfactionIndex($this->clean($message));
+                    $whatsapp_registration->satisfaction_index_id = $this->satisfactionIndex($this->message);
                     $whatsapp_registration->save();
                 } else {
                     $input_tidak_tepat = true;
@@ -189,10 +189,10 @@ class WablasController extends Controller
         /* 	is_null( $whatsapp_registration->demam ) */ 
         /* ) */ 
         /* { */
-        /* 	if ( $this->clean($message) == 'ya')  { */
+        /* 	if ( $this->message == 'ya')  { */
             /* 		$whatsapp_registration->demam  = 1; */
             /* 		$whatsapp_registration->save(); */
-            /* 	} else if ( $this->clean($message) == 'tidak') { */
+            /* 	} else if ( $this->message == 'tidak') { */
             /* 		$whatsapp_registration->demam  = 0; */
             /* 		$whatsapp_registration->save(); */
             /* 	} else { */
@@ -206,10 +206,10 @@ class WablasController extends Controller
             /* 	is_null( $whatsapp_registration->batuk_pilek ) */ 
             /* ) */ 
             /* { */
-            /* 	if ( $this->clean($message) == 'ya')  { */
+            /* 	if ( $this->message == 'ya')  { */
             /* 		$whatsapp_registration->batuk_pilek  = 1; */
             /* 		$whatsapp_registration->save(); */
-            /* 	} else if ( $this->clean($message) == 'tidak')  { */
+            /* 	} else if ( $this->message == 'tidak')  { */
             /* 		$whatsapp_registration->batuk_pilek  = 0; */
             /* 		$whatsapp_registration->save(); */
             /* 	} else { */
@@ -223,10 +223,10 @@ class WablasController extends Controller
             /* 	is_null( $whatsapp_registration->nyeri_menelan ) */ 
             /* ) */ 
             /* { */
-            /* 	if ( $this->clean($message) == 'ya')  { */
+            /* 	if ( $this->message == 'ya')  { */
             /* 		$whatsapp_registration->nyeri_menelan  = 1; */
             /* 		$whatsapp_registration->save(); */
-            /* 	} else if ( $this->clean($message) == 'tidak')  { */
+            /* 	} else if ( $this->message == 'tidak')  { */
             /* 		$whatsapp_registration->nyeri_menelan  = 0; */
             /* 		$whatsapp_registration->save(); */
             /* 	} else { */
@@ -240,10 +240,10 @@ class WablasController extends Controller
             /* 	is_null( $whatsapp_registration->sesak_nafas ) */ 
             /* ) { */
             /* 	Log::info('============================ sesak nafas =========================================='); */
-            /* 	if ( $this->clean($message)             == 'ya')  { */
+            /* 	if ( $this->message             == 'ya')  { */
             /* 		$whatsapp_registration->sesak_nafas  = 1; */
             /* 		$whatsapp_registration->save(); */
-            /* 	} else if ( $this->clean($message)      == 'tidak')  { */
+            /* 	} else if ( $this->message      == 'tidak')  { */
             /* 		$whatsapp_registration->sesak_nafas  = 0; */
             /* 		$whatsapp_registration->save(); */
             /* 	} else { */
@@ -256,10 +256,10 @@ class WablasController extends Controller
  && */
             /* 	is_null( $whatsapp_registration->kontak_covid ) */ 
             /* ) { */
-            /* 	if ( $this->clean($message) == 'ya')  { */
+            /* 	if ( $this->message == 'ya')  { */
             /* 		$whatsapp_registration->kontak_covid  = 1; */
             /* 		$whatsapp_registration->save(); */
-            /* 	} else if ( $this->clean($message) == 'tidak')  { */
+            /* 	} else if ( $this->message == 'tidak')  { */
             /* 		$whatsapp_registration->kontak_covid  = 0; */
             /* 		$whatsapp_registration->save(); */
             /* 	} else { */
@@ -607,15 +607,15 @@ class WablasController extends Controller
 	/*private function input_poli( $whatsapp_registration, $message ){ */
 	/*	Log::info('input_poli'); */
 	/*	if ($whatsapp_registration->antrian->jenis_antrian_id == 1) { */
-	/*		if ( $this->clean($message) == 'a' ) { */
+	/*		if ( $this->message == 'a' ) { */
 	/*			$whatsapp_registration->antrian->poli_id    = 'umum'; */
-	/*		} else if ( $this->clean($message) == 'b'   ){ */
+	/*		} else if ( $this->message == 'b'   ){ */
 	/*			if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') { */
 	/*				$whatsapp_registration->antrian->poli_id    = 'prolanis_ht'; */
 	/*			} else { */
 	/*				$whatsapp_registration->antrian->poli_id    = 'sks'; */
 	/*			} */
-	/*		} else if ( $this->clean($message) == 'c'   ){ */
+	/*		} else if ( $this->message == 'c'   ){ */
 	/*			if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') { */
 	/*				$whatsapp_registration->antrian->poli_id    = 'prolanis_dm'; */
 	/*			} else { */
@@ -624,11 +624,11 @@ class WablasController extends Controller
 	/*		} */ 
 	/*	} */
 	/*	if ($whatsapp_registration->antrian->jenis_antrian_id == 3) { */
-	/*		if ( $this->clean($message) == 'a' ) { */
+	/*		if ( $this->message == 'a' ) { */
 	/*			$whatsapp_registration->antrian->poli_id    = 'anc'; */
-	/*		} else if ( $this->clean($message) == 'b'   ){ */
+	/*		} else if ( $this->message == 'b'   ){ */
 	/*			$whatsapp_registration->antrian->poli_id    = 'kb 1 bulan'; */
-	/*		} else if ( $this->clean($message) == 'c'   ){ */
+	/*		} else if ( $this->message == 'c'   ){ */
 	/*			$whatsapp_registration->antrian->poli_id    = 'kb 3 bulan'; */
 	/*		} */
 	/*	} */
