@@ -745,7 +745,7 @@ class WablasController extends Controller
                 'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
             ];
 
-            echo json_encode(['data' => $payload]);
+            return json_encode(['data' => $payload]);
         }
     }
 }
