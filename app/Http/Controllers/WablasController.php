@@ -703,9 +703,10 @@ class WablasController extends Controller
 	*/
 	private function createWAregis()
 	{
-		$whatsapp_registration             = new WhatsappRegistration;
-		$whatsapp_registration->no_telp    = $this->no_telp;
-		$whatsapp_registration->tenant_id  = 1;
+		$whatsapp_registration                           = new WhatsappRegistration;
+		$whatsapp_registration->no_telp                  = $this->no_telp;
+		$whatsapp_registration->registering_confirmation = 0;
+		$whatsapp_registration->tenant_id                = 1;
 		$whatsapp_registration->save();
 
 		return $whatsapp_registration;
