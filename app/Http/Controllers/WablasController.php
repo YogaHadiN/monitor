@@ -309,7 +309,7 @@ class WablasController extends Controller
                 !is_null($whatsapp_registration)
             ) {
                 $payload   = $this->botKirim($whatsapp_registration);
-                $response .= $payload['category'] == 'button' ? $payload['message']['content'] : $payload['message']
+                $response .= $payload['category'] == 'button' ? $payload['message']['content'] : $payload['message'];
 
                 if (
                     !is_null($whatsapp_registration) &&
