@@ -347,11 +347,17 @@ class WablasController extends Controller
                 if ( $category == 'button' ) {
                     $message['buttons'] = $payload['message']['buttons'];
                     $message['content'] = $response;
+                    /* $payload[] = [ */
+                    /*     'category' => 'button', */
+                    /*     'message'  => json_encode($message), */
+                    /*     'footer'  => '' */
+                    /* ]; */
+
                     $payload[] = [
                         'category' => 'button',
-                        'message'  => json_encode($message),
-                        'footer'  => ''
+                        'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
                     ];
+
                 } else if ( $category == 'text' ){
                     $reply  = $payload['message'] . ' ' . $response;
                     $payload[] = [
@@ -747,18 +753,18 @@ class WablasController extends Controller
             return null;
         }
     }
-    /* public function wablas2(){ */
-    /*     header('Content-Type: application/json'); */
-    /*     if ( $this->message == '11111' ) { */
-    /*         $payload[] = [ */
-    /*             'category' => 'button', */
-    /*             'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}' */
-    /*         ]; */
+    public function wablas2(){
+        header('Content-Type: application/json');
+        if ( $this->message == '11111' ) {
+            $payload[] = [
+                'category' => 'button',
+                'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
+            ];
 
-    /*         return response()->json([ */
-    /*             'status' => true, */
-    /*             'data' => $payload */
-    /*         ])->header('Content-Type', 'application/json'); */
-    /*     } */
-    /* } */
+            return response()->json([
+                'status' => true,
+                'data' => $payload
+            ])->header('Content-Type', 'application/json');
+        }
+    }
 }
