@@ -103,7 +103,7 @@ class WablasController extends Controller
                 $whatsapp_registration->registering_confirmation < 1
             ){
                 Log::info('registering_confirmation');
-                Log::info( $this->messag );
+                Log::info( $this->message );
                 if (
                     $this->message == 'Lanjutkan'
                 ) {
