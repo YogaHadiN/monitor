@@ -358,12 +358,15 @@ class WablasController extends Controller
                         'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
                     ];
 
+                    Log::info('paypay');
+
                 } else if ( $category == 'text' ){
                     $reply  = $payload['message'] . ' ' . $response;
                     $payload[] = [
                         'category' => 'text',
                         'message'  => $reply
                     ];
+                    Log::info('paypay2');
                 }
 
                 return response()->json([
