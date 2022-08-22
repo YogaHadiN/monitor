@@ -67,6 +67,7 @@ class WablasController extends Controller
 	
 	public function webhook(){
 
+		header("Content-Type: text/plain");
 
         if (
 		 !is_null( $this->no_telp ) &&
