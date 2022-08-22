@@ -347,19 +347,19 @@ class WablasController extends Controller
                 if ( $category == 'button' ) {
                     $message['buttons'] = $payload['message']['buttons'];
                     $message['content'] = $response;
-                    /* $payload[] = [ */
-                    /*     'category' => 'button', */
-                    /*     'message'  => json_encode($message), */
-                    /*     'footer'  => '' */
-                    /* ]; */
                     $payload = null;
 
                     $payload[] = [
                         'category' => 'button',
-                        'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}'
+                        'message'  => json_encode($message),
+                        'footer'  => ''
                     ];
+                    /* $payload[] = [ */
+                    /*     'category' => 'button', */
+                    /*     'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}' */
+                    /* ]; */
 
-                    Log::info('paypaydfdkfd');
+                    Log::info('tess');
                     Log::info($payload);
 
                 } else if ( $category == 'text' ){
