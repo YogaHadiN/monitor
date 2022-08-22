@@ -705,12 +705,9 @@ class WablasController extends Controller
 	{
 		$whatsapp_registration             = new WhatsappRegistration;
 		$whatsapp_registration->no_telp    = $this->no_telp;
-		$whatsapp_registration->antrian_id = $this->antrian->id;
-		$whatsapp_registration->tenant_id  = $this->antrian->tenant_id;
+		$whatsapp_registration->tenant_id  = 1;
 		$whatsapp_registration->save();
 
-		$whatsapp_registration->antrian->no_telp    = $this->no_telp;
-		$whatsapp_registration->antrian->save();
 		return $whatsapp_registration;
 	}
     /**
