@@ -432,7 +432,7 @@ class WablasController extends Controller
 
 			return $payload;
 		}
-		if ( is_null( $whatsapp_registration->antrian->pembayaran ) ) {
+		if ( is_null( $whatsapp_registration->pembayaran ) ) {
 			$text = 'Bisa dibantu pembayaran menggunakan apa? ';
 
             $message = [
@@ -481,7 +481,7 @@ class WablasController extends Controller
 
 			return $payload;
 		}
-		if ( is_null( $whatsapp_registration->antrian->nama ) ) {
+		if ( is_null( $whatsapp_registration->nama ) ) {
 			$text =  'Bisa dibantu *Nama Lengkap* pasien?';
             $message = 'message : ' . $text;
             $payload[] = [
@@ -601,38 +601,38 @@ class WablasController extends Controller
 		return $text;
 	}
 
-	private function input_poli( $whatsapp_registration, $message ){
-		Log::info('input_poli');
-		if ($whatsapp_registration->antrian->jenis_antrian_id == 1) {
-			if ( $this->clean($message) == 'a' ) {
-				$whatsapp_registration->antrian->poli_id    = 'umum';
-			} else if ( $this->clean($message) == 'b'   ){
-				if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') {
-					$whatsapp_registration->antrian->poli_id    = 'prolanis_ht';
-				} else {
-					$whatsapp_registration->antrian->poli_id    = 'sks';
-				}
-			} else if ( $this->clean($message) == 'c'   ){
-				if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') {
-					$whatsapp_registration->antrian->poli_id    = 'prolanis_dm';
-				} else {
-					$whatsapp_registration->antrian->poli_id    = 'rapid test';
-				}
-			} 
-		}
-		if ($whatsapp_registration->antrian->jenis_antrian_id == 3) {
-			if ( $this->clean($message) == 'a' ) {
-				$whatsapp_registration->antrian->poli_id    = 'anc';
-			} else if ( $this->clean($message) == 'b'   ){
-				$whatsapp_registration->antrian->poli_id    = 'kb 1 bulan';
-			} else if ( $this->clean($message) == 'c'   ){
-				$whatsapp_registration->antrian->poli_id    = 'kb 3 bulan';
-			}
-		}
-		Log::info('input_poli_saved');
-		$whatsapp_registration->antrian->save();
-	}
-	/**
+	/*private function input_poli( $whatsapp_registration, $message ){ */
+	/*	Log::info('input_poli'); */
+	/*	if ($whatsapp_registration->antrian->jenis_antrian_id == 1) { */
+	/*		if ( $this->clean($message) == 'a' ) { */
+	/*			$whatsapp_registration->antrian->poli_id    = 'umum'; */
+	/*		} else if ( $this->clean($message) == 'b'   ){ */
+	/*			if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') { */
+	/*				$whatsapp_registration->antrian->poli_id    = 'prolanis_ht'; */
+	/*			} else { */
+	/*				$whatsapp_registration->antrian->poli_id    = 'sks'; */
+	/*			} */
+	/*		} else if ( $this->clean($message) == 'c'   ){ */
+	/*			if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') { */
+	/*				$whatsapp_registration->antrian->poli_id    = 'prolanis_dm'; */
+	/*			} else { */
+	/*				$whatsapp_registration->antrian->poli_id    = 'rapid test'; */
+	/*			} */
+	/*		} */ 
+	/*	} */
+	/*	if ($whatsapp_registration->antrian->jenis_antrian_id == 3) { */
+	/*		if ( $this->clean($message) == 'a' ) { */
+	/*			$whatsapp_registration->antrian->poli_id    = 'anc'; */
+	/*		} else if ( $this->clean($message) == 'b'   ){ */
+	/*			$whatsapp_registration->antrian->poli_id    = 'kb 1 bulan'; */
+	/*		} else if ( $this->clean($message) == 'c'   ){ */
+	/*			$whatsapp_registration->antrian->poli_id    = 'kb 3 bulan'; */
+	/*		} */
+	/*	} */
+	/*	Log::info('input_poli_saved'); */
+	/*	$whatsapp_registration->antrian->save(); */
+	/*} */
+	/*/1** */
 	* undocumented function
 	*
 	* @return void
