@@ -277,6 +277,7 @@ class WablasController extends Controller
                             'message'  => $reply
                         ];
                         Log::info('paypay2');
+                        Log::info($payload);
                     }
 
                     return response()->json([
