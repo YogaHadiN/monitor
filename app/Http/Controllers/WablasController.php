@@ -76,6 +76,7 @@ class WablasController extends Controller
                 Log::info("=========================================");
                 Log::info("Nyampe bawah");
                 Log::info( Input::all() );
+                Log::info( $this->message );
                 Log::info("=========================================");
                 $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
