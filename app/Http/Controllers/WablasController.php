@@ -359,6 +359,7 @@ class WablasController extends Controller
                     ];
 
                     Log::info('paypay');
+                    Log::info($payload);
 
                 } else if ( $category == 'text' ){
                     $reply  = $payload['message'] . ' ' . $response;
