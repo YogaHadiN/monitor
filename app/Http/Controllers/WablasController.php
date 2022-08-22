@@ -74,6 +74,7 @@ class WablasController extends Controller
                  !is_null( $this->message )
             ) {
                 Log::info("=========================================");
+                Log::info("Nyampe bawah");
                 Log::info( $this->message );
                 Log::info("=========================================");
                 $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
@@ -103,7 +104,6 @@ class WablasController extends Controller
                     $whatsapp_registration->registering_confirmation < 1
                 ){
                     Log::info('registering_confirmation');
-                    Log::info( $this->message );
                     if (
                         $this->message == 'Lanjutkan'
                     ) {
