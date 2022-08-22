@@ -71,7 +71,7 @@ class WablasController extends Controller
 
         Log::info( Input::all() );
         Log::info("isFromMe");
-        Log::info( Input::get('isFromMe') );
+        Log::info( Input::get('isFromMe') ? 'isFromMe' : 'NotFromMe');
 
         if (
 		 !is_null( $this->no_telp ) &&
