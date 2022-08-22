@@ -345,7 +345,7 @@ class WablasController extends Controller
             }
             if (!empty($response)) {
                 if ( $category == 'button' ) {
-                    $message['buttons'] = $payload['buttons'];
+                    $message['buttons'] = $payload['message']['buttons'];
                     $message['content'] = $response;
                     $payload[] = [
                         'category' => 'button',
