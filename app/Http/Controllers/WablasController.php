@@ -355,7 +355,7 @@ class WablasController extends Controller
 
                     $payload[] = [
                         'category' => 'button',
-                        'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
+                        'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}'
                     ];
 
                     Log::info('paypay');
