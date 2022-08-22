@@ -67,7 +67,7 @@ class WablasController extends Controller
 	
 	public function webhook(){
 
-		header("Content-Type: text/plain");
+        header('Content-Type: application/json');
 
         if (
 		 !is_null( $this->no_telp ) &&
@@ -345,15 +345,25 @@ class WablasController extends Controller
             }
             if (!empty($response)) {
                 if ( $category == 'button' ) {
-                    $buttons = $payload['buttons'];
-                    $reply['category'] = 'button';
-                    $reply['message']['buttons'] = $buttons;
-                    $reply['message']['content'] = $response;
+                    $message['buttons'] = $buttons;
+                    $message['content'] = $response;
+                    $payload[] = [
+                        'category' => 'button',
+                        'message'  => json_encode($message),
+                        'footer'  => ''
+                    ];
                 } else if ( $category == 'text' ){
-                    $reply ['category'] = 'text';
-                    $reply ['message'] = $payload['message'] . ' ' . $response;
+                    $reply  = $payload['message'] . ' ' . $response;
+                    $payload[] = [
+                        'category' => 'text',
+                        'message'  => $reply
+                    ];
                 }
-                echo $reply;
+
+                return response()->json([
+                    'status' => true,
+                    'data' => json_encode($reply)
+                ])->header('Content-Type', 'application/json');
             }
                 /* Sms::send($this->no_telp, $response); */
 		/* Konfirmasi mengantri berapa orang lagi sebelum didaftarkan dan perkiraan jam berapa dipanggil untuk masuk ruang dokter */
@@ -737,18 +747,18 @@ class WablasController extends Controller
             return null;
         }
     }
-    public function wablas2(){
-        header('Content-Type: application/json');
-        if ( $this->message == '11111' ) {
-            $payload[] = [
-                'category' => 'button',
-                'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
-            ];
+    /* public function wablas2(){ */
+    /*     header('Content-Type: application/json'); */
+    /*     if ( $this->message == '11111' ) { */
+    /*         $payload[] = [ */
+    /*             'category' => 'button', */
+    /*             'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}' */
+    /*         ]; */
 
-            return response()->json([
-                'status' => true,
-                'data' => $payload
-            ])->header('Content-Type', 'application/json');
-        }
-    }
+    /*         return response()->json([ */
+    /*             'status' => true, */
+    /*             'data' => $payload */
+    /*         ])->header('Content-Type', 'application/json'); */
+    /*     } */
+    /* } */
 }
