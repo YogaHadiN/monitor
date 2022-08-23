@@ -28,7 +28,6 @@ class WablasController extends Controller
 	public $estetika_buka = true;
 	public $no_telp;
 	public $message;
-	public $antrian;
 
 	public function __construct()
 	{
