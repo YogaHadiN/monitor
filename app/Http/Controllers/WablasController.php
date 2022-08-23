@@ -650,7 +650,7 @@ class WablasController extends Controller
         header('Content-Type: application/json');
         $payload[] = [
             'category' => 'button',
-            'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
+            'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}'
         ];
 
         return response()->json([
