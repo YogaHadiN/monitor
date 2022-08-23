@@ -646,6 +646,7 @@ class WablasController extends Controller
         }
     }
     public function wablas2(){
+        Log::info("wablas_masuk" . strtotime("now"));
         header('Content-Type: application/json');
         $payload[] = [
             'category' => 'button',
