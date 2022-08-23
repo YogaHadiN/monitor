@@ -646,19 +646,15 @@ class WablasController extends Controller
         }
     }
     public function wablas2(){
-        Log::info("wablas2");
         header('Content-Type: application/json');
-        if ( $this->message == '11111' ) {
-            Log::info("message masuk 11111");
-            $payload[] = [
-                'category' => 'button',
-                'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
-            ];
+        $payload[] = [
+            'category' => 'button',
+            'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message. ' . $this->message. '","footer":"footer here"}'
+        ];
 
-            return response()->json([
-                'status' => true,
-                'data' => $payload
-            ])->header('Content-Type', 'application/json');
-        }
+        return response()->json([
+            'status' => true,
+            'data' => $payload
+        ])->header('Content-Type', 'application/json');
     }
 }
