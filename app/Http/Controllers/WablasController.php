@@ -119,7 +119,7 @@ class WablasController extends Controller
                 } else if (
                     $this->message == 'jangan lanjutkan'
                 ) {
-                    if (isset($whatsapp_registration->antrian())) {
+                    if (!is_null($whatsapp_registration->antrian())) {
                         $whatsapp_registration->antrian()->delete();
                     }
                     $whatsapp_registration->delete();
