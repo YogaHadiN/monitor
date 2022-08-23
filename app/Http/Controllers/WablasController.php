@@ -646,6 +646,7 @@ class WablasController extends Controller
         }
     }
     public function wablas2(){
+        Log::info("wablas2");
         header('Content-Type: application/json');
         if ( $this->message == '11111' ) {
             $payload[] = [
