@@ -653,11 +653,11 @@ class WablasController extends Controller
             'category' => 'button',
             'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}'
         ];
-        echo json_encode(['data' => $payload]);
-        /* return response()->json([ */
-        /*     'status' => true, */
-        /*     'data' => $payload */
-        /* ])->header('Content-Type', 'application/json'); */
+
+        return response()->json([
+            'status' => true,
+            'data' => $payload
+        ])->header('Content-Type', 'application/json');
     }
     
 }
