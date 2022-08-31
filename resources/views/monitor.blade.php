@@ -446,12 +446,11 @@
 				if(
 					typeof ruangan !== 'undefined' 
 					&& ruangan !== ''
-					&& data.panggil
 				){
 					refreshElement('#dipanggil');
                     console.log('panggilan', panggilan)
-					$('#nomor_panggilan').html(panggilan.nomor_antrian);
 					$('#poli_panggilan').html( displayRuangan(ruangan) );
+					$('#nomor_panggilan').html(panggilan.nomor_antrian);
 					$('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
 					panggilPasien(ruangan);
 				}
