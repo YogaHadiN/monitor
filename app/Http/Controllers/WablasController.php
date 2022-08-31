@@ -631,15 +631,15 @@ class WablasController extends Controller
      * @return void
      */
     private function satisfactionIndex($message){
-        if ( str_contains( $message, 'Sangat Baik' ) ) {
+        if ( str_contains( $message, 'sangat baik' ) ) {
             return 5;
-        } else if ( str_contains( $message, 'Baik' ) ){
+        } else if ( str_contains( $message, 'baik' ) ){
             return 4;
-        } else if ( str_contains( $message,  'Biasa'  ) ){
+        } else if ( str_contains( $message,  'biasa'  ) ){
             return 3;
-        } else if ( str_contains( $message,   'Sangat Buruk'  ) ){
+        } else if ( str_contains( $message,   'sangat buruk'  ) ){
             return 1;
-        } else if ( str_contains( $message,    'Buruk'  ) ){
+        } else if ( str_contains( $message,    'buruk'  ) ){
             return 2;
         } else {
             return null;
