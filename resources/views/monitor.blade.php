@@ -441,6 +441,7 @@
 					$("#timbang_tensi").html(temp);
 				}
 				console.log('data.ruangan', data.ruangan);
+                console.log("============================================")
 				console.log('data'. data);
 				if(
 					typeof ruangan !== 'undefined' 
