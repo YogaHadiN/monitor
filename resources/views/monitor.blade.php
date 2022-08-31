@@ -442,7 +442,7 @@
 				}
 				console.log('data.ruangan', data.ruangan);
                 console.log("============================================")
-				console.log('data'. data);
+				console.log('data', data);
 				if(
 					typeof ruangan !== 'undefined' 
 					&& ruangan !== ''
