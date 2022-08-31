@@ -446,6 +446,7 @@
 				if(
 					typeof ruangan !== 'undefined' 
 					&& ruangan !== ''
+					&& data.panggil
 				){
 					refreshElement('#dipanggil');
                     console.log('panggilan', panggilan)
