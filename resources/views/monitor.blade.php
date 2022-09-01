@@ -323,6 +323,10 @@
   <source src="{{ flex_url('sound/ruangperiksagigi.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
+<audio id="audio_ruangpf">
+  <source src="{{ flex_url('sound/ruangpf.mp3') }}" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
 <audio id="audio_loketsatu">
   <source src="{{ flex_url('sound/loketsatu.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
