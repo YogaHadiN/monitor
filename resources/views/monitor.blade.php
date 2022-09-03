@@ -374,12 +374,6 @@
 	var channel = pusher.subscribe(channel_name);
 	var nomor_antrian = '';
 	channel.bind(event_name, function(data) {
-		console.log('ini ni datanya yang baru');
-		console.log(data);
-		console.log('data.panggil');
-		console.log(data.panggil);
-		console.log('data.ruangan');
-		console.log(data.ruangan);
 		if( data.panggil ){
 			var panggil_pasien = 1;
 		} else {
@@ -454,7 +448,7 @@
                     && ruangan !== null
 				){
 					refreshElement('#dipanggil');
-                    console.log('panggilan', panggilan)
+                    console.log('displayRuangan',displayRuangan( ruangan ));
 					$('#poli_panggilan').html( displayRuangan(ruangan) );
 					$('#nomor_panggilan').html(panggilan.nomor_antrian);
 					$('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
@@ -602,6 +596,8 @@
 			return 'Loket Dua';
 		} else if ( ruangan == 'ruangperiksagigi' ){
 			return 'Ruang Periksa Gigi';
+		} else if ( ruangan == 'ruangpf' ){
+			return 'Ruang Pemeriksaan Fisik';
 		}
 	}
 </script>
