@@ -235,6 +235,10 @@ class WablasController extends Controller
                 $input_tidak_tepat = false;
             }
             if (!empty($response)) {
+                Log::info("======================================================");
+                Log::info("masuk sini");
+                Log::info($response);
+                Log::info("======================================================");
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
                 if ( $category == 'button' ) {
