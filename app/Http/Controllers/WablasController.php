@@ -307,7 +307,7 @@ class WablasController extends Controller
 	{
         if (
             !is_null($whatsapp_registration) &&
-             is_null($whatsapp_registration->registering_confirmation) 
+             $whatsapp_registration->registering_confirmation < 1
         ) {
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
@@ -339,8 +339,6 @@ class WablasController extends Controller
             !is_null($whatsapp_registration) &&
              is_null( $whatsapp_registration->registrasi_pembayaran_id ) 
         ) {
-            Log::info("whatsapp_registration cheeeeck");
-            Log::info($whatsapp_registration->registrasi_pembayaran_id);
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
 
             $message = [
