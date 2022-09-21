@@ -187,6 +187,7 @@ class AntrianController extends Controller
 	
 	}
 	public function updateJumlahAntrian( $panggil_pasien = true ){
+        $ruangan = Input::get('ruangan');
 		$today = date('Y-m-d');
 		$antrians       = Antrian::with(
 									'jenis_antrian.poli_antrian', 
@@ -246,27 +247,8 @@ class AntrianController extends Controller
 			}
 		}
 
-		$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = '-';
-		$data['data']['pendaftaran']['nomor_antrian_terakhir'] = '-';
-		foreach ($antrians as $antrian) {
-			if (
-				$antrian->antriable_type == 'App\Models\Antrian'
-			) {
-				if (
-					isset($antrian->jenis_antrian->antrian_terakhir)
-				) {
-					$data['data']['pendaftaran']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-				}
-			} else if (
-				$antrian->antriable_type == 'App\Models\AntrianPoli'
-			){
-				if (
-					isset($antrian->jenis_antrian->antrian_terakhir)
-				) {
-					$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-				} 
-			}
-		}
+
+        /* dd('=================',$data['data']['pendaftaran']['nomor_antrian_terakhir'], $data['data']['timbang_tensi']['nomor_antrian_terakhir']) ; */
 
 		foreach ($jenis_antrian as $ja) {
 			if (!isset($data['data'][$ja->id]) && $ja->id <5) {
@@ -332,6 +314,24 @@ class AntrianController extends Controller
 				}
 		    }
 		}
+
+		$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = '-';
+		$data['data']['pendaftaran']['nomor_antrian_terakhir'] = '-';
+
+		foreach ($antrians as $antrian) {
+			if (
+				$antrian->antriable_type == 'App\Models\Antrian' &&
+                isset($antrian->jenis_antrian->antrian_terakhir)
+			) {
+                $data['data']['pendaftaran']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
+			} else if (
+				$antrian->antriable_type == 'App\Models\AntrianPoli' &&
+                isset($antrian->jenis_antrian->antrian_terakhir)
+			){
+                $data['data']['timbang_tensi']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
+			}
+		}
+
 		$columns = array_column($data['antrian_by_type']['pendaftaran'], 'selesai_periksa');
 		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['pendaftaran']);
 

@@ -383,6 +383,7 @@
 
 		$.get(base + '/antrianperiksa/monitor/getData/' + panggil_pasien,
 			{
+                ruangan : ruangan
 			},
 			function (data, textStatus, jqXHR) {
 				var panggilan                 = data.panggilan;
