@@ -138,28 +138,8 @@ class WablasController extends Controller
                 !is_null( $whatsapp_registration->antrian ) &&
                 is_null( $whatsapp_registration->antrian->nama ) 
             ) {
-                Log::info('nama');
                 $whatsapp_registration->antrian->nama  = ucfirst(strtolower($this->message));;
                 $whatsapp_registration->antrian->save();
-                /* } else if ( */ 
-                /*     isset( $whatsapp_registration ) && */
-                /*     is_null( $whatsapp_registration->alamat ) */ 
-                /* ) { */
-                /*      $whatsapp_registration->alamat  = $this->message; */
-                /*      $whatsapp_registration->save(); */
-                /* } else if ( */
-                /*     isset( $whatsapp_registration ) && */
-                /*     !is_null($whatsapp_registration->periksa_id) && */
-                /*     !is_null($whatsapp_registration->periksa) */
-                /* ){ */
-                /*     if ( */
-                /*         !is_null($this->satisfactionIndex($this->message)) */
-                /*     ) { */
-                /*         $whatsapp_registration->satisfaction_index_id = $this->satisfactionIndex($this->message); */
-                /*         $whatsapp_registration->save(); */
-                /*     } else { */
-                /*         $input_tidak_tepat = true; */
-                /*     } */
             } else if ( 
                 isset( $whatsapp_registration ) &&
                 !is_null( $whatsapp_registration->antrian ) &&
@@ -169,6 +149,12 @@ class WablasController extends Controller
                     $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                     $whatsapp_registration->antrian->save();
                     $whatsapp_registration->delete();
+
+                    Log::info("=========================================");
+                    Log::info("WhatsappRegistration setelah delete");
+                    Log::info( $whatsapp_registration);
+                    Log::info("=========================================");
+
                 } else {
                     $input_tidak_tepat = true;
                 }
@@ -211,10 +197,7 @@ class WablasController extends Controller
                     $response .= PHP_EOL;
                 }
             }
-            Log::info("============================================");
-            Log::info("whatsapp_registration");
-            Log::info($whatsapp_registration);
-            Log::info("============================================");
+
             if ( 
                 !is_null($whatsapp_registration)
             ) {
