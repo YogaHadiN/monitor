@@ -211,6 +211,10 @@ class WablasController extends Controller
                     $response .= PHP_EOL;
                 }
             }
+            Log::info("============================================");
+            Log::info("whatsapp_registration");
+            Log::info($whatsapp_registration);
+            Log::info("============================================");
             if ( 
                 !is_null($whatsapp_registration)
             ) {
