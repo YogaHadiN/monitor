@@ -195,7 +195,7 @@ class WablasController extends Controller
 
             if ( 
                 !is_null($whatsapp_registration) &&
-                isset($whatsapp_registration_deleted)
+                !isset($whatsapp_registration_deleted)
             ) {
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
