@@ -69,20 +69,11 @@ class WablasController extends Controller
             !is_null( $this->message ) &&
             !Input::get('isFromMe') 
         ) {
-            Log::info("=========================================");
-            Log::info("Nyampe bawah");
-            Log::info( Input::all() );
-            Log::info( $this->message );
-            Log::info("=========================================");
             $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->first();
 
             $this->antrian  = Antrian::where('kode_unik', $this->message )->first();
-            Log::info("==================================");
-            Log::info("this->antrian");
-            Log::info($this->antrian->id);
-            Log::info("==================================");
 
             $response              = '';
             $input_tidak_tepat     = false;
