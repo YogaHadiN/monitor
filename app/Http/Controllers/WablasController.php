@@ -179,6 +179,7 @@ class WablasController extends Controller
                 /*         $input_tidak_tepat = true; */
                 /*     } */
             }
+
             if (
                 isset( $whatsapp_registration ) &&
                 !is_null($whatsapp_registration->antrian)
@@ -255,6 +256,9 @@ class WablasController extends Controller
                 $input_tidak_tepat = false;
             }
             if (!empty($response)) {
+                Log::info("==========================================================");
+                Log::info("Disiniiiiii");
+                Log::info("==========================================================");
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
                 if ( $category == 'button' ) {
