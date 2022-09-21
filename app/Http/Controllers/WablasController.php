@@ -148,12 +148,7 @@ class WablasController extends Controller
                 if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
                     $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                     $whatsapp_registration->antrian->save();
-                    $whatsapp_registration->delete();
-
-                    Log::info("=========================================");
-                    Log::info("WhatsappRegistration setelah delete");
-                    Log::info( $whatsapp_registration);
-                    Log::info("=========================================");
+                    $whatsapp_registration_deleted = $whatsapp_registration->delete();
 
                 } else {
                     $input_tidak_tepat = true;
@@ -200,7 +195,7 @@ class WablasController extends Controller
 
             if ( 
                 !is_null($whatsapp_registration) &&
-                !$whatsapp_registration->trashed()
+                !$whatsapp_registration_deleted
             ) {
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
