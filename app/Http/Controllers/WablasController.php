@@ -218,16 +218,13 @@ class WablasController extends Controller
                 $category = $payload['category'];
                 $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
-                if (
-                    !is_null($whatsapp_registration)
-                ) {
-                    $response .=  PHP_EOL;
-                    $response .=  PHP_EOL;
-                    $response .= "==============";
-                    $response .=  PHP_EOL;
-                    $response .=  PHP_EOL;
-                    $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
-                }
+                $response .=  PHP_EOL;
+                $response .=  PHP_EOL;
+                $response .= "==============";
+                $response .=  PHP_EOL;
+                $response .=  PHP_EOL;
+                $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
+
                 /* if ( */
                 /*     !is_null($whatsapp_registration) && */
                 /*     !is_null($whatsapp_registration->periksa_id) && */
