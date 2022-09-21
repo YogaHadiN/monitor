@@ -266,7 +266,7 @@ class WablasController extends Controller
             }
             // Cek kepuasan pelanggan
             if ( str_contains( $this->message, '(pxid' ) ) {
-                $id = explode('PXID', $this->message);
+                $id = explode('pxid', $this->message);
                 $id = rtrim( $id, ')');
 
                 $antrian = Antrian::find($id);
