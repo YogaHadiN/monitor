@@ -211,9 +211,12 @@ class WablasController extends Controller
                     !is_null( $whatsapp_registration->antrian->tanggal_lahir )
                 ) {
                     $response .= PHP_EOL;
-                    $response .=    "==================";
+                    $response .= "Anda bisa mendaftarkan pasien berikutnya apabila ada";
+                    $response .= "==================";
                     $response .= PHP_EOL;
                     $response .= PHP_EOL;
+
+                    $whatsapp_registration->delete();
                 }
             }
             if ( 
