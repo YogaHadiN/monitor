@@ -194,19 +194,20 @@ class WablasController extends Controller
             }
 
             if ( 
-                !is_null($whatsapp_registration) &&
-                !isset($whatsapp_registration_deleted)
+                !is_null($whatsapp_registration)
             ) {
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
                 $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
+                if (!isset($whatsapp_registration_deleted)) {
+                    $response .=  PHP_EOL;
+                    $response .=  PHP_EOL;
+                    $response .= "==============";
+                    $response .=  PHP_EOL;
+                    $response .=  PHP_EOL;
+                    $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
+                }
 
-                $response .=  PHP_EOL;
-                $response .=  PHP_EOL;
-                $response .= "==============";
-                $response .=  PHP_EOL;
-                $response .=  PHP_EOL;
-                $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
 
                 /* if ( */
                 /*     !is_null($whatsapp_registration) && */
