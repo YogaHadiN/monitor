@@ -168,6 +168,7 @@ class WablasController extends Controller
                 if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
                     $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                     $whatsapp_registration->antrian->save();
+                    $whatsapp_registration->delete();
                 } else {
                     $input_tidak_tepat = true;
                 }
