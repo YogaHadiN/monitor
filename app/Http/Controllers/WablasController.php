@@ -308,7 +308,7 @@ class WablasController extends Controller
 
 	private function botKirim($whatsapp_registration)
 	{
-		if ( !$whatsapp_registration->registering_confirmation ) {
+		if ( !is_null($whatsapp_registration->registering_confirmation) ) {
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
 			$text .= "==============";
