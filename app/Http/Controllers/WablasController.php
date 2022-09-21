@@ -214,8 +214,6 @@ class WablasController extends Controller
                     $response .= "==================";
                     $response .= PHP_EOL;
                     $response .= PHP_EOL;
-
-                    $whatsapp_registration->delete();
                 }
             }
             if ( 
