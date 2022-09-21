@@ -142,17 +142,6 @@ class WablasController extends Controller
             } else if ( 
                 isset( $whatsapp_registration ) &&
                 !is_null( $whatsapp_registration->antrian ) &&
-                is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
-            ) {
-                if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
-                    $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
-                    $whatsapp_registration->antrian->save();
-                } else {
-                    $input_tidak_tepat = true;
-                }
-            } else if ( 
-                isset( $whatsapp_registration ) &&
-                !is_null( $whatsapp_registration->antrian ) &&
                 is_null( $whatsapp_registration->antrian->nama ) 
             ) {
                 Log::info('nama');
@@ -177,6 +166,17 @@ class WablasController extends Controller
                 /*     } else { */
                 /*         $input_tidak_tepat = true; */
                 /*     } */
+            } else if ( 
+                isset( $whatsapp_registration ) &&
+                !is_null( $whatsapp_registration->antrian ) &&
+                is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
+            ) {
+                if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
+                    $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
+                    $whatsapp_registration->antrian->save();
+                } else {
+                    $input_tidak_tepat = true;
+                }
             }
 
             if (
