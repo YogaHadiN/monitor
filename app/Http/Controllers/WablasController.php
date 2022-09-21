@@ -308,7 +308,10 @@ class WablasController extends Controller
 
 	private function botKirim($whatsapp_registration)
 	{
-		if ( is_null($whatsapp_registration->registering_confirmation) ) {
+        if (
+            !is_null($whatsapp_registration) &&
+             is_null($whatsapp_registration->registering_confirmation) 
+        ) {
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
 			$text .= "==============";
@@ -335,7 +338,10 @@ class WablasController extends Controller
 
 			return $payload;
 		}
-		if ( is_null( $whatsapp_registration->registrasi_pembayaran_id ) ) {
+		if (
+            !is_null($whatsapp_registration) &&
+             is_null( $whatsapp_registration->registrasi_pembayaran_id ) 
+        ) {
             Log::info("whatsapp_registration cheeeeck");
             Log::info($whatsapp_registration->registrasi_pembayaran_id);
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
@@ -357,7 +363,10 @@ class WablasController extends Controller
 
 			return $payload;
 		}
-		if ( is_null( $whatsapp_registration->nama ) ) {
+		if (
+            !is_null($whatsapp_registration) &&
+             is_null( $whatsapp_registration->nama ) 
+        ) {
             $payload[] = [
                 'category' => 'text',
                 'message' =>   'Bisa dibantu *Nama Lengkap* pasien?'
@@ -366,7 +375,10 @@ class WablasController extends Controller
 			return $payload;
 		}
 
-		if ( is_null( $whatsapp_registration->tanggal_lahir ) ) {
+		if (
+            !is_null($whatsapp_registration) &&
+             is_null( $whatsapp_registration->tanggal_lahir ) 
+        ) {
 			$text =  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
             $message = $text;
             $payload[] = [
