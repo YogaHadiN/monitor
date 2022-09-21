@@ -109,9 +109,6 @@ class WablasController extends Controller
                 } else if (
                     $this->message == 'jangan lanjutkan'
                 ) {
-                    if (!is_null($whatsapp_registration->antrian())) {
-                        $whatsapp_registration->antrian()->delete();
-                    }
                     $whatsapp_registration->delete();
                     $whatsapp_registration = null;
                     $response .=    "Silahkan scan QR Code Pendaftaran yang tersedia di klinik";
