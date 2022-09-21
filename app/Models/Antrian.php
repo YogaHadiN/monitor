@@ -81,5 +81,8 @@ class Antrian extends Model
         }
         return $kode_unik;
     }
+    public function registrasiPembayaran(){
+        return $this->belongsTo(RegistrasiPembayaran::class);
+    }
     
 }
