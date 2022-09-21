@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use App\Models\AntrianPeriksa;
 use App\Models\AntrianPoli;
@@ -17,7 +15,6 @@ use Carbon\Carbon;
 use Log;
 use DateTime;
 use App\Models\Sms;
-/* use App\Http\Controllers\FasilitasController; */
 class WablasController extends Controller
 {
 	/**
@@ -80,25 +77,19 @@ class WablasController extends Controller
             $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->first();
-            $this->tenant  = Tenant::where('kode_unik', $this->message )->first();
+            $this->antrian  = Antrian::where('kode_unik', $this->message )->first();
 
             $response              = '';
             $input_tidak_tepat     = false;
-            if ( !is_null($this->tenant) ) {
+            if ( !is_null($this->antrian) ) {
                 if ( is_null( $whatsapp_registration ) ) {
                     $whatsapp_registration = $this->createWAregis();
-                    /* $this->antrian = Antrian::createFromWhatsappRegistration($whatsapp_registration); */
-                    /* $whatsapp_registration->antrian_id = $this->antrian->id; */
-                    /* $whatsapp_registration->save(); */
-                } else if( !is_null($whatsapp_registration) && !is_null($whatsapp_registration->antrian) ) {
-                    $this->antrian = $whatsapp_registration->antrian;
                 }
             } else if (  
                 substr($this->message, 0, 5) == 'ulang' &&
                 isset( $whatsapp_registration ) &&
                 !is_null($whatsapp_registration->antrian)
             ) {
-                Log::info('antrian');
                 $whatsapp_registration->no_telp                  = null;
                 $whatsapp_registration->registrasi_pembayaran_id = null;
                 $whatsapp_registration->nama                     = null;
@@ -108,7 +99,6 @@ class WablasController extends Controller
                 isset( $whatsapp_registration ) &&
                 $whatsapp_registration->registering_confirmation < 1
             ){
-                Log::info('registering_confirmation');
                 if (
                     $this->message == 'lanjutkan'
                 ) {
@@ -239,7 +229,6 @@ class WablasController extends Controller
                 if (
                     !is_null($whatsapp_registration)
                 ) {
-
                     $response .=  PHP_EOL;
                     $response .=  PHP_EOL;
                     $response .= "==============";
@@ -269,6 +258,8 @@ class WablasController extends Controller
                 $input_tidak_tepat = false;
             }
             if (!empty($response)) {
+                $payload   = $this->botKirim($whatsapp_registration)[0];
+                $category = $payload['category'];
                 if ( $category == 'button' ) {
                     $message['buttons'] = $payload['message']['buttons'];
                     $message['content'] = $response;
@@ -621,6 +612,7 @@ class WablasController extends Controller
 		$whatsapp_registration->no_telp                  = $this->no_telp;
 		$whatsapp_registration->registering_confirmation = 0;
 		$whatsapp_registration->tenant_id                = 1;
+		$whatsapp_registration->antrian_id                = $this->antrian->id;
 		$whatsapp_registration->save();
 
 		return $whatsapp_registration;
