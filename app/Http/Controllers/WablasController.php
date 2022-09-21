@@ -206,6 +206,13 @@ class WablasController extends Controller
                     $response .=  PHP_EOL;
                     $response .=  PHP_EOL;
                     $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
+                } else {
+                    $response .=  PHP_EOL;
+                    $response .=  PHP_EOL;
+                    $response .= "==============";
+                    $response .=  PHP_EOL;
+                    $response .=  PHP_EOL;
+                    $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
                 }
 
 
