@@ -273,7 +273,7 @@ class WablasController extends Controller
                 $antrian->satisfaction_index = $this->satisfactionIndex( $this->message );
                 $antrian->save();
 
-                echo "Terima kasih atas kesediaan menjawab pertanyaan kami";
+                echo "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
             }
 
         }   
