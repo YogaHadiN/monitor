@@ -211,7 +211,6 @@ class WablasController extends Controller
                     !is_null( $whatsapp_registration->antrian->tanggal_lahir )
                 ) {
                     $response .= PHP_EOL;
-                    $response .= "Anda bisa mendaftarkan pasien berikutnya apabila ada";
                     $response .= "==================";
                     $response .= PHP_EOL;
                     $response .= PHP_EOL;
@@ -258,9 +257,6 @@ class WablasController extends Controller
                 $input_tidak_tepat = false;
             }
             if (!empty($response)) {
-                Log::info("==========================================================");
-                Log::info("Disiniiiiii");
-                Log::info("==========================================================");
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
                 if ( $category == 'button' ) {
