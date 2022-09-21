@@ -392,7 +392,7 @@ class WablasController extends Controller
 		$text .= "Anda telah terdaftar dengan Nomor Antrian";
 		$text .= PHP_EOL;
 		$text .= PHP_EOL;
-		$text .= "```" . $this->antrian->nomor_antrian . "```" ;
+		$text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
 		$text .= PHP_EOL;
 		$text .= PHP_EOL;
 		$text .= "Silahkan menunggu untuk dilayani";
