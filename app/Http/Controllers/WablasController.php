@@ -144,10 +144,9 @@ class WablasController extends Controller
                 !is_null( $whatsapp_registration->antrian ) &&
                 is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
             ) {
-                Log::info('tanggal_lahir');
                 if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
-                    $whatsapp_registration->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
-                    $whatsapp_registration->save();
+                    $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
+                    $whatsapp_registration->antrian->save();
                 } else {
                     $input_tidak_tepat = true;
                 }
@@ -158,7 +157,7 @@ class WablasController extends Controller
             ) {
                 Log::info('nama');
                 $whatsapp_registration->antrian->nama  = ucfirst(strtolower($this->message));;
-                $whatsapp_registration->save();
+                $whatsapp_registration->antrian->save();
                 /* } else if ( */ 
                 /*     isset( $whatsapp_registration ) && */
                 /*     is_null( $whatsapp_registration->alamat ) */ 
@@ -341,7 +340,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($whatsapp_registration) &&
-             is_null( $whatsapp_registration->registrasi_pembayaran_id ) 
+             is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ) {
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
 
@@ -364,7 +363,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($whatsapp_registration) &&
-             is_null( $whatsapp_registration->nama ) 
+             is_null( $whatsapp_registration->antrian->nama ) 
         ) {
             $payload[] = [
                 'category' => 'text',
@@ -376,7 +375,7 @@ class WablasController extends Controller
 
 		if (
             !is_null($whatsapp_registration) &&
-             is_null( $whatsapp_registration->tanggal_lahir ) 
+             is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
 			$text =  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
             $message = $text;
