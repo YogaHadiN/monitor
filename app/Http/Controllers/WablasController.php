@@ -149,6 +149,7 @@ class WablasController extends Controller
                     $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                     $whatsapp_registration->antrian->save();
                     $whatsapp_registration->delete();
+                    $whatsapp_registration = null;
 
                     Log::info("=========================================");
                     Log::info("WhatsappRegistration setelah delete");
