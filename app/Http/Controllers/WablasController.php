@@ -221,19 +221,18 @@ class WablasController extends Controller
                     $response .=  PHP_EOL;
                     $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
                 } else {
-                    $text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
-                    $text .= PHP_EOL;
-                    $text .= "Anda telah terdaftar dengan Nomor Antrian";
-                    $text .= PHP_EOL;
-                    $text .= PHP_EOL;
-                    $text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
-                    $text .= PHP_EOL;
-                    $text .= PHP_EOL;
-                    $text .= "Silahkan menunggu untuk dilayani";
-                    $text .=  PHP_EOL;
-                    $text .=  PHP_EOL;
-                    $text .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
-                    echo $text;
+                    $response = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
+                    $response .= PHP_EOL;
+                    $response .= "Anda telah terdaftar dengan Nomor Antrian";
+                    $response .= PHP_EOL;
+                    $response .= PHP_EOL;
+                    $response .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
+                    $response .= PHP_EOL;
+                    $response .= PHP_EOL;
+                    $response .= "Silahkan menunggu untuk dilayani";
+                    $response .=  PHP_EOL;
+                    $response .=  PHP_EOL;
+                    $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
                 }
 
 
