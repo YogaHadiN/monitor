@@ -569,7 +569,6 @@ class WablasController extends Controller
      */
     private function ulangiRegistrasiWhatsapp($whatsapp_registration)
     {
-        $whatsapp_registration->no_telp                  = null;
         $whatsapp_registration->registrasi_pembayaran_id = null;
         $whatsapp_registration->nama                     = null;
         $whatsapp_registration->tanggal_lahir            = null;
