@@ -222,16 +222,7 @@ class WablasController extends Controller
                 } else {
                     $response = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
                     $response .= PHP_EOL;
-                    $response .= "Anda telah terdaftar dengan Nomor Antrian";
-                    $response .= PHP_EOL;
-                    $response .= PHP_EOL;
-                    $response .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
-                    $response .= PHP_EOL;
-                    $response .= PHP_EOL;
-                    $response .= "Silahkan menunggu untuk dilayani";
-                    $response .=  PHP_EOL;
-                    $response .=  PHP_EOL;
-                    $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
+                    $response .= $this->pesanBalasanBilaTerdaftar($whatsapp_registration);
                     echo $response;
                     return false;
                 }
@@ -299,6 +290,9 @@ class WablasController extends Controller
             }
 
 
+            if ( $this->antrian->antriable_type != 'App\Models\Antrian' ) {
+                echo $this->pesanBalasanBilaTerdaftar($whatsapp_registration);
+            }
             // Jika pasien sudah didaftarkan oleh admin
 
         }   
@@ -576,6 +570,27 @@ class WablasController extends Controller
         $whatsapp_registration->antrian->tanggal_lahir            = null;
         $whatsapp_registration->antrian->save();
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function pesanBalasanBilaTerdaftar($whatsapp_registration)
+    {
+        $response = "Anda telah terdaftar dengan Nomor Antrian";
+        $response .= PHP_EOL;
+        $response .= PHP_EOL;
+        $response .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
+        $response .= PHP_EOL;
+        $response .= PHP_EOL;
+        $response .= "Silahkan menunggu untuk dilayani";
+        $response .=  PHP_EOL;
+        $response .=  PHP_EOL;
+        $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
+
+        return $response;
+    }
+    
     
     
 }
