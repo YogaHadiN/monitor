@@ -221,12 +221,19 @@ class WablasController extends Controller
                     $response .=  PHP_EOL;
                     $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
                 } else {
-                    $response .=  PHP_EOL;
-                    $response .=  PHP_EOL;
-                    $response .= "==============";
-                    $response .=  PHP_EOL;
-                    $response .=  PHP_EOL;
-                    $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
+                    $text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
+                    $text .= PHP_EOL;
+                    $text .= "Anda telah terdaftar dengan Nomor Antrian";
+                    $text .= PHP_EOL;
+                    $text .= PHP_EOL;
+                    $text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
+                    $text .= PHP_EOL;
+                    $text .= PHP_EOL;
+                    $text .= "Silahkan menunggu untuk dilayani";
+                    $text .=  PHP_EOL;
+                    $text .=  PHP_EOL;
+                    $text .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
+                    echo $text;
                 }
 
 
@@ -409,24 +416,6 @@ class WablasController extends Controller
 			return $payload;
 		}
 
-        if (isset($whatsapp_registration_deleted)) {
-            $text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
-            $text .= PHP_EOL;
-            $text .= "Anda telah terdaftar dengan Nomor Antrian";
-            $text .= PHP_EOL;
-            $text .= PHP_EOL;
-            $text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
-            $text .= PHP_EOL;
-            $text .= PHP_EOL;
-            $text .= "Silahkan menunggu untuk dilayani";
-
-            $payload[] = [
-                'category' => 'text',
-                'message' => $text
-            ];
-
-            return $payload;
-        }
 	}
 
 	/*private function input_poli( $whatsapp_registration, $message ){ */
