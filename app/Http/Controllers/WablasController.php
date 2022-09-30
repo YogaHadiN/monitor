@@ -300,7 +300,6 @@ class WablasController extends Controller
 
 
             // Jika pasien sudah didaftarkan oleh admin
-            $this->antrian = Antrian::where('kode_unik')
 
         }   
 	}
