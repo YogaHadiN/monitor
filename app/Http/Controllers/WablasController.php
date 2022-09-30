@@ -572,7 +572,7 @@ class WablasController extends Controller
         $whatsapp_registration->antrian->registrasi_pembayaran_id = null;
         $whatsapp_registration->antrian->nama                     = null;
         $whatsapp_registration->antrian->tanggal_lahir            = null;
-        $whatsapp_registration->save();
+        $whatsapp_registration->antrian->save();
     }
     
     
