@@ -234,6 +234,7 @@ class WablasController extends Controller
                     $response .=  PHP_EOL;
                     $response .=  PHP_EOL;
                     $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
+                    echo $response;
                 }
 
 
