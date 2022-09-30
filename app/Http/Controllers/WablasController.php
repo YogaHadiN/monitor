@@ -79,7 +79,7 @@ class WablasController extends Controller
             $response              = '';
             $input_tidak_tepat     = false;
             Log::info([ $this->antrian->antriable_type, 'Apakah Antrian?' ]);
-            if ( !is_null($this->antrian) && $this->antrian->antriable_type = 'App\Models\Antrian' ) {
+            if ( !is_null($this->antrian) && $this->antrian->antriable_type == 'App\\Models\\Antrian' ) {
                 if ( is_null( $whatsapp_registration ) ) {
                     $whatsapp_registration = $this->createWAregis();
                 }
@@ -291,7 +291,7 @@ class WablasController extends Controller
             }
 
 
-            if ( $this->antrian->antriable_type != 'App\Models\Antrian' ) {
+            if ( $this->antrian->antriable_type != 'App\\Models\\Antrian' ) {
                 echo $this->pesanBalasanBilaTerdaftar($whatsapp_registration);
             }
             // Jika pasien sudah didaftarkan oleh admin
