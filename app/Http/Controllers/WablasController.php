@@ -32,7 +32,6 @@ class WablasController extends Controller
 		 !is_null(Input::get('phone')) &&
 		 !is_null(Input::get('message'))
 		) {
-			$this->no_telp = Input::get('phone');
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
 
@@ -292,6 +291,8 @@ class WablasController extends Controller
 
 
             if ( $this->antrian->antriable_type != 'App\\Models\\Antrian' ) {
+                $this->antrian->no_telp = $this->no_telp;
+                $this->antrian->save();
                 echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
             }
             // Jika pasien sudah didaftarkan oleh admin
