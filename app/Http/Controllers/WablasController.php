@@ -290,7 +290,10 @@ class WablasController extends Controller
             }
 
 
-            if ( $this->antrian->antriable_type != 'App\\Models\\Antrian' ) {
+            if (
+                 $this->antrian->antriable_type != 'App\\Models\\Antrian' &&
+                 $this->antrian->antriable_type != 'App\\Models\\Periksa' 
+            ) {
                 $this->antrian->no_telp = $this->no_telp;
                 $this->antrian->save();
                 echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
