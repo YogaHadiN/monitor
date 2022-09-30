@@ -74,12 +74,11 @@ class WablasController extends Controller
                 ->first();
 
             $this->antrian  = Antrian::where('kode_unik', $this->message )
-                                     ->where('antriable_type', 'App\Models\Antrian' )
                                      ->first();
 
             $response              = '';
             $input_tidak_tepat     = false;
-            if ( !is_null($this->antrian) ) {
+            if ( !is_null($this->antrian) && $this->antrian->antriable_type = 'App\Models\Antrian' ) {
                 if ( is_null( $whatsapp_registration ) ) {
                     $whatsapp_registration = $this->createWAregis();
                 }
@@ -298,6 +297,10 @@ class WablasController extends Controller
 
                 echo "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
             }
+
+
+            // Jika pasien sudah didaftarkan oleh admin
+            $this->antrian = Antrian::where('kode_unik')
 
         }   
 	}
