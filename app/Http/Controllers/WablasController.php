@@ -159,6 +159,7 @@ class WablasController extends Controller
                 ) {
                     if ($this->message == 'lanjutkan') {
                         $whatsapp_registration_deleted = $whatsapp_registration->delete();
+                        $whatsapp_registration = null;
                     }
                     if ($this->message == 'ulangi') {
                         $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
@@ -257,6 +258,7 @@ class WablasController extends Controller
                 }
                 $input_tidak_tepat = false;
             }
+
             if (!empty($response)) {
                 Log::info("======================================================");
                 Log::info("masuk sini");
