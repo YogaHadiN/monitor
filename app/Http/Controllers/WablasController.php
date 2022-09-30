@@ -73,7 +73,9 @@ class WablasController extends Controller
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->first();
 
-            $this->antrian  = Antrian::where('kode_unik', $this->message )->first();
+            $this->antrian  = Antrian::where('kode_unik', $this->message )
+                                     ->where('antriable_type', 'App\Models\Antrian' )
+                                     ->first();
 
             $response              = '';
             $input_tidak_tepat     = false;
@@ -86,11 +88,7 @@ class WablasController extends Controller
                 isset( $whatsapp_registration ) &&
                 !is_null($whatsapp_registration->antrian)
             ) {
-                $whatsapp_registration->no_telp                  = null;
-                $whatsapp_registration->registrasi_pembayaran_id = null;
-                $whatsapp_registration->nama                     = null;
-                $whatsapp_registration->tanggal_lahir            = null;
-                $whatsapp_registration->save();
+                $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
             } else if ( 
                 isset( $whatsapp_registration ) &&
                 $whatsapp_registration->registering_confirmation < 1
@@ -114,7 +112,6 @@ class WablasController extends Controller
                 !is_null( $whatsapp_registration->antrian ) &&
                 is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
             ){
-                Log::info('pembayaran');
                 if (
                     $this->message == 'biaya pribadi' ||
                     $this->message == 'bpjs' ||
@@ -148,8 +145,24 @@ class WablasController extends Controller
                 if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
                     $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                     $whatsapp_registration->antrian->save();
-                    $whatsapp_registration_deleted = $whatsapp_registration->delete();
-
+                } else {
+                    $input_tidak_tepat = true;
+                }
+            } else if ( 
+                isset( $whatsapp_registration ) &&
+                !is_null( $whatsapp_registration->antrian ) &&
+                !is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
+            ) {
+                if (
+                    $this->message == 'lanjutkan' ||
+                    $this->message == 'ulangi'
+                ) {
+                    if ($this->message == 'lanjutkan') {
+                        $whatsapp_registration->delete();
+                    }
+                    if ($this->message == 'ulangi') {
+                        $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
+                    }
                 } else {
                     $input_tidak_tepat = true;
                 }
@@ -186,9 +199,7 @@ class WablasController extends Controller
                     !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id) ||
                     !is_null( $whatsapp_registration->antrian->tanggal_lahir )
                 ) {
-                    $response .= PHP_EOL;
-                    $response .= "==================";
-                    $response .= PHP_EOL;
+                    $response .= 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?'
                     $response .= PHP_EOL;
                 }
             }
@@ -530,5 +541,19 @@ class WablasController extends Controller
             'data' => $payload
         ])->header('Content-Type', 'application/json');
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function ulangiRegistrasiWhatsapp($whatsapp_registration)
+    {
+        $whatsapp_registration->no_telp                  = null;
+        $whatsapp_registration->registrasi_pembayaran_id = null;
+        $whatsapp_registration->nama                     = null;
+        $whatsapp_registration->tanggal_lahir            = null;
+        $whatsapp_registration->save();
+    }
+    
     
 }
