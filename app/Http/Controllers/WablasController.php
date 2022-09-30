@@ -159,7 +159,6 @@ class WablasController extends Controller
                 ) {
                     if ($this->message == 'lanjutkan') {
                         $whatsapp_registration_deleted = $whatsapp_registration->delete();
-                        $whatsapp_registration = null;
                     }
                     if ($this->message == 'ulangi') {
                         $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
@@ -235,6 +234,7 @@ class WablasController extends Controller
                     $response .=  PHP_EOL;
                     $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
                     echo $response;
+                    return false;
                 }
 
 
