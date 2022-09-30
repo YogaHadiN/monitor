@@ -388,7 +388,7 @@ class WablasController extends Controller
             !is_null($whatsapp_registration) &&
             !is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-            $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?'
+            $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?';
             $text .= PHP_EOL;
 
             $message = [
