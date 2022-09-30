@@ -158,7 +158,7 @@ class WablasController extends Controller
                     $this->message == 'ulangi'
                 ) {
                     if ($this->message == 'lanjutkan') {
-                        $whatsapp_registration->delete();
+                        $whatsapp_registration_deleted = $whatsapp_registration->delete();
                     }
                     if ($this->message == 'ulangi') {
                         $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
@@ -212,6 +212,7 @@ class WablasController extends Controller
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
                 $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
+
                 if (!isset($whatsapp_registration_deleted)) {
                     $response .=  PHP_EOL;
                     $response .=  PHP_EOL;
@@ -408,22 +409,24 @@ class WablasController extends Controller
 			return $payload;
 		}
 
-		$text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
-		$text .= PHP_EOL;
-		$text .= "Anda telah terdaftar dengan Nomor Antrian";
-		$text .= PHP_EOL;
-		$text .= PHP_EOL;
-		$text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
-		$text .= PHP_EOL;
-		$text .= PHP_EOL;
-		$text .= "Silahkan menunggu untuk dilayani";
+        if (isset($whatsapp_registration_deleted)) {
+            $text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
+            $text .= PHP_EOL;
+            $text .= "Anda telah terdaftar dengan Nomor Antrian";
+            $text .= PHP_EOL;
+            $text .= PHP_EOL;
+            $text .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
+            $text .= PHP_EOL;
+            $text .= PHP_EOL;
+            $text .= "Silahkan menunggu untuk dilayani";
 
-        $payload[] = [
-            'category' => 'text',
-            'message' => $text
-        ];
+            $payload[] = [
+                'category' => 'text',
+                'message' => $text
+            ];
 
-        return $payload;
+            return $payload;
+        }
 	}
 
 	/*private function input_poli( $whatsapp_registration, $message ){ */
