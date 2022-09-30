@@ -223,7 +223,7 @@ class WablasController extends Controller
                 } else {
                     $response = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
                     $response .= PHP_EOL;
-                    $response .= $this->pesanBalasanBilaTerdaftar($whatsapp_registration);
+                    $response .= $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
                     echo $response;
                     return false;
                 }
@@ -292,7 +292,7 @@ class WablasController extends Controller
 
 
             if ( $this->antrian->antriable_type != 'App\\Models\\Antrian' ) {
-                echo $this->pesanBalasanBilaTerdaftar($whatsapp_registration);
+                echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
             }
             // Jika pasien sudah didaftarkan oleh admin
 
@@ -576,12 +576,12 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function pesanBalasanBilaTerdaftar($whatsapp_registration)
+    private function pesanBalasanBilaTerdaftar($nomor_antrian)
     {
         $response = "Anda telah terdaftar dengan Nomor Antrian";
         $response .= PHP_EOL;
         $response .= PHP_EOL;
-        $response .= "```" . $whatsapp_registration->antrian->nomor_antrian . "```" ;
+        $response .= "```" . $nomor_antrian . "```" ;
         $response .= PHP_EOL;
         $response .= PHP_EOL;
         $response .= "Silahkan menunggu untuk dilayani";
