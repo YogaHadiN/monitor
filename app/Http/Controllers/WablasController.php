@@ -298,17 +298,20 @@ class WablasController extends Controller
 
                 // Jika pasien berada di antrian kasir
             if (
+                $this->antrian &&
                 $this->antrian->antriable_type == 'App\\Models\\AntrianKasir'             
             ){
                 $this->saveNomorTeleponPasien();
                 // kirimkan nomor rekening beserta dengan jumlah yang harus ditransfer
             } else if (
+                $this->antrian &&
                  $this->antrian->antriable_type == 'App\\Models\\Periksa' 
             ){
                 $this->saveNomorTeleponPasien();
                 // kirimkan umpan balik pelayanan
                 // jika pasien sudah didaftarkan oleh admin
             } else if (
+                $this->antrian &&
                 $this->antrian->antriable_type != 'App\\Models\\Antrian'
             ){
                 $this->saveNomorTeleponPasien();
