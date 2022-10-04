@@ -77,7 +77,6 @@ class WablasController extends Controller
 
             $response              = '';
             $input_tidak_tepat     = false;
-            Log::info([ $this->antrian->antriable_type, 'Apakah Antrian?' ]);
             if ( !is_null($this->antrian) && $this->antrian->antriable_type == 'App\\Models\\Antrian' ) {
                 if ( is_null( $whatsapp_registration ) ) {
                     $whatsapp_registration = $this->createWAregis();
@@ -282,23 +281,39 @@ class WablasController extends Controller
                 $id = explode('pxid', $this->message)[1];
                 $id = preg_replace('~\D~', '', $id);
 
+                $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
                 $antrian = Antrian::find($id);
-                $antrian->satisfaction_index = $this->satisfactionIndex( $this->message );
+                $antrian->satisfaction_index = $satisfaction_index_ini;
                 $antrian->save();
+
+                // Jika pasien memilih sangat baik sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
+                //
+                if ( $satisfaction_index_ini == 5 ) {
+                    $this->kirimkanLinkGoogleReview();
+                }
 
                 echo "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
             }
 
 
+                // Jika pasien berada di antrian kasir
             if (
-                 $this->antrian->antriable_type != 'App\\Models\\Antrian' &&
-                 $this->antrian->antriable_type != 'App\\Models\\Periksa' 
-            ) {
-                $this->antrian->no_telp = $this->no_telp;
-                $this->antrian->save();
+                $this->antrian->antriable_type == 'App\\Models\\AntrianKasir'             
+            ){
+                $this->saveNomorTeleponPasien();
+                // kirimkan nomor rekening beserta dengan jumlah yang harus ditransfer
+            } else if (
+                 $this->antrian->antriable_type == 'App\\Models\\Periksa' 
+            ){
+                $this->saveNomorTeleponPasien();
+                // kirimkan umpan balik pelayanan
+                // jika pasien sudah didaftarkan oleh admin
+            } else if (
+                $this->antrian->antriable_type != 'App\\Models\\Antrian'
+            ){
+                $this->saveNomorTeleponPasien();
                 echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
             }
-            // Jika pasien sudah didaftarkan oleh admin
 
         }   
 	}
@@ -595,6 +610,28 @@ class WablasController extends Controller
 
         return $response;
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function saveNomorTeleponPasien()
+    {
+        $this->antrian->no_telp = $this->no_telp;
+        $this->antrian->save();
+    }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function kirimkanLinkGoogleReview()
+    {
+        return null;
+    }
+    
+    
     
     
     
