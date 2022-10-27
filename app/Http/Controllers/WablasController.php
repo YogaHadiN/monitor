@@ -71,6 +71,9 @@ class WablasController extends Controller
             $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->first();
+            if ( !is_null($whatsapp_registration) ) {
+                $this->antrian = $whatsapp_registration->antrian;
+            }
 
             /* $this->antrian  = Antrian::where('kode_unik', $this->message ) */
             /*                          ->first(); */
