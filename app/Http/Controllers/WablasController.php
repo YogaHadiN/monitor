@@ -61,6 +61,9 @@ class WablasController extends Controller
 	}
 	
 	public function webhook(){
+        Log::info("coba coba");
+        Log::info( $this->no_telp );
+        Log::info( $this->message );
         header('Content-Type: application/json');
 
         if (
@@ -251,10 +254,6 @@ class WablasController extends Controller
             }
 
             if (!empty($response)) {
-                Log::info("======================================================");
-                Log::info("masuk sini");
-                Log::info($response);
-                Log::info("======================================================");
                 $payload   = $this->botKirim($whatsapp_registration)[0];
                 $category = $payload['category'];
                 if ( $category == 'button' ) {
