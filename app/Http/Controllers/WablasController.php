@@ -72,16 +72,17 @@ class WablasController extends Controller
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->first();
 
-            $this->antrian  = Antrian::where('kode_unik', $this->message )
-                                     ->first();
+            /* $this->antrian  = Antrian::where('kode_unik', $this->message ) */
+            /*                          ->first(); */
 
             $response              = '';
             $input_tidak_tepat     = false;
-            if ( !is_null($this->antrian) && $this->antrian->antriable_type == 'App\\Models\\Antrian' ) {
-                if ( is_null( $whatsapp_registration ) ) {
-                    $whatsapp_registration = $this->createWAregis();
-                }
-            } else if (  
+            /* if ( !is_null($this->antrian) && $this->antrian->antriable_type == 'App\\Models\\Antrian' ) { */
+            /*     if ( is_null( $whatsapp_registration ) ) { */
+            /*         $whatsapp_registration = $this->createWAregis(); */
+            /*     } */
+            /* } else if ( */  
+            if (  
                 substr($this->message, 0, 5) == 'ulang' &&
                 isset( $whatsapp_registration ) &&
                 !is_null($whatsapp_registration->antrian)
