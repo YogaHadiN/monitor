@@ -82,6 +82,9 @@ class WablasController extends Controller
             /*         $whatsapp_registration = $this->createWAregis(); */
             /*     } */
             /* } else if ( */  
+            Log::info("coba coba 3");
+            Log::info( $this->no_telp );
+            Log::info( $this->message );
             if (  
                 substr($this->message, 0, 5) == 'ulang' &&
                 isset( $whatsapp_registration ) &&
