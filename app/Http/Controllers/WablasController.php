@@ -78,6 +78,7 @@ class WablasController extends Controller
      */
     private function proceedRegistering()
     {
+        Log::info('masuk lagi niyh')
         $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
             ->first();
@@ -105,6 +106,7 @@ class WablasController extends Controller
             isset( $whatsapp_registration ) &&
             $whatsapp_registration->registering_confirmation < 1
         ){
+            Log::info("bisa masuk sini gak");
             if (
                 $this->message == 'lanjutkan'
             ) {
