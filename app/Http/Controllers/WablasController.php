@@ -237,7 +237,40 @@ class WablasController extends Controller
                 $response .= PHP_EOL;
                 $response .= $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
                 echo $response;
-                $this->proceedRegistering();
+
+                $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
+                    ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                    ->get();
+
+                if ( $registeredWhatsapp->count() ) {
+
+                    $registeredWhatsapp = $registeredWhatsapp->first();
+
+                    $text = '*KLINIK JATI ELOK*' ;
+                    $text .= PHP_EOL;
+                    $text .= "==============";
+                    $text .= PHP_EOL;
+                    $text .= PHP_EOL;
+                    $text .= 'Fasilitas ini akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
+                    $text .= PHP_EOL;
+                    $text .= 'Apakah Anda ingin melanjutkan?';
+                    $text .= PHP_EOL;
+
+                    $wablas = new WablasController;
+                    $wablas->sendButton([
+                        [
+                            'phone' => $this->no_telp,
+                            'message' => [
+                                'buttons' => [
+                                                'Lanjutkan',
+                                                'Jangan Lanjutkan'
+                                            ],
+                                'content' =>$text,
+                                'footer' => '',
+                            ],
+                        ]
+                    ]);
+                }
                 return false;
             }
 
