@@ -187,6 +187,7 @@ class WablasController extends Controller
             isset( $whatsapp_registration ) &&
             !is_null($whatsapp_registration->antrian)
         ) {
+            Log::info("190");
             if (
                 !is_null( $whatsapp_registration->antrian->nama ) ||
                 !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) ||
@@ -197,7 +198,7 @@ class WablasController extends Controller
                 $response .= PHP_EOL;
             }
             if ( !is_null( $whatsapp_registration->antrian->nama ) ) {
-                Log::info("bisa masuk sini antrin null");
+                Log::info("201");
                 $response .= 'Nama Pasien: ' . ucwords($whatsapp_registration->antrian->nama)  ;
                 $response .= PHP_EOL;
             }
