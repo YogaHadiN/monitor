@@ -285,8 +285,7 @@ class WablasController extends Controller
                     $text .= 'Apakah Anda ingin melanjutkan?';
                     $text .= PHP_EOL;
 
-                    $wablas = new WablasController;
-                    $wablas->sendButton([
+                    $this->sendButton([
                         [
                             'phone' => $this->no_telp,
                             'message' => [
