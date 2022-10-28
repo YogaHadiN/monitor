@@ -23,6 +23,7 @@ class WablasController extends Controller
 	public $antrian;
 	public $gigi_buka     = true;
 	public $estetika_buka = true;
+	public $whatsapp_registration;
 	public $no_telp;
 	public $message;
 
@@ -187,7 +188,7 @@ class WablasController extends Controller
                 Log::info('186');
                 if ($this->message == 'lanjutkan') {
                     Log::info('188');
-                    $whatsapp_registration_deleted = $whatsapp_registration->delete();
+                    $this->whatsapp_registration_deleted = $whatsapp_registration->delete();
                 }
                 if ($this->message == 'ulangi') {
                     Log::info('192');
@@ -251,7 +252,7 @@ class WablasController extends Controller
             $category = $payload['category'];
             $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
-            if (!isset($whatsapp_registration_deleted)) {
+            if (is_null($this->whatsapp_registration_deleted)) {
                 Log::info("254");
                 $response .=  PHP_EOL;
                 $response .=  PHP_EOL;
@@ -454,7 +455,7 @@ class WablasController extends Controller
 		if (
             !is_null($whatsapp_registration) &&
             !is_null( $whatsapp_registration->antrian->tanggal_lahir ) &&
-            !isset( $whatsapp_registration_deleted ) 
+            is_null( $this->whatsapp_registration_deleted ) 
         ) {
             $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?';
             $text .= PHP_EOL;
@@ -477,7 +478,7 @@ class WablasController extends Controller
 		}
 
 		if (
-            isset( $whatsapp_registration_deleted ) 
+            !is_null( $this->whatsapp_registration_deleted ) 
         ) {
 
             $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
