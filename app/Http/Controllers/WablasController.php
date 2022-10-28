@@ -509,12 +509,12 @@ class WablasController extends Controller
 
                 return $payload;
             } else {
-                $response = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
-                $response .= PHP_EOL;
-                $response .= $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
+                $text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
+                $text .= PHP_EOL;
+                $text .= $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
                 $payload[] = [
                     'category' => 'text',
-                    'message' => $message
+                    'message' => $text
                 ];
                 return $payload;
             }
