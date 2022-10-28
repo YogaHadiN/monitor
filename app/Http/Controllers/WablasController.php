@@ -82,8 +82,6 @@ class WablasController extends Controller
         $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
             ->first();
-        Log::info("yuhuuuuuuuuuuuuu");
-        Log::info($whatsapp_registration);
 
         if ( !is_null($whatsapp_registration) ) {
             $this->antrian = $whatsapp_registration->antrian;
@@ -199,6 +197,7 @@ class WablasController extends Controller
                 $response .= PHP_EOL;
             }
             if ( !is_null( $whatsapp_registration->antrian->nama ) ) {
+                Log::info("bisa masuk sini antrin null");
                 $response .= 'Nama Pasien: ' . ucwords($whatsapp_registration->antrian->nama)  ;
                 $response .= PHP_EOL;
             }
