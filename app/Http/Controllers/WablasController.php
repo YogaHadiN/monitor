@@ -491,6 +491,8 @@ class WablasController extends Controller
             if ( $registeredWhatsapp->count() ) {
                 $registeredWhatsapp = $registeredWhatsapp->first();
 
+                $text .= PHP_EOL;
+                $text .= PHP_EOL;
                 $text .= 'Anda akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
                 $text .= PHP_EOL;
                 $text .= 'Apakah Anda ingin melanjutkan?';
