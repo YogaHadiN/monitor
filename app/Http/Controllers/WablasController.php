@@ -23,7 +23,7 @@ class WablasController extends Controller
 	public $antrian;
 	public $gigi_buka     = true;
 	public $estetika_buka = true;
-	public $whatsapp_registration;
+	public $whatsapp_registration_deleted;
 	public $no_telp;
 	public $message;
 
