@@ -342,6 +342,8 @@ class WablasController extends Controller
                     'footer'   => ''
                 ];
 
+                Log::info($payload);
+
                 return response()->json([
                     'status' => true,
                     'data'   => $payload
