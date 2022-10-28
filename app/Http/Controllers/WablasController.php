@@ -259,49 +259,7 @@ class WablasController extends Controller
                 $response .=  PHP_EOL;
                 $response .=  PHP_EOL;
                 $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
-            } else {
-                Log::info("262");
-                $response = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
-                $response .= PHP_EOL;
-                $response .= $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
-                echo $response;
-
-                $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
-                    ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                    ->get();
-
-                if ( $registeredWhatsapp->count() ) {
-                    Log::info("273");
-
-                    $registeredWhatsapp = $registeredWhatsapp->first();
-
-                    $text = '*KLINIK JATI ELOK*' ;
-                    $text .= PHP_EOL;
-                    $text .= "==============";
-                    $text .= PHP_EOL;
-                    $text .= PHP_EOL;
-                    $text .= 'Fasilitas ini akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
-                    $text .= PHP_EOL;
-                    $text .= 'Apakah Anda ingin melanjutkan?';
-                    $text .= PHP_EOL;
-
-                    $this->sendButton([
-                        [
-                            'phone' => $this->no_telp,
-                            'message' => [
-                                'buttons' => [
-                                                'Lanjutkan',
-                                                'Jangan Lanjutkan'
-                                            ],
-                                'content' =>$text,
-                                'footer' => '',
-                            ],
-                        ]
-                    ]);
-                }
-                return false;
             }
-
 
             /* if ( */
             /*     !is_null($whatsapp_registration) && */
@@ -341,8 +299,6 @@ class WablasController extends Controller
                     'message'  => json_encode($message),
                     'footer'   => ''
                 ];
-
-                Log::info($payload);
 
                 return response()->json([
                     'status' => true,
@@ -520,6 +476,48 @@ class WablasController extends Controller
 			return $payload;
 		}
 
+		if (
+            isset( $whatsapp_registration_deleted ) 
+        ) {
+
+            $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
+                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                ->get();
+
+            if ( $registeredWhatsapp->count() ) {
+                $registeredWhatsapp = $registeredWhatsapp->first();
+
+                $text = 'Anda akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
+                $text .= PHP_EOL;
+                $text .= 'Apakah Anda ingin melanjutkan?';
+                $text .= PHP_EOL;
+
+
+                $message = [
+                    'buttons' => [
+                        'Lanjutkan'
+                    ],
+                    'content' => $text,
+                    'footer' => ''
+                ];
+
+                $payload[] = [
+                    'category' => 'button',
+                    'message' => $message
+                ];
+
+                return $payload;
+            } else {
+                $response = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
+                $response .= PHP_EOL;
+                $response .= $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
+                $payload[] = [
+                    'category' => 'text',
+                    'message' => $message
+                ];
+                return $payload;
+            }
+		}
 	}
 
 	/*private function input_poli( $whatsapp_registration, $message ){ */
