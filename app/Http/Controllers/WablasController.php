@@ -322,7 +322,7 @@ class WablasController extends Controller
             $antrian->satisfaction_index = $satisfaction_index_ini;
             $antrian->save();
 
-            Log::info('$satisfaction_index_ini', $satisfaction_index_ini);
+            Log::info('$satisfaction_index_ini '. $satisfaction_index_ini);
 
             // Jika pasien memilih sangat baik sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
             //
