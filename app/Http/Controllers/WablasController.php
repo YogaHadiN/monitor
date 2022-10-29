@@ -237,7 +237,6 @@ class WablasController extends Controller
                 !is_null( $whatsapp_registration->antrian->tanggal_lahir )
             ) {
                 Log::info("237");
-                $response .= PHP_EOL;
                 $response .= "==================";
                 $response .= PHP_EOL;
                 $response .= PHP_EOL;
