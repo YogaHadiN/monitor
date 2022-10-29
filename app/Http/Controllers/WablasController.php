@@ -319,7 +319,7 @@ class WablasController extends Controller
 
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
             $antrian = Antrian::find($id);
-            if (!is_null($antrian) && !$antrian->satisfaction_index) {
+            if (!is_null($antrian) && $antrian->satisfaction_index) {
                 $antrian->satisfaction_index = $satisfaction_index_ini;
                 $antrian->save();
 
