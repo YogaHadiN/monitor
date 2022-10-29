@@ -159,7 +159,7 @@ class WablasController extends Controller
             is_null( $whatsapp_registration->antrian->nama ) 
         ) {
             Log::info('159');
-            $whatsapp_registration->antrian->nama  = ucfirst(strtolower($this->message));;
+            $whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
             $whatsapp_registration->antrian->save();
         } else if ( 
             isset( $whatsapp_registration ) &&
@@ -254,12 +254,12 @@ class WablasController extends Controller
 
             if (is_null($this->whatsapp_registration_deleted)) {
                 Log::info("254");
-                $response .=  PHP_EOL;
-                $response .=  PHP_EOL;
-                $response .= "==============";
-                $response .=  PHP_EOL;
-                $response .=  PHP_EOL;
-                $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal";
+                /* $response .=  PHP_EOL; */
+                /* $response .=  PHP_EOL; */
+                /* $response .= "=============="; */
+                /* $response .=  PHP_EOL; */
+                /* $response .=  PHP_EOL; */
+                /* $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal"; */
             }
 
             /* if ( */
@@ -329,7 +329,10 @@ class WablasController extends Controller
             if ( $satisfaction_index_ini == 5 ) {
                 echo $this->kirimkanLinkGoogleReview();
             } else {
-                echo "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                $message .= PHP_EOL;
+                $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+                echo $message;
             }
 
         }
@@ -720,7 +723,7 @@ class WablasController extends Controller
     {
         $message = "Terima kasih atas kesediaan anda memberikan masukan terhadap pelayanan Kami, ";
         $message .= PHP_EOL;
-        $message .= "kami berharap dapat melayani anda kembali.";
+        $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "mohon memberikan nilai layanan kami dengan memberikan ulasan Bintang 5 di google review Klinik Jati Elok hanya dengan klik link dibawah ini : ";
