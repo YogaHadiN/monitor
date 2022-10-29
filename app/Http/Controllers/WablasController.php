@@ -325,11 +325,11 @@ class WablasController extends Controller
             // Jika pasien memilih sangat baik sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
             //
             if ( $satisfaction_index_ini == 5 ) {
-                Log::info("369");
-                $this->kirimkanLinkGoogleReview();
+                echo $this->kirimkanLinkGoogleReview();
+            } else {
+                echo "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
             }
 
-            echo "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
         }
 
 
@@ -716,7 +716,16 @@ class WablasController extends Controller
      */
     private function kirimkanLinkGoogleReview()
     {
-        return null;
+        $message = "Terima kasih atas kesediaan anda memberikan masukan terhadap pelayanan Kami, ";
+        $message .= PHP_EOL;
+        $message .= "kami berharap dapat melayani anda kembali.";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "mohon memberikan nilai layanan kami dengan memberikan ulasan Bintang 5 di google review Klinik Jati Elok hanya dengan klik link dibawah ini : ";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "https://bit.ly/3DInVOr";
+        return $message;
     }
     
     public function sendButton($data){
