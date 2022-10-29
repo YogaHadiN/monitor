@@ -319,22 +319,23 @@ class WablasController extends Controller
 
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
             $antrian = Antrian::find($id);
-            $antrian->satisfaction_index = $satisfaction_index_ini;
-            $antrian->save();
+            if (!is_null($antrian) && !$antrian->satisfaction_index) {
+                $antrian->satisfaction_index = $satisfaction_index_ini;
+                $antrian->save();
 
-            Log::info('$satisfaction_index_ini '. $satisfaction_index_ini);
+                Log::info('$satisfaction_index_ini '. $satisfaction_index_ini);
 
-            // Jika pasien memilih sangat baik sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
-            //
-            if ( $satisfaction_index_ini == 5 ) {
-                echo $this->kirimkanLinkGoogleReview();
-            } else {
-                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-                $message .= PHP_EOL;
-                $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
-                echo $message;
+                // Jika pasien memilih sangat baik sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
+                //
+                if ( $satisfaction_index_ini == 5 ) {
+                    echo $this->kirimkanLinkGoogleReview();
+                } else {
+                    $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                    $message .= PHP_EOL;
+                    $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+                    echo $message;
+                }
             }
-
         }
 
 
