@@ -330,7 +330,7 @@ class WablasController extends Controller
 
                 // Jika pasien memilih sangat baik sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
                 //
-                if ( $satisfaction_index_ini == 5 ) {
+                if ( $satisfaction_index_ini == 3 ) {
                     echo $this->kirimkanLinkGoogleReview();
                 } else {
                     $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
@@ -647,16 +647,12 @@ class WablasController extends Controller
      * @return void
      */
     private function satisfactionIndex($message){
-        if ( str_contains( $message, 'sangat baik' ) ) {
-            return 5;
-        } else if ( str_contains( $message, 'baik' ) ){
-            return 4;
-        } else if ( str_contains( $message,  'biasa'  ) ){
-            return 3;
-        } else if ( str_contains( $message,   'sangat buruk'  ) ){
+        if ( str_contains( $message, 'tidak' ) ) {
             return 1;
-        } else if ( str_contains( $message,    'buruk'  ) ){
+        } else if ( str_contains( $message, 'biasa' ) ){
             return 2;
+        } else if ( str_contains( $message,  'puas'  ) ){
+            return 3;
         } else {
             return null;
         }
