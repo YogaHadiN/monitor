@@ -310,6 +310,24 @@ class WablasController extends Controller
                 echo $response;
             }
         }
+
+
+        // dokumentasikan whatsapp complaint
+        $whatsapp_complaint = WhatsappComplaint::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+        if (!is_null( $whatsapp_complaint )) {
+            $whatsapp_complaint->antrian->complaint = $this->message;
+            $whatsapp_complaint->antrian->save();
+            $whatsapp_complaint->delete();
+
+            $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+            $message .= PHP_EOL;
+            $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+            echo $message;
+        }
+
+
         // Cek kepuasan pelanggan
         if ( str_contains( $this->message, '(pxid' ) ) {
             Log::info("357");
@@ -328,11 +346,30 @@ class WablasController extends Controller
 
                 Log::info('$satisfaction_index_ini '. $satisfaction_index_ini);
 
-                // Jika pasien memilih sangat baik sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
+                // Jika pasien memilih puas sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
                 //
                 if ( $satisfaction_index_ini == 3 ) {
                     echo $this->kirimkanLinkGoogleReview();
-                } else {
+                    //
+                // Jika pasien memilih tidak puas sebagai satisfactionIndex, maka minta balasan alasan pasien tidak puas
+                //
+                } else if ( $satisfaction_index_ini == 1 ){
+
+                    $complaint             = new WhatsappComplaint;
+                    $complaint->no_telp    = $antrian->id;
+                    $complaint->antrian_id = $antrian->no_telp;
+                    $complaint->save();
+
+                    WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
+
+                    $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
+                    $message .= PHP_EOL;
+                    $message .= "Bisa diinfokan kendala yang kakak alami?";
+                    echo $message;
+
+                // Selain itu ucapkan terima kasih
+                //
+                }else {
                     $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                     $message .= PHP_EOL;
                     $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
@@ -366,6 +403,9 @@ class WablasController extends Controller
             $this->saveNomorTeleponPasien();
             echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
         }
+
+
+
 
     }
     
