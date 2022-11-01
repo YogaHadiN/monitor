@@ -357,8 +357,8 @@ class WablasController extends Controller
                 } else if ( $satisfaction_index_ini == 1 ){
 
                     $complaint             = new WhatsappComplaint;
-                    $complaint->no_telp    = $antrian->id;
-                    $complaint->antrian_id = $antrian->no_telp;
+                    $complaint->no_telp    = $antrian->no_telp;
+                    $complaint->antrian_id = $antrian->id;
                     $complaint->save();
 
                     WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
