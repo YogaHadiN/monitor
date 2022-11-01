@@ -324,7 +324,9 @@ class WablasController extends Controller
 
             $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
             $message .= PHP_EOL;
-            $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+            $message .= "Keluhan atas pelayanan yang kakak rasakan akan kami tindak lanjuti.";
+            $message .= PHP_EOL;
+            $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
             echo $message;
         }
 
