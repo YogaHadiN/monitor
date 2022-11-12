@@ -282,8 +282,8 @@ class WablasController extends Controller
         } else if ( 
             isset( $whatsapp_registration ) &&
             !is_null( $whatsapp_registration->antrian ) &&
-            !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
-            !is_null( $whatsapp_registration->antrian->nama ) 
+            !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) &&
+            !is_null( $whatsapp_registration->antrian->nama ) &&
             !is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
             Log::info('181');
