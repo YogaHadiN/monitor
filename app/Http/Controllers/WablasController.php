@@ -272,8 +272,14 @@ class WablasController extends Controller
 
                 $databaseFriendlyDateFormat = $tahun . '-' . $bulan . '-' . $tanggal;
 
-                $whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
-                $whatsapp_registration->antrian->save();
+                try {
+                    Carbon::parse($databaseFriendlyDateFormat);
+                    $whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
+                    $whatsapp_registration->antrian->save();
+                } catch (\Exception $e) {
+                    $input_tidak_tepat = true;
+                }
+
             } else {
                 Log::info('281');
                 $input_tidak_tepat = true;
