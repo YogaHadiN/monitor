@@ -117,15 +117,7 @@ class WablasController extends Controller
             ) {
                 $whatsapp_registration->registering_confirmation = 1;
                 $whatsapp_registration->save();
-            } else if (
-                $this->message == 'jangan lanjutkan'
-            ) {
-                $whatsapp_registration->delete();
-                $whatsapp_registration = null;
-                $response .=    "Silahkan scan QR Code Pendaftaran yang tersedia di klinik";
-            } else {
-                $input_tidak_tepat = true;
-            }
+            } 
         } else if ( 
             isset( $whatsapp_registration ) &&
             !is_null( $whatsapp_registration->antrian ) &&
@@ -149,11 +141,36 @@ class WablasController extends Controller
                     Log::info('146');
                     $whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
                 }
+                $data = $this->queryPreviouslySavedPatientRegistry();
+                if (count($data) < 1) {
+                    $whatsapp_registration->antrian->register_previously_saved_patient = 0;
+                }
                 $whatsapp_registration->antrian->save();
+
             } else {
                 Log::info('151');
                 $input_tidak_tepat = true;
             }
+        } else if ( 
+            isset( $whatsapp_registration ) &&
+            !is_null( $whatsapp_registration->antrian ) &&
+            is_null( $whatsapp_registration->antrian->register_previously_saved_patient ) 
+        ) {
+            $data = $this->queryPreviouslySavedPatientRegistry();
+
+            $dataCount = count($data);
+            if ( (int) $this->message == 0 ) {
+                $whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+            }
+            if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                $whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+                $whatsapp_registration->antrian->nama                              = $data[ (int)$this->message -1 ]->nama;
+                $whatsapp_registration->antrian->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+            } else {
+                $input_tidak_tepat = true;
+            }
+            $whatsapp_registration->antrian->save();
+                $whatsapp_registration->antrian->save();
         } else if ( 
             isset( $whatsapp_registration ) &&
             !is_null( $whatsapp_registration->antrian ) &&
@@ -172,13 +189,101 @@ class WablasController extends Controller
                 Log::info('169');
                 $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                 $whatsapp_registration->antrian->save();
+            } else if(
+                str_contains( $this->message , 'jan') ||
+                str_contains( $this->message , 'feb') ||
+                str_contains( $this->message , 'mar') ||
+                str_contains( $this->message , 'apr') ||
+                str_contains( $this->message , 'mei') ||
+                str_contains( $this->message , 'jun') ||
+                str_contains( $this->message , 'jul') ||
+                str_contains( $this->message , 'agustus') ||
+                str_contains( $this->message , 'ags') ||
+                str_contains( $this->message , 'sept') ||
+                str_contains( $this->message , 'oktober') ||
+                str_contains( $this->message , 'okt') ||
+                str_contains( $this->message , 'nov') ||
+                str_contains( $this->message , 'des')
+            ) {
+                $tanggals = explode(" ", $this->message );
+                $tanggal  = $tanggals[0];
+                $bulan    = $tanggals[1];
+                $tahun    = $tanggals[2];
+
+                if (strlen($tanggal) == 1) {
+                    $tanggal = '0' . $tanggal;
+                }
+
+                if(
+                     trim($bulan) == 'januari' ||
+                     trim($bulan) == 'jan'
+                ){
+                    $bulan = 1;
+                } else if(
+                    trim($bulan) == 'februari' || 
+                    trim($bulan) == 'feb'
+                ){
+                    $bulan = 2;
+                } else if(
+                    trim($bulan) == 'maret' || 
+                    trim($bulan) == 'mar'
+                ){
+                    $bulan = 3;
+                } else if(
+                    trim($bulan) == 'april' || 
+                    trim($bulan) == 'apr'
+                ){
+                    $bulan = 4;
+                } else if( trim($bulan) == 'mei' ){
+                    $bulan = 5;
+                } else if(
+                    trim($bulan) == 'juni' || 
+                    trim($bulan) == 'jun'
+                ){
+                    $bulan = 6;
+                } else if(
+                    trim($bulan) == 'juli' || 
+                    trim($bulan) == 'jul'
+                ){
+                    $bulan = 7;
+                } else if( trim($bulan) == 'agustus' ){
+                    $bulan = 8;
+                } else if(
+                    trim($bulan) == 'september' || 
+                    trim($bulan) == 'sept' || 
+                    trim($bulan) == 'sep'
+                ){
+                    $bulan = 9;
+                } else if(
+                     trim($bulan) == 'oktober' ||
+                     trim($bulan) == 'okt'
+                ){
+                    $bulan = 10;
+                } else if(
+                    trim($bulan) == 'november' || 
+                    trim($bulan) == 'nov'
+                ){
+                    $bulan = 11;
+                } else if(
+                    trim($bulan) == 'desember' || 
+                    trim($bulan) == 'des'
+                ){
+                    $bulan = 12;
+                }
+
+                $databaseFriendlyDateFormat = $tahun . '-' . $bulan . '-' . $tanggal;
+
+                $whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
+                $whatsapp_registration->antrian->save();
             } else {
-                Log::info('173');
+                Log::info('151');
                 $input_tidak_tepat = true;
             }
         } else if ( 
             isset( $whatsapp_registration ) &&
             !is_null( $whatsapp_registration->antrian ) &&
+            !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
+            !is_null( $whatsapp_registration->antrian->nama ) 
             !is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
             Log::info('181');
@@ -458,6 +563,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($whatsapp_registration) &&
+            !is_null($whatsapp_registration->antrian) &&
              is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ) {
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
@@ -481,6 +587,30 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($whatsapp_registration) &&
+            !is_null($whatsapp_registration->antrian) &&
+             is_null( $whatsapp_registration->antrian->register_previously_saved_patient ) 
+        ) {
+            $data = $this->queryPreviouslySavedPatientRegistry();
+            $message = 'Pilih pasien yang akan didaftarkan. Balas 0 jika anda ingin mendaftarkan pasien lainnya';
+			$message .= PHP_EOL;
+			$message .= PHP_EOL;
+
+            foreach ($data as $key => $d) {
+                $number = $key + 1;
+                $message .= $number . '. ' . ucwords($d->nama) . ' (Tanggal Lahir:' . Carbon::parse($d->tanggal_lahir)->format('d M Y') . ')';
+                $message .= PHP_EOL;
+            }
+            $message .= "0. Lainnya ";
+            $payload[] = [
+                'category' => 'text',
+                'message'  => $message
+            ];
+
+			return $payload;
+		}
+		if (
+            !is_null($whatsapp_registration) &&
+            !is_null($whatsapp_registration->antrian) &&
              is_null( $whatsapp_registration->antrian->nama ) 
         ) {
             $payload[] = [
@@ -493,6 +623,7 @@ class WablasController extends Controller
 
 		if (
             !is_null($whatsapp_registration) &&
+            !is_null($whatsapp_registration->antrian) &&
              is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
 			$text =  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
@@ -507,6 +638,7 @@ class WablasController extends Controller
 
 		if (
             !is_null($whatsapp_registration) &&
+            !is_null($whatsapp_registration->antrian) &&
             !is_null( $whatsapp_registration->antrian->tanggal_lahir ) &&
             is_null( $this->whatsapp_registration_deleted ) 
         ) {
@@ -801,6 +933,27 @@ class WablasController extends Controller
         /* echo "<pre>"; */
         /* print_r($result); */
     }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function queryPreviouslySavedPatientRegistry()
+    {
+        $query  = "SELECT ";
+        $query .= "psn.nama as nama, ";
+        $query .= "psn.tanggal_lahir as tanggal_lahir, ";
+        $query .= "psn.id as pasien_id ";
+        $query .= "FROM antrians as ant ";
+        $query .= "JOIN periksas as prx on prx.id = ant.antriable_id ";
+        $query .= "JOIN pasiens as psn on psn.id = prx.antriable_id ";
+        $query .= "WHERE antriable_type = 'App\\\Models\\\Periksa' ";
+        $query .= "AND ant.no_telp = '{$this->no_telp}' ";
+        $query .= "GROUP BY prx.pasien_id";
+        return DB::select($query);
+    }
+    
     
     
     

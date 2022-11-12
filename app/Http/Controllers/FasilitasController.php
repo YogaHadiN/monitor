@@ -96,6 +96,7 @@ class FasilitasController extends Controller
 		$prolanis_ht          = '';
 
 		try {
+
 			$pasien               = Pasien::where('nomor_asuransi_bpjs', $antrian->nomor_bpjs)->firstOrFail();
 			$nama_pasien          = $pasien->nama;
 			$pasien_id            = $pasien->id;
@@ -105,6 +106,7 @@ class FasilitasController extends Controller
 			$image                = $pasien->image;
 			$prolanis_dm          = $pasien->prolanis_dm;
 			$prolanis_ht          = $pasien->prolanis_ht;
+
 		} catch (\Exception $e) {
 			
 		}
