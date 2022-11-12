@@ -14,6 +14,7 @@ use App\Models\User;
 use Input;
 use Carbon\Carbon;
 use Log;
+use DB;
 use DateTime;
 use App\Models\Sms;
 class WablasController extends Controller
