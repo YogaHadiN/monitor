@@ -162,6 +162,7 @@ class WablasController extends Controller
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 $whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+                $whatsapp_registration->antrian->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $whatsapp_registration->antrian->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $whatsapp_registration->antrian->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
             } else {
