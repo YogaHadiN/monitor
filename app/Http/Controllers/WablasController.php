@@ -149,7 +149,7 @@ class WablasController extends Controller
                 $whatsapp_registration->antrian->save();
 
             } else {
-                Log::info('151');
+                Log::info('152');
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -168,10 +168,11 @@ class WablasController extends Controller
                 $whatsapp_registration->antrian->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $whatsapp_registration->antrian->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
             } else {
+                Log::info('171');
                 $input_tidak_tepat = true;
             }
             $whatsapp_registration->antrian->save();
-                $whatsapp_registration->antrian->save();
+
         } else if ( 
             isset( $whatsapp_registration ) &&
             !is_null( $whatsapp_registration->antrian ) &&
@@ -277,7 +278,7 @@ class WablasController extends Controller
                 $whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
                 $whatsapp_registration->antrian->save();
             } else {
-                Log::info('151');
+                Log::info('281');
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -302,7 +303,7 @@ class WablasController extends Controller
                     $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
                 }
             } else {
-                Log::info('196');
+                Log::info('306');
                 $input_tidak_tepat = true;
             }
         }
@@ -378,7 +379,7 @@ class WablasController extends Controller
             /* } */
 
             if ( $input_tidak_tepat ) {
-                Log::info("316");
+                Log::info('382 ss');
                 $response .=  PHP_EOL;
                 $response .=  PHP_EOL;
                 $response .=    "==================";
