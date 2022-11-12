@@ -185,9 +185,6 @@ class WablasController extends Controller
         ) {
             Log::info('167');
             $tanggals = explode(" ", $this->message );
-            $tanggal  = $tanggals[0];
-            $bulan    = $tanggals[1];
-            $tahun    = $tanggals[2];
 
             if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
                 Log::info('169');
@@ -212,6 +209,9 @@ class WablasController extends Controller
                 ) &&
                 count($tanggals) == 3
             ) {
+                $tanggal  = $tanggals[0];
+                $bulan    = $tanggals[1];
+                $tahun    = $tanggals[2];
 
                 if (strlen($tanggal) == 1) {
                     $tanggal = '0' . $tanggal;
