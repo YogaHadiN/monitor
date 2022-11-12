@@ -947,8 +947,8 @@ class WablasController extends Controller
         $query .= "psn.tanggal_lahir as tanggal_lahir, ";
         $query .= "psn.id as pasien_id ";
         $query .= "FROM antrians as ant ";
-        $query .= "JOIN periksas as prx on prx.id = ant.antriable_id ";
-        $query .= "JOIN pasiens as psn on psn.id = prx.antriable_id ";
+        $query .= "JOIN periksas as prx on prx.id = ant.antriable_id and ant.antriable_type ='App\\\Models\\\Periksa' ";
+        $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
         $query .= "WHERE antriable_type = 'App\\\Models\\\Periksa' ";
         $query .= "AND ant.no_telp = '{$this->no_telp}' ";
         $query .= "GROUP BY prx.pasien_id";
