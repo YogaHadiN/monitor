@@ -184,30 +184,34 @@ class WablasController extends Controller
             is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
             Log::info('167');
+            $tanggals = explode(" ", $this->message );
+            $tanggal  = $tanggals[0];
+            $bulan    = $tanggals[1];
+            $tahun    = $tanggals[2];
+
             if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
                 Log::info('169');
                 $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                 $whatsapp_registration->antrian->save();
             } else if(
-                str_contains( $this->message , 'jan') ||
-                str_contains( $this->message , 'feb') ||
-                str_contains( $this->message , 'mar') ||
-                str_contains( $this->message , 'apr') ||
-                str_contains( $this->message , 'mei') ||
-                str_contains( $this->message , 'jun') ||
-                str_contains( $this->message , 'jul') ||
-                str_contains( $this->message , 'agustus') ||
-                str_contains( $this->message , 'ags') ||
-                str_contains( $this->message , 'sept') ||
-                str_contains( $this->message , 'oktober') ||
-                str_contains( $this->message , 'okt') ||
-                str_contains( $this->message , 'nov') ||
-                str_contains( $this->message , 'des')
+                (
+                    str_contains( $this->message , 'jan') ||
+                    str_contains( $this->message , 'feb') ||
+                    str_contains( $this->message , 'mar') ||
+                    str_contains( $this->message , 'apr') ||
+                    str_contains( $this->message , 'mei') ||
+                    str_contains( $this->message , 'jun') ||
+                    str_contains( $this->message , 'jul') ||
+                    str_contains( $this->message , 'agustus') ||
+                    str_contains( $this->message , 'ags') ||
+                    str_contains( $this->message , 'sept') ||
+                    str_contains( $this->message , 'oktober') ||
+                    str_contains( $this->message , 'okt') ||
+                    str_contains( $this->message , 'nov') ||
+                    str_contains( $this->message , 'des')
+                ) &&
+                count($tanggals) == 3
             ) {
-                $tanggals = explode(" ", $this->message );
-                $tanggal  = $tanggals[0];
-                $bulan    = $tanggals[1];
-                $tahun    = $tanggals[2];
 
                 if (strlen($tanggal) == 1) {
                     $tanggal = '0' . $tanggal;
