@@ -865,9 +865,11 @@ class WablasController extends Controller
      */
     private function ulangiRegistrasiWhatsapp($whatsapp_registration)
     {
-        $whatsapp_registration->antrian->registrasi_pembayaran_id = null;
-        $whatsapp_registration->antrian->nama                     = null;
-        $whatsapp_registration->antrian->tanggal_lahir            = null;
+        $whatsapp_registration->antrian->registrasi_pembayaran_id          = null;
+        $whatsapp_registration->antrian->nama                              = null;
+        $whatsapp_registration->antrian->tanggal_lahir                     = null;
+        $whatsapp_registration->antrian->register_previously_saved_patient = null;
+        $whatsapp_registration->antrian->pasien_id                         = null;
         $whatsapp_registration->antrian->save();
     }
     /**
