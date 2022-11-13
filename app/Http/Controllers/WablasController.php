@@ -601,13 +601,13 @@ class WablasController extends Controller
              is_null( $whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
-            $message = 'Pilih pasien yang akan didaftarkan. Balas 0 jika anda ingin mendaftarkan pasien lainnya';
+            $message = 'Pilih pasien yang akan didaftarkan';
 			$message .= PHP_EOL;
 			$message .= PHP_EOL;
 
             foreach ($data as $key => $d) {
                 $number = $key + 1;
-                $message .= $number . '. ' . ucwords($d->nama) . ' (Tanggal Lahir:' . Carbon::parse($d->tanggal_lahir)->format('d M Y') . ')';
+                $message .= $number . '. ' . ucwords($d->nama);
                 $message .= PHP_EOL;
             }
             $message .= "0. Lainnya ";
@@ -636,7 +636,7 @@ class WablasController extends Controller
             !is_null($whatsapp_registration->antrian) &&
              is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-			$text =  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : *19 Juli 2003*, Balas dengan *19-07-2003*';
+			$text =  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : 19-07-2003';
             $message = $text;
             $payload[] = [
                 'category' => 'text',
