@@ -82,7 +82,6 @@ class WablasController extends Controller
     private function proceedRegistering()
     {
         header('Content-Type: application/json');
-        Log::info('81');
         $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
             ->first();
@@ -128,15 +127,12 @@ class WablasController extends Controller
                 $this->message == 'lainnya'
             ) {
                 if ($this->message == 'biaya pribadi') {
-                    Log::info('138');
                     $whatsapp_registration->antrian->registrasi_pembayaran_id  = 1;
                 }
                 if ($this->message == 'bpjs') {
-                    Log::info('142');
                     $whatsapp_registration->antrian->registrasi_pembayaran_id  = 2;
                 }
                 if ($this->message == 'lainnya') {
-                    Log::info('146');
                     $whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
                 }
                 $data = $this->queryPreviouslySavedPatientRegistry();
