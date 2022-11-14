@@ -106,13 +106,11 @@ class WablasController extends Controller
             isset( $whatsapp_registration ) &&
             !is_null($whatsapp_registration->antrian)
         ) {
-            Log::info('105');
             $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
         } else if ( 
             isset( $whatsapp_registration ) &&
             $whatsapp_registration->registering_confirmation < 1
         ){
-            Log::info('111');
             if (
                 $this->message == 'lanjutkan'
             ) {
@@ -124,7 +122,6 @@ class WablasController extends Controller
             !is_null( $whatsapp_registration->antrian ) &&
             is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ){
-            Log::info('127');
             if (
                 $this->message == 'biaya pribadi' ||
                 $this->message == 'bpjs' ||
@@ -149,7 +146,6 @@ class WablasController extends Controller
                 $whatsapp_registration->antrian->save();
 
             } else {
-                Log::info('152');
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -166,7 +162,6 @@ class WablasController extends Controller
                 $whatsapp_registration->antrian->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $whatsapp_registration->antrian->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
             } else {
-                Log::info('171');
                 $whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
             }
             $whatsapp_registration->antrian->save();
@@ -176,7 +171,6 @@ class WablasController extends Controller
             !is_null( $whatsapp_registration->antrian ) &&
             is_null( $whatsapp_registration->antrian->nama ) 
         ) {
-            Log::info('159');
             $whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
             $whatsapp_registration->antrian->save();
         } else if ( 
@@ -184,11 +178,9 @@ class WablasController extends Controller
             !is_null( $whatsapp_registration->antrian ) &&
             is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-            Log::info('167');
             $tanggals = explode(" ", $this->message );
 
             if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
-                Log::info('169');
                 $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                 $whatsapp_registration->antrian->save();
             } else if(
@@ -286,7 +278,6 @@ class WablasController extends Controller
                 }
 
             } else {
-                Log::info('281');
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -296,22 +287,17 @@ class WablasController extends Controller
             !is_null( $whatsapp_registration->antrian->nama ) &&
             !is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-            Log::info('181');
             if (
                 $this->message == 'lanjutkan' ||
                 $this->message == 'ulangi'
             ) {
-                Log::info('186');
                 if ($this->message == 'lanjutkan') {
-                    Log::info('188');
                     $this->whatsapp_registration_deleted = $whatsapp_registration->delete();
                 }
                 if ($this->message == 'ulangi') {
-                    Log::info('192');
                     $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
                 }
             } else {
-                Log::info('306');
                 $input_tidak_tepat = true;
             }
         }
@@ -320,31 +306,26 @@ class WablasController extends Controller
             isset( $whatsapp_registration ) &&
             !is_null($whatsapp_registration->antrian)
         ) {
-            Log::info("205");
             if (
                 !is_null( $whatsapp_registration->antrian->nama ) ||
                 !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) ||
                 !is_null( $whatsapp_registration->antrian->tanggal_lahir )
             ) {
-                Log::info("211");
                 $response .=  "*Uraian Pengisian Anda*";
                 $response .= PHP_EOL;
                 $response .= PHP_EOL;
             }
             if ( !is_null( $whatsapp_registration->antrian->nama ) ) {
-                Log::info("217");
                 $response .= 'Nama Pasien: ' . ucwords($whatsapp_registration->antrian->nama)  ;
                 $response .= PHP_EOL;
             }
             if ( !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) ) {
-                Log::info("222");
                 $response .= 'Pembayaran : ';
                 $response .= ucwords($whatsapp_registration->antrian->registrasiPembayaran->pembayaran);
                 $response .= PHP_EOL;
             }
             if ( !is_null( $whatsapp_registration->antrian->tanggal_lahir ) ) {
-                Log::info("228");
-                $response .= 'Tanggal Lahir : '.  Carbon::CreateFromFormat('Y-m-d',$whatsapp_registration->antrian->tanggal_lahir)->format('d M Y');;
+                $response .= 'Tanggal Lahir : '.  Carbon::parse($whatsapp_registration->antrian->tanggal_lahir)->format('d M Y');;
                 $response .= PHP_EOL;
             }
             if (
@@ -352,7 +333,6 @@ class WablasController extends Controller
                 !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id) ||
                 !is_null( $whatsapp_registration->antrian->tanggal_lahir )
             ) {
-                Log::info("237");
                 $response .= "==================";
                 $response .= PHP_EOL;
                 $response .= PHP_EOL;
@@ -362,14 +342,11 @@ class WablasController extends Controller
         if ( 
             !is_null($whatsapp_registration)
         ) {
-            Log::info("248");
-            Log::info("antrian_id " . $whatsapp_registration->antrian_id);
             $payload   = $this->botKirim($whatsapp_registration)[0];
             $category = $payload['category'];
             $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
             if (is_null($this->whatsapp_registration_deleted)) {
-                Log::info("254");
                 /* $response .=  PHP_EOL; */
                 /* $response .=  PHP_EOL; */
                 /* $response .= "=============="; */
@@ -388,7 +365,6 @@ class WablasController extends Controller
             /* } */
 
             if ( $input_tidak_tepat ) {
-                Log::info('382 ss');
                 $response .=  PHP_EOL;
                 $response .=  PHP_EOL;
                 $response .=    "==================";
@@ -402,11 +378,9 @@ class WablasController extends Controller
         }
 
         if (!empty($response)) {
-            Log::info("330");
             $payload   = $this->botKirim($whatsapp_registration)[0];
             $category = $payload['category'];
             if ( $category == 'button' ) {
-                Log::info("334");
                 $message['buttons'] = $payload['message']['buttons'];
                 $message['content'] = $response;
                 $payload = null;
@@ -423,7 +397,6 @@ class WablasController extends Controller
                 ])->header('Content-Type', 'application/json');
 
             } else if ( $category == 'text' ){
-                Log::info("351");
                 echo $response;
             }
         }
@@ -450,7 +423,6 @@ class WablasController extends Controller
 
         // Cek kepuasan pelanggan
         if ( str_contains( $this->message, '(pxid' ) ) {
-            Log::info("357");
             $id = explode('pxid', $this->message)[1];
             $id = preg_replace('~\D~', '', $id);
 
@@ -464,7 +436,6 @@ class WablasController extends Controller
                 $antrian->satisfaction_index = $satisfaction_index_ini;
                 $antrian->save();
 
-                Log::info('$satisfaction_index_ini '. $satisfaction_index_ini);
 
                 // Jika pasien memilih puas sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
                 //
@@ -504,14 +475,12 @@ class WablasController extends Controller
             $this->antrian &&
             $this->antrian->antriable_type == 'App\\Models\\AntrianKasir'             
         ){
-            Log::info("382");
             $this->saveNomorTeleponPasien();
             // kirimkan nomor rekening beserta dengan jumlah yang harus ditransfer
         } else if (
             $this->antrian &&
              $this->antrian->antriable_type == 'App\\Models\\Periksa' 
         ){
-            Log::info("389");
             $this->saveNomorTeleponPasien();
             // kirimkan umpan balik pelayanan
             // jika pasien sudah didaftarkan oleh admin
@@ -519,7 +488,6 @@ class WablasController extends Controller
             $this->antrian &&
             $this->antrian->antriable_type != 'App\\Models\\Antrian'
         ){
-            Log::info("397");
             $this->saveNomorTeleponPasien();
             echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
         }
@@ -579,12 +547,24 @@ class WablasController extends Controller
         ) {
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
 
-            $message = [
-                'buttons' => [
+            if (
+                 $whatsapp_registration->antrian->jenis_antrian_id == 7 ||
+                 $whatsapp_registration->antrian->jenis_antrian_id == 8
+            ) {
+                $payment_options = [
+                    'Biaya Pribadi',
+                    'Lainnya'
+                ];
+            } else {
+                $payment_options = [
                     'Biaya Pribadi',
                     'BPJS',
                     'Lainnya'
-                ],
+                ];
+            }
+
+            $message = [
+                'buttons' => $payment_options,
                 'content' => $text,
                 'footer' => ''
             ];
@@ -611,7 +591,8 @@ class WablasController extends Controller
                 $message .= $number . '. ' . ucwords($d->nama);
                 $message .= PHP_EOL;
             }
-            $message .= "0. Lainnya ";
+            $nomor_lainnya = count($data) + 1;
+            $message .= $nomor_lainnya. ". Lainnya ";
             $payload[] = [
                 'category' => 'text',
                 'message'  => $message
@@ -845,7 +826,6 @@ class WablasController extends Controller
         }
     }
     public function wablas2(){
-        Log::info("wablas_masuk" . strtotime("now"));
         
         header('Content-Type: application/json');
         $payload[] = [
@@ -966,9 +946,4 @@ class WablasController extends Controller
         $query .= "GROUP BY prx.pasien_id";
         return DB::select($query);
     }
-    
-    
-    
-    
-    
 }
