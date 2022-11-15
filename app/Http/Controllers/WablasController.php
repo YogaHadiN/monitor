@@ -374,7 +374,14 @@ class WablasController extends Controller
         }
 
         if (!empty($response)) {
-            $payload   = $this->botKirim($whatsapp_registration)[0];
+            try {
+                $payload   = $this->botKirim($whatsapp_registration)[0];
+            } catch (\Exception $e) {
+                Log::info("botkirim null");
+                Log::info("whatsapp_registration", $whatsapp_registration);
+                Log::info('$this->message', $this->message);
+                Log::info('$this->no_telp', $this->no_telp);
+            }
             $category = $payload['category'];
             if ( $category == 'button' ) {
                 $message['buttons'] = $payload['message']['buttons'];
@@ -533,7 +540,6 @@ class WablasController extends Controller
                 'category' => 'button',
                 'message' => $message
             ];
-
 			return $payload;
 		}
 		if (
