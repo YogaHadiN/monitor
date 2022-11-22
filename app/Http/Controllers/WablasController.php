@@ -476,22 +476,13 @@ class WablasController extends Controller
             $id = explode('pqid', $this->message)[1];
             $id = preg_replace('~\D~', '', $id);
 
-            Log::info(479);
-            Log::info($id);
             $recovery_index_id = $this->recoveryIndexConverter();
             $antrian = Antrian::find($id);
-            Log::info( "ooo");
-            Log::info($antrian);
-            Log::info($antrian->recovery_index_id);
-            Log::info($antrian->no_telp);
-            Log::info($this->no_telp);
-            Log::info( "ooo");
             if (
                 !is_null($antrian) 
                 && !$antrian->recovery_index_id
                 && $antrian->no_telp == $this->no_telp
             ) {
-                Log::info(486);
                 $antrian->recovery_index_id = $recovery_index_id;
                 $antrian->save();
 
@@ -527,10 +518,6 @@ class WablasController extends Controller
             $this->saveNomorTeleponPasien();
             echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
         }
-
-
-
-
     }
     
 	private function clean($param)
@@ -1004,18 +991,13 @@ class WablasController extends Controller
      */
     private function recoveryIndexConverter()
     {
-        Log::info(998);
         if ( str_contains( $this->message, 'perubahan' ) ) {
-            Log::info(1000);
             return 1;
         } else if ( str_contains( $this->message, 'membaik' ) ){
-            Log::info(1003);
             return 2;
         } else if ( str_contains( $this->message,  'sembuh'  ) ){
-            Log::info(1006);
             return 3;
         } else {
-            Log::info(1009);
             return null;
         }
     }
