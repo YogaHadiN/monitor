@@ -476,8 +476,16 @@ class WablasController extends Controller
             $id = explode('pqid', $this->message)[1];
             $id = preg_replace('~\D~', '', $id);
 
+            Log::info(479);
+            Log::info($id);
             $recovery_index_id = $this->recoveryIndexConverter();
             $antrian = Antrian::find($id);
+            Log::info(
+                "ooo",
+                !is_null($antrian) 
+                && !$antrian->recovery_index_id
+                && $antrian->no_telp == $this->no_telp
+            );
             if (
                 !is_null($antrian) 
                 && !$antrian->recovery_index_id
