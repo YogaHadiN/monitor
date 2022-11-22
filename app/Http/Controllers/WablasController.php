@@ -483,6 +483,7 @@ class WablasController extends Controller
                 && !$antrian->recovery_index_id
                 && $antrian->no_telp == $this->no_telp
             ) {
+                Log::info(486);
                 $antrian->recovery_index_id = $recovery_index_id;
                 $antrian->save();
 
@@ -995,13 +996,18 @@ class WablasController extends Controller
      */
     private function recoveryIndexConverter()
     {
+        Log::info(998);
         if ( str_contains( $this->message, 'perubahan' ) ) {
+            Log::info(1000);
             return 1;
         } else if ( str_contains( $this->message, 'membaik' ) ){
+            Log::info(1003);
             return 2;
         } else if ( str_contains( $this->message,  'sembuh'  ) ){
+            Log::info(1006);
             return 3;
         } else {
+            Log::info(1009);
             return null;
         }
     }
