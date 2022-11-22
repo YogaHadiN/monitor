@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
 use App\Models\WhatsappComplaint;
+use App\Models\FailedTherapy;
 use App\Models\Periksa;
 use App\Models\Pasien;
 use App\Models\User;
@@ -423,6 +424,20 @@ class WablasController extends Controller
             echo $message;
         }
 
+        // dokumentasikan kegagalan terapi
+        $failed_therapy = FailedTherapy::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+        if (!is_null( $failed_therapy )) {
+            $failed_therapy->antrian->informasi_terapi_gagal = $this->message;
+            $failed_therapy->antrian->save();
+            $failed_therapy->delete();
+
+            $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+            $message .= PHP_EOL;
+            $message .= "Informasi ini akan menjadi bahan evaluasi kami";
+            echo $message;
+        }
 
         // Cek kepuasan pelanggan
         if ( str_contains( $this->message, '(pxid' ) ) {
@@ -487,17 +502,33 @@ class WablasController extends Controller
                 $antrian->save();
 
 
-                // Jika pasien memilih puas sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
+                // Jika pasien memilih gagal pengobatan, maka dapatkan informasi mengenai kondisi pasien
                 //
-                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-                $message .= PHP_EOL;
-                $message .= "Informasi ini akan menjadi bahan evaluasi kami";
-                echo $message;
+                if ( $recovery_index_id == 1 ) {
+                    $failed_therapy             = new FailedTherapy;
+                    $failed_therapy->no_telp    = $antrian->no_telp;
+                    $failed_therapy->antrian_id = $antrian->id;
+                    $failed_therapy->save();
+
+                    $nama_pasien = $antrian->periksa->pasien->nama;
+
+                    $message = "Mohon maaf atas ketidak nyamanannya .";
+                    $message .= PHP_EOL;
+                    $message .= "Bisa diinfokan kondisi saat ini?";
+                    echo $message;
+                    //
+                // Jika pasien memilih mengalami perbaikan, ucapkan terima kasih
+                //
+                } else {
+                    $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                    $message .= PHP_EOL;
+                    $message .= "Informasi ini akan menjadi bahan evaluasi kami";
+                    echo $message;
+                }
             }
         }
 
-
-            // Jika pasien berada di antrian kasir
+        // Jika pasien berada di antrian kasir
         if (
             $this->antrian &&
             $this->antrian->antriable_type == 'App\\Models\\AntrianKasir'             
