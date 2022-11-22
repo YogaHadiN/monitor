@@ -612,7 +612,7 @@ class WablasController extends Controller
 			$message .= PHP_EOL;
 			$message .= PHP_EOL;
 
-            $balas_dengan = 'Balas dengan ';
+            $balas_dengan = 'Balas dengan angka ';
             $balas_dengan .= '*';
             foreach ($data as $key => $d) {
                 $number = $key + 1;
@@ -629,7 +629,7 @@ class WablasController extends Controller
             $nomor_lainnya = count($data) + 1;
             $message .= $nomor_lainnya. ". Lainnya ";
 
-            $balas_dengan .= 'atau ' . $nomor_lainnya . '*'; 
+            $balas_dengan .= ' atau ' . $nomor_lainnya . '*'; 
             $balas_dengan .= ' sesuai urutan di atas';
 
             $message .= PHP_EOL;
