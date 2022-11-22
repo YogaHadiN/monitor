@@ -480,12 +480,12 @@ class WablasController extends Controller
             Log::info($id);
             $recovery_index_id = $this->recoveryIndexConverter();
             $antrian = Antrian::find($id);
-            Log::info(
-                "ooo",
-                !is_null($antrian) 
-                && !$antrian->recovery_index_id
-                && $antrian->no_telp == $this->no_telp
-            );
+            Log::info( "ooo");
+            Log::info($antrian);
+            Log::info($antrian->recovery_index_id);
+            Log::info($antrian->no_telp);
+            Log::info($this->no_telp);
+            Log::info( "ooo");
             if (
                 !is_null($antrian) 
                 && !$antrian->recovery_index_id
