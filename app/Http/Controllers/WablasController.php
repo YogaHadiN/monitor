@@ -472,6 +472,30 @@ class WablasController extends Controller
             }
         }
 
+        if ( str_contains( $this->message, '(pqid' ) ) {
+            $id = explode('pqid', $this->message)[1];
+            $id = preg_replace('~\D~', '', $id);
+
+            $recovery_index_id = $this->recoveryIndexConverter();
+            $antrian = Antrian::find($id);
+            if (
+                !is_null($antrian) 
+                && !$antrian->recovery_index_id
+                && $antrian->no_telp == $this->no_telp
+            ) {
+                $antrian->recovery_index_id = $recovery_index_id;
+                $antrian->save();
+
+
+                // Jika pasien memilih puas sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
+                //
+                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                $message .= PHP_EOL;
+                $message .= "Informasi ini akan menjadi bahan evaluasi kami untuk melayani Anda dengan lebih baik lagi";
+                echo $message;
+            }
+        }
+
 
             // Jika pasien berada di antrian kasir
         if (
@@ -588,18 +612,34 @@ class WablasController extends Controller
 			$message .= PHP_EOL;
 			$message .= PHP_EOL;
 
+            $balas_dengan = 'Balas dengan ';
+            $balas_dengan .= '*';
             foreach ($data as $key => $d) {
                 $number = $key + 1;
                 $message .= $number . '. ' . ucwords($d->nama);
                 $message .= PHP_EOL;
+
+                $urutan = (string) $key + 1;
+                if ($key == 0) {
+                    $balas_dengan .= $urutan;
+                } else {
+                    $balas_dengan .= ', ' . $urutan;
+                }
             }
             $nomor_lainnya = count($data) + 1;
             $message .= $nomor_lainnya. ". Lainnya ";
+
+            $balas_dengan .= 'atau ' . $nomor_lainnya . '*'; 
+            $balas_dengan .= ' sesuai urutan di atas';
+
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= $balas_dengan;
+
             $payload[] = [
                 'category' => 'text',
                 'message'  => $message
             ];
-
 			return $payload;
 		}
 		if (
@@ -948,4 +988,22 @@ class WablasController extends Controller
         $query .= "GROUP BY prx.pasien_id";
         return DB::select($query);
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function recoveryIndexConverter()
+    {
+        if ( str_contains( $this->message, 'perubahan' ) ) {
+            return 1;
+        } else if ( str_contains( $this->message, 'membaik' ) ){
+            return 2;
+        } else if ( str_contains( $this->message,  'sembuh'  ) ){
+            return 3;
+        } else {
+            return null;
+        }
+    }
+    
 }
