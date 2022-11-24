@@ -510,8 +510,6 @@ class WablasController extends Controller
                     $failed_therapy->antrian_id = $antrian->id;
                     $failed_therapy->save();
 
-                    $nama_pasien = $antrian->antriable->pasien->nama;
-
                     $message = "Mohon maaf atas ketidak nyamanannya .";
                     $message .= PHP_EOL;
                     $message .= "Bisa diinfokan kondisi saat ini?";
