@@ -37,7 +37,9 @@ class testCommand extends Command
      */
     public function handle()
     {
-		$this->multipleSendWablas('hello there');
+        $message = 'oke';
+        dd( 'oke' );
+        $this->singleTextSend($message);
     }
 	/**
 	* undocumented function

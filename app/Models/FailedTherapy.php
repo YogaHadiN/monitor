@@ -10,4 +10,7 @@ class FailedTherapy extends Model
     use HasFactory;
 
     protected $table = 'failed_therapies';
+    public function antrian(){
+        return $this->belongsTo(Antrian:class);
+    }
 }
