@@ -11,6 +11,6 @@ class FailedTherapy extends Model
 
     protected $table = 'failed_therapies';
     public function antrian(){
-        return $this->belongsTo(Antrian:class);
+        return $this->belongsTo("App\Models\Antrian");
     }
 }
