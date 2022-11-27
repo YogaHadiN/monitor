@@ -175,27 +175,37 @@ class WablasController extends Controller
             !is_null( $whatsapp_registration->antrian ) &&
             is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-            $tanggals = explode(" ", $this->message );
+            $tanggals = [];
+            if ( str_contains( $this->message, "." ) ){
+                $tanggals = explode(".", $this->message );
+            } else if ( str_contains( $this->message, "_" ) ){
+                $tanggals = explode("_", $this->message );
+            } else if ( str_contains( $this->message, "/" ) ){
+                $tanggals = explode("/", $this->message );
+            } else {
+                $tanggals = explode(" ", $this->message );
+            }
 
             if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
                 $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                 $whatsapp_registration->antrian->save();
             } else if(
                 (
-                    str_contains( $this->message , 'jan') ||
-                    str_contains( $this->message , 'feb') ||
-                    str_contains( $this->message , 'mar') ||
-                    str_contains( $this->message , 'apr') ||
-                    str_contains( $this->message , 'mei') ||
-                    str_contains( $this->message , 'jun') ||
-                    str_contains( $this->message , 'jul') ||
-                    str_contains( $this->message , 'agustus') ||
-                    str_contains( $this->message , 'ags') ||
-                    str_contains( $this->message , 'sept') ||
-                    str_contains( $this->message , 'oktober') ||
-                    str_contains( $this->message , 'okt') ||
-                    str_contains( $this->message , 'nov') ||
-                    str_contains( $this->message , 'des')
+                    str_contains( $tanggals[1] , 'jan') ||
+                    str_contains( $tanggals[1] , 'feb') ||
+                    str_contains( $tanggals[1] , 'mar') ||
+                    str_contains( $tanggals[1] , 'apr') ||
+                    str_contains( $tanggals[1] , 'mei') ||
+                    str_contains( $tanggals[1] , 'jun') ||
+                    str_contains( $tanggals[1] , 'jul') ||
+                    str_contains( $tanggals[1] , 'agustus') ||
+                    str_contains( $tanggals[1] , 'ags') ||
+                    str_contains( $tanggals[1] , 'sept') ||
+                    str_contains( $tanggals[1] , 'oktober') ||
+                    str_contains( $tanggals[1] , 'okt') ||
+                    str_contains( $tanggals[1] , 'nov') ||
+                    str_contains( $tanggals[1] , 'des')
+
                 ) &&
                 count($tanggals) == 3
             ) {
@@ -209,69 +219,111 @@ class WablasController extends Controller
 
                 if(
                      trim($bulan) == 'januari' ||
-                     trim($bulan) == 'jan'
+                     trim($bulan) == 'jan' ||
+                     trim($bulan) == '01' ||
+                     trim($bulan) == '1'
                 ){
-                    $bulan = 1;
+                    $bulan = '01';
                 } else if(
                     trim($bulan) == 'februari' || 
-                    trim($bulan) == 'feb'
+                    trim($bulan) == 'feb' ||
+                    trim($bulan) == '02' ||
+                    trim($bulan) == '2'
                 ){
-                    $bulan = 2;
+                    $bulan = '02';
                 } else if(
                     trim($bulan) == 'maret' || 
-                    trim($bulan) == 'mar'
+                    trim($bulan) == 'mar' ||
+                    trim($bulan) == '03' ||
+                    trim($bulan) == '3'
                 ){
-                    $bulan = 3;
+                    $bulan = '03';
                 } else if(
                     trim($bulan) == 'april' || 
-                    trim($bulan) == 'apr'
+                    trim($bulan) == 'apr' ||
+                    trim($bulan) == '04' ||
+                    trim($bulan) == '4'
+
                 ){
-                    $bulan = 4;
-                } else if( trim($bulan) == 'mei' ){
-                    $bulan = 5;
+                    $bulan = '04';
+                } else if( 
+                    trim($bulan) == 'mei'  ||
+                    trim($bulan) == '05' ||
+                    trim($bulan) == '5'
+
+                ){
+                    $bulan = '05';
                 } else if(
                     trim($bulan) == 'juni' || 
-                    trim($bulan) == 'jun'
+                    trim($bulan) == 'jun' ||
+                    trim($bulan) == '06' ||
+                    trim($bulan) == '6'
+
                 ){
-                    $bulan = 6;
+                    $bulan = '06';
                 } else if(
                     trim($bulan) == 'juli' || 
-                    trim($bulan) == 'jul'
+                    trim($bulan) == 'jul' ||
+                    trim($bulan) == '07' ||
+                    trim($bulan) == '7'
+
                 ){
-                    $bulan = 7;
-                } else if( trim($bulan) == 'agustus' ){
-                    $bulan = 8;
+                    $bulan = '07';
+                } else if(
+                    trim($bulan) == 'agustus' ||
+                    trim($bulan) == '08' ||
+                    trim($bulan) == '8'
+                ){
+                    $bulan = '08';
                 } else if(
                     trim($bulan) == 'september' || 
                     trim($bulan) == 'sept' || 
-                    trim($bulan) == 'sep'
+                    trim($bulan) == 'sep' ||
+                    trim($bulan) == '09' ||
+                    trim($bulan) == '9'
+
                 ){
-                    $bulan = 9;
+                    $bulan = '09';
                 } else if(
                      trim($bulan) == 'oktober' ||
-                     trim($bulan) == 'okt'
+                     trim($bulan) == 'okt' ||
+                    trim($bulan) == '10'
+
                 ){
                     $bulan = 10;
                 } else if(
                     trim($bulan) == 'november' || 
-                    trim($bulan) == 'nov'
+                    trim($bulan) == 'nov' ||
+                    trim($bulan) == '11'
+
                 ){
                     $bulan = 11;
                 } else if(
                     trim($bulan) == 'desember' || 
-                    trim($bulan) == 'des'
+                    trim($bulan) == 'des' ||
+                    trim($bulan) == '12'
+
                 ){
                     $bulan = 12;
                 }
 
-                $databaseFriendlyDateFormat = $tahun . '-' . $bulan . '-' . $tanggal;
 
+                if ( (int) $tahun < 100 ) {
+                   if ( $tahun <= date('y') ) {
+                       $tahun = '20' . $tahun;
+                   } else {
+                       $tahun = '19' . $tahun;
+                   }
+                }
+
+                $databaseFriendlyDateFormat = $tahun . '-' . $bulan . '-' . $tanggal;
                 try {
                     Carbon::parse($databaseFriendlyDateFormat);
                     $whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
                     $whatsapp_registration->antrian->save();
                 } catch (\Exception $e) {
                     $input_tidak_tepat = true;
+                    Log::info( $this->message );
                 }
 
             } else {
