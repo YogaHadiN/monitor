@@ -192,23 +192,6 @@ class WablasController extends Controller
                 $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
                 $whatsapp_registration->antrian->save();
             } else if(
-                (
-                    str_contains( $tanggals[1] , 'jan') ||
-                    str_contains( $tanggals[1] , 'feb') ||
-                    str_contains( $tanggals[1] , 'mar') ||
-                    str_contains( $tanggals[1] , 'apr') ||
-                    str_contains( $tanggals[1] , 'mei') ||
-                    str_contains( $tanggals[1] , 'jun') ||
-                    str_contains( $tanggals[1] , 'jul') ||
-                    str_contains( $tanggals[1] , 'agustus') ||
-                    str_contains( $tanggals[1] , 'ags') ||
-                    str_contains( $tanggals[1] , 'sept') ||
-                    str_contains( $tanggals[1] , 'oktober') ||
-                    str_contains( $tanggals[1] , 'okt') ||
-                    str_contains( $tanggals[1] , 'nov') ||
-                    str_contains( $tanggals[1] , 'des')
-
-                ) &&
                 count($tanggals) == 3
             ) {
                 Log::info( $tanggals );
