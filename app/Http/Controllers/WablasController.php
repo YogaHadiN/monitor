@@ -211,6 +211,7 @@ class WablasController extends Controller
                 ) &&
                 count($tanggals) == 3
             ) {
+                Log::info( $tanggals );
                 $tanggal  = $tanggals[0];
                 $bulan    = $tanggals[1];
                 $tahun    = $tanggals[2];
