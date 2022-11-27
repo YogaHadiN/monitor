@@ -182,6 +182,8 @@ class WablasController extends Controller
                 $tanggals = explode("_", $this->message );
             } else if ( str_contains( $this->message, "/" ) ){
                 $tanggals = explode("/", $this->message );
+            } else if ( str_contains( $this->message, "-" ) ){
+                $tanggals = explode("-", $this->message );
             } else {
                 $tanggals = explode(" ", $this->message );
             }
