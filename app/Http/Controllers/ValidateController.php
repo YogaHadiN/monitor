@@ -18,6 +18,7 @@ class ValidateController extends Controller
     }
     public function surat_sakit($id){
         $query  = "SELECT ";
+        $query .= "tn.name as nama_klinik, ";
         $query .= "ps.nama as nama, ";
         $query .= "px.tanggal as tanggal, ";
         $query .= "ss.tanggal_mulai as tanggal_mulai,";
@@ -25,6 +26,7 @@ class ValidateController extends Controller
         $query .= "FROM surat_sakits as ss ";
         $query .= "JOIN periksas as px on px.id = ss.periksa_id ";
         $query .= "JOIN pasiens as ps on ps.id = px.pasien_id ";
+        $query .= "JOIN tenants as tn on tn.id = px.tenant_id ";
         $query .= "WHERE periksa_id = '{$id}'";
         $data = DB::select($query);
         $nama          = '';
@@ -33,6 +35,7 @@ class ValidateController extends Controller
         $tanggal       = '';
         if (count($data)) {
             $nama          = $data[0]->nama;
+            $nama_klinik          = $data[0]->nama_klinik;
             $tanggal_mulai = Carbon::parse($data[0]->tanggal_mulai);
             $hari          = $data[0]->hari;
             $tanggal       = Carbon::parse($data[0]->tanggal);
@@ -40,6 +43,7 @@ class ValidateController extends Controller
         return view('validasi.surat_sakit', compact(
             'data',
             'nama',
+            'nama_klinik',
             'tanggal_mulai',
             'hari',
             'tanggal'

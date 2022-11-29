@@ -28,7 +28,7 @@
             <h1>{{ $tanggal_mulai->format('d M Y') }}</h1>
             <h3>Selama</h3>
             <h1>{{ $hari }} Hari</h1>
-            <h3>Di Klink Jati Elok</h3>
+            <h3>Di {{ $nama_klinik }}</h3>
             <h3>Saat berobat pada tanggal {{ $tanggal->format('d M Y') }}</h3>
         </div>
         
