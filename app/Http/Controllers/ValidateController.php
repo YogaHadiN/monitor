@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Periksa;
 use DB;
+use Auth;
 use Carbon\Carbon;
 use Crypt;
 
@@ -30,6 +31,7 @@ class ValidateController extends Controller
         $query .= "WHERE periksa_id = '{$id}'";
         $data = DB::select($query);
         $nama          = '';
+        $nama_klinik   = '';
         $tanggal_mulai = '';
         $hari          = '';
         $tanggal       = '';
@@ -48,7 +50,6 @@ class ValidateController extends Controller
             'hari',
             'tanggal'
         ));
-        return 'Halaman ini menyatakan bahwa benar ' . ucwords($nama) . ' Mengajukan Izin Sakit mulai tanggal ' . $tanggal_mulai . ' selama ' . $hari. ' Hari di Klinik Jati Elok pada tanggal ' . $tanggal;
     }
     public function templateRapid($antigen, $id){
         $query  = "SELECT ";
@@ -70,14 +71,6 @@ class ValidateController extends Controller
             'data',
             'antigen'
         ));
-        /* if ( count($data) ) { */
-        /*     $nama = $data[0]->nama; */
-        /*     $tanggal = $data[0]->tanggal; */
-        /*     $pemeriksaan = $antigen ? 'Rapid Antigen COVID 19' : 'Rapid Antibodi COVID 19'; */
-        /*     return 'Halaman ini menyatakan bahwa benar ' . ucwords($nama) . ' telah melakukan pemeriksaan ' . $pemeriksaan . ' di Klinik Jati Elok pada tanggal ' . $tanggal; */
-        /* } else { */
-        /*     return 'Data tidak ditemukan Mohon hubungi 0215977529 untuk verifikasi lebih lanjut'; */
-        /* } */
     }
     
     
