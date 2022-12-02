@@ -66,6 +66,7 @@ class WablasController extends Controller
         Log::info("===================");
         Log::info( Input::get('phone') );
         Log::info( Input::get('messageType') );
+        Log::info( Input::get('file') );
         Log::info( Input::get('message') );
         Log::info("===================");
 
