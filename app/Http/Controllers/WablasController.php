@@ -78,11 +78,10 @@ class WablasController extends Controller
      */
     private function proceedRegistering()
     {
-        if ( $this->no_telp == '6281381912803' ) {
-            Log::info('pesan gambar dari pak Yoga');
-            Log::info('=======================================================');
-            Log::info( $this->message );
-        }
+        Log::info('pesan gambar dari pak Yoga');
+        Log::info('=======================================================');
+        Log::info( $this->message );
+
         header('Content-Type: application/json');
         $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
