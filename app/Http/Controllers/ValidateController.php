@@ -37,7 +37,7 @@ class ValidateController extends Controller
         $tanggal       = '';
         if (count($data)) {
             $nama          = $data[0]->nama;
-            $nama_klinik          = $data[0]->nama_klinik;
+            $nama_klinik   = $data[0]->nama_klinik;
             $tanggal_mulai = Carbon::parse($data[0]->tanggal_mulai);
             $hari          = $data[0]->hari;
             $tanggal       = Carbon::parse($data[0]->tanggal);
