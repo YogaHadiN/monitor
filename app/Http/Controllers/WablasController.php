@@ -63,12 +63,9 @@ class WablasController extends Controller
 	public function webhook(){
         header('Content-Type: application/json');
 
-        Log::info("===================");
-        Log::info( Input::get('phone') );
-        Log::info( Input::get('messageType') );
-        Log::info( Input::get('file') );
-        Log::info( Input::get('message') );
-        Log::info("===================");
+        if ( Input::get('messageType') == 'image' ) {
+            $this->uploadImage();
+        }
 
         if (
             !is_null( $this->no_telp ) &&
@@ -1072,4 +1069,41 @@ class WablasController extends Controller
         }
     }
     
+    private function uploadImage()
+    {
+        Log::info("===================");
+        Log::info( Input::get('phone') );
+        Log::info( Input::get('messageType') );
+        Log::info( Input::get('file') );
+        Log::info( Input::get('message') );
+        Log::info("===================");
+
+        $upload_cover = Input::get('file');
+        $extension = $upload_cover->getClientOriginalExtension();
+
+        /* $upload_cover = Image::make($upload_cover); */
+        /* $upload_cover->resize(1000, null, function ($constraint) { */
+        /* 	$constraint->aspectRatio(); */
+        /* 	$constraint->upsize(); */
+        /* }); */
+
+        //membuat nama file random + extension
+        $filename =	 'whatsapp' . '_' .  time().'.' . $extension;
+
+        //menyimpan bpjs_image ke folder public/img
+        $destination_path = 'whatsapp_image';
+        if (!str_ends_with('/', $destination_path)) {
+            $destination_path =  $destination_path . '/';
+        }
+
+        //destinasi s3
+        //
+        \Storage::disk('s3')->put($destination_path. $filename, file_get_contents($upload_cover));
+        // Mengambil file yang di upload
+
+        /* $upload_cover->save($destination_path . '/' . $filename); */
+        
+        //mengisi field bpjs_image di book dengan filename yang baru dibuat
+        /* return $destination_path. $filename; */
+    }
 }
