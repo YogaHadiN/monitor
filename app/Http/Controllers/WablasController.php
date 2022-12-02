@@ -63,6 +63,11 @@ class WablasController extends Controller
 	public function webhook(){
         header('Content-Type: application/json');
 
+        Log::info("===================");
+        Log::info( $this->no_telp );
+        Log::info( $this->message );
+        Log::info("===================");
+
         if (
             !is_null( $this->no_telp ) &&
             !is_null( $this->message ) &&
@@ -78,10 +83,6 @@ class WablasController extends Controller
      */
     private function proceedRegistering()
     {
-        Log::info('pesan gambar dari pak Yoga');
-        Log::info('=======================================================');
-        Log::info( $this->message );
-
         header('Content-Type: application/json');
         $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
