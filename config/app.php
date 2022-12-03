@@ -167,8 +167,8 @@ return [
         /*
          * Package Service Providers...
          */
-          browner12\helpers\HelperServiceProvider::class,
-
+        browner12\helpers\HelperServiceProvider::class,
+        Intervention\Image\ImageServiceProvider::class
         /*
          * Application Service Providers...
          */
@@ -192,7 +192,8 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
-        'Input'        => Illuminate\Support\Facades\Request::class,
+        'Input' => Illuminate\Support\Facades\Request::class,
+        'Image' => Intervention\Image\Facades\Image::class,
     ])->toArray(),
 
 ];

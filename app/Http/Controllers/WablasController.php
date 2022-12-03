@@ -1082,6 +1082,11 @@ class WablasController extends Controller
         Log::info( Input::get('message') );
         Log::info("===================");
 
+        $url      = Input::get('url');
+        $contents = file_get_contents($url);
+        $name     = substr($url, strrpos($url, '/') + 1);
+        Log::info($name);
+        /* Storagel::disk('s3')->put($name, $contents); */
         /* $upload_cover = Input::get('file'); */
         /* $extension = $upload_cover->getClientOriginalExtension(); */
 
