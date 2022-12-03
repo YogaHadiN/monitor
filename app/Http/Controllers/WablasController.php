@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers; use Illuminate\Http\Request; use App\Models\AntrianPeriksa; use App\Models\AntrianPoli;
+<?php namespace App\Http\Controllers; 
+use Illuminate\Http\Request; 
+use App\Models\AntrianPeriksa; 
+use App\Models\AntrianPoli;
 use App\Models\Antrian;
 use App\Models\Tenant;
 use App\Models\JenisAntrian;
@@ -1074,6 +1077,7 @@ class WablasController extends Controller
         Log::info("===================");
         Log::info( Input::get('phone') );
         Log::info( Input::get('messageType') );
+        Log::info( Input::get('file') );
         Log::info( Input::get('file') );
         Log::info( Input::get('message') );
         Log::info("===================");
