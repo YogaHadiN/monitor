@@ -168,7 +168,7 @@ return [
          * Package Service Providers...
          */
         browner12\helpers\HelperServiceProvider::class,
-        Intervention\Image\ImageServiceProvider::class
+        Intervention\Image\ImageServiceProvider::class,
         /*
          * Application Service Providers...
          */
