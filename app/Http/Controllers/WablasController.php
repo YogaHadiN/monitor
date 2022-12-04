@@ -1085,6 +1085,7 @@ class WablasController extends Controller
         $url      = Input::get('url');
         $contents = file_get_contents($url);
         $name     = substr($url, strrpos($url, '/') + 1);
+        Log::info("nama file yang akan disimpan");
         Log::info($name);
         /* Storagel::disk('s3')->put($name, $contents); */
         /* $upload_cover = Input::get('file'); */
