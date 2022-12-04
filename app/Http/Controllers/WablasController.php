@@ -1087,6 +1087,9 @@ class WablasController extends Controller
         $name     = substr($url, strrpos($url, '/') + 1);
         Log::info("nama file yang akan disimpan");
         Log::info($name);
+        $destination_path = 'image/whatsapp/';
+
+        \Storage::disk('s3')->put($destination_path. $filename, $contents);
         /* Storagel::disk('s3')->put($name, $contents); */
         /* $upload_cover = Input::get('file'); */
         /* $extension = $upload_cover->getClientOriginalExtension(); */
@@ -1108,7 +1111,7 @@ class WablasController extends Controller
 
         //destinasi s3
         //
-        /* \Storage::disk('s3')->put($destination_path. $filename, file_get_contents($upload_cover)); */
+        \Storage::disk('s3')->put($destination_path. $filename, file_get_contents($upload_cover));
         /* // Mengambil file yang di upload */
 
         /* /1* $upload_cover->save($destination_path . '/' . $filename); *1/ */
