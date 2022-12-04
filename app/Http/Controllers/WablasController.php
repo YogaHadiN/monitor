@@ -1111,7 +1111,7 @@ class WablasController extends Controller
 
         //destinasi s3
         //
-        \Storage::disk('s3')->put($destination_path. $filename, file_get_contents($upload_cover));
+        /* \Storage::disk('s3')->put($destination_path. $filename, file_get_contents($upload_cover)); */
         /* // Mengambil file yang di upload */
 
         /* /1* $upload_cover->save($destination_path . '/' . $filename); *1/ */
