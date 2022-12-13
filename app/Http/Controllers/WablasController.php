@@ -770,9 +770,9 @@ class WablasController extends Controller
                 ];
             } else {
                 $text .= PHP_EOL;
-                $text = '1. Lanjutkan';
+                $text .= '1. Lanjutkan';
                 $text .= PHP_EOL;
-                $text = '2. Ulangi';
+                $text .= '2. Ulangi';
                 $text .= PHP_EOL;
                 $text .= PHP_EOL;
                 $text .= "Balas dengan angka *1 atau 2* sesuai informasi di atas";
