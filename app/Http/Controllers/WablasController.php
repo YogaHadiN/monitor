@@ -152,8 +152,8 @@ class WablasController extends Controller
             $this->whatsapp_registration->registering_confirmation < 1
         ){
             if (
-                ( $this->message == 'lanjutkan' && $tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == 'ya' && !$tenant->iphone_whatsapp_button_available )
+                ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == 'ya' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
                 $this->whatsapp_registration->registering_confirmation = 1;
                 $this->whatsapp_registration->save();
@@ -164,29 +164,29 @@ class WablasController extends Controller
             is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ){
             if (
-                ( $this->message == 'biaya pribadi' && $tenant->iphone_whatsapp_button_available ) ||
-                ($this->message == 'bpjs' && $tenant->iphone_whatsapp_button_available) ||
-                ( $this->message == 'lainnya' && $tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available ) ||
-                ($this->message == '2' && !$tenant->iphone_whatsapp_button_available) ||
-                ( $this->message == '3' && !$tenant->iphone_whatsapp_button_available )
+                ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ($this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available) ||
+                ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
+                ($this->message == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
+                ( $this->message == '3' && !$this->tenant->iphone_whatsapp_button_available )
 
             ) {
                 if (
-                    ( $this->message == 'biaya pribadi' && $tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available )
+                    ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 1;
                 }
                 if (
-                    ( $this->message == 'bpjs' && $tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '2' && !$tenant->iphone_whatsapp_button_available )
+                    ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 2;
                 }
                 if (
-                    ( $this->message == 'lainnya' && $tenant->iphone_whatsapp_button_available ) ||
-                    ( !$this->message == '3' && !$tenant->iphone_whatsapp_button_available )
+                    ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( !$this->message == '3' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
                 }
@@ -377,20 +377,20 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
             if (
-                ( $this->message == 'lanjutkan' && $tenant->iphone_whatsapp_button_available )||
-                ( $this->message == 'ulangi' && $tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available )||
-                ( $this->message == '2' && !$tenant->iphone_whatsapp_button_available )
+                ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
+                ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available )||
+                ( $this->message == '2' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
                 if (
-                    ( $this->message == 'lanjutkan' && $tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available )
+                    ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
                 }
                 if (
-                    ( $this->message == 'ulangi' && $tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '2' && !$tenant->iphone_whatsapp_button_available )
+                    ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->ulangiRegistrasiWhatsapp();
                 }
