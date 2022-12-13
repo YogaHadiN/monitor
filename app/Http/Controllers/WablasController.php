@@ -622,7 +622,6 @@ class WablasController extends Controller
                     'message' => $message
                 ];
             } else {
-                Log::info('balas ya');
                 $text .= 'Balas *ya* untuk melanjutkan';
 
                 $payload[] = [
@@ -808,7 +807,7 @@ class WablasController extends Controller
                 $text .= PHP_EOL;
                 $text .= '=======================';
                 $text .= PHP_EOL;
-                $text .= 'Anda akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
+                $text .= 'Selanjutnya Anda akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
                 $text .= PHP_EOL;
                 $text .= PHP_EOL;
 
