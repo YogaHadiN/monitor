@@ -608,6 +608,7 @@ class WablasController extends Controller
                     'message' => $message
                 ];
             } else {
+                Log::info('balas ya');
                 $text .= 'Balas *ya* untuk melanjutkan';
 
                 $payload[] = [
