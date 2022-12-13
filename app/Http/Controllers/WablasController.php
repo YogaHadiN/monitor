@@ -196,8 +196,10 @@ class WablasController extends Controller
                 }
 
                 $this->whatsapp_registration->antrian->save();
-                Log::info(199, $this->message);
-                Log::info(200, $this->whatsapp_registration->antrian);
+                Log::info(199);
+                Log::info($this->message);
+                Log::info(200);
+                Log::info($this->whatsapp_registration->antrian);
 
             } else {
                 $input_tidak_tepat = true;
