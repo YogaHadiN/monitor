@@ -165,7 +165,7 @@ class WablasController extends Controller
                 ( $this->message == 'lainnya' && $tenant->iphone_whatsapp_button_available ) ||
                 ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available ) ||
                 ($this->message == '2' && !$tenant->iphone_whatsapp_button_available) ||
-                ( $this->message == '3' && !$tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == '3' && !$tenant->iphone_whatsapp_button_available )
 
             ) {
                 if (
@@ -579,6 +579,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration) &&
              $this->whatsapp_registration->registering_confirmation < 1
         ) {
+            $payload = [];
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
 			$text .= "==============";
