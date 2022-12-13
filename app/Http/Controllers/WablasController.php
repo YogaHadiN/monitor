@@ -583,6 +583,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration) &&
              $this->whatsapp_registration->registering_confirmation < 1
         ) {
+            Log::info('is this count');
             $payload = [];
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
