@@ -586,21 +586,30 @@ class WablasController extends Controller
 			$text .= PHP_EOL;
 			$text .= 'Fasilitas ini akan memproses antrian Untuk berkonsultasi ke *Dokter Umum*';
 			$text .= PHP_EOL;
-			$text .= 'Apakah Anda ingin melanjutkan?';
-			$text .= PHP_EOL;
+            if ( $this->tenant->iphone_whatsapp_button_available ) {
+                $text .= 'Apakah Anda ingin melanjutkan?';
+                $text .= PHP_EOL;
 
-            $message = [
-                'buttons' => [
-                    'Lanjutkan',
-                ],
-                'content' => $text,
-                'footer' => ''
-            ];
+                $message = [
+                    'buttons' => [
+                        'Lanjutkan',
+                    ],
+                    'content' => $text,
+                    'footer' => ''
+                ];
 
-            $payload[] = [
-                'category' => 'button',
-                'message' => $message
-            ];
+                $payload[] = [
+                    'category' => 'button',
+                    'message' => $message
+                ];
+            } else {
+                $text .= 'Balas *ya* untuk melanjutkan';
+
+                $payload[] = [
+                    'category' => 'text',
+                    'message' => $text
+                ];
+            }
 			return $payload;
 		}
 		if (
@@ -615,38 +624,16 @@ class WablasController extends Controller
                      $this->whatsapp_registration->antrian->jenis_antrian_id == 7 ||
                      $this->whatsapp_registration->antrian->jenis_antrian_id == 8
                 ) {
-                    /* if ( $this->tenant->iphone_whatsapp_button_available ) { */
-                        $payment_options = [
-                            'Biaya Pribadi',
-                            'Lainnya'
-                        ];
-                    /* } else { */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= "1. Biaya Pribadi"; */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= "2. Lainnya"; */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= "Balas dengan angka *1 atau 2* sesuai informasi di atas"; */
-
-                    /* } */
+                    $payment_options = [
+                        'Biaya Pribadi',
+                        'Lainnya'
+                    ];
                 } else {
-                    /* if ( $this->tenant->iphone_whatsapp_button_available ) { */
-                        $payment_options = [
-                            'Biaya Pribadi',
-                            'BPJS',
-                            'Lainnya'
-                        ];
-                    /* } else { */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= "1. Biaya Pribadi"; */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= "2. BPJS"; */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= "3. Lainnya"; */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= PHP_EOL; */
-                    /*     $text .= "Balas dengan angka *1,2 atau 3* sesuai informasi di atas"; */
-                    /* } */
+                    $payment_options = [
+                        'Biaya Pribadi',
+                        'BPJS',
+                        'Lainnya'
+                    ];
                 }
             } else {
                 $text .= PHP_EOL;
@@ -775,6 +762,9 @@ class WablasController extends Controller
                 $text = '1. Lanjutkan';
                 $text .= PHP_EOL;
                 $text = '2. Ulangi';
+                $text .= PHP_EOL;
+                $text .= PHP_EOL;
+                $text .= "Balas dengan angka *1 atau 2* sesuai informasi di atas";
 
                 $payload[] = [
                     'category' => 'text',
@@ -803,11 +793,11 @@ class WablasController extends Controller
                 $text .= PHP_EOL;
                 $text .= 'Anda akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
                 $text .= PHP_EOL;
-                $text .= 'Apakah Anda ingin melanjutkan?';
                 $text .= PHP_EOL;
 
 
                 if ( $this->tenant->iphone_whatsapp_button_available) {
+                    $text .= 'Apakah Anda ingin melanjutkan?';
                     $message = [
                         'buttons' => [
                             'Lanjutkan'
