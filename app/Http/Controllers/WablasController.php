@@ -579,6 +579,8 @@ class WablasController extends Controller
 
 	private function botKirim()
 	{
+        Log::info($this->whatsapp_registration);
+        Log::info($this->whatsapp_registration->registering_confirmation);
         if (
             !is_null($this->whatsapp_registration) &&
              $this->whatsapp_registration->registering_confirmation < 1
