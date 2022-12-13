@@ -6,6 +6,7 @@ use App\Models\Antrian;
 use App\Models\Tenant;
 use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
+use App\Models\KuesionerMenungguObat;
 use App\Models\WhatsappComplaint;
 use App\Models\FailedTherapy;
 use App\Models\Periksa;
@@ -26,8 +27,15 @@ class WablasController extends Controller
 	public $gigi_buka     = true;
 	public $estetika_buka = true;
 	public $whatsapp_registration_deleted;
+	public $kuesioner_menunggu_obat;
+	public $whatsapp_registration;
+	public $whatsapp_recovery_index;
+	public $whatsapp_complaint;
+	public $tenant;
+	public $failed_therapy;
 	public $no_telp;
 	public $message;
+    public $whatsapp_satisfaction_survey;
 
 	public function __construct()
 	{
@@ -49,7 +57,6 @@ class WablasController extends Controller
 				$this->gigi_buka = false;
 			}
 
-
 			//estetika_buka
 			if ( 
 				( date('w') < 1 ||  date('w') > 5)
@@ -66,16 +73,50 @@ class WablasController extends Controller
 	public function webhook(){
         header('Content-Type: application/json');
 
-        if ( Input::get('messageType') == 'image' ) {
-            $this->uploadImage();
-        }
+        $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
+                                        ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                        ->first();
+
+        $this->whatsapp_complaint = WhatsappComplaint::where('no_telp', $this->no_telp)
+                                    ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                    ->first();
+
+        $this->failed_therapy = FailedTherapy::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+
+        $this->whatsapp_satisfaction_survey = WhatsappSatisfactionSurvey::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+
+        $this->whatsapp_recovery_index = WhatsappRecoveryIndex::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+
+        $this->kuesioner_menunggu_obat = KuesionerMenungguObat::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+
+        $this->tenant = Tenant::find(1);
 
         if (
             !is_null( $this->no_telp ) &&
             !is_null( $this->message ) &&
             !Input::get('isFromMe') 
         ) {
-            return $this->proceedRegistering();
+            if ( !is_null( $this->whatsapp_registration ) ) {
+                return $this->proceedRegistering(); //register untuk pendaftaran pasien
+            } else if (!is_null( $this->whatsapp_complaint )){
+                return $this->registerWhatsappComplaint(); //register untuk pendataan complain pasien
+            } else if (!is_null( $this->failed_therapy  )) {
+                return $this->registerFailedTherapy(); //register untuk pendataan kegagalan terapi
+            } else if (!is_null( $this->whatsapp_satisfaction_survey  )) {
+                return $this->registerWhatsappSatisfactionSurvey(); //register untuk survey kepuasan pasien
+            } else if (!is_null( $this->whatsapp_recovery_index  )) {
+                return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
+            } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
+                return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
+            }
         }   
 	}
     /**
@@ -86,12 +127,9 @@ class WablasController extends Controller
     private function proceedRegistering()
     {
         header('Content-Type: application/json');
-        $whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
-            ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-            ->first();
 
-        if ( !is_null($whatsapp_registration) ) {
-            $this->antrian = $whatsapp_registration->antrian;
+        if ( !is_null($this->whatsapp_registration) ) {
+            $this->antrian = $this->whatsapp_registration->antrian;
         }
 
         /* $this->antrian  = Antrian::where('kode_unik', $this->message ) */
@@ -99,84 +137,93 @@ class WablasController extends Controller
 
         $response              = '';
         $input_tidak_tepat     = false;
-        /* if ( !is_null($this->antrian) && $this->antrian->antriable_type == 'App\\Models\\Antrian' ) { */
-        /*     if ( is_null( $whatsapp_registration ) ) { */
-        /*         $whatsapp_registration = $this->createWAregis(); */
-        /*     } */
-        /* } else if ( */  
         if (  
             substr($this->message, 0, 5) == 'ulang' &&
-            isset( $whatsapp_registration ) &&
-            !is_null($whatsapp_registration->antrian)
+            isset( $this->whatsapp_registration ) &&
+            !is_null($this->whatsapp_registration->antrian)
         ) {
-            $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
+            $this->ulangiRegistrasiWhatsapp();
         } else if ( 
-            isset( $whatsapp_registration ) &&
-            $whatsapp_registration->registering_confirmation < 1
+            isset( $this->whatsapp_registration ) &&
+            $this->whatsapp_registration->registering_confirmation < 1
         ){
             if (
-                $this->message == 'lanjutkan'
+                ( $this->message == 'lanjutkan' && $tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == 'ya' && !$tenant->iphone_whatsapp_button_available )
             ) {
-                $whatsapp_registration->registering_confirmation = 1;
-                $whatsapp_registration->save();
+                $this->whatsapp_registration->registering_confirmation = 1;
+                $this->whatsapp_registration->save();
             } 
         } else if ( 
-            isset( $whatsapp_registration ) &&
-            !is_null( $whatsapp_registration->antrian ) &&
-            is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
+            isset( $this->whatsapp_registration ) &&
+            !is_null( $this->whatsapp_registration->antrian ) &&
+            is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ){
             if (
-                $this->message == 'biaya pribadi' ||
-                $this->message == 'bpjs' ||
-                $this->message == 'lainnya'
+                ( $this->message == 'biaya pribadi' && $tenant->iphone_whatsapp_button_available ) ||
+                ($this->message == 'bpjs' && $tenant->iphone_whatsapp_button_available) ||
+                ( $this->message == 'lainnya' && $tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available ) ||
+                ($this->message == '2' && !$tenant->iphone_whatsapp_button_available) ||
+                ( $this->message == '3' && !$tenant->iphone_whatsapp_button_available ) ||
+
             ) {
-                if ($this->message == 'biaya pribadi') {
-                    $whatsapp_registration->antrian->registrasi_pembayaran_id  = 1;
+                if (
+                    ( $this->message == 'biaya pribadi' && $tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available )
+                ) {
+                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 1;
                 }
-                if ($this->message == 'bpjs') {
-                    $whatsapp_registration->antrian->registrasi_pembayaran_id  = 2;
+                if (
+                    ( $this->message == 'bpjs' && $tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '2' && !$tenant->iphone_whatsapp_button_available )
+                ) {
+                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 2;
                 }
-                if ($this->message == 'lainnya') {
-                    $whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
+                if (
+                    ( $this->message == 'lainnya' && $tenant->iphone_whatsapp_button_available ) ||
+                    ( !$this->message == '3' && !$tenant->iphone_whatsapp_button_available )
+                ) {
+                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
                 }
                 $data = $this->queryPreviouslySavedPatientRegistry();
                 if (count($data) < 1) {
-                    $whatsapp_registration->antrian->register_previously_saved_patient = 0;
+                    $this->whatsapp_registration->antrian->register_previously_saved_patient = 0;
                 }
-                $whatsapp_registration->antrian->save();
+                $this->whatsapp_registration->antrian->save();
 
             } else {
                 $input_tidak_tepat = true;
             }
         } else if ( 
-            isset( $whatsapp_registration ) &&
-            !is_null( $whatsapp_registration->antrian ) &&
-            is_null( $whatsapp_registration->antrian->register_previously_saved_patient ) 
+            isset( $this->whatsapp_registration ) &&
+            !is_null( $this->whatsapp_registration->antrian ) &&
+            is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
 
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
-                $whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
-                $whatsapp_registration->antrian->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
-                $whatsapp_registration->antrian->nama                              = $data[ (int)$this->message -1 ]->nama;
-                $whatsapp_registration->antrian->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                $this->whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+                $this->whatsapp_registration->antrian->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
+                $this->whatsapp_registration->antrian->nama                              = $data[ (int)$this->message -1 ]->nama;
+                $this->whatsapp_registration->antrian->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
             } else {
-                $whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+                $this->whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
             }
-            $whatsapp_registration->antrian->save();
+            $this->whatsapp_registration->antrian->save();
 
         } else if ( 
-            isset( $whatsapp_registration ) &&
-            !is_null( $whatsapp_registration->antrian ) &&
-            is_null( $whatsapp_registration->antrian->nama ) 
+            isset( $this->whatsapp_registration ) &&
+            !is_null( $this->whatsapp_registration->antrian ) &&
+            is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
-            $whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
-            $whatsapp_registration->antrian->save();
+            $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
+            $this->whatsapp_registration->antrian->save();
         } else if ( 
-            isset( $whatsapp_registration ) &&
-            !is_null( $whatsapp_registration->antrian ) &&
-            is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
+            isset( $this->whatsapp_registration ) &&
+            !is_null( $this->whatsapp_registration->antrian ) &&
+            is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
             $tanggals = [];
             if ( str_contains( $this->message, "." ) ){
@@ -192,8 +239,8 @@ class WablasController extends Controller
             }
 
             if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
-                $whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
-                $whatsapp_registration->antrian->save();
+                $this->whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
+                $this->whatsapp_registration->antrian->save();
             } else if(
                 count($tanggals) == 3
             ) {
@@ -308,8 +355,8 @@ class WablasController extends Controller
                 $databaseFriendlyDateFormat = $tahun . '-' . $bulan . '-' . $tanggal;
                 try {
                     Carbon::parse($databaseFriendlyDateFormat);
-                    $whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
-                    $whatsapp_registration->antrian->save();
+                    $this->whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
+                    $this->whatsapp_registration->antrian->save();
                 } catch (\Exception $e) {
                     $input_tidak_tepat = true;
                     Log::info( $this->message );
@@ -319,21 +366,29 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
             }
         } else if ( 
-            isset( $whatsapp_registration ) &&
-            !is_null( $whatsapp_registration->antrian ) &&
-            !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) &&
-            !is_null( $whatsapp_registration->antrian->nama ) &&
-            !is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
+            isset( $this->whatsapp_registration ) &&
+            !is_null( $this->whatsapp_registration->antrian ) &&
+            !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) &&
+            !is_null( $this->whatsapp_registration->antrian->nama ) &&
+            !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
             if (
-                $this->message == 'lanjutkan' ||
-                $this->message == 'ulangi'
+                ( $this->message == 'lanjutkan' && $tenant->iphone_whatsapp_button_available )||
+                ( $this->message == 'ulangi' && $tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available )||
+                ( $this->message == '2' && !$tenant->iphone_whatsapp_button_available )
             ) {
-                if ($this->message == 'lanjutkan') {
-                    $this->whatsapp_registration_deleted = $whatsapp_registration->delete();
+                if (
+                    ( $this->message == 'lanjutkan' && $tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '1' && !$tenant->iphone_whatsapp_button_available )
+                ) {
+                    $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
                 }
-                if ($this->message == 'ulangi') {
-                    $this->ulangiRegistrasiWhatsapp($whatsapp_registration);
+                if (
+                    ( $this->message == 'ulangi' && $tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message == '2' && !$tenant->iphone_whatsapp_button_available )
+                ) {
+                    $this->ulangiRegistrasiWhatsapp();
                 }
             } else {
                 $input_tidak_tepat = true;
@@ -341,35 +396,35 @@ class WablasController extends Controller
         }
 
         if (
-            isset( $whatsapp_registration ) &&
-            !is_null($whatsapp_registration->antrian)
+            isset( $this->whatsapp_registration ) &&
+            !is_null($this->whatsapp_registration->antrian)
         ) {
             if (
-                !is_null( $whatsapp_registration->antrian->nama ) ||
-                !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) ||
-                !is_null( $whatsapp_registration->antrian->tanggal_lahir )
+                !is_null( $this->whatsapp_registration->antrian->nama ) ||
+                !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) ||
+                !is_null( $this->whatsapp_registration->antrian->tanggal_lahir )
             ) {
                 $response .=  "*Uraian Pengisian Anda*";
                 $response .= PHP_EOL;
                 $response .= PHP_EOL;
             }
-            if ( !is_null( $whatsapp_registration->antrian->nama ) ) {
-                $response .= 'Nama Pasien: ' . ucwords($whatsapp_registration->antrian->nama)  ;
+            if ( !is_null( $this->whatsapp_registration->antrian->nama ) ) {
+                $response .= 'Nama Pasien: ' . ucwords($this->whatsapp_registration->antrian->nama)  ;
                 $response .= PHP_EOL;
             }
-            if ( !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) ) {
+            if ( !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) ) {
                 $response .= 'Pembayaran : ';
-                $response .= ucwords($whatsapp_registration->antrian->registrasiPembayaran->pembayaran);
+                $response .= ucwords($this->whatsapp_registration->antrian->registrasiPembayaran->pembayaran);
                 $response .= PHP_EOL;
             }
-            if ( !is_null( $whatsapp_registration->antrian->tanggal_lahir ) ) {
-                $response .= 'Tanggal Lahir : '.  Carbon::parse($whatsapp_registration->antrian->tanggal_lahir)->format('d M Y');;
+            if ( !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) ) {
+                $response .= 'Tanggal Lahir : '.  Carbon::parse($this->whatsapp_registration->antrian->tanggal_lahir)->format('d M Y');;
                 $response .= PHP_EOL;
             }
             if (
-                !is_null( $whatsapp_registration->antrian->nama ) ||
-                !is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id) ||
-                !is_null( $whatsapp_registration->antrian->tanggal_lahir )
+                !is_null( $this->whatsapp_registration->antrian->nama ) ||
+                !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id) ||
+                !is_null( $this->whatsapp_registration->antrian->tanggal_lahir )
             ) {
                 $response .= "==================";
                 $response .= PHP_EOL;
@@ -378,9 +433,9 @@ class WablasController extends Controller
         }
 
         if ( 
-            !is_null($whatsapp_registration)
+            !is_null($this->whatsapp_registration)
         ) {
-            $payload   = $this->botKirim($whatsapp_registration)[0];
+            $payload   = $this->botKirim($this->whatsapp_registration)[0];
             $category = $payload['category'];
             $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
@@ -393,14 +448,6 @@ class WablasController extends Controller
                 /* $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal"; */
             }
 
-            /* if ( */
-            /*     !is_null($whatsapp_registration) && */
-            /*     !is_null($whatsapp_registration->periksa_id) && */
-            /*     !is_null($whatsapp_registration->periksa) && */
-            /*     !is_null($whatsapp_registration->periksa->satisfaction_index) */
-            /* ) { */
-            /*     $response .=  "Terima kasih sudah menjawab pertanyaan kami. Masukan Anda sangat berarti untuk kemajuan pelayanan kami"; */
-            /* } */
 
             if ( $input_tidak_tepat ) {
                 $response .=  PHP_EOL;
@@ -417,10 +464,10 @@ class WablasController extends Controller
 
         if (!empty($response)) {
             try {
-                $payload   = $this->botKirim($whatsapp_registration)[0];
+                $payload   = $this->botKirim($this->whatsapp_registration)[0];
             } catch (\Exception $e) {
                 Log::info("botkirim null");
-                Log::info("whatsapp_registration", $whatsapp_registration);
+                Log::info("whatsapp_registration", $this->whatsapp_registration);
                 Log::info('$this->message', $this->message);
                 Log::info('$this->no_telp', $this->no_telp);
             }
@@ -447,86 +494,10 @@ class WablasController extends Controller
         }
 
 
-        // dokumentasikan whatsapp complaint
-        $whatsapp_complaint = WhatsappComplaint::where('no_telp', $this->no_telp)
-                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                ->first();
-        if (!is_null( $whatsapp_complaint )) {
-            $whatsapp_complaint->antrian->complaint = $this->message;
-            $whatsapp_complaint->antrian->save();
-            $whatsapp_complaint->delete();
-
-            $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-            $message .= PHP_EOL;
-            $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
-            echo $message;
-        }
 
         // dokumentasikan kegagalan terapi
-        $failed_therapy = FailedTherapy::where('no_telp', $this->no_telp)
-                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                ->first();
-        if (!is_null( $failed_therapy )) {
-            $failed_therapy->antrian->informasi_terapi_gagal = $this->message;
-            $failed_therapy->antrian->save();
-            $failed_therapy->delete();
-
-            $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-            $message .= PHP_EOL;
-            $message .= "Informasi ini akan menjadi bahan evaluasi kami";
-            echo $message;
-        }
 
         // Cek kepuasan pelanggan
-        if ( str_contains( $this->message, '(pxid' ) ) {
-            $id = explode('pxid', $this->message)[1];
-            $id = preg_replace('~\D~', '', $id);
-
-            $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
-            $antrian = Antrian::find($id);
-            if (
-                !is_null($antrian) 
-                && !$antrian->satisfaction_index
-                && $antrian->no_telp == $this->no_telp
-            ) {
-                $antrian->satisfaction_index = $satisfaction_index_ini;
-                $antrian->save();
-
-
-                // Jika pasien memilih puas sebagai satisfactionIndex, maka berikan balasan untuk mengklik google review
-                //
-                if ( $satisfaction_index_ini == 3 ) {
-                    echo $this->kirimkanLinkGoogleReview();
-                    //
-                // Jika pasien memilih tidak puas sebagai satisfactionIndex, maka minta balasan alasan pasien tidak puas
-                //
-                } else if ( $satisfaction_index_ini == 1 ){
-
-                    $complaint             = new WhatsappComplaint;
-                    $complaint->no_telp    = $antrian->no_telp;
-                    $complaint->antrian_id = $antrian->id;
-                    $complaint->save();
-
-                    WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
-
-                    $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
-                    $message .= PHP_EOL;
-                    $message .= "Bisa diinfokan kendala yang kakak alami?";
-                    echo $message;
-
-                // Selain itu ucapkan terima kasih
-                //
-                }else {
-                    $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-                    $message .= PHP_EOL;
-                    $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
-                    echo $message;
-                }
-            }
-        }
 
         if ( str_contains( $this->message, '(pqid' ) ) {
             $id = explode('pqid', $this->message)[1];
@@ -602,11 +573,11 @@ class WablasController extends Controller
 		return strtolower( trim($param) );
 	}
 
-	private function botKirim($whatsapp_registration)
+	private function botKirim()
 	{
         if (
-            !is_null($whatsapp_registration) &&
-             $whatsapp_registration->registering_confirmation < 1
+            !is_null($this->whatsapp_registration) &&
+             $this->whatsapp_registration->registering_confirmation < 1
         ) {
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
@@ -633,26 +604,60 @@ class WablasController extends Controller
 			return $payload;
 		}
 		if (
-            !is_null($whatsapp_registration) &&
-            !is_null($whatsapp_registration->antrian) &&
-             is_null( $whatsapp_registration->antrian->registrasi_pembayaran_id ) 
+            !is_null($this->whatsapp_registration) &&
+            !is_null($this->whatsapp_registration->antrian) &&
+             is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ) {
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
 
-            if (
-                 $whatsapp_registration->antrian->jenis_antrian_id == 7 ||
-                 $whatsapp_registration->antrian->jenis_antrian_id == 8
-            ) {
-                $payment_options = [
-                    'Biaya Pribadi',
-                    'Lainnya'
-                ];
+            if ( $this->tenant->iphone_whatsapp_button_available ) {
+                if (
+                     $this->whatsapp_registration->antrian->jenis_antrian_id == 7 ||
+                     $this->whatsapp_registration->antrian->jenis_antrian_id == 8
+                ) {
+                    /* if ( $this->tenant->iphone_whatsapp_button_available ) { */
+                        $payment_options = [
+                            'Biaya Pribadi',
+                            'Lainnya'
+                        ];
+                    /* } else { */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= "1. Biaya Pribadi"; */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= "2. Lainnya"; */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= "Balas dengan angka *1 atau 2* sesuai informasi di atas"; */
+
+                    /* } */
+                } else {
+                    /* if ( $this->tenant->iphone_whatsapp_button_available ) { */
+                        $payment_options = [
+                            'Biaya Pribadi',
+                            'BPJS',
+                            'Lainnya'
+                        ];
+                    /* } else { */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= "1. Biaya Pribadi"; */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= "2. BPJS"; */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= "3. Lainnya"; */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= PHP_EOL; */
+                    /*     $text .= "Balas dengan angka *1,2 atau 3* sesuai informasi di atas"; */
+                    /* } */
+                }
             } else {
-                $payment_options = [
-                    'Biaya Pribadi',
-                    'BPJS',
-                    'Lainnya'
-                ];
+                $text .= PHP_EOL;
+                $text .= "1. Biaya Pribadi";
+                $text .= PHP_EOL;
+                $text .= "2. BPJS";
+                $text .= PHP_EOL;
+                $text .= "3. Lainnya";
+                $text .= PHP_EOL;
+                $text .= PHP_EOL;
+                $text .= "Balas dengan angka *1,2 atau 3* sesuai informasi di atas";
             }
 
             $message = [
@@ -661,17 +666,24 @@ class WablasController extends Controller
                 'footer' => ''
             ];
 
-            $payload[] = [
-                'category' => 'button',
-                'message' => $message
-            ];
+            if ( $this->tenant->iphone_whatsapp_button_available) {
+                $payload[] = [
+                    'category' => 'button',
+                    'message' => $message
+                ];
+            } else {
+                $payload[] = [
+                    'category' => 'text',
+                    'message' => $text
+                ];
+            }
 
 			return $payload;
 		}
 		if (
-            !is_null($whatsapp_registration) &&
-            !is_null($whatsapp_registration->antrian) &&
-             is_null( $whatsapp_registration->antrian->register_previously_saved_patient ) 
+            !is_null($this->whatsapp_registration) &&
+            !is_null($this->whatsapp_registration->antrian) &&
+             is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
             $message = 'Pilih pasien yang akan didaftarkan';
@@ -709,63 +721,72 @@ class WablasController extends Controller
 			return $payload;
 		}
 		if (
-            !is_null($whatsapp_registration) &&
-            !is_null($whatsapp_registration->antrian) &&
-             is_null( $whatsapp_registration->antrian->nama ) 
+            !is_null($this->whatsapp_registration) &&
+            !is_null($this->whatsapp_registration->antrian) &&
+             is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
             $payload[] = [
                 'category' => 'text',
                 'message' => 'Bisa dibantu *Nama Lengkap* pasien?'
             ];
-
 			return $payload;
 		}
 
 		if (
-            !is_null($whatsapp_registration) &&
-            !is_null($whatsapp_registration->antrian) &&
-             is_null( $whatsapp_registration->antrian->tanggal_lahir ) 
+            !is_null($this->whatsapp_registration) &&
+            !is_null($this->whatsapp_registration->antrian) &&
+             is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-			$text =  'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : 19-07-2003';
+			$text    = 'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : 19-07-2003';
             $message = $text;
             $payload[] = [
                 'category' => 'text',
-                'message' => $message
+                'message'  => $message
             ];
 
 			return $payload;
 		}
 
 		if (
-            !is_null($whatsapp_registration) &&
-            !is_null($whatsapp_registration->antrian) &&
-            !is_null( $whatsapp_registration->antrian->tanggal_lahir ) &&
+            !is_null($this->whatsapp_registration) &&
+            !is_null($this->whatsapp_registration->antrian) &&
+            !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
             is_null( $this->whatsapp_registration_deleted ) 
         ) {
             $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?';
             $text .= PHP_EOL;
 
-            $message = [
-                'buttons' => [
-                    'Lanjutkan',
-                    'Ulangi'
-                ],
-                'content' => $text,
-                'footer' => ''
-            ];
+            if ( $this->tenant->iphone_whatsapp_button_available) {
+                $message = [
+                    'buttons' => [
+                        'Lanjutkan',
+                        'Ulangi'
+                    ],
+                    'content' => $text,
+                    'footer' => ''
+                ];
 
-            $payload[] = [
-                'category' => 'button',
-                'message' => $message
-            ];
+                $payload[] = [
+                    'category' => 'button',
+                    'message' => $message
+                ];
+            } else {
+                $text .= PHP_EOL;
+                $text = '1. Lanjutkan';
+                $text .= PHP_EOL;
+                $text = '2. Ulangi';
 
+                $payload[] = [
+                    'category' => 'text',
+                    'message' => $text
+                ];
+            }
 			return $payload;
 		}
 
 		if (
             !is_null( $this->whatsapp_registration_deleted ) 
         ) {
-
             $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->get();
@@ -786,18 +807,27 @@ class WablasController extends Controller
                 $text .= PHP_EOL;
 
 
-                $message = [
-                    'buttons' => [
-                        'Lanjutkan'
-                    ],
-                    'content' => $text,
-                    'footer' => ''
-                ];
+                if ( $this->tenant->iphone_whatsapp_button_available) {
+                    $message = [
+                        'buttons' => [
+                            'Lanjutkan'
+                        ],
+                        'content' => $text,
+                        'footer' => ''
+                    ];
 
-                $payload[] = [
-                    'category' => 'button',
-                    'message' => $message
-                ];
+                    $payload[] = [
+                        'category' => 'button',
+                        'message' => $message
+                    ];
+                } else {
+
+                    $text .='Ketik *ya* untuk melanjutkan';
+                    $payload[] = [
+                        'category' => 'text',
+                        'message' => $text
+                    ];
+                }
 
                 return $payload;
             } else {
@@ -810,38 +840,6 @@ class WablasController extends Controller
 		}
 	}
 
-	/*private function input_poli( $whatsapp_registration, $message ){ */
-	/*	Log::info('input_poli'); */
-	/*	if ($whatsapp_registration->antrian->jenis_antrian_id == 1) { */
-	/*		if ( $this->message == 'a' ) { */
-	/*			$whatsapp_registration->antrian->poli_id    = 'umum'; */
-	/*		} else if ( $this->message == 'b'   ){ */
-	/*			if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') { */
-	/*				$whatsapp_registration->antrian->poli_id    = 'prolanis_ht'; */
-	/*			} else { */
-	/*				$whatsapp_registration->antrian->poli_id    = 'sks'; */
-	/*			} */
-	/*		} else if ( $this->message == 'c'   ){ */
-	/*			if ($whatsapp_registration->antrian->nama_asuransi == 'BPJS') { */
-	/*				$whatsapp_registration->antrian->poli_id    = 'prolanis_dm'; */
-	/*			} else { */
-	/*				$whatsapp_registration->antrian->poli_id    = 'rapid test'; */
-	/*			} */
-	/*		} */ 
-	/*	} */
-	/*	if ($whatsapp_registration->antrian->jenis_antrian_id == 3) { */
-	/*		if ( $this->message == 'a' ) { */
-	/*			$whatsapp_registration->antrian->poli_id    = 'anc'; */
-	/*		} else if ( $this->message == 'b'   ){ */
-	/*			$whatsapp_registration->antrian->poli_id    = 'kb 1 bulan'; */
-	/*		} else if ( $this->message == 'c'   ){ */
-	/*			$whatsapp_registration->antrian->poli_id    = 'kb 3 bulan'; */
-	/*		} */
-	/*	} */
-	/*	Log::info('input_poli_saved'); */
-	/*	$whatsapp_registration->antrian->save(); */
-	/*} */
-	/*/1** */
 	private function formatPembayaran($param)
 	{
 		if ( $this->clean($param) == 'a' ) {
@@ -896,38 +894,17 @@ class WablasController extends Controller
 		// The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
 		return $d && $d->format($format) === $date;
 	}
-	/**
-	* undocumented function
-	*
-	* @return void
-	*/
-	/**
-	* undocumented function
-	*
-	* @return void
-	*/
-	private function createWAregis()
-	{
-		$whatsapp_registration                           = new WhatsappRegistration;
-		$whatsapp_registration->no_telp                  = $this->no_telp;
-		$whatsapp_registration->registering_confirmation = 0;
-		$whatsapp_registration->tenant_id                = 1;
-		$whatsapp_registration->antrian_id                = $this->antrian->id;
-		$whatsapp_registration->save();
-
-		return $whatsapp_registration;
-	}
     /**
      * undocumented function
      *
      * @return void
      */
     private function satisfactionIndex($message){
-        if ( str_contains( $message, 'tidak' ) ) {
+        if ( $message == 3 ) {
             return 1;
-        } else if ( str_contains( $message, 'biasa' ) ){
+        } else if ( $message == 2 ){
             return 2;
-        } else if ( str_contains( $message,  'puas'  ) ){
+        } else if ( $message == 1 ){
             return 3;
         } else {
             return null;
@@ -951,14 +928,14 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function ulangiRegistrasiWhatsapp($whatsapp_registration)
+    private function ulangiRegistrasiWhatsapp()
     {
-        $whatsapp_registration->antrian->registrasi_pembayaran_id          = null;
-        $whatsapp_registration->antrian->nama                              = null;
-        $whatsapp_registration->antrian->tanggal_lahir                     = null;
-        $whatsapp_registration->antrian->register_previously_saved_patient = null;
-        $whatsapp_registration->antrian->pasien_id                         = null;
-        $whatsapp_registration->antrian->save();
+        $this->whatsapp_registration->antrian->registrasi_pembayaran_id          = null;
+        $this->whatsapp_registration->antrian->nama                              = null;
+        $this->whatsapp_registration->antrian->tanggal_lahir                     = null;
+        $this->whatsapp_registration->antrian->register_previously_saved_patient = null;
+        $this->whatsapp_registration->antrian->pasien_id                         = null;
+        $this->whatsapp_registration->antrian->save();
     }
     /**
      * undocumented function
@@ -1061,14 +1038,12 @@ class WablasController extends Controller
      */
     private function recoveryIndexConverter()
     {
-        if ( str_contains( $this->message, 'perubahan' ) ) {
-            return 1;
-        } else if ( str_contains( $this->message, 'membaik' ) ){
-            return 2;
-        } else if ( str_contains( $this->message,  'sembuh'  ) ){
+        if ( $this->message == '1' ) {
             return 3;
-        } else {
-            return null;
+        } else if ( $this->message == '2' ){
+            return 2;
+        } else if ( $this->message == '3' ){
+            return 1;
         }
     }
     
@@ -1118,5 +1093,181 @@ class WablasController extends Controller
         
         //mengisi field bpjs_image di book dengan filename yang baru dibuat
         /* return $destination_path. $filename; */
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function registerWhatsappComplaint()
+    {
+        $this->whatsapp_complaint->antrian->complaint = $this->message;
+        $this->whatsapp_complaint->antrian->save();
+        $this->whatsapp_complaint->delete();
+
+        $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+        $message .= PHP_EOL;
+        $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
+        echo $message;
+
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function registerFailedTherapy()
+    {
+        $failed_therapy->antrian->informasi_terapi_gagal = $this->message;
+        $failed_therapy->antrian->save();
+        $failed_therapy->delete();
+
+        $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+        $message .= PHP_EOL;
+        $message .= "Informasi ini akan menjadi bahan evaluasi kami";
+        echo $message;
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function registerWhatsappSatisfactionSurvey()
+    {
+        if (
+            $this->message == '1' ||
+            $this->message == '2' ||
+            $this->message == '3'
+        ) {
+            $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
+            $this->whatsapp_satisfaction_survey->antrian->satisfaction_index = $satisfaction_index_ini; 
+            $this->whatsapp_satisfaction_survey->antrian->save();
+            $this->whatsapp_satisfaction_survey->delete();
+            
+            if( $this->message == '1' ){
+                echo $this->kirimkanLinkGoogleReview();
+            } else if( $this->message == '3' ){
+
+                $complaint             = new WhatsappComplaint;
+                $complaint->no_telp    = $antrian->no_telp;
+                $complaint->antrian_id = $antrian->id;
+                $complaint->save();
+
+                WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
+
+                $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
+                $message .= PHP_EOL;
+                $message .= "Bisa diinfokan kendala yang kakak alami?";
+                echo $message;
+            } else {
+                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                $message .= PHP_EOL;
+                $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+                echo $message;
+            }
+        } else {
+            $message = "Balasan yang anda masukkan tidak dikenali";
+            $message .= PHP_EOL;
+            $message .= "1. Puas";
+            $message .= PHP_EOL;
+            $message .= "2. Biasa";
+            $message .= PHP_EOL;
+            $message .= "3. Tidak Puas";
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Mohon balas dengan angka *1,2 atau 3* sesuai urutan diatas";
+            echo $message;
+        }
+    }
+    private function registerWhatsappRecoveryIndex(){
+        if (
+            $this->message == '1' ||
+            $this->message == '2' ||
+            $this->message == '3'
+        ) {
+            $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
+            $this->whatsapp_recovery_index->antrian->satisfaction_index = $recovery_index_ini; 
+            $this->whatsapp_recovery_index->antrian->save();
+            $this->whatsapp_recovery_index->delete();
+            
+            if( $this->message == '1' ){
+                echo $this->kirimkanLinkGoogleReview();
+            } else if( $this->message == '3' ){
+
+                $complaint             = new WhatsappComplaint;
+                $complaint->no_telp    = $antrian->no_telp;
+                $complaint->antrian_id = $antrian->id;
+                $complaint->save();
+
+                WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
+
+                $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
+                $message .= PHP_EOL;
+                $message .= "Bisa diinfokan kendala yang kakak alami?";
+                echo $message;
+            } else {
+                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                $message .= PHP_EOL;
+                $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+                echo $message;
+            }
+        } else {
+            $message = "Balasan yang anda masukkan tidak dikenali";
+            $message .= PHP_EOL;
+            $message .= "1. Sudah Sembuh";
+            $message .= PHP_EOL;
+            $message .= "2. Membaik";
+            $message .= PHP_EOL;
+            $message .= "3. Tidak ada perubahan";
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Mohon agar membalas dengan angka *1,2 atau 3* sesuai urutan diatas";
+            echo $message;
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function registerKuesionerMenungguObat()
+    {
+        if (
+            $this->message == '1' ||
+            $this->message == '2'
+        ) {
+            $menunggu_ini = $this->menungguConverter( $this->message );
+            $this->kuesioner_menunggu_obat->antrian->menunggu = $menunggu_ini; 
+            $this->kuesioner_menunggu_obat->antrian->save();
+            $this->kuesioner_menunggu_obat->delete();
+            
+            $message = 'Anda akan kami informasikan apabila obat telah selesai diracik';
+            echo $message;
+        } else {
+            $message = "Balasan yang anda masukkan tidak dikenali";
+            $message .= PHP_EOL;
+            $message .= '1. Saya Menunggu saja  di klinik';
+            $message .= PHP_EOL;
+            $message .= '2. Saya pergi dulu nanti kabari saya kalau obat sudah selesai diracik';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Balas dengan angka *1 atau 2* sesuai informasi diatas";
+            echo $message;
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function menungguConverter($message)
+    {
+        if ( $message == '2' ) {
+            return 0;
+        }
+        return $message;
     }
 }
