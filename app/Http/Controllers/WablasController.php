@@ -473,6 +473,7 @@ class WablasController extends Controller
         }
         $category = $payload['category'];
         if ( $category == 'button' ) {
+            Log::info('button');
             $message['buttons'] = $payload['message']['buttons'];
             $message['content'] = $response;
             $payload = null;
@@ -490,6 +491,8 @@ class WablasController extends Controller
 
         } else if ( $category == 'text' ){
             $response .= $payload['message'];
+            Log::info('text');
+            Log::info( $response );
             echo $response;
         }
         /* } */
