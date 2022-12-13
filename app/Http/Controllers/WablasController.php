@@ -489,6 +489,7 @@ class WablasController extends Controller
             ])->header('Content-Type', 'application/json');
 
         } else if ( $category == 'text' ){
+            $response .= $payload['message'];
             echo $response;
         }
         /* } */
