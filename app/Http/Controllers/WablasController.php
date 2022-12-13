@@ -649,6 +649,16 @@ class WablasController extends Controller
                         'Lainnya'
                     ];
                 }
+                $message = [
+                    'buttons' => $payment_options,
+                    'content' => $text,
+                    'footer' => ''
+                ];
+
+                $payload[] = [
+                    'category' => 'button',
+                    'message' => $message
+                ];
             } else {
                 $text .= PHP_EOL;
                 $text .= "1. Biaya Pribadi";
@@ -659,20 +669,7 @@ class WablasController extends Controller
                 $text .= PHP_EOL;
                 $text .= PHP_EOL;
                 $text .= "Balas dengan angka *1,2 atau 3* sesuai informasi di atas";
-            }
 
-            $message = [
-                'buttons' => $payment_options,
-                'content' => $text,
-                'footer' => ''
-            ];
-
-            if ( $this->tenant->iphone_whatsapp_button_available) {
-                $payload[] = [
-                    'category' => 'button',
-                    'message' => $message
-                ];
-            } else {
                 $payload[] = [
                     'category' => 'text',
                     'message' => $text
