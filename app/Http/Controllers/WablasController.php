@@ -43,6 +43,7 @@ class WablasController extends Controller
 		 !is_null(Input::get('phone')) &&
 		 !is_null(Input::get('message'))
 		) {
+            Log::info("mau mulai gak");
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
 
@@ -463,6 +464,7 @@ class WablasController extends Controller
         }
 
         /* if (!empty($response)) { */
+        Log::info("ini ada gak sih");
         try {
             $payload   = $this->botKirim($this->whatsapp_registration)[0];
         } catch (\Exception $e) {
