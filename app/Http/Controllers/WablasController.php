@@ -188,6 +188,7 @@ class WablasController extends Controller
                     ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
                     ( !$this->message == '3' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
+                    Log::info(191);
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
                 }
                 $data = $this->queryPreviouslySavedPatientRegistry();
