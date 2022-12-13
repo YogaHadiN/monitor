@@ -194,7 +194,10 @@ class WablasController extends Controller
                 if (count($data) < 1) {
                     $this->whatsapp_registration->antrian->register_previously_saved_patient = 0;
                 }
+
                 $this->whatsapp_registration->antrian->save();
+                Log::info(199, $this->message);
+                Log::info(200, $this->whatsapp_registration->antrian);
 
             } else {
                 $input_tidak_tepat = true;
