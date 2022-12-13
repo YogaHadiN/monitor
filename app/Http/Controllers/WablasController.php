@@ -466,41 +466,41 @@ class WablasController extends Controller
             $input_tidak_tepat = false;
         }
 
-        /* if (!empty($response)) { */
-        Log::info("ini ada gak sih");
-        try {
-            $payload   = $this->botKirim($this->whatsapp_registration)[0];
-        } catch (\Exception $e) {
-            Log::info("botkirim null");
-            Log::info("whatsapp_registration", $this->whatsapp_registration);
-            Log::info('$this->message', $this->message);
-            Log::info('$this->no_telp', $this->no_telp);
+        if (!empty($response)) {
+            Log::info("ini ada gak sih");
+            try {
+                $payload   = $this->botKirim($this->whatsapp_registration)[0];
+            } catch (\Exception $e) {
+                Log::info("botkirim null");
+                Log::info("whatsapp_registration", $this->whatsapp_registration);
+                Log::info('$this->message', $this->message);
+                Log::info('$this->no_telp', $this->no_telp);
+            }
+            $category = $payload['category'];
+            if ( $category == 'button' ) {
+                Log::info('button');
+                $message['buttons'] = $payload['message']['buttons'];
+                $message['content'] = $response;
+                $payload = null;
+
+                $payload[] = [
+                    'category' => 'button',
+                    'message'  => json_encode($message),
+                    'footer'   => ''
+                ];
+
+                return response()->json([
+                    'status' => true,
+                    'data'   => $payload
+                ])->header('Content-Type', 'application/json');
+
+            } else if ( $category == 'text' ){
+                /* $response .= $payload['message']; */
+                /* Log::info('text'); */
+                /* Log::info( $response ); */
+                echo $response;
+            }
         }
-        $category = $payload['category'];
-        if ( $category == 'button' ) {
-            Log::info('button');
-            $message['buttons'] = $payload['message']['buttons'];
-            $message['content'] = $response;
-            $payload = null;
-
-            $payload[] = [
-                'category' => 'button',
-                'message'  => json_encode($message),
-                'footer'   => ''
-            ];
-
-            return response()->json([
-                'status' => true,
-                'data'   => $payload
-            ])->header('Content-Type', 'application/json');
-
-        } else if ( $category == 'text' ){
-            $response .= $payload['message'];
-            Log::info('text');
-            Log::info( $response );
-            echo $response;
-        }
-        /* } */
 
 
 
