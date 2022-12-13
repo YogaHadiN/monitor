@@ -72,6 +72,7 @@ class WablasController extends Controller
 	}
 	
 	public function webhook(){
+        Log::info(" 6");
         header('Content-Type: application/json');
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
