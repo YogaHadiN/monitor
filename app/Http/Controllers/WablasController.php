@@ -797,9 +797,7 @@ class WablasController extends Controller
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->get();
 
-            $text = "Terima kasih atas kesediaan menjawab pertanyaan kami" ;
-            $text .= PHP_EOL;
-            $text .= $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
+            $text = $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
             if ( $registeredWhatsapp->count() ) {
                 $registeredWhatsapp = $registeredWhatsapp->first();
 
@@ -957,9 +955,6 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= PHP_EOL;
         $response .= "Silahkan menunggu untuk dilayani";
-        $response .=  PHP_EOL;
-        $response .=  PHP_EOL;
-        $response .=  "Anda dapat menggunakan handphone ini untuk mendaftarkan pasien berikutnya";
 
         return $response;
     }
