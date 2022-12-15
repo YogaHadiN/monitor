@@ -1159,7 +1159,7 @@ class WablasController extends Controller
                 $complaint->antrian_id = $this->whatsapp_satisfaction_survey->antrian->id;
                 $complaint->save();
 
-                WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
+                WhatsappRegistration::where('no_telp', $this->whatsapp_satisfaction_survey->antrian->no_telp)->delete();
 
                 $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
                 $message .= PHP_EOL;
@@ -1252,7 +1252,7 @@ class WablasController extends Controller
             
             $message = 'Kakak akan kami infokan apabila obat telah selesai diracik';
             $message .= PHP_EOL;
-            $message .= 'Mohon kesabarannya menunggu karena peracikan obat membutuhkan ketekunan dan ketelitian yang tinggi';
+            $message .= 'Meracik obat membutuhkan ketekunan dan ketelitian yang tinggi';
             $message .= PHP_EOL;
             $message .= 'Terima kasih untuk tidak membuat kami terburu-buru dalam meracik obat';
             echo $message;
