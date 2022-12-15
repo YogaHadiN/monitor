@@ -1130,8 +1130,13 @@ class WablasController extends Controller
             $this->message == '3'
         ) {
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
-            $this->whatsapp_satisfaction_survey->antrian->satisfaction_index = $satisfaction_index_ini; 
-            $this->whatsapp_satisfaction_survey->antrian->save();
+            $no_telp = $this->whatsapp_satisfaction_survey->antrian->no_telp;
+
+            $previous_wa_surveys = WhatsappSatisfactionSurvey::with('antrian')->where('no_telp', $no_telp)->get();
+            foreach ($previous_wa_surveys as $survey) {
+                $survey->antrian->satisfaction_index = $satisfaction_index_ini;
+                $survey->antrian->save();
+            }
             
             if( $this->message == '1' ){
                 echo $this->kirimkanLinkGoogleReview();
