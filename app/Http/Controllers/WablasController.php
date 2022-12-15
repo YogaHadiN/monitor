@@ -1146,7 +1146,6 @@ class WablasController extends Controller
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
             $this->whatsapp_satisfaction_survey->antrian->satisfaction_index = $satisfaction_index_ini; 
             $this->whatsapp_satisfaction_survey->antrian->save();
-            $this->whatsapp_satisfaction_survey->delete();
             Log::info(1150);
             
             if( $this->message == '1' ){
@@ -1156,8 +1155,8 @@ class WablasController extends Controller
                 Log::info(1156);
 
                 $complaint             = new WhatsappComplaint;
-                $complaint->no_telp    = $antrian->no_telp;
-                $complaint->antrian_id = $antrian->id;
+                $complaint->no_telp    = $this->whatsapp_satisfaction_survey->antrian->no_telp;
+                $complaint->antrian_id = $this->whatsapp_satisfaction_survey->antrian->id;
                 $complaint->save();
 
                 WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
@@ -1173,6 +1172,7 @@ class WablasController extends Controller
                 $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
                 echo $message;
             }
+            $this->whatsapp_satisfaction_survey->delete();
         } else {
             Log::info(1177);
             $message = "Balasan yang anda masukkan tidak dikenali";
@@ -1250,7 +1250,11 @@ class WablasController extends Controller
             $this->kuesioner_menunggu_obat->antrian->save();
             $this->kuesioner_menunggu_obat->delete();
             
-            $message = 'Anda akan kami informasikan apabila obat telah selesai diracik';
+            $message = 'Kakak akan kami infokan apabila obat telah selesai diracik';
+            $message .= PHP_EOL;
+            $message .= 'Mohon kesabarannya menunggu karena peracikan obat membutuhkan ketekunan dan ketelitian yang tinggi';
+            $message .= PHP_EOL;
+            $message .= 'Terima kasih untuk tidak membuat kami terburu-buru dalam meracik obat';
             echo $message;
         } else {
             $message = "Balasan yang anda masukkan tidak dikenali";
