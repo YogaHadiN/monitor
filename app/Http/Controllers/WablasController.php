@@ -45,7 +45,6 @@ class WablasController extends Controller
 		 !is_null(Input::get('phone')) &&
 		 !is_null(Input::get('message'))
 		) {
-            Log::info("mau mulai gak");
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
 
@@ -74,7 +73,6 @@ class WablasController extends Controller
 	}
 	
 	public function webhook(){
-        Log::info(" 6");
         header('Content-Type: application/json');
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
@@ -188,7 +186,6 @@ class WablasController extends Controller
                     ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
                     ( $this->message == '3' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-                    Log::info(191);
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
                 }
                 $data = $this->queryPreviouslySavedPatientRegistry();
@@ -197,10 +194,6 @@ class WablasController extends Controller
                 }
 
                 $this->whatsapp_registration->antrian->save();
-                Log::info(199);
-                Log::info($this->message);
-                Log::info(200);
-                Log::info($this->whatsapp_registration->antrian);
 
             } else {
                 $input_tidak_tepat = true;
@@ -254,7 +247,6 @@ class WablasController extends Controller
             } else if(
                 count($tanggals) == 3
             ) {
-                Log::info( $tanggals );
                 $tanggal  = $tanggals[0];
                 $bulan    = $tanggals[1];
                 $tahun    = $tanggals[2];
@@ -369,7 +361,6 @@ class WablasController extends Controller
                     $this->whatsapp_registration->antrian->save();
                 } catch (\Exception $e) {
                     $input_tidak_tepat = true;
-                    Log::info( $this->message );
                 }
 
             } else {
@@ -473,7 +464,6 @@ class WablasController extends Controller
         }
 
         if (!empty($response)) {
-            Log::info("ini ada gak sih");
             try {
                 $payload   = $this->botKirim($this->whatsapp_registration)[0];
             } catch (\Exception $e) {
@@ -484,7 +474,6 @@ class WablasController extends Controller
             }
             $category = $payload['category'];
             if ( $category == 'button' ) {
-                Log::info('button');
                 $message['buttons'] = $payload['message']['buttons'];
                 $message['content'] = $response;
                 $payload = null;
@@ -590,13 +579,10 @@ class WablasController extends Controller
 
 	private function botKirim()
 	{
-        Log::info($this->whatsapp_registration);
-        Log::info($this->whatsapp_registration->registering_confirmation);
         if (
             !is_null($this->whatsapp_registration) &&
              $this->whatsapp_registration->registering_confirmation < 1
         ) {
-            Log::info('is this count');
             $payload = [];
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
@@ -1146,13 +1132,10 @@ class WablasController extends Controller
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
             $this->whatsapp_satisfaction_survey->antrian->satisfaction_index = $satisfaction_index_ini; 
             $this->whatsapp_satisfaction_survey->antrian->save();
-            Log::info(1150);
             
             if( $this->message == '1' ){
-                Log::info(1153);
                 echo $this->kirimkanLinkGoogleReview();
             } else if( $this->message == '3' ){
-                Log::info(1156);
 
                 $complaint             = new WhatsappComplaint;
                 $complaint->no_telp    = $this->whatsapp_satisfaction_survey->antrian->no_telp;
@@ -1166,7 +1149,6 @@ class WablasController extends Controller
                 $message .= "Bisa diinfokan kendala yang kakak alami?";
                 echo $message;
             } else {
-                Log::info(1170);
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 $message .= PHP_EOL;
                 $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
@@ -1174,7 +1156,6 @@ class WablasController extends Controller
             }
             $this->whatsapp_satisfaction_survey->delete();
         } else {
-            Log::info(1177);
             $message = "Balasan yang anda masukkan tidak dikenali";
             $message .= PHP_EOL;
             $message .= "1. Puas";
