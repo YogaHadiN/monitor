@@ -1147,10 +1147,13 @@ class WablasController extends Controller
             $this->whatsapp_satisfaction_survey->antrian->satisfaction_index = $satisfaction_index_ini; 
             $this->whatsapp_satisfaction_survey->antrian->save();
             $this->whatsapp_satisfaction_survey->delete();
+            Log::info(1150);
             
             if( $this->message == '1' ){
+                Log::info(1153);
                 echo $this->kirimkanLinkGoogleReview();
             } else if( $this->message == '3' ){
+                Log::info(1156);
 
                 $complaint             = new WhatsappComplaint;
                 $complaint->no_telp    = $antrian->no_telp;
@@ -1164,12 +1167,14 @@ class WablasController extends Controller
                 $message .= "Bisa diinfokan kendala yang kakak alami?";
                 echo $message;
             } else {
+                Log::info(1170);
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 $message .= PHP_EOL;
                 $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
                 echo $message;
             }
         } else {
+            Log::info(1177);
             $message = "Balasan yang anda masukkan tidak dikenali";
             $message .= PHP_EOL;
             $message .= "1. Puas";
