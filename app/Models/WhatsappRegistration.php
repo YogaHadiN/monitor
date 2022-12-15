@@ -18,4 +18,10 @@ class WhatsappRegistration extends Model
     public function registrasiPembayaran(){
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
+    public static function boot(){
+        parent::boot();
+        self::creating(function($model){
+            resetWhatsappRegistration( $model->no_telp );
+        });
+    }
 }

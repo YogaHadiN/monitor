@@ -13,4 +13,10 @@ class FailedTherapy extends Model
     public function antrian(){
         return $this->belongsTo("App\Models\Antrian");
     }
+    public static function boot(){
+        parent::boot();
+        self::creating(function($model){
+            resetWhatsappRegistration( $model->no_telp );
+        });
+    }
 }
