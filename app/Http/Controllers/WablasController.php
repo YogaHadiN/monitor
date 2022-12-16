@@ -1181,31 +1181,27 @@ class WablasController extends Controller
             $this->message == '3'
         ) {
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
-            $this->whatsapp_recovery_index->antrian->satisfaction_index = $recovery_index_ini; 
+            $this->whatsapp_recovery_index->antrian->reccovery_index = $recovery_index_ini; 
             $this->whatsapp_recovery_index->antrian->save();
-            $this->whatsapp_recovery_index->delete();
             
-            if( $this->message == '1' ){
-                echo $this->kirimkanLinkGoogleReview();
-            } else if( $this->message == '3' ){
+            if( $this->message == '3' ){
 
-                $complaint             = new WhatsappComplaint;
-                $complaint->no_telp    = $antrian->no_telp;
-                $complaint->antrian_id = $antrian->id;
+                $complaint             = new FailedTherapy;
+                $complaint->no_telp    = $this->whatsapp_recovery_index->antrian->no_telp;
+                $complaint->antrian_id = $this->whatsapp_recovery_index->antrian->id;
                 $complaint->save();
-
-                WhatsappRegistration::where('no_telp', $antrian->no_telp)->delete();
 
                 $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
                 $message .= PHP_EOL;
-                $message .= "Bisa diinfokan kendala yang kakak alami?";
+                $message .= "Bisa diinfokan kondisi pasien saat ini?";
                 echo $message;
             } else {
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 $message .= PHP_EOL;
-                $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+                $message .= "Informasi ini akan menjadi bahan evaluasi kami";
                 echo $message;
             }
+            $this->whatsapp_recovery_index->delete();
         } else {
             $message = "Balasan yang anda masukkan tidak dikenali";
             $message .= PHP_EOL;

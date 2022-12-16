@@ -14,4 +14,7 @@ class WhatsappRecoveryIndex extends Model
             resetWhatsappRegistration( $model->no_telp );
         });
     }
+    public function antrian(){
+        return $this->belongsTo(Antrian::class);
+    }
 }
