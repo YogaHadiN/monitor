@@ -1108,13 +1108,14 @@ class WablasController extends Controller
      */
     private function registerFailedTherapy()
     {
-        $failed_therapy->antrian->informasi_terapi_gagal = $this->message;
-        $failed_therapy->antrian->save();
-        $failed_therapy->delete();
+        $this->failed_therapy->antrian->informasi_terapi_gagal = $this->message;
+        $this->failed_therapy->antrian->save();
 
         $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
         $message .= PHP_EOL;
         $message .= "Informasi ini akan menjadi bahan evaluasi kami";
+
+        $this->failed_therapy->delete();
         echo $message;
     }
     /**
