@@ -1186,10 +1186,10 @@ class WablasController extends Controller
             
             if( $this->message == '3' ){
 
-                $complaint             = new FailedTherapy;
-                $complaint->no_telp    = $this->whatsapp_recovery_index->antrian->no_telp;
-                $complaint->antrian_id = $this->whatsapp_recovery_index->antrian->id;
-                $complaint->save();
+                $fail             = new FailedTherapy;
+                $fail->no_telp    = $this->no_telp;
+                $fail->antrian_id = $this->whatsapp_recovery_index->antrian->id;
+                $fail->save();
 
                 $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
                 $message .= PHP_EOL;
