@@ -1181,7 +1181,7 @@ class WablasController extends Controller
             $this->message == '3'
         ) {
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
-            $this->whatsapp_recovery_index->antrian->recovery_index = $recovery_index_ini; 
+            $this->whatsapp_recovery_index->antrian->recovery_index_id = $recovery_index_ini; 
             $this->whatsapp_recovery_index->antrian->save();
             
             if( $this->message == '3' ){
