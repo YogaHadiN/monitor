@@ -860,6 +860,7 @@ class WablasController extends Controller
     {
         $query  = "SELECT ";
         $query .= "psn.nama as nama, ";
+        $query .= "psn.nomor_asuransi_bpjs as nomor_asuransi_bpjs, ";
         $query .= "psn.tanggal_lahir as tanggal_lahir, ";
         $query .= "psn.id as pasien_id ";
         $query .= "FROM antrians as ant ";
@@ -1261,6 +1262,7 @@ class WablasController extends Controller
                 $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $this->whatsapp_bpjs_dentist_registrations->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomot_asuransi_bpjs;
                 echo $this->tanyaNomorBpjsPasien();
             } else {
                 Log::info(1260);
