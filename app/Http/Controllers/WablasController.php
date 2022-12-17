@@ -1214,6 +1214,7 @@ class WablasController extends Controller
                 Log::info(1213);
                 $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id = $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->save();
+
                 $message = $this->tanyaKetersediaanSlot();
                 Log::info(1218);
                 Log::info('message');
@@ -1611,9 +1612,7 @@ class WablasController extends Controller
                 }
             }
         }
-
-        dd( $result );
-            
+        return $result;
     }
     /**
      * undocumented function
