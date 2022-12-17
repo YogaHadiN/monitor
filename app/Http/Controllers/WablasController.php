@@ -1232,16 +1232,22 @@ class WablasController extends Controller
                 $this->message <= count( $slots )
             ) {
                 Log::info(1228);
-                $this->whatsapp_bpjs_dentist_registrations->tanggal_booking = $slots[ $this->message -1 ];
-                $this->whatsapp_bpjs_dentist_registrations->save();
+                $this->whatsapp_bpjs_dentist_registrations->tanggal_booking = $slots[ $this->message -1 ]['tanggal'];
 
                 $data = $this->queryPreviouslySavedPatientRegistry();
                 if (count($data) < 1) {
                     $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = 0;
-                    $message = $this->tanyaNamaLengkapPasien();
+                    if ( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id == 2  ) {  // jika pasien BPJS
+                        $message = $this->tanyaNomorBpjsPasien();
+                    } else {
+                        $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs == 0  
+                        $message = $this->tanyaNamaLengkapPasien();
+                    }
                 } else {
                     $message = $this->pesanUntukPilihPasien();
                 }
+
+                $this->whatsapp_bpjs_dentist_registrations->save();
             } else {
                 Log::info(1240);
                 $message = 'Input yang kakak masukkan tidak dikenali';
@@ -1262,14 +1268,45 @@ class WablasController extends Controller
                 $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $this->whatsapp_bpjs_dentist_registrations->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
-                $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
-                echo $this->tanyaNomorBpjsPasien();
+                if ( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id == 2 ) {
+                    $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
+                } else {
+                    $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs = 0;
+                }
+                echo $this->konfirmasiSebelumDisimpanDiAntrianPoli();
             } else {
                 Log::info(1260);
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
-                echo $this->tanyaNamaLengkapPasien();
+                echo $this->tanyaNomorBpjsPasien();
             }
             $this->whatsapp_bpjs_dentist_registrations->save();
+        } else if ( 
+            is_null($this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs)
+        ) {
+            $message = '';
+            if (
+                $this->nomorAsuransiBpjsValid( $this->message )
+            ) {
+                Log::info(1307);
+                $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs  = $this->message;
+                $pasien_bpjs =  Pasien::where('nomor_asuransi_bpjs', $this->message )->first() ;
+                if ( $pasien_bpjs ) {
+                    $this->whatsapp_bpjs_dentist_registrations->pasien_id     = $pasien_bpjs->id;
+                    $this->whatsapp_bpjs_dentist_registrations->nama          = $pasien_bpjs->nama;
+                    $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir = $pasien_bpjs->tanggal_lahir;
+                }
+                $this->whatsapp_bpjs_dentist_registrations->save();
+                $message .= $this->tanyaNamaLengkapPasien();
+            } else {
+                Log::info(1311);
+                $message = 'Input yang kakak masukkan salah';
+                $message .= PHP_EOL;
+                $message = 'Nomor Asuransi BPJS terdiri dari 13 angka';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= $this->tanyaNomorBpjsPasien();
+            }
+            echo $message;
         } else if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->nama)
         ) {
@@ -1278,7 +1315,7 @@ class WablasController extends Controller
                 $this->namaLengkapValid($this->message)
             ) {
                 Log::info(1272);
-                $this->whatsapp_bpjs_dentist_registrations->nama  = $this->message;
+                $this->whatsapp_bpjs_dentist_registrations->nama  = ucwords($this->message);
                 $this->whatsapp_bpjs_dentist_registrations->save();
                 echo $this->tanyaTanggalLahirPasien();
             } else {
@@ -1307,25 +1344,6 @@ class WablasController extends Controller
                 echo $message;
             }
         } else if ( 
-            is_null($this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs)
-        ) {
-            if (
-                $this->nomorAsuransiBpjsValid( $this->message )
-            ) {
-                Log::info(1307);
-                $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs  = $this->message;
-                $this->whatsapp_bpjs_dentist_registrations->save();
-            } else {
-                Log::info(1311);
-                $message = 'Input yang kakak masukkan salah';
-                $message .= PHP_EOL;
-                $message = 'Nomor Asuransi BPJS terdiri dari 13 angka';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= $this->tanyaNomorBpjsPasien();
-                echo $message;
-            }
-        } else if ( 
             !$this->whatsapp_bpjs_dentist_registrations->data_konfirmation
         ) {
             Log::info(1324);
@@ -1340,6 +1358,7 @@ class WablasController extends Controller
                     Log::info(1332);
                     $this->whatsapp_bpjs_dentist_registrations->data_konfirmation  = 1;
                     $this->whatsapp_bpjs_dentist_registrations->save();
+                    $this->masukkanDiAntrianPoli();
                 } else if ( 
                     $this->message == '2'
                 ) {
@@ -1681,6 +1700,76 @@ class WablasController extends Controller
         $message .= $this->messagePilihanPembayaran();
         return $message;
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function konfirmasiSebelumDisimpanDiAntrianPoli()
+    {
+        if (
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->nama ) ||
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id ) ||
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir )
+        ) {
+            $response .=  "*Uraian Pengisian Anda*";
+            $response .= PHP_EOL;
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $this->whatsapp_bpjs_dentist_registrations->nama ) ) {
+            $response .= 'Nama Pasien: ' . ucwords($this->whatsapp_bpjs_dentist_registrations->nama)  ;
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id ) ) {
+            $response .= 'Pembayaran : ';
+            $response .= ucwords($this->whatsapp_bpjs_dentist_registrations->registrasiPembayaran->pembayaran);
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir ) ) {
+            $response .= 'Tanggal Lahir : '.  Carbon::parse($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)->format('d M Y');;
+            $response .= PHP_EOL;
+        }
+        if (
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->nama ) ||
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id) ||
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir )
+        ) {
+            $response .= "==================";
+            $response .= PHP_EOL;
+            $response .= PHP_EOL;
+        }
+
+        $response .= "1. Lanjutkan";
+        $response .= PHP_EOL;
+        $response .= "2. Ulangi";
+        $response .= PHP_EOL;
+        $response .= PHP_EOL;
+        $response .= "Mohon balas dengan angka *1 atau 2* sesuai urutan diatas";
+        echo $response;
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function masukkanDiAntrianPoli()
+    {
+        AntrianPoli::create([
+            'pasien_id'        => $this->whatsapp_bpjs_dentist_registrations->pasien_id,
+            'asuransi_id'      => $this->whatsapp_bpjs_dentist_registrations->asuransi_id,
+            'poli_id'          => 4,
+            'staf_id'          => null,
+            'tanggal'          => $this->whatsapp_bpjs_dentist_registrations->tanggal_booking,
+            'jam'              => $this->whatsapp_bpjs_dentist_registrations->updated_at,
+            'kecelakaan_kerja' => 0,
+            'self_register'    => 0,
+            'bukan_peserta'    => 0,
+            'submitted'        => 1,
+            'tenant_id'        => 1
+        ]);
+    }
+    
+    
     
     
 }

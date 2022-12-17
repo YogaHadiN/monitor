@@ -15,4 +15,7 @@ class WhatsappBpjsDentistRegistration extends Model
             resetWhatsappRegistration( $model->no_telp );
         });
     }
+    public function registrasiPembayaran(){
+        return $this->belongsTo(RegistrasiPembayaran::class);
+    }
 }
