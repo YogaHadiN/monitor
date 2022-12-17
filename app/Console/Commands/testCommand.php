@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Http\Controllers\WablasController;
 
 class testCommand extends Command
 {
@@ -37,9 +38,8 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $message = 'oke';
-        dd( 'oke' );
-        $this->singleTextSend($message);
+        $wa = new WablasController;
+        $wa->queryKetersediaanSlotBpjsSatuMingguKeDepan();
     }
 	/**
 	* undocumented function

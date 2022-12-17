@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers; 
+<?php 
+namespace App\Http\Controllers; 
 use Illuminate\Http\Request; 
 use App\Models\AntrianPeriksa; 
 use App\Models\AntrianPoli;
@@ -9,6 +10,8 @@ use App\Models\WhatsappRegistration;
 use App\Models\WhatsappSatisfactionSurvey;
 use App\Models\WhatsappRecoveryIndex;
 use App\Models\KuesionerMenungguObat;
+use App\Models\WhatsappMainMenu;
+use App\Models\WhatsappBpjsDentistRegistration;
 use App\Models\WhatsappComplaint;
 use App\Models\FailedTherapy;
 use App\Models\Periksa;
@@ -29,6 +32,7 @@ class WablasController extends Controller
 	public $gigi_buka     = true;
 	public $estetika_buka = true;
 	public $whatsapp_registration_deleted;
+	public $whatsapp_main_menu;
 	public $kuesioner_menunggu_obat;
 	public $whatsapp_registration;
 	public $whatsapp_recovery_index;
@@ -38,6 +42,7 @@ class WablasController extends Controller
 	public $no_telp;
 	public $message;
     public $whatsapp_satisfaction_survey;
+    public $whatsapp_bpjs_dentist_registrations;
 
 	public function __construct()
 	{
@@ -99,6 +104,14 @@ class WablasController extends Controller
                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                 ->first();
 
+        $this->whatsapp_main_menu = WhatsappMainMenu::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+
+        $this->whatsapp_bpjs_dentist_registrations = WhatsappBpjsDentistRegistration::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+
         $this->tenant = Tenant::find(1);
 
         if (
@@ -118,6 +131,12 @@ class WablasController extends Controller
                 return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
                 return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
+            } else if (!is_null( $this->whatsapp_main_menu  )) {
+                return $this->registerWhatsappMainMenu(); //register untuk survey kesembuhan pasien
+            } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
+                return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
+            } else {
+                return $this->createWhatsappMainMenu(); //register untuk survey kesembuhan pasien
             }
         }   
 	}
@@ -228,143 +247,12 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-            $tanggals = [];
-            if ( str_contains( $this->message, "." ) ){
-                $tanggals = explode(".", $this->message );
-            } else if ( str_contains( $this->message, "_" ) ){
-                $tanggals = explode("_", $this->message );
-            } else if ( str_contains( $this->message, "/" ) ){
-                $tanggals = explode("/", $this->message );
-            } else if ( str_contains( $this->message, "-" ) ){
-                $tanggals = explode("-", $this->message );
-            } else {
-                $tanggals = explode(" ", $this->message );
-            }
-
-            if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
-                $this->whatsapp_registration->antrian->tanggal_lahir  = Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
+            $tanggal = $this->convertToPropperDate();
+            if (!is_null( $tanggal )) {
+                $this->whatsapp_registration->antrian->tanggal_lahir  = $tanggal;
                 $this->whatsapp_registration->antrian->save();
-            } else if(
-                count($tanggals) == 3
-            ) {
-                $tanggal  = $tanggals[0];
-                $bulan    = $tanggals[1];
-                $tahun    = $tanggals[2];
-
-                if (strlen($tanggal) == 1) {
-                    $tanggal = '0' . $tanggal;
-                }
-
-                if(
-                     trim($bulan) == 'januari' ||
-                     trim($bulan) == 'jan' ||
-                     trim($bulan) == '01' ||
-                     trim($bulan) == '1'
-                ){
-                    $bulan = '01';
-                } else if(
-                    trim($bulan) == 'februari' || 
-                    trim($bulan) == 'feb' ||
-                    trim($bulan) == '02' ||
-                    trim($bulan) == '2'
-                ){
-                    $bulan = '02';
-                } else if(
-                    trim($bulan) == 'maret' || 
-                    trim($bulan) == 'mar' ||
-                    trim($bulan) == '03' ||
-                    trim($bulan) == '3'
-                ){
-                    $bulan = '03';
-                } else if(
-                    trim($bulan) == 'april' || 
-                    trim($bulan) == 'apr' ||
-                    trim($bulan) == '04' ||
-                    trim($bulan) == '4'
-
-                ){
-                    $bulan = '04';
-                } else if( 
-                    trim($bulan) == 'mei'  ||
-                    trim($bulan) == '05' ||
-                    trim($bulan) == '5'
-
-                ){
-                    $bulan = '05';
-                } else if(
-                    trim($bulan) == 'juni' || 
-                    trim($bulan) == 'jun' ||
-                    trim($bulan) == '06' ||
-                    trim($bulan) == '6'
-
-                ){
-                    $bulan = '06';
-                } else if(
-                    trim($bulan) == 'juli' || 
-                    trim($bulan) == 'jul' ||
-                    trim($bulan) == '07' ||
-                    trim($bulan) == '7'
-
-                ){
-                    $bulan = '07';
-                } else if(
-                    trim($bulan) == 'agustus' ||
-                    trim($bulan) == '08' ||
-                    trim($bulan) == '8'
-                ){
-                    $bulan = '08';
-                } else if(
-                    trim($bulan) == 'september' || 
-                    trim($bulan) == 'sept' || 
-                    trim($bulan) == 'sep' ||
-                    trim($bulan) == '09' ||
-                    trim($bulan) == '9'
-
-                ){
-                    $bulan = '09';
-                } else if(
-                     trim($bulan) == 'oktober' ||
-                     trim($bulan) == 'okt' ||
-                    trim($bulan) == '10'
-
-                ){
-                    $bulan = 10;
-                } else if(
-                    trim($bulan) == 'november' || 
-                    trim($bulan) == 'nov' ||
-                    trim($bulan) == '11'
-
-                ){
-                    $bulan = 11;
-                } else if(
-                    trim($bulan) == 'desember' || 
-                    trim($bulan) == 'des' ||
-                    trim($bulan) == '12'
-
-                ){
-                    $bulan = 12;
-                }
-
-
-                if ( (int) $tahun < 100 ) {
-                   if ( $tahun <= date('y') ) {
-                       $tahun = '20' . $tahun;
-                   } else {
-                       $tahun = '19' . $tahun;
-                   }
-                }
-
-                $databaseFriendlyDateFormat = $tahun . '-' . $bulan . '-' . $tanggal;
-                try {
-                    Carbon::parse($databaseFriendlyDateFormat);
-                    $this->whatsapp_registration->antrian->tanggal_lahir  = $databaseFriendlyDateFormat;
-                    $this->whatsapp_registration->antrian->save();
-                } catch (\Exception $e) {
-                    $input_tidak_tepat = true;
-                }
-
             } else {
-                $input_tidak_tepat = true;
+                $this->input_tidak_tepat = true;
             }
         } else if ( 
             isset( $this->whatsapp_registration ) &&
@@ -651,15 +539,7 @@ class WablasController extends Controller
                     'message' => $message
                 ];
             } else {
-                $text .= PHP_EOL;
-                $text .= "1. Biaya Pribadi";
-                $text .= PHP_EOL;
-                $text .= "2. BPJS";
-                $text .= PHP_EOL;
-                $text .= "3. Lainnya";
-                $text .= PHP_EOL;
-                $text .= PHP_EOL;
-                $text .= "Balas dengan angka *1,2 atau 3* sesuai informasi di atas";
+                $text .= $this->messagePilihanPembayaran();
 
                 $payload[] = [
                     'category' => 'text',
@@ -674,35 +554,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
-            $data = $this->queryPreviouslySavedPatientRegistry();
-            $message = 'Pilih pasien yang akan didaftarkan';
-			$message .= PHP_EOL;
-			$message .= PHP_EOL;
-
-            $balas_dengan = 'Balas dengan angka ';
-            $balas_dengan .= '*';
-            foreach ($data as $key => $d) {
-                $number = $key + 1;
-                $message .= $number . '. ' . ucwords($d->nama);
-                $message .= PHP_EOL;
-
-                $urutan = (string) $key + 1;
-                if ($key == 0) {
-                    $balas_dengan .= $urutan;
-                } else {
-                    $balas_dengan .= ', ' . $urutan;
-                }
-            }
-            $nomor_lainnya = count($data) + 1;
-            $message .= $nomor_lainnya. ". Lainnya ";
-
-            $balas_dengan .= ' atau ' . $nomor_lainnya . '*'; 
-            $balas_dengan .= ' sesuai urutan di atas';
-
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $balas_dengan;
-
+            $message = $this->pesanUntukPilihPasien();
             $payload[] = [
                 'category' => 'text',
                 'message'  => $message
@@ -726,7 +578,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-			$text    = 'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : 19-07-2003';
+			$text    = $this->tanyaTanggalLahirPasien();
             $message = $text;
             $payload[] = [
                 'category' => 'text',
@@ -1133,11 +985,11 @@ class WablasController extends Controller
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
             $no_telp = $this->whatsapp_satisfaction_survey->antrian->no_telp;
 
-            $previous_wa_surveys = WhatsappSatisfactionSurvey::with('antrian')->where('no_telp', $no_telp)->get();
-            foreach ($previous_wa_surveys as $survey) {
-                $survey->antrian->satisfaction_index = $satisfaction_index_ini;
-                $survey->antrian->save();
-            }
+            Antrian::where('no_telp', $no_telp)
+                    ->where('created_at', $this->whatsapp_satisfaction_survey->created_at)
+                    ->update([
+                        'satisfaction_index' => $satisfaction_index_ini
+                    ]);
             
             if( $this->message == '1' ){
                 echo $this->kirimkanLinkGoogleReview();
@@ -1262,5 +1114,540 @@ class WablasController extends Controller
             return 0;
         }
         return $message;
+
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function createWhatsappMainMenu(){
+
+        $message = 'Selamat Datang di Klinik Jati Elok';
+        $message .= PHP_EOL;
+        $message .= 'Pesan ini adalah pesan BOT';
+        $message .= PHP_EOL;
+        $message .= $this->messageWhatsappMainMenu();
+
+        WhatsappMainMenu::create([
+            'no_telp' => $this->no_telp
+        ]);
+
+        echo $message;
+
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function registerWhatsappMainMenu()
+    {
+        if (
+            $this->message == '1'
+        ) {
+            if ( $this->message == '1' ) {
+                WhatsappBpjsDentistRegistration::create([
+                    'no_telp' => $this->no_telp
+                ]);
+            }
+
+            echo $this->pertanyaanPertamaWaBpjsDentistRegistration();
+        } else {
+            $message = "Balasan yang kakak masukkan tidak dikenali";
+            $message .= $this->messageWhatsappMainMenu();
+
+            echo $message;
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function messageWhatsappMainMenu()
+    {
+        $message = 'Beritahu kami apa yang dapat kami bantu';
+        $message .= PHP_EOL;
+        $message .= '1. Buat perjanjian Dokter Gigi';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Balas dengan *1* sesuai dengan urutan di atas';
+        return $message;
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function messagePilihanPembayaran()
+    {
+        $text = PHP_EOL;
+        $text .= "1. Biaya Pribadi";
+        $text .= PHP_EOL;
+        $text .= "2. BPJS";
+        $text .= PHP_EOL;
+        $text .= "3. Lainnya";
+        $text .= PHP_EOL;
+        $text .= PHP_EOL;
+        $text .= "Balas dengan angka *1,2 atau 3* sesuai informasi di atas";
+        return $text;
+    }
+    
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function registerWhatsappBpjsDentistRegistration()
+    {
+
+        if ( 
+            is_null($this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id)
+        ) {
+            if (
+                 $this->message == '1' ||
+                 $this->message == '2' ||
+                 $this->message == '3'
+            ) {
+                $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id == $this->message;
+                $this->whatsapp_bpjs_dentist_registrations->save();
+
+                echo $this->tanyaKetersediaanSlot();
+            } 
+        } else if ( 
+            is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_booking)
+        ) {
+            $slots = $this->queryKetersediaanSlotBpjsSatuMingguKeDepan();
+            if (
+                $this->message > 0 &&
+                $this->message <= count( $slots )
+            ) {
+                $this->whatsapp_bpjs_dentist_registrations->tanggal_booking = $slots[ $this->message -1 ];
+                $this->whatsapp_bpjs_dentist_registrations->save();
+                $data = $this->queryPreviouslySavedPatientRegistry();
+                if (count($data) < 1) {
+                    $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = 0;
+                    $message = $this->tanyaNamaLengkapPasien();
+                } else {
+                    $message = $this->pesanUntukPilihPasien();
+                }
+            } else {
+                $message = 'Input yang kakak masukkan tidak dikenali';
+                $message .= PHP_EOL;
+                $message .= $this->tanyaKetersediaanSlot();
+            }
+            echo $message;
+        } else if ( 
+            is_null($this->whatsapp_bpjs_dentist_registrations->previously_registered_pasien_id)
+        ) {
+            $data = $this->queryPreviouslySavedPatientRegistry();
+            $dataCount = count($data);
+            if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+
+                $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
+                $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
+                $this->whatsapp_bpjs_dentist_registrations->nama                              = $data[ (int)$this->message -1 ]->nama;
+                $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+
+            } else {
+                $this->whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+                echo $this->tanyaNamaLengkapPasien();
+            }
+            $this->whatsapp_registration->antrian->save();
+        } else if ( 
+            is_null($this->whatsapp_bpjs_dentist_registrations->nama)
+        ) {
+            if (
+                $this->namaLengkapValid($this->message)
+            ) {
+                $this->whatsapp_bpjs_dentist_registrations->nama  = $this->message;
+                $this->whatsapp_bpjs_dentist_registrations->save();
+                echo $this->tanyaTanggalLahirPasien();
+            } else {
+                $message = 'Input yang kakak masukkan tidak tepat';
+                $message .= PHP_EOL;
+                $message .= $this->tanyaNamaLengkapPasien();
+                echo $message;
+            }
+        } else if ( 
+            is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)
+        ) {
+            $tanggal = $this->convertToPropperDate();
+            if (
+                !is_null( $tanggal )
+            ) {
+                $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir  = $tanggal;
+                $this->whatsapp_bpjs_dentist_registrations->save();
+            } else {
+                $message = 'Input yang kakak masukkan tidak dikenali';
+                $message .= PHP_EOL;
+                $message .= $this->tanyaTanggalLahirPasien();
+                echo $message;
+            }
+        } else if ( 
+            is_null($this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs)
+        ) {
+            if (
+                $this->nomorAsuransiBpjsValid( $this->message )
+            ) {
+                $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs  = $this->message;
+                $this->whatsapp_bpjs_dentist_registrations->save();
+            } else {
+                $message = 'Input yang kakak masukkan salah';
+                $message .= PHP_EOL;
+                $message = 'Nomor Asuransi BPJS terdiri dari 13 angka';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= $this->tanyaNomorBpjsPasien();
+                echo $message;
+            }
+        } else if ( 
+            !$this->whatsapp_bpjs_dentist_registrations->data_konfirmation
+        ) {
+
+            if (
+                $this->message == '1' ||
+                $this->message == '2'
+            ) {
+                if (
+                    $this->message == '1'
+                ) {
+                    $this->whatsapp_bpjs_dentist_registrations->data_konfirmation  = 1;
+                    $this->whatsapp_bpjs_dentist_registrations->save();
+                } else if ( 
+                    $this->message == '2'
+                ) {
+                    WhatsappBpjsDentistRegistration::create([
+                        'no_telp' => $this->no_telp
+                    ]);
+                    echo $this->pertanyaanPertamaWaBpjsDentistRegistration();
+                }
+            }
+
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function pesanUntukPilihPasien()
+    {
+        $data = $this->queryPreviouslySavedPatientRegistry();
+        $message = 'Pilih pasien yang akan didaftarkan';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+
+        $balas_dengan = 'Balas dengan angka ';
+        $balas_dengan .= '*';
+        foreach ($data as $key => $d) {
+            $number = $key + 1;
+            $message .= $number . '. ' . ucwords($d->nama);
+            $message .= PHP_EOL;
+
+            $urutan = (string) $key + 1;
+            if ($key == 0) {
+                $balas_dengan .= $urutan;
+            } else {
+                $balas_dengan .= ', ' . $urutan;
+            }
+        }
+        $nomor_lainnya = count($data) + 1;
+        $message .= $nomor_lainnya. ". Lainnya ";
+
+        $balas_dengan .= ' atau ' . $nomor_lainnya . '*'; 
+        $balas_dengan .= ' sesuai urutan di atas';
+
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= $balas_dengan;
+        return $message;
+    }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function tanyaNamaLengkapPasien()
+    {
+         return 'Bisa dibantu *Nama Lengkap* pasien?';
+    }
+    
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function namaLengkapValid($string)
+    {
+        if (preg_match('~[0-9]+~', $string)) {
+            return false;
+        }
+        return true;
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function convertToPropperDate(){
+        $tanggals = [];
+        if ( str_contains( $this->message, "." ) ){
+            $tanggals = explode(".", $this->message );
+        } else if ( str_contains( $this->message, "_" ) ){
+            $tanggals = explode("_", $this->message );
+        } else if ( str_contains( $this->message, "/" ) ){
+            $tanggals = explode("/", $this->message );
+        } else if ( str_contains( $this->message, "-" ) ){
+            $tanggals = explode("-", $this->message );
+        } else {
+            $tanggals = explode(" ", $this->message );
+        }
+
+        if ( $this->validateDate($this->message, $format = 'd-m-Y') ) {
+            return Carbon::CreateFromFormat('d-m-Y',$this->message)->format('Y-m-d');
+        } else if(
+            count($tanggals) == 3
+        ) {
+            $tanggal  = $tanggals[0];
+            $bulan    = $tanggals[1];
+            $tahun    = $tanggals[2];
+
+            if (strlen($tanggal) == 1) {
+                $tanggal = '0' . $tanggal;
+            }
+
+            if(
+                 trim($bulan) == 'januari' ||
+                 trim($bulan) == 'jan' ||
+                 trim($bulan) == '01' ||
+                 trim($bulan) == '1'
+            ){
+                $bulan = '01';
+            } else if(
+                trim($bulan) == 'februari' || 
+                trim($bulan) == 'feb' ||
+                trim($bulan) == '02' ||
+                trim($bulan) == '2'
+            ){
+                $bulan = '02';
+            } else if(
+                trim($bulan) == 'maret' || 
+                trim($bulan) == 'mar' ||
+                trim($bulan) == '03' ||
+                trim($bulan) == '3'
+            ){
+                $bulan = '03';
+            } else if(
+                trim($bulan) == 'april' || 
+                trim($bulan) == 'apr' ||
+                trim($bulan) == '04' ||
+                trim($bulan) == '4'
+
+            ){
+                $bulan = '04';
+            } else if( 
+                trim($bulan) == 'mei'  ||
+                trim($bulan) == '05' ||
+                trim($bulan) == '5'
+
+            ){
+                $bulan = '05';
+            } else if(
+                trim($bulan) == 'juni' || 
+                trim($bulan) == 'jun' ||
+                trim($bulan) == '06' ||
+                trim($bulan) == '6'
+
+            ){
+                $bulan = '06';
+            } else if(
+                trim($bulan) == 'juli' || 
+                trim($bulan) == 'jul' ||
+                trim($bulan) == '07' ||
+                trim($bulan) == '7'
+
+            ){
+                $bulan = '07';
+            } else if(
+                trim($bulan) == 'agustus' ||
+                trim($bulan) == '08' ||
+                trim($bulan) == '8'
+            ){
+                $bulan = '08';
+            } else if(
+                trim($bulan) == 'september' || 
+                trim($bulan) == 'sept' || 
+                trim($bulan) == 'sep' ||
+                trim($bulan) == '09' ||
+                trim($bulan) == '9'
+
+            ){
+                $bulan = '09';
+            } else if(
+                 trim($bulan) == 'oktober' ||
+                 trim($bulan) == 'okt' ||
+                trim($bulan) == '10'
+
+            ){
+                $bulan = 10;
+            } else if(
+                trim($bulan) == 'november' || 
+                trim($bulan) == 'nopember' || 
+                trim($bulan) == 'nov' ||
+                trim($bulan) == '11'
+
+            ){
+                $bulan = 11;
+            } else if(
+                trim($bulan) == 'desember' || 
+                trim($bulan) == 'des' ||
+                trim($bulan) == '12'
+
+            ){
+                $bulan = 12;
+            }
+
+
+            if ( (int) $tahun < 100 ) {
+               if ( $tahun <= date('y') ) {
+                   $tahun = '20' . $tahun;
+               } else {
+                   $tahun = '19' . $tahun;
+               }
+            }
+
+            $databaseFriendlyDateFormat = $tahun . '-' . $bulan . '-' . $tanggal;
+            try {
+                Carbon::parse($databaseFriendlyDateFormat);
+                return $databaseFriendlyDateFormat;
+            } catch (\Exception $e) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function tanyaTanggalLahirPasien()
+    {
+        return 'Bisa dibantu *Tanggal Lahir* pasien? ' . PHP_EOL . PHP_EOL . 'Contoh : 19-07-2003';
+    }
+
+    private function tanyaNomorBpjsPasien()
+    {
+        return 'Bisa dibantu *Nomor Asuransi BPJS* pasien?';
+    }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function nomorAsuransiBpjsValid($nomor)
+    {
+        if(
+            !preg_match('#[^0-9]#',$nomor) &&
+            strlen($nomor) == 13
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    public function queryKetersediaanSlotBpjsSatuMingguKeDepan()
+    {
+        $hari_ini   = date('Y-m-d');
+        $bulan_ini  = date('Y-m');
+        $query      = "SELECT tanggal ";
+        $query     .= "FROM antrian_polis ";
+        $query     .= "WHERE tanggal like '{$bulan_ini}%' ";
+        $query     .= "AND poli_id = 4;";
+        $data       = DB::select($query);
+
+        $result = [];
+        $tenant = Tenant::find( 1 );
+        foreach ($this->semingguKeDepan() as $hari) {
+            if ( !isset( $result[$hari] )) {
+                $result[$hari]['kuota'] = $tenant->kuota_gigi_bpjs;
+                $result[$hari]['tanggal'] = $hari;
+            }
+            foreach ($data as $d) {
+                if ($d->tanggal == $hari) {
+                    $result[$hari]['kuota']--;
+                }
+            }
+        }
+
+        dd( $result );
+            
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    public function semingguKeDepan()
+    {
+        $timestamp = strtotime('yesterday');
+        $days = [];
+        for ($i = 0; $i < 7; $i++) {
+            $days[] = strftime('%Y-%m-%d', $timestamp);
+            $timestamp = strtotime('+1 day', $timestamp);
+        }
+        return $days;
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function tanyaKetersediaanSlot()
+    {
+        $slots = $this->queryKetersediaanSlotBpjsSatuMingguKeDepan();
+        $balas_dengan = 'Balas dengan angka ';
+        $message = 'Pilih sesuai ketersediaan hari 1 minggu ke depan';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $nomor = 0;
+        foreach ($slots as $k => $s) {
+            $nomor++;
+            if ($k == 0) {
+                $balas_dengan .= $nomor;
+            } else if ( $k == count($slots) -1 ){
+                $balas_dengan .= ' atau '.$nomor;
+            } else {
+                $balas_dengan .= ', '.$nomor;
+            }
+            $message .= $nomor . '. ' . $s->tanggal . ' (Masih tersedia untuk ' . $s->tersedia . ' pasien)';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= $balas_dengan;
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function pertanyaanPertamaWaBpjsDentistRegistration()
+    {
+        $message = 'Bisa dibantu menggunakan pembayaran apa?';
+        $message .= PHP_EOL;
+        $message .= $this->messagePilihanPembayaran();
+        return $message
+    }
+    
+    
 }
