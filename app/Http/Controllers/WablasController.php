@@ -1612,7 +1612,12 @@ class WablasController extends Controller
                 }
             }
         }
-        return $result;
+
+        $data = [];
+        foreach ($result as $r) {
+            $data[] = $r;
+        }
+        return $data;
     }
     /**
      * undocumented function
