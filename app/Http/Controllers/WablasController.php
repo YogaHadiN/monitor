@@ -1256,7 +1256,7 @@ class WablasController extends Controller
             }
             echo $message;
         } else if ( 
-            is_null($this->whatsapp_bpjs_dentist_registrations->previously_registered_pasien_id)
+            is_null($this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient)
         ) {
             Log::info(1249);
             $data = $this->queryPreviouslySavedPatientRegistry();
