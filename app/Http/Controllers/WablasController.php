@@ -1261,6 +1261,7 @@ class WablasController extends Controller
                 $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $this->whatsapp_bpjs_dentist_registrations->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                echo $this->tanyaNomorBpjsPasien();
             } else {
                 Log::info(1260);
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
