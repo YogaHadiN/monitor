@@ -1717,7 +1717,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir )
         ) {
-            $response .=  "*Uraian Pengisian Anda*";
+            $response =  "*Uraian Pengisian Anda*";
             $response .= PHP_EOL;
             $response .= PHP_EOL;
         }
