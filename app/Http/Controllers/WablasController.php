@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request; 
 use App\Models\AntrianPeriksa; 
 use App\Models\AntrianPoli;
+use App\Models\DentistReservation;
 use App\Models\Antrian;
 use App\Models\Tenant;
 use App\Models\JenisAntrian;
@@ -25,9 +26,6 @@ use DateTime;
 use App\Models\Sms;
 class WablasController extends Controller
 {
-	/**
-	* @param 
-	*/
 	public $antrian;
 	public $gigi_buka     = true;
 	public $estetika_buka = true;
@@ -109,8 +107,8 @@ class WablasController extends Controller
                                 ->first();
 
         $this->whatsapp_bpjs_dentist_registrations = WhatsappBpjsDentistRegistration::where('no_telp', $this->no_telp)
-                                ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                ->first();
+                                                    ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                                    ->first();
 
         $this->tenant = Tenant::find(1);
 
@@ -135,9 +133,10 @@ class WablasController extends Controller
                 return $this->registerWhatsappMainMenu(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
-            } else {
-                return $this->createWhatsappMainMenu(); //register untuk survey kesembuhan pasien
-            }
+            } 
+            /* else { */
+            /*     return $this->createWhatsappMainMenu(); //register untuk survey kesembuhan pasien */
+            /* } */
         }   
 	}
     /**
@@ -1124,9 +1123,13 @@ class WablasController extends Controller
      */
     private function createWhatsappMainMenu(){
 
-        $message = 'Selamat Datang di Klinik Jati Elok';
+        $message = '*Klinik Jati Elok*';
         $message .= PHP_EOL;
-        $message .= 'Pesan ini adalah pesan BOT';
+        $message .= '=====================================';
+        $message .= PHP_EOL;
+        $message .= 'Selamat Datang di Klinik Jati Elok';
+        $message .= PHP_EOL;
+        $message .= 'Pesan ini adalah pesan robot';
         $message .= PHP_EOL;
         $message .= $this->messageWhatsappMainMenu();
 
@@ -1151,9 +1154,8 @@ class WablasController extends Controller
                 WhatsappBpjsDentistRegistration::create([
                     'no_telp' => $this->no_telp
                 ]);
+                echo $this->pertanyaanPertamaWaBpjsDentistRegistration();
             }
-
-            echo $this->pertanyaanPertamaWaBpjsDentistRegistration();
         } else {
             $message = "Balasan yang kakak masukkan tidak dikenali";
             $message .= $this->messageWhatsappMainMenu();
@@ -1330,19 +1332,21 @@ class WablasController extends Controller
         ) {
             Log::info(1286);
             $tanggal = $this->convertToPropperDate();
+            $message = '';
             if (
                 !is_null( $tanggal )
             ) {
                 Log::info(1291);
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir  = $tanggal;
                 $this->whatsapp_bpjs_dentist_registrations->save();
+                $message .= $this->konfirmasiSebelumDisimpanDiAntrianPoli();
             } else {
                 Log::info(1295);
-                $message = 'Input yang kakak masukkan tidak dikenali';
+                $message .= 'Input yang kakak masukkan tidak dikenali';
                 $message .= PHP_EOL;
                 $message .= $this->tanyaTanggalLahirPasien();
-                echo $message;
             }
+            echo $message;
         } else if ( 
             !$this->whatsapp_bpjs_dentist_registrations->data_konfirmation
         ) {
@@ -1710,6 +1714,7 @@ class WablasController extends Controller
         if (
             !is_null( $this->whatsapp_bpjs_dentist_registrations->nama ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id ) ||
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir )
         ) {
             $response .=  "*Uraian Pengisian Anda*";
@@ -1725,6 +1730,10 @@ class WablasController extends Controller
             $response .= ucwords($this->whatsapp_bpjs_dentist_registrations->registrasiPembayaran->pembayaran);
             $response .= PHP_EOL;
         }
+        if ( $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs ) {
+            $response .= 'Nomor BPJS : '.  $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs;
+            $response .= PHP_EOL;
+        }
         if ( !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir ) ) {
             $response .= 'Tanggal Lahir : '.  Carbon::parse($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)->format('d M Y');;
             $response .= PHP_EOL;
@@ -1732,6 +1741,7 @@ class WablasController extends Controller
         if (
             !is_null( $this->whatsapp_bpjs_dentist_registrations->nama ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id) ||
+            !is_null( $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir )
         ) {
             $response .= "==================";
@@ -1754,22 +1764,30 @@ class WablasController extends Controller
      */
     private function masukkanDiAntrianPoli()
     {
-        AntrianPoli::create([
-            'pasien_id'        => $this->whatsapp_bpjs_dentist_registrations->pasien_id,
-            'asuransi_id'      => $this->whatsapp_bpjs_dentist_registrations->asuransi_id,
-            'poli_id'          => 4,
-            'staf_id'          => null,
-            'tanggal'          => $this->whatsapp_bpjs_dentist_registrations->tanggal_booking,
-            'jam'              => $this->whatsapp_bpjs_dentist_registrations->updated_at,
-            'kecelakaan_kerja' => 0,
-            'self_register'    => 0,
-            'bukan_peserta'    => 0,
-            'submitted'        => 1,
-            'tenant_id'        => 1
-        ]);
+        if ( !is_null( $this->whatsapp_bpjs_dentist_registrations->pasien_id ) ) {
+            AntrianPoli::create([
+                'pasien_id'        => $this->whatsapp_bpjs_dentist_registrations->pasien_id,
+                'asuransi_id'      => $this->whatsapp_bpjs_dentist_registrations->asuransi_id,
+                'poli_id'          => 4,
+                'staf_id'          => null,
+                'tanggal'          => $this->whatsapp_bpjs_dentist_registrations->tanggal_booking,
+                'jam'              => $this->whatsapp_bpjs_dentist_registrations->updated_at,
+                'kecelakaan_kerja' => 0,
+                'self_register'    => 0,
+                'bukan_peserta'    => 0,
+                'submitted'        => 1,
+                'tenant_id'        => 1
+            ]);
+        } else {
+            DentistReservation::create([
+                'no_telp'                  => $this->whatsapp_bpjs_dentist_registrations->no_telp,
+                'registrasi_pembayaran_id' => $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id,
+                'tanggal_booking'          => $this->whatsapp_bpjs_dentist_registrations->tanggal_booking,
+                'nama'                     => $this->whatsapp_bpjs_dentist_registrations->nama,
+                'tanggal_lahir'            => $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir,
+                'nomor_asuransi_bpjs'      => $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs
+            ]);
+        }
+        $this->whatsapp_bpjs_dentist_registrations->delete();
     }
-    
-    
-    
-    
 }
