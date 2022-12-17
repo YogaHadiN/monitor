@@ -22,7 +22,7 @@ class WhatsappBpjsDentistRegistration extends Model
     public function getAsuransiIdAttribute(){
         if ( $this->registrasi_pembayaran_id == '2' ) {
             return Asuransi::Bpjs()->id;
-        } else (   $this->registrasi_pembayaran_id == '1' ){
+        } elseif (   $this->registrasi_pembayaran_id == '1' ){
             return Asuransi::BiayaPribadi()->id;
         } else {
             return $this->pasien->asuransi_id;

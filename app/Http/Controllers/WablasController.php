@@ -1242,7 +1242,7 @@ class WablasController extends Controller
                     if ( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id == 2  ) {  // jika pasien BPJS
                         $message = $this->tanyaNomorBpjsPasien();
                     } else {
-                        $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs == 0  
+                        $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs == 0  ;
                         $message = $this->tanyaNamaLengkapPasien();
                     }
                 } else {
