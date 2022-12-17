@@ -134,9 +134,9 @@ class WablasController extends Controller
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
             } 
-            else {
-                return $this->createWhatsappMainMenu(); //whatsapp bot main menu
-            }
+            /* else { */
+            /*     return $this->createWhatsappMainMenu(); //whatsapp bot main menu */
+            /* } */
         }   
 	}
     /**
