@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Http\Controllers\WablasController;
+use App\Models\WhatsappBpjsDentistRegistration;
+use App\Models\WhatsappMainMenu;
 
 class testCommand extends Command
 {
@@ -38,8 +40,8 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $wa = new WablasController;
-        $wa->queryKetersediaanSlotBpjsSatuMingguKeDepan();
+        WhatsappBpjsDentistRegistration::where('no_telp', '6281381912803')->delete();
+        WhatsappMainMenu::where('no_telp', '6281381912803')->delete();
     }
 	/**
 	* undocumented function
