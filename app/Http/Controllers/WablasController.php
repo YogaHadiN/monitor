@@ -1220,8 +1220,6 @@ class WablasController extends Controller
 
                 $message = $this->tanyaKetersediaanSlot();
                 Log::info(1218);
-                Log::info('message');
-                Log::info( $message );
                 echo $message;
             } 
         } else if ( 
@@ -1263,7 +1261,6 @@ class WablasController extends Controller
             Log::info(1249);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
-            Log::info( $dataCount );
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 Log::info(1253);
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
