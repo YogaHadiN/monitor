@@ -134,7 +134,7 @@ class WablasController extends Controller
             } else if (!is_null( $this->whatsapp_main_menu  )) {
                 return $this->registerWhatsappMainMenu(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
-                return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
+                $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
             } else {
                 return $this->createWhatsappMainMenu(); //register untuk survey kesembuhan pasien
             }
@@ -1214,7 +1214,9 @@ class WablasController extends Controller
                 Log::info(1213);
                 $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id = $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->save();
-                echo $this->tanyaKetersediaanSlot();
+                $message = $this->tanyaKetersediaanSlot();
+                Log::info( $message );
+                echo $message;
             } 
         } else if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_booking)
