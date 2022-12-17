@@ -1205,26 +1205,30 @@ class WablasController extends Controller
         if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id)
         ) {
+            Log::info(1208);
             if (
                  $this->message == '1' ||
                  $this->message == '2' ||
                  $this->message == '3'
             ) {
+                Log::info(1213);
                 $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id == $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->save();
-
                 echo $this->tanyaKetersediaanSlot();
             } 
         } else if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_booking)
         ) {
+            Log::info(1222);
             $slots = $this->queryKetersediaanSlotBpjsSatuMingguKeDepan();
             if (
                 $this->message > 0 &&
                 $this->message <= count( $slots )
             ) {
+                Log::info(1228);
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_booking = $slots[ $this->message -1 ];
                 $this->whatsapp_bpjs_dentist_registrations->save();
+
                 $data = $this->queryPreviouslySavedPatientRegistry();
                 if (count($data) < 1) {
                     $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = 0;
@@ -1233,6 +1237,7 @@ class WablasController extends Controller
                     $message = $this->pesanUntukPilihPasien();
                 }
             } else {
+                Log::info(1240);
                 $message = 'Input yang kakak masukkan tidak dikenali';
                 $message .= PHP_EOL;
                 $message .= $this->tanyaKetersediaanSlot();
@@ -1241,16 +1246,18 @@ class WablasController extends Controller
         } else if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->previously_registered_pasien_id)
         ) {
+            Log::info(1249);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
-
+                Log::info(1253);
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $this->whatsapp_bpjs_dentist_registrations->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
 
             } else {
+                Log::info(1260);
                 $this->whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
                 echo $this->tanyaNamaLengkapPasien();
             }
@@ -1258,13 +1265,16 @@ class WablasController extends Controller
         } else if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->nama)
         ) {
+            Log::info(1268);
             if (
                 $this->namaLengkapValid($this->message)
             ) {
+                Log::info(1272);
                 $this->whatsapp_bpjs_dentist_registrations->nama  = $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->save();
                 echo $this->tanyaTanggalLahirPasien();
             } else {
+                Log::info(1277);
                 $message = 'Input yang kakak masukkan tidak tepat';
                 $message .= PHP_EOL;
                 $message .= $this->tanyaNamaLengkapPasien();
@@ -1273,13 +1283,16 @@ class WablasController extends Controller
         } else if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)
         ) {
+            Log::info(1286);
             $tanggal = $this->convertToPropperDate();
             if (
                 !is_null( $tanggal )
             ) {
+                Log::info(1291);
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir  = $tanggal;
                 $this->whatsapp_bpjs_dentist_registrations->save();
             } else {
+                Log::info(1295);
                 $message = 'Input yang kakak masukkan tidak dikenali';
                 $message .= PHP_EOL;
                 $message .= $this->tanyaTanggalLahirPasien();
@@ -1291,9 +1304,11 @@ class WablasController extends Controller
             if (
                 $this->nomorAsuransiBpjsValid( $this->message )
             ) {
+                Log::info(1307);
                 $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs  = $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->save();
             } else {
+                Log::info(1311);
                 $message = 'Input yang kakak masukkan salah';
                 $message .= PHP_EOL;
                 $message = 'Nomor Asuransi BPJS terdiri dari 13 angka';
@@ -1305,19 +1320,22 @@ class WablasController extends Controller
         } else if ( 
             !$this->whatsapp_bpjs_dentist_registrations->data_konfirmation
         ) {
-
+            Log::info(1324);
             if (
                 $this->message == '1' ||
                 $this->message == '2'
             ) {
+                Log::info(1328);
                 if (
                     $this->message == '1'
                 ) {
+                    Log::info(1332);
                     $this->whatsapp_bpjs_dentist_registrations->data_konfirmation  = 1;
                     $this->whatsapp_bpjs_dentist_registrations->save();
                 } else if ( 
                     $this->message == '2'
                 ) {
+                    Log::info(1338);
                     WhatsappBpjsDentistRegistration::create([
                         'no_telp' => $this->no_telp
                     ]);
