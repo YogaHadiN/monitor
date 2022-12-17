@@ -1633,6 +1633,7 @@ class WablasController extends Controller
      */
     private function tanyaKetersediaanSlot()
     {
+        Log::info(1636);
         $slots = $this->queryKetersediaanSlotBpjsSatuMingguKeDepan();
         $balas_dengan = 'Balas dengan angka ';
         $message = 'Pilih sesuai ketersediaan hari 1 minggu ke depan';
@@ -1653,6 +1654,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= $balas_dengan;
         }
+        Log::info(1657);
         return $message;
     }
     /**
