@@ -1266,7 +1266,7 @@ class WablasController extends Controller
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
                 echo $this->tanyaNamaLengkapPasien();
             }
-            $this->whatsapp_registration->antrian->save();
+            $this->whatsapp_bpjs_dentist_registrations->save();
         } else if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->nama)
         ) {
