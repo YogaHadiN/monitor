@@ -1653,11 +1653,11 @@ class WablasController extends Controller
             } else {
                 $balas_dengan .= ', '.$nomor;
             }
-            $message .= $nomor . '. ' . $s['tanggal'] . ' (Masih tersedia untuk ' . $s['kuota'] . ' pasien)';
+            $message .= $nomor . '. ' . Carbon::parse($s['tanggal'])->format(d M Y) . ' (Masih tersedia untuk ' . $s['kuota'] . ' pasien)';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= $balas_dengan;
         }
+        $message .= $balas_dengan;
         Log::info(1657);
         return $message;
     }
