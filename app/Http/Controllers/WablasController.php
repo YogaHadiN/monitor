@@ -1645,14 +1645,14 @@ class WablasController extends Controller
         $nomor = 0;
         foreach ($slots as $k => $s) {
             $nomor++;
-            if ($k == 0) {
+            if ($k == 1) {
                 $balas_dengan .= $nomor;
-            } else if ( $k == count($slots) -1 ){
+            } else if ( $k == count($slots)  ){
                 $balas_dengan .= ' atau '.$nomor;
             } else {
                 $balas_dengan .= ', '.$nomor;
             }
-            $message .= $nomor . '. ' . $s->tanggal . ' (Masih tersedia untuk ' . $s->tersedia . ' pasien)';
+            $message .= $nomor . '. ' . $k . ' (Masih tersedia untuk ' . $s . ' pasien)';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= $balas_dengan;
