@@ -1254,16 +1254,16 @@ class WablasController extends Controller
             Log::info(1249);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
+            Log::info( $dataCount );
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 Log::info(1253);
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $this->whatsapp_bpjs_dentist_registrations->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
-
             } else {
                 Log::info(1260);
-                $this->whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+                $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
                 echo $this->tanyaNamaLengkapPasien();
             }
             $this->whatsapp_registration->antrian->save();
