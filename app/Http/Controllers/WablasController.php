@@ -1653,6 +1653,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= $balas_dengan;
         }
+        return $message;
     }
     /**
      * undocumented function
