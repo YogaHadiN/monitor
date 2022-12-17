@@ -1653,7 +1653,7 @@ class WablasController extends Controller
             } else {
                 $balas_dengan .= ', '.$nomor;
             }
-            $message .= $nomor . '. ' . $k . ' (Masih tersedia untuk ' . $s . ' pasien)';
+            $message .= $nomor . '. ' . $s['tangal'] . ' (Masih tersedia untuk ' . $s['kuota'] . ' pasien)';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= $balas_dengan;
