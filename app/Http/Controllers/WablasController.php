@@ -1646,7 +1646,7 @@ class WablasController extends Controller
         $message = 'Bisa dibantu menggunakan pembayaran apa?';
         $message .= PHP_EOL;
         $message .= $this->messagePilihanPembayaran();
-        return $message
+        return $message;
     }
     
     
