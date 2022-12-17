@@ -1646,9 +1646,9 @@ class WablasController extends Controller
         $nomor = 0;
         foreach ($slots as $k => $s) {
             $nomor++;
-            if ($k == 1) {
+            if ($nomor == 1) {
                 $balas_dengan .= $nomor;
-            } else if ( $k == count($slots)  ){
+            } else if ( $nomor == count($slots)  ){
                 $balas_dengan .= ' atau '.$nomor;
             } else {
                 $balas_dengan .= ', '.$nomor;
