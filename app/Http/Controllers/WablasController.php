@@ -985,7 +985,7 @@ class WablasController extends Controller
             $no_telp = $this->whatsapp_satisfaction_survey->antrian->no_telp;
 
             Antrian::where('no_telp', $no_telp)
-                    ->where('created_at', $this->whatsapp_satisfaction_survey->created_at)
+                    ->where('created_at', 'like', $this->whatsapp_satisfaction_survey->created_at->format('Y-m-d') . '%')
                     ->update([
                         'satisfaction_index' => $satisfaction_index_ini
                     ]);
