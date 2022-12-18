@@ -7,6 +7,7 @@ use DateTimeInterface;
 
 class Antrian extends Model
 {
+    protected $guarded = [];
 	public function jenis_antrian(){
 		return $this->belongsTo('App\Models\JenisAntrian');
 	}
