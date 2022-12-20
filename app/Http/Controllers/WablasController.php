@@ -1823,6 +1823,8 @@ class WablasController extends Controller
         $query .= ")";
         $data = DB::select($query);
 
+        Log::info('count data ');
+        Log::info(count($data));
         return count($data) == 0;
     }
     
