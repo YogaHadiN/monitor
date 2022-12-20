@@ -134,8 +134,8 @@ class WablasController extends Controller
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
             } else {
-                return $this->createWhatsappMainMenu(); //whatsapp bot main menu
-                Log::info('138');
+                /* return $this->createWhatsappMainMenu(); //whatsapp bot main menu */
+                /* Log::info('138'); */
             }
         }   
 	}
@@ -1823,12 +1823,8 @@ class WablasController extends Controller
         $query .= "or antriable_type = 'App\\\Models\\\Antrian' ";
         $query .= ") ";
         $query .= "AND created_at like '{$today}%'";
-        Log::info('query');
-        Log::info($query);
         $data = DB::select($query);
 
-        Log::info('count data ');
-        Log::info(count($data));
         return count($data) == 0;
     }
     
