@@ -1821,8 +1821,8 @@ class WablasController extends Controller
         $query .= "or antriable_type = 'App\\\Models\\\AntrianApotek' ";
         $query .= "or antriable_type = 'App\\\Models\\\Antrian' ";
         $query .= ")";
-        Log::('query');
-        Log::($query);
+        Log::info('query');
+        Log::info($query);
         $data = DB::select($query);
 
         Log::info('count data ');
