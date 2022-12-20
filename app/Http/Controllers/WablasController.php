@@ -1123,8 +1123,10 @@ class WablasController extends Controller
      * @return void
      */
     private function createWhatsappMainMenu(){
-                Log::info('1126');
+        Log::info('1126');
+        Log::info( $this->pasienTidakSedangBerobat() );
         if ( $this->pasienTidakSedangBerobat() ) {
+            Log::info('1128');
             $message = '*Klinik Jati Elok*';
             $message .= PHP_EOL;
             $message .= '=====================================';
