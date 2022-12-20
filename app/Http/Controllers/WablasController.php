@@ -135,6 +135,7 @@ class WablasController extends Controller
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
             } else {
                 return $this->createWhatsappMainMenu(); //whatsapp bot main menu
+                Log::info('138');
             }
         }   
 	}
@@ -1122,7 +1123,7 @@ class WablasController extends Controller
      * @return void
      */
     private function createWhatsappMainMenu(){
-
+                Log::info('1126');
         if ( $this->pasienBelumSelesaiBerobat() ) {
             $message = '*Klinik Jati Elok*';
             $message .= PHP_EOL;
