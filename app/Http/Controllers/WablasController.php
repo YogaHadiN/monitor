@@ -1809,6 +1809,7 @@ class WablasController extends Controller
      */
     private function pasienTidakSedangBerobat()
     {
+        $today = date('Y-m-d');
         $no_telp = $this->no_telp;
         $query  = "SELECT * ";
         $query .= "FROM antrians ";
@@ -1820,7 +1821,8 @@ class WablasController extends Controller
         $query .= "or antriable_type = 'App\\\Models\\\AntrianFarmasi' ";
         $query .= "or antriable_type = 'App\\\Models\\\AntrianApotek' ";
         $query .= "or antriable_type = 'App\\\Models\\\Antrian' ";
-        $query .= ")";
+        $query .= ") ";
+        $query .= "AND created_at like '{$today}%'";
         Log::info('query');
         Log::info($query);
         $data = DB::select($query);
