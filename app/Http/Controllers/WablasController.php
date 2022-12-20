@@ -509,6 +509,7 @@ class WablasController extends Controller
              is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ) {
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
+			$text = PHP_EOL;
 
             if ( $this->tenant->iphone_whatsapp_button_available ) {
                 if (
@@ -1122,22 +1123,23 @@ class WablasController extends Controller
      */
     private function createWhatsappMainMenu(){
 
-        $message = '*Klinik Jati Elok*';
-        $message .= PHP_EOL;
-        $message .= '=====================================';
-        $message .= PHP_EOL;
-        $message .= 'Selamat Datang di Klinik Jati Elok';
-        $message .= PHP_EOL;
-        $message .= 'Pesan ini adalah pesan robot';
-        $message .= PHP_EOL;
-        $message .= $this->messageWhatsappMainMenu();
+        if ( $this->pasienBelumSelesaiBerobat() ) {
+            $message = '*Klinik Jati Elok*';
+            $message .= PHP_EOL;
+            $message .= '=====================================';
+            $message .= PHP_EOL;
+            $message .= 'Selamat Datang di Klinik Jati Elok';
+            $message .= PHP_EOL;
+            $message .= 'Pesan ini adalah pesan robot';
+            $message .= PHP_EOL;
+            $message .= $this->messageWhatsappMainMenu();
 
-        WhatsappMainMenu::create([
-            'no_telp' => $this->no_telp
-        ]);
+            WhatsappMainMenu::create([
+                'no_telp' => $this->no_telp
+            ]);
 
-        echo $message;
-
+            echo $message;
+        }
     }
     /**
      * undocumented function
@@ -1171,7 +1173,18 @@ class WablasController extends Controller
     {
         $message = 'Beritahu kami apa yang dapat kami bantu';
         $message .= PHP_EOL;
+        $message .= PHP_EOL;
         $message .= '1. Buat perjanjian Dokter Gigi';
+        $message .= PHP_EOL;
+        $message .= '2. Jadwal Dokter';
+        $message .= PHP_EOL;
+        $message .= '3. Jadwal Dokter Gigi';
+        $message .= PHP_EOL;
+        $message .= '4. Jadwal Bidan';
+        $message .= PHP_EOL;
+        $message .= '5. Saya ingin memberikan masukan dan saran';
+        $message .= PHP_EOL;
+        $message .= '6. Saya ingin berbicara dengan admin';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan *1* sesuai dengan urutan di atas';
@@ -1786,4 +1799,14 @@ class WablasController extends Controller
         }
         $this->whatsapp_bpjs_dentist_registrations->delete();
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function pasienBelumSelesaiBerobat()
+    {
+        return null;
+    }
+    
 }
