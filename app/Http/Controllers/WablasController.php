@@ -1124,7 +1124,7 @@ class WablasController extends Controller
      */
     private function createWhatsappMainMenu(){
                 Log::info('1126');
-        if ( $this->pasienBelumSelesaiBerobat() ) {
+        if ( $this->pasienTidakSedangBerobat() ) {
             $message = '*Klinik Jati Elok*';
             $message .= PHP_EOL;
             $message .= '=====================================';
@@ -1805,9 +1805,23 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function pasienBelumSelesaiBerobat()
+    private function pasienTidakSedangBerobat()
     {
-        return null;
+        $no_telp = $this->no_telp;
+        $query  = "SELECT * ";
+        $query .= "FROM antrians ";
+        $query .= "WHERE no_telp = '{$no_telp}' ";
+        $query .= "AND ";
+        $query .= "(";
+        $query .= "antriable_type = 'App\\\Models\\\AntrianPoli' ";
+        $query .= "or antriable_type = 'App\\\Models\\\AntrianPeriksa' ";
+        $query .= "or antriable_type = 'App\\\Models\\\AntrianFarmasi' ";
+        $query .= "or antriable_type = 'App\\\Models\\\AntrianApotek' ";
+        $query .= "or antriable_type = 'App\\\Models\\\Antrian' ";
+        $query .= ")";
+        $data = DB::select($query);
+
+        return count($data) == 0;
     }
     
 }
