@@ -180,29 +180,28 @@ class WablasController extends Controller
             is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ){
             if (
-                ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ($this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available) ||
-                ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
-                ($this->message == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
-                ( $this->message == '3' && !$this->tenant->iphone_whatsapp_button_available )
-
+                ( $this->message    == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message    == 'bpjs' && $this->tenant->iphone_whatsapp_button_available) ||
+                ( $this->message    == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
+                ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
                 if (
                     ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 1;
                 }
                 if (
                     ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 2;
                 }
                 if (
                     ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '3' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
                 }
@@ -210,9 +209,7 @@ class WablasController extends Controller
                 if (count($data) < 1) {
                     $this->whatsapp_registration->antrian->register_previously_saved_patient = 0;
                 }
-
                 $this->whatsapp_registration->antrian->save();
-
             } else {
                 $input_tidak_tepat = true;
             }
@@ -263,18 +260,18 @@ class WablasController extends Controller
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                 ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available )||
-                ( $this->message == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
+                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
                 if (
                     ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '1' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->ulangiRegistrasiWhatsapp();
                 }
@@ -964,13 +961,8 @@ class WablasController extends Controller
     {
         $this->failed_therapy->antrian->informasi_terapi_gagal = $this->message;
         $this->failed_therapy->antrian->save();
-
-        $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-        $message .= PHP_EOL;
-        $message .= "Informasi ini akan menjadi bahan evaluasi kami";
-
         $this->failed_therapy->delete();
-        echo $message;
+        $this->pesanUntukPasienSelanjutnya();
     }
     /**
      * undocumented function
@@ -1040,9 +1032,9 @@ class WablasController extends Controller
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
             $this->whatsapp_recovery_index->antrian->recovery_index_id = $recovery_index_ini; 
             $this->whatsapp_recovery_index->antrian->save();
-            
-            if( $this->message == '3' ){
+            $nama = ucwords($this->whatsapp_recovery_index->antrian->antriable->pasien->nama);
 
+            if( $this->message == '3' ){
                 $fail             = new FailedTherapy;
                 $fail->no_telp    = $this->no_telp;
                 $fail->antrian_id = $this->whatsapp_recovery_index->antrian->id;
@@ -1050,15 +1042,13 @@ class WablasController extends Controller
 
                 $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
                 $message .= PHP_EOL;
-                $message .= "Bisa diinfokan kondisi pasien saat ini?";
+                $message .= "Bisa diinfokan kondisi pasien atas nama " . $nama . " saat ini?";
+                $this->whatsapp_recovery_index->delete();
                 echo $message;
             } else {
-                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-                $message .= PHP_EOL;
-                $message .= "Informasi ini akan menjadi bahan evaluasi kami";
-                echo $message;
+                $this->whatsapp_recovery_index->delete();
+                $this->pesanUntukPasienSelanjutnya();
             }
-            $this->whatsapp_recovery_index->delete();
         } else {
             $message = "Balasan yang anda masukkan tidak dikenali";
             $message .= PHP_EOL;
@@ -1829,5 +1819,43 @@ class WablasController extends Controller
 
         return count($data) == 0;
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function pesanUntukPasienSelanjutnya() {
+        $this->whatsapp_recovery_index = WhatsappRecoveryIndex::where('no_telp', $this->no_telp)
+                                ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                ->first();
+        if ( !is_null( $this->whatsapp_recovery_index ) ) {
+            $nama         = ucwords($this->whatsapp_recovery_index->antrian->antriable->pasien->nama);
+            $dua_hari_yl  = $this->whatsapp_recovery_index->antrian->created_at->subDays(2);
+            $message      = 'Selamat Siang. Maaf mengganggu. Izin menanyakan kabar pasien atas nama ';
+            $message     .= PHP_EOL;
+            $message     .= PHP_EOL;
+            $message     .= $nama;
+            $message     .= PHP_EOL;
+            $message     .= PHP_EOL;
+            $message     .= ' setelah berobat tanggal ' . $dua_hari_yl->format('d M Y'). '. Bagaimana kabarnya setelah pengobatan kemarin?';
+            $message     .= PHP_EOL;
+            $message     .= '1. Sudah Sembuh';
+            $message     .= PHP_EOL;
+            $message     .= '2. Membaik';
+            $message     .= PHP_EOL;
+            $message     .= '3. Tidak ada perubahan';
+            $message     .= PHP_EOL;
+            $message     .= PHP_EOL;
+            $message     .= 'Mohon balas dengan angka *1,2 atau 3* sesuai dengan informasi di atas';
+            Log::info("terkirim followuppengobatan ke pasien atas nama " . $nama));
+            echo $message;
+        } else {
+            $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+            $message .= PHP_EOL;
+            $message .= "Informasi ini akan menjadi bahan evaluasi kami";
+            echo $message;
+        }
+    }
+    
     
 }

@@ -13,5 +13,8 @@ class Periksa extends Model
 	public function antrian(){
         return $this->morphOne('App\Models\Antrian', 'antriable');
 	}
+    public function pasien(){
+        return $this->belongsTo(Pasien::class);
+    }
 }
 
