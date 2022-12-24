@@ -1837,7 +1837,7 @@ class WablasController extends Controller
             $message     .= $nama;
             $message     .= PHP_EOL;
             $message     .= PHP_EOL;
-            $message     .= ' setelah berobat tanggal ' . $dua_hari_yl->format('d M Y'). '. Bagaimana kabarnya setelah pengobatan kemarin?';
+            $message     .= 'Setelah berobat tanggal ' . $dua_hari_yl->format('d M Y'). '. Bagaimana kabarnya setelah pengobatan kemarin?';
             $message     .= PHP_EOL;
             $message     .= '1. Sudah Sembuh';
             $message     .= PHP_EOL;
