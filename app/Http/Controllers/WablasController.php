@@ -1011,6 +1011,7 @@ class WablasController extends Controller
         } else {
             $message = "Balasan yang anda masukkan tidak dikenali";
             $message .= PHP_EOL;
+            $message .= PHP_EOL;
             $message .= "1. Puas";
             $message .= PHP_EOL;
             $message .= "2. Biasa";
@@ -1042,7 +1043,7 @@ class WablasController extends Controller
 
                 $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
                 $message .= PHP_EOL;
-                $message .= "Bisa diinfokan kondisi pasien atas nama " . $nama . " saat ini?";
+                $message .= "Bisa diinfokan kondisi pasien saat ini?";
                 $this->whatsapp_recovery_index->delete();
                 echo $message;
             } else {
@@ -1051,6 +1052,7 @@ class WablasController extends Controller
             }
         } else {
             $message = "Balasan yang anda masukkan tidak dikenali";
+            $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= "1. Sudah Sembuh";
             $message .= PHP_EOL;
@@ -1829,7 +1831,7 @@ class WablasController extends Controller
                                 ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                 ->first();
         if ( !is_null( $this->whatsapp_recovery_index ) ) {
-            $nama         = ucwords($this->whatsapp_recovery_index->antrian->antriable->pasien->nama);
+            $nama         = ucwords( strtolower( $this->whatsapp_recovery_index->antrian->antriable->pasien->nama ) );
             $dua_hari_yl  = $this->whatsapp_recovery_index->antrian->created_at->subDays(2);
             $message      = 'Selamat Siang. Maaf mengganggu. Izin menanyakan kabar pasien atas nama ';
             $message     .= PHP_EOL;
