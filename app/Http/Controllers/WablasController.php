@@ -536,7 +536,7 @@ class WablasController extends Controller
                     'message' => $message
                 ];
             } else {
-                $text .= $this->messagePilihanPembayaran();
+                $text .= $this->pertanyaanPertamaWaBpjsDentistRegistration();
 
                 $payload[] = [
                     'category' => 'text',
