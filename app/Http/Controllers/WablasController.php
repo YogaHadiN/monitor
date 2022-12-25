@@ -1847,7 +1847,7 @@ class WablasController extends Controller
             $message     .= PHP_EOL;
             $message     .= PHP_EOL;
             $message     .= 'Mohon balas dengan angka *1,2 atau 3* sesuai dengan informasi di atas';
-            Log::info("terkirim followuppengobatan ke pasien atas nama " . $nama));
+            Log::info("terkirim followuppengobatan ke pasien atas nama " . $nama);
             echo $message;
         } else {
             $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
