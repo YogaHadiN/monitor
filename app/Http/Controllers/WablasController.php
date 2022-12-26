@@ -1833,7 +1833,7 @@ class WablasController extends Controller
         if ( !is_null( $this->whatsapp_recovery_index ) ) {
             $nama         = ucwords( strtolower( $this->whatsapp_recovery_index->antrian->antriable->pasien->nama ) );
             $dua_hari_yl  = $this->whatsapp_recovery_index->antrian->created_at;
-            $message      = 'Selamat Siang. Maaf mengganggu. Izin menanyakan kabar pasien atas nama ';
+            $message      = 'Terima kasih. Mohon dibantu kabar pasien selanjutnya atas nama : ';
             $message     .= PHP_EOL;
             $message     .= PHP_EOL;
             $message     .= '*' . $nama . '*';
