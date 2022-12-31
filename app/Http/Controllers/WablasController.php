@@ -1894,11 +1894,10 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= '================';
             $message .= PHP_EOL;
-            $message .= 'Notifikasi Panggilan dinonaktifkan.';
+            $message .= 'Notifikasi Panggilan *dinonaktifkan*';
             $message .= PHP_EOL;
-            $message .= 'Anda tidak akan diinformasikan apabila ada panggilan pasien';
             $message .= PHP_EOL;
-            $message .= 'Balas *aktifkan* untuk mengatifkan kembali notifikasi panggilan';
+            $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
             echo $message;
         } else if ( $this->message == 'aktifkan' ) {
             Antrian::where('no_telp', $this->no_telp)
@@ -1910,8 +1909,8 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= '================';
             $message .= PHP_EOL;
-            $message .= 'Notifikasi Panggilan diaktifkan.';
-            $message .= 'Kami akan menginformasikan apabila ada panggilan baru';
+            $message .= 'Notifikasi Panggilan *diaktifkan*.';
+            $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Balas *stop* untuk berhenti menerima notifikasi panggilan';
             echo $message;
