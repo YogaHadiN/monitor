@@ -1882,7 +1882,7 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function updateNotifikasPanggilanUntukAntrianame()
+    private function updateNotifikasPanggilanUntukAntrian()
     {
         if ( $this->message == 'stop' ) {
             Antrian::where('no_telp', $this->no_telp)
