@@ -788,6 +788,8 @@ class WablasController extends Controller
         $response .= "```" . $nomor_antrian . "```" ;
         $response .= PHP_EOL;
         $response .= PHP_EOL;
+        $response .= "Anda akan menerima notifikasi setiap kali ada panggilan pasien.";
+        $response .= PHP_EOL;
         $response .= "Silahkan menunggu untuk dilayani";
 
         return $response;
