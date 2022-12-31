@@ -973,6 +973,7 @@ class WablasController extends Controller
         $this->message = $this->message[0];
         if (
             $this->message == '1' ||
+            $this->message == 'puas' ||
             $this->message == '2' ||
             $this->message == '3'
         ) {
@@ -985,7 +986,10 @@ class WablasController extends Controller
                         'satisfaction_index' => $satisfaction_index_ini
                     ]);
             
-            if( $this->message == '1' ){
+            if(
+                 $this->message == '1'  ||
+                 $this->message == 'puas'
+            ){
                 echo $this->kirimkanLinkGoogleReview();
             } else if( $this->message == '3' ){
 
