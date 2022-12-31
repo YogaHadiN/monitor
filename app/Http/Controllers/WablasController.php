@@ -133,9 +133,8 @@ class WablasController extends Controller
                 return $this->registerWhatsappMainMenu(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
-            } else {
-                /* return $this->createWhatsappMainMenu(); //whatsapp bot main menu */
-                /* Log::info('138'); */
+            } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
+                return $this->updateNotifikasPanggilanUntukAntrian();
             }
         }   
 	}
@@ -1856,6 +1855,50 @@ class WablasController extends Controller
             $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
             $message .= PHP_EOL;
             $message .= "Informasi ini akan menjadi bahan evaluasi kami";
+            echo $message;
+        }
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function noTelpAdaDiAntrianPeriksa()
+    {
+        $this->antrian = Antrian::where('no_telp', $this->no_telp)
+                ->where('created_at', 'like', date('Y-m-d') . '%')
+                ->where('antriable_type', 'App\\Models\\AntrianPeriksa')
+                ->first();
+        return !is_null( $this->antrian );
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function updateNotifikasPanggilanUntukAntrianame()
+    {
+        if ( $this->message == 'stop' ) {
+            Antrian::where('no_telp', $this->no_telp)
+                ->where('created_at', 'like', date('Y-m-d') . '%')
+                ->update([
+                    'notifikasi_panggilan_aktif' => 0
+                ]);
+            $message = 'Notifikasi Panggilan dinonaktifkan.'
+            $message .= 'Anda tidak akan diinformasikan apabila ada panggilan pasien';
+            $message .= PHP_EOL;
+            $message .= 'Balas *aktifkan* untuk mengatifkan kembali notifikasi panggilan';
+            echo $message;
+        } else if ( $this->message == 'aktifkan' ) {
+            Antrian::where('no_telp', $this->no_telp)
+                ->where('created_at', 'like', date('Y-m-d') . '%')
+                ->update([
+                    'notifikasi_panggilan_aktif' => 1
+                ]);
+            $message = 'Notifikasi Panggilan diaktifkan.'
+            $message .= 'Kami akan menginformasikan apabila ada panggilan baru';
+            $message .= PHP_EOL;
+            $message .= 'Balas *stop* untuk berhenti menerima notifikasi panggilan';
             echo $message;
         }
     }
