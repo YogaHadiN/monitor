@@ -1890,7 +1890,12 @@ class WablasController extends Controller
                 ->update([
                     'notifikasi_panggilan_aktif' => 0
                 ]);
-            $message = 'Notifikasi Panggilan dinonaktifkan.';
+            $message = 'Klinik Jati Elok';
+            $message .= PHP_EOL;
+            $message .= '================';
+            $message .= PHP_EOL;
+            $message .= 'Notifikasi Panggilan dinonaktifkan.';
+            $message .= PHP_EOL;
             $message .= 'Anda tidak akan diinformasikan apabila ada panggilan pasien';
             $message .= PHP_EOL;
             $message .= 'Balas *aktifkan* untuk mengatifkan kembali notifikasi panggilan';
@@ -1901,7 +1906,11 @@ class WablasController extends Controller
                 ->update([
                     'notifikasi_panggilan_aktif' => 1
                 ]);
-            $message = 'Notifikasi Panggilan diaktifkan.';
+            $message = 'Klinik Jati Elok';
+            $message .= PHP_EOL;
+            $message .= '================';
+            $message .= PHP_EOL;
+            $message .= 'Notifikasi Panggilan diaktifkan.';
             $message .= 'Kami akan menginformasikan apabila ada panggilan baru';
             $message .= PHP_EOL;
             $message .= 'Balas *stop* untuk berhenti menerima notifikasi panggilan';
