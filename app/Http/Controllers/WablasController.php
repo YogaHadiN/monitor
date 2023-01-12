@@ -2045,7 +2045,6 @@ class WablasController extends Controller
                     'jam_akhir' => $q->jam_akhir,
                 ];
             }
-
             $message = '*Jadwal ' . ucwords(strtolower($query[0]->tipe_konsultasi)) . '*';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
@@ -2109,6 +2108,7 @@ class WablasController extends Controller
     {
         if (
             !str_contains( strtolower($nama), 'dr.' ) &&
+            !str_contains( strtolower($nama), 'drg' ) &&
             !str_contains( strtolower($nama), 'dr ' )
         ) {
             return $titel.'. ' . $nama;
