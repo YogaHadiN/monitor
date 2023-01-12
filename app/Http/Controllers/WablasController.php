@@ -142,6 +142,7 @@ class WablasController extends Controller
             } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
                 return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
             } else if ( $this->pasienTidakDalamAntrian() ) {
+                Log::info(1943);
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
@@ -1940,6 +1941,7 @@ class WablasController extends Controller
         echo $message;
     }
     public function pasienTidakDalamAntrian(){
+        Log::info(1943);
         return !Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->whereRaw("antriable_type not like 'App\\\Models\\\Periksa' ")
