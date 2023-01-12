@@ -10,8 +10,10 @@ use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
 use App\Models\WhatsappSatisfactionSurvey;
 use App\Models\WhatsappRecoveryIndex;
+use App\Models\WhatsappJadwalKonsultasiInquiry;
 use App\Models\KuesionerMenungguObat;
 use App\Models\WhatsappMainMenu;
+use App\Models\WhatsappJadwalKonsultasiInquiry;
 use App\Models\WhatsappBpjsDentistRegistration;
 use App\Models\WhatsappComplaint;
 use App\Models\FailedTherapy;
@@ -134,7 +136,13 @@ class WablasController extends Controller
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
             } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
-                return $this->updateNotifikasPanggilanUntukAntrian();
+                return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
+            } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
+                return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
+            } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
+                return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
+            } else if ( $this->pasienTidakDalamAntrian() ) {
+                return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
 	}
@@ -940,9 +948,14 @@ class WablasController extends Controller
      */
     private function registerWhatsappComplaint()
     {
-        $this->whatsapp_complaint->antrian->complaint = $this->message;
-        $this->whatsapp_complaint->antrian->save();
+        $tanggal_berobat = $this->whatsapp_complaint->antrian->created_at->format('Y-m-d');
         $this->whatsapp_complaint->delete();
+
+        Antrian::where('no_telp', $this->no_telp)
+            ->where('created_at', 'like', $tanggal_berobat . '%')
+            ->update([
+                'complaint' => $this->message
+            ]);
 
         $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
         $message .= PHP_EOL;
@@ -951,7 +964,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
         echo $message;
-
     }
     /**
      * undocumented function
@@ -1124,26 +1136,21 @@ class WablasController extends Controller
      * @return void
      */
     private function createWhatsappMainMenu(){
-        Log::info('1126');
-        Log::info( $this->pasienTidakSedangBerobat() );
-        if ( $this->pasienTidakSedangBerobat() ) {
-            Log::info('1128');
-            $message = '*Klinik Jati Elok*';
-            $message .= PHP_EOL;
-            $message .= '=================';
-            $message .= PHP_EOL;
-            $message .= 'Selamat Datang di Klinik Jati Elok';
-            $message .= PHP_EOL;
-            $message .= 'Pesan ini adalah pesan robot';
-            $message .= PHP_EOL;
-            $message .= $this->messageWhatsappMainMenu();
+        $message = '*Klinik Jati Elok*';
+        $message .= PHP_EOL;
+        $message .= '=================';
+        $message .= PHP_EOL;
+        $message .= 'Selamat Datang di Klinik Jati Elok';
+        $message .= PHP_EOL;
+        $message .= 'Pesan ini adalah pesan robot';
+        $message .= PHP_EOL;
+        $message .= $this->messageWhatsappMainMenu();
 
-            WhatsappMainMenu::create([
-                'no_telp' => $this->no_telp
-            ]);
+        WhatsappMainMenu::create([
+            'no_telp' => $this->no_telp
+        ]);
 
-            echo $message;
-        }
+        echo $message;
     }
     /**
      * undocumented function
@@ -1179,16 +1186,14 @@ class WablasController extends Controller
         $message = 'Beritahu kami apa yang dapat kami bantu';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= '1. Buat Perjanjian Kosultasi';
-        $message .= PHP_EOL;
-        $message .= '2. Jadwal Pelayanan Konsultasi';
-        $message .= PHP_EOL;
-        $message .= '3. Saya ingin memberikan masukan dan saran';
-        $message .= PHP_EOL;
-        $message .= '4. Saya ingin berbicara dengan admin';
+        $message .= '1. Jadwal Pelayanan Konsultasi';
+        /* $message .= PHP_EOL; */
+        /* $message .= '2. Saya ingin memberikan masukan dan saran'; */
+        /* $message .= PHP_EOL; */
+        /* $message .= '3. Saya ingin berbicara dengan admin'; */
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Balas dengan *1, 2, 3 atau 4* sesuai dengan informasi di atas';
+        $message .= 'Balas dengan *1, 2 atau 3* sesuai dengan informasi di atas';
         return $message;
     }
     /**
@@ -1884,7 +1889,7 @@ class WablasController extends Controller
      */
     private function updateNotifikasPanggilanUntukAntrian()
     {
-        if ( $this->message == 'stop' ) {
+        if ( str_contains( $this->message,'stop' ) ) {
             Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->update([
@@ -1898,8 +1903,11 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
-            echo $message;
-        } else if ( $this->message == 'aktifkan' ) {
+        } else if (
+             str_contains($this->message, 'aktivkan') ||
+             str_contains($this->message, 'aktipkan') ||
+             str_contains($this->message, 'aktifkan')
+        ) {
             Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->update([
@@ -1913,9 +1921,111 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Balas *stop* untuk berhenti menerima notifikasi panggilan';
+        } else {
+            $message = 'Balasan yang anda masukkan tidak dikenali';
+            if ( $this->antrian->notifikasi_panggilan_aktif ) {
+                $message .= PHP_EOL;
+                $message .= 'Notifikasi Panggilan *diaktifkan*';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= 'Balas *stop* untuk berhenti menerima notifikasi panggilan';
+            } else {
+                $message .= PHP_EOL;
+                $message .= 'Notifikasi Panggilan *dinonaktifkan*';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
+            }
+        }
+        echo $message;
+    }
+    public function pasienTidakDalamAntrian(){
+        return !Antrian::where('no_telp', $this->no_telp)
+            ->where('created_at', 'like', date('Y-m-d') . '%')
+            ->whereRaw("antriable_type not like 'App\\\Models\\\Periksa' ")
+            ->exists() 
+        && $this->no_telp = '6281381912803';
+    }
+    public function whatsappMainMenuExists(){
+        return WhatsappMainMenu::where('no_telp', $this->no_telp)
+            ->where('created_at', 'like', date('Y-m-d') . '%')
+            ->exists();
+    }
+
+    public function whatsappJadwalKonsultasiInquiryExists(){
+        return WhatsappJadwalKonsultasiInquiry::where('no_telp', $this->no_telp)
+            ->where('created_at', 'like', date('Y-m-d') . '%')
+            ->exists();
+    }
+
+
+    public function balasJadwalKonsultasi(){
+        if ( 
+             $this->message == '1'  ||
+             $this->message == '2'  ||
+             $this->message == '3'  ||
+             $this->message == '4' 
+        ){
+            WhatsappJadwalKonsultasiInquiry::where('created_at', 'like', date('Y-m-d') . '%')
+                ->where('no_telp', $this->no_telp)
+                ->delete();
+            if ( $this->message == '1' ) {
+                $this->balasJadwalDokterUmum();
+            } else if ( $this->message == '2' )
+                $this->balasJadwalDokterGigi();
+            } else if ( $this->message == '3' )
+                $this->balasJadwalDokterBidan();
+            } else if ( $this->message == '4' )
+                $this->balasJadwalDokterUsg();
+            }
+        } else {
+            $message = 'Balasan yang anda masukkan tidak dikenali';
+            $message .= PHP_EOL;
+        }
+    }
+
+    public function prosesMainMenuInquiry(){
+        $message = '';
+        if ( $this->message == 1 ) {
+            WhatsappJadwalKonsultasiInquiry::create([
+                'no_telp' => $this->no_telp;
+            ]);
+            $message .= '1. Jadwal Dokter Umum';
+            $message .= PHP_EOL;
+            $message .= '2. Jadwal Dokter Gigi';
+            $message .= PHP_EOL;
+            $message .= '3. Bidan';
+            $message .= PHP_EOL;
+            $message .= '4. Jadwal USG';
+            $message .= PHP_EOL;
             echo $message;
         }
     }
-    
+    public function balasJadwalDokterUmum(){
+        return $this->queryJadwalKonsultasiByTipeKonsultasi(2);
+    }
+    public function balasJadwalDokterGigi(){
+
+    }
+    public function balasJadwalDokterBidan(){
+
+    }
+    public function balasJadwalDokterUsg(){
+
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function queryJadwalKonsultasiByTipeKonsultasi($param)
+    {
+        $query  = "SELECT *";
+        $query .= "FROM jadwal_konsultasis as jad ";
+        $query .= "JOIN stafs as sta on sta.id = jad.staf_id ";
+        $query .= "JOIN haris as har on har.id = jad.hari_id ";
+        $query .= "WHERE sta.titel_id = {$param} ";
+        dd( DB::select($query) );
+    }
     
 }
