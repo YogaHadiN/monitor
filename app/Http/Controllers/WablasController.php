@@ -2057,8 +2057,15 @@ class WablasController extends Controller
                     }
                     $message .=  $this->tambahkanGelar($d['titel'],ucwords($d['nama'])) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
                     $message .= PHP_EOL;
+                    $message .= PHP_EOL;
                 }
+            }
+            if ( $param == 1 ) {
+                $message .= 'Dokter umum yang saat ini praktik adalah ' . Periksa::where('poli_id', 13)->latest()->first()->staf->nama;
                 $message .= PHP_EOL;
+                $message .= 'untuk memastikan silahkan hubungi 021-5977529';
+                $message .= PHP_EOL;
+                $message .= 'Terima kasih';
             }
         } else {
             $message = 'Fitur ini dalam pengembangan';
