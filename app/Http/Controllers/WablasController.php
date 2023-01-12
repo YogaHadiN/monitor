@@ -2064,6 +2064,7 @@ class WablasController extends Controller
             }
             if ( $param == 1 ) {
                 $staf = Periksa::with('staf.titel')->where('poli_id', 13)->latest()->first()->staf;
+                $message .= PHP_EOL;
                 $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel->singkatan, ucwords( strtolower($staf->nama) ) );
                 $message .= PHP_EOL;
                 $message .= 'untuk memastikan silahkan hubungi 021-5977529';
