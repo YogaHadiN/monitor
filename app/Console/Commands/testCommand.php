@@ -40,9 +40,21 @@ class testCommand extends Command
      */
     public function handle()
     {
-        WhatsappBpjsDentistRegistration::where('no_telp', '6281381912803')->delete();
-        WhatsappMainMenu::where('no_telp', '6281381912803')->delete();
+
+        $no_telp =  '6281381912803';
+        \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappRecoveryIndex::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappSatisfactionSurvey::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappMainMenu::where('no_telp', $no_telp)->delete();
+        \App\Models\FailedTherapy::where('no_telp', $no_telp)->delete();
+        \App\Models\KuesionerMenungguObat::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappDentistRegistration::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappJadwalDokterInquiry::where('no_telp', $no_telp)->delete();
+        \App\Models\WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
     }
+
 	/**
 	* undocumented function
 	*
