@@ -2051,8 +2051,11 @@ class WablasController extends Controller
                 $message .= ucwords($k) . ': ';
                 $message .= PHP_EOL;
                 foreach ($r as $i => $d) {
-                    $nomor = $i + 1;
-                    $message .= $nomor . '. ' . $this->tambahkanGelar($d['titel'],ucwords($d['nama'])) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
+                    if (count($r) > 1) {
+                        $nomor    = $i + 1;
+                        $message .= $nomor . '. ';
+                    }
+                    $message .=  $this->tambahkanGelar($d['titel'],ucwords($d['nama'])) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
                     $message .= PHP_EOL;
                 }
                 $message .= PHP_EOL;
