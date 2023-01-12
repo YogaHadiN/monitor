@@ -40,7 +40,17 @@ class testCommand extends Command
      */
     public function handle()
     {
+        $wa = new WablasController;
+        dd( $wa->queryJadwalKonsultasiByTipeKonsultasi(2) );
+    }
 
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function clearWaBot()
+    {
         $no_telp =  '6281381912803';
         \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
@@ -52,6 +62,7 @@ class testCommand extends Command
         \App\Models\WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
     }
+    
 
 	/**
 	* undocumented function

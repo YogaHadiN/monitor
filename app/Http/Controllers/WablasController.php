@@ -2000,52 +2000,86 @@ class WablasController extends Controller
         }
     }
     public function balasJadwalDokterUmum(){
-        echo 'jadal dokter';
+        echo $this->queryJadwalKonsultasiByTipeKonsultasi(1);
     }
     public function balasJadwalDokterGigi(){
-        echo 'jadal dokter gigi';
+        echo $this->queryJadwalKonsultasiByTipeKonsultasi(2);
     }
     public function balasJadwalDokterBidan(){
-        echo 'jadal bidan';
+        echo $this->queryJadwalKonsultasiByTipeKonsultasi(3);
     }
     public function balasJadwalDokterUsg(){
-        echo 'jadal usg';
+        echo $this->queryJadwalKonsultasiByTipeKonsultasi(4);
     }
     /**
      * undocumented function
      *
      * @return void
      */
-    private function queryJadwalKonsultasiByTipeKonsultasi($param)
+    public function queryJadwalKonsultasiByTipeKonsultasi($param)
     {
-        $query  = "SELECT *";
+        $query  = "SELECT ";
+        $query .= "har.hari, ";
+        $query .= "TIME_FORMAT(jad.jam_mulai, '%H:%i') as jam_mulai, ";
+        $query .= "TIME_FORMAT(jad.jam_akhir, '%H:%i') as jam_akhir, ";
+        $query .= "tip.tipe_konsultasi, ";
+        $query .= "sta.nama ";
         $query .= "FROM jadwal_konsultasis as jad ";
         $query .= "JOIN stafs as sta on sta.id = jad.staf_id ";
+        $query .= "JOIN tipe_konsultasis as tip on tip.id = jad.tipe_konsultasi_id ";
         $query .= "JOIN haris as har on har.id = jad.hari_id ";
-        $query .= "WHERE sta.titel_id = {$param} ";
-        dd( DB::select($query) );
+        $query .= "WHERE jad.tipe_konsultasi_id = {$param} ";
+        $query .= "ORDER BY hari_id asc, jam_mulai asc";
+
+        $query = DB::select($query);
+        if (count($query)) {
+            $result = [];
+
+            foreach ($query as $q) {
+                $result[$q->hari][] = [
+                    'nama' => $q->nama,
+                    'jam_mulai' => $q->jam_mulai,
+                    'jam_akhir' => $q->jam_akhir,
+                ];
+            }
+
+            $message = '';
+            foreach ($result as $k => $r) {
+                $message .= ucwords($k) . ': ';
+                $message .= PHP_EOL;
+                foreach ($r as $i => $d) {
+                    $nomor = $i + 1;
+                    $message .= $nomor . '. ' . ucwords($d['nama']) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
+                    $message .= PHP_EOL;
+                }
+                $message .= PHP_EOL;
+            }
+        } else {
+            $message = 'Fitur ini dalam pengembangan';
+
+        }
+        return $message;
     }
     /**
      * undocumented function
      *
      * @return void
      */
-    private function pertanyaanTipeKonsultasi()
-    {
-            $message = 'Bisa dibantu infokan Jadwal Konsultasi yang ingin diketahui?';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '1. Jadwal Dokter Umum';
-            $message .= PHP_EOL;
-            $message .= '2. Jadwal Dokter Gigi';
-            $message .= PHP_EOL;
-            $message .= '3. Bidan';
-            $message .= PHP_EOL;
-            $message .= '4. Jadwal USG kebidanan';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Balas dengan angka *1,2,3 atau 4* sesuai informasi di atas';
-            return $message;
+    private function pertanyaanTipeKonsultasi(){
+        $message = 'Bisa dibantu infokan Jadwal Konsultasi yang ingin diketahui?';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '1. Dokter Umum';
+        $message .= PHP_EOL;
+        $message .= '2. Dokter Gigi';
+        $message .= PHP_EOL;
+        $message .= '3. Bidan';
+        $message .= PHP_EOL;
+        $message .= '4. USG Kehamilan';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Balas dengan angka *1,2,3 atau 4* sesuai informasi di atas';
+        return $message;
     }
     
     
