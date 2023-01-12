@@ -2094,7 +2094,10 @@ class WablasController extends Controller
      */
     private function tambahkanGelar($titel,$nama)
     {
-        if (!str_contains( strtolower($nama), 'dr' )) {
+        if (
+            !str_contains( strtolower($nama), 'dr.' ) &&
+            !str_contains( strtolower($nama), 'dr ' )
+        ) {
             return $titel.'. ' . $nama;
         } else {
             return $nama;
