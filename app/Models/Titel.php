@@ -5,10 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Staf extends Model
+class Titel extends Model
 {
     use HasFactory;
-    public function titel(){
-        return $this->belongsTo(Titel::class);
-    }
 }
