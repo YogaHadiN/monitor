@@ -2115,6 +2115,8 @@ class WablasController extends Controller
         }
     }
     public function lastStaf(){
+        $hari_ini = date('Y-m-d');
+        $kemarin = date('Y-m-d',strtotime("-1 days"));
         $query  = "SELECT ";
         $query .= "sta.nama as nama, ";
         $query .= "ttl.singkatan as titel ";
@@ -2122,6 +2124,8 @@ class WablasController extends Controller
         $query .= "JOIN stafs as sta on sta.id = prx.staf_id ";
         $query .= "JOIN titels as ttl on ttl.id = sta.titel_id ";
         $query .= "ORDER BY prx.id desc ";
+        $query .= "WHERE prx.tanggal = '{$hari_ini}' ";
+        $query .= "or prx.tanggal = '{$kemarin}' ";
         $query .= "LIMIT 1";
         return DB::select($query)[0];
     }
