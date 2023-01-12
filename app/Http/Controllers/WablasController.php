@@ -2061,7 +2061,7 @@ class WablasController extends Controller
                 }
             }
             if ( $param == 1 ) {
-                $staf = Periksa::with('staf.titeldokter_terakhir')->where('poli_id', 13)->latest()->first()->staf;
+                $staf = Periksa::with('staf.titel')->where('poli_id', 13)->latest()->first()->staf;
                 Log::info($dokter_terakhir);
                 $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel->singkatan, ucwords( strtolower($staf->nama) ) );
                 $message .= PHP_EOL;
