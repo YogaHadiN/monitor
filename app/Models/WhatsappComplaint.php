@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class WhatsappComplaint extends Model
 {
     use HasFactory;
+    protected $guarded = [];
     public function antrian(){
         return $this->belongsTo(Antrian::class);
     }
