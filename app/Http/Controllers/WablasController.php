@@ -1946,7 +1946,7 @@ class WablasController extends Controller
         return !Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->whereRaw("antriable_type not like 'App\\\Models\\\Periksa' ")
-            ->exists() 
+            ->exists() ;
         /* && $this->no_telp = '6281381912803'; */
     }
     public function whatsappMainMenuExists(){
