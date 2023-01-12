@@ -10,7 +10,6 @@ use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
 use App\Models\WhatsappSatisfactionSurvey;
 use App\Models\WhatsappRecoveryIndex;
-use App\Models\WhatsappJadwalKonsultasiInquiry;
 use App\Models\KuesionerMenungguObat;
 use App\Models\WhatsappMainMenu;
 use App\Models\WhatsappJadwalKonsultasiInquiry;
