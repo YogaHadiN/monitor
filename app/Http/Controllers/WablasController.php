@@ -1991,7 +1991,7 @@ class WablasController extends Controller
         $message = '';
         if ( $this->message == 1 ) {
             WhatsappJadwalKonsultasiInquiry::create([
-                'no_telp' => $this->no_telp;
+                'no_telp' => $this->no_telp
             ]);
             $message .= '1. Jadwal Dokter Umum';
             $message .= PHP_EOL;
