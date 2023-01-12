@@ -2048,6 +2048,9 @@ class WablasController extends Controller
 
             $message = '';
             foreach ($result as $k => $r) {
+                if ( strtolower( $k ) != 'senin' ) {
+                    $message .= PHP_EOL;
+                }
                 $message .= ucwords($k) . ': ';
                 $message .= PHP_EOL;
                 foreach ($r as $i => $d) {
