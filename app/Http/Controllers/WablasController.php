@@ -2027,7 +2027,7 @@ class WablasController extends Controller
         $query .= "sta.nama ";
         $query .= "FROM jadwal_konsultasis as jad ";
         $query .= "JOIN stafs as sta on sta.id = jad.staf_id ";
-        $query .= "JOIN titles as ttl on ttl.id = sta.titel_id ";
+        $query .= "JOIN titels as ttl on ttl.id = sta.titel_id ";
         $query .= "JOIN tipe_konsultasis as tip on tip.id = jad.tipe_konsultasi_id ";
         $query .= "JOIN haris as har on har.id = jad.hari_id ";
         $query .= "WHERE jad.tipe_konsultasi_id = {$param} ";
