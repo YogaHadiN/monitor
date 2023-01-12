@@ -41,7 +41,7 @@ class testCommand extends Command
     public function handle()
     {
         $wa = new WablasController;
-        dd( $wa->queryJadwalKonsultasiByTipeKonsultasi(2) );
+        dd( $wa->lastStaf() );
     }
 
     /**

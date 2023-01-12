@@ -2063,9 +2063,9 @@ class WablasController extends Controller
                 }
             }
             if ( $param == 1 ) {
-                $staf = Periksa::with('staf.titel')->where('poli_id', 13)->latest()->first()->staf;
+                $staf = $this->lastStaf();
                 $message .= PHP_EOL;
-                $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel->singkatan, ucwords( strtolower($staf->nama) ) );
+                $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel, ucwords( strtolower($staf->nama) ) );
                 $message .= PHP_EOL;
                 $message .= 'untuk memastikan silahkan hubungi 021-5977529';
                 $message .= PHP_EOL;
@@ -2114,6 +2114,18 @@ class WablasController extends Controller
             return $nama;
         }
     }
+    public function lastStaf(){
+        $query  = "SELECT ";
+        $query .= "sta.nama as nama, ";
+        $query .= "ttl.singkatan as titel ";
+        $query .= "FROM periksas as prx ";
+        $query .= "JOIN stafs as sta on sta.id = prx.staf_id ";
+        $query .= "JOIN titels as ttl on ttl.id = sta.titel_id ";
+        $query .= "ORDER BY prx.id desc ";
+        $query .= "LIMIT 1";
+        return DB::select($query)[0];
+    }
+    
     
     
     
