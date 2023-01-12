@@ -2020,12 +2020,14 @@ class WablasController extends Controller
     {
         $query  = "SELECT ";
         $query .= "har.hari, ";
+        $query .= "ttl.singkatan as titel, ";
         $query .= "TIME_FORMAT(jad.jam_mulai, '%H:%i') as jam_mulai, ";
         $query .= "TIME_FORMAT(jad.jam_akhir, '%H:%i') as jam_akhir, ";
         $query .= "tip.tipe_konsultasi, ";
         $query .= "sta.nama ";
         $query .= "FROM jadwal_konsultasis as jad ";
         $query .= "JOIN stafs as sta on sta.id = jad.staf_id ";
+        $query .= "JOIN titles as ttl on ttl.id = sta.titel_id ";
         $query .= "JOIN tipe_konsultasis as tip on tip.id = jad.tipe_konsultasi_id ";
         $query .= "JOIN haris as har on har.id = jad.hari_id ";
         $query .= "WHERE jad.tipe_konsultasi_id = {$param} ";
@@ -2038,6 +2040,7 @@ class WablasController extends Controller
             foreach ($query as $q) {
                 $result[$q->hari][] = [
                     'nama' => $q->nama,
+                    'titel' => $q->titel,
                     'jam_mulai' => $q->jam_mulai,
                     'jam_akhir' => $q->jam_akhir,
                 ];
@@ -2049,7 +2052,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 foreach ($r as $i => $d) {
                     $nomor = $i + 1;
-                    $message .= $nomor . '. ' . $this->tambahkanGelar(ucwords($d['nama'])) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
+                    $message .= $nomor . '. ' . $this->tambahkanGelar($d['titel'],ucwords($d['nama'])) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
                     $message .= PHP_EOL;
                 }
                 $message .= PHP_EOL;
@@ -2086,10 +2089,10 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tambahkanGelar($nama)
+    private function tambahkanGelar($titel,$nama)
     {
         if (!str_contains( strtolower($nama), 'dr' )) {
-            return 'dr. ' . $nama;
+            return $titel.'. ' . $nama;
         } else {
             return $nama;
         }
