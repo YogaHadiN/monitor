@@ -142,6 +142,7 @@ class WablasController extends Controller
             } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
                 return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
             } else if ( $this->pasienTidakDalamAntrian() ) {
+
                 Log::info(1943);
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
@@ -1973,11 +1974,11 @@ class WablasController extends Controller
                 ->delete();
             if ( $this->message == '1' ) {
                 $this->balasJadwalDokterUmum();
-            } else if ( $this->message == '2' )
+            } else if ( $this->message == '2' ){
                 $this->balasJadwalDokterGigi();
-            } else if ( $this->message == '3' )
+            } else if ( $this->message == '3' ){
                 $this->balasJadwalDokterBidan();
-            } else if ( $this->message == '4' )
+            } else if ( $this->message == '4' ){
                 $this->balasJadwalDokterUsg();
             }
         } else {
