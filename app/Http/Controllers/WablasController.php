@@ -2046,7 +2046,7 @@ class WablasController extends Controller
                 ];
             }
 
-            $message = '';
+            $message = '*Jadwal ' . ucwords(strtolower($result[0]->tipe_konsultasi)) . '*';
             foreach ($result as $k => $r) {
                 if ( strtolower( $k ) != 'senin' ) {
                     $message .= PHP_EOL;
