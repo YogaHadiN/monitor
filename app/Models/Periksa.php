@@ -16,5 +16,8 @@ class Periksa extends Model
     public function pasien(){
         return $this->belongsTo(Pasien::class);
     }
+    public function staf(){
+        return $this->belongsTo(Staf::class);
+    }
 }
 
