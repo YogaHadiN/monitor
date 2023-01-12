@@ -1984,6 +1984,9 @@ class WablasController extends Controller
         } else {
             $message = 'Balasan yang anda masukkan tidak dikenali';
             $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= $this->pertanyaanTipeKonsultasi();
+            echo $message;
         }
     }
 
@@ -1993,28 +1996,20 @@ class WablasController extends Controller
             WhatsappJadwalKonsultasiInquiry::create([
                 'no_telp' => $this->no_telp
             ]);
-            $message .= '1. Jadwal Dokter Umum';
-            $message .= PHP_EOL;
-            $message .= '2. Jadwal Dokter Gigi';
-            $message .= PHP_EOL;
-            $message .= '3. Bidan';
-            $message .= PHP_EOL;
-            $message .= '4. Jadwal USG';
-            $message .= PHP_EOL;
-            echo $message;
+            echo $this->pertanyaanTipeKonsultasi();
         }
     }
     public function balasJadwalDokterUmum(){
-        return $this->queryJadwalKonsultasiByTipeKonsultasi(2);
+        echo 'jadal dokter';
     }
     public function balasJadwalDokterGigi(){
-
+        echo 'jadal dokter gigi';
     }
     public function balasJadwalDokterBidan(){
-
+        echo 'jadal bidan';
     }
     public function balasJadwalDokterUsg(){
-
+        echo 'jadal usg';
     }
     /**
      * undocumented function
@@ -2030,5 +2025,28 @@ class WablasController extends Controller
         $query .= "WHERE sta.titel_id = {$param} ";
         dd( DB::select($query) );
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function pertanyaanTipeKonsultasi()
+    {
+            $message = 'Bisa dibantu infokan Jadwal Konsultasi yang ingin diketahui?';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= '1. Jadwal Dokter Umum';
+            $message .= PHP_EOL;
+            $message .= '2. Jadwal Dokter Gigi';
+            $message .= PHP_EOL;
+            $message .= '3. Bidan';
+            $message .= PHP_EOL;
+            $message .= '4. Jadwal USG kebidanan';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= 'Balas dengan angka *1,2,3 atau 4* sesuai informasi di atas';
+            return $message;
+    }
+    
     
 }
