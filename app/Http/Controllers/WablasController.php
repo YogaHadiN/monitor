@@ -131,18 +131,21 @@ class WablasController extends Controller
             } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
                 return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->whatsapp_main_menu  )) {
+                Log::info(134);
                 return $this->registerWhatsappMainMenu(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
+                Log::info(137);
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
             } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
+                Log::info(140);
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
+                Log::info(143);
                 return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
             } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
+                Log::info(146);
                 return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
             } else if ( $this->pasienTidakDalamAntrian() ) {
-
-                Log::info(1943);
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
@@ -1150,7 +1153,6 @@ class WablasController extends Controller
         WhatsappMainMenu::create([
             'no_telp' => $this->no_telp
         ]);
-
         echo $message;
     }
     /**
