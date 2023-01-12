@@ -2049,7 +2049,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 foreach ($r as $i => $d) {
                     $nomor = $i + 1;
-                    $message .= $nomor . '. ' . ucwords($d['nama']) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
+                    $message .= $nomor . '. ' . $this->tambahkanGelar(ucwords($d['nama'])) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
                     $message .= PHP_EOL;
                 }
                 $message .= PHP_EOL;
@@ -2081,6 +2081,20 @@ class WablasController extends Controller
         $message .= 'Balas dengan angka *1,2,3 atau 4* sesuai informasi di atas';
         return $message;
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function tambahkanGelar($nama)
+    {
+        if (!str_contains( strtolower($nama), 'dr' )) {
+            return 'dr. ' . $nama;
+        } else {
+            return $nama;
+        }
+    }
+    
     
     
 }
