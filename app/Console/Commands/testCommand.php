@@ -50,7 +50,6 @@ class testCommand extends Command
         \App\Models\FailedTherapy::where('no_telp', $no_telp)->delete();
         \App\Models\KuesionerMenungguObat::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappJadwalDokterInquiry::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
     }
 
