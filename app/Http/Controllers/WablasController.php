@@ -2130,6 +2130,7 @@ class WablasController extends Controller
         $query .= "WHERE prx.tanggal = '{$hari_ini}' ";
         $query .= "or prx.tanggal = '{$kemarin}' ";
         $query .= "and prx.tenant_id = 1 ";
+        $query .= "and sta.tenant_id = 1 ";
         $query .= "ORDER BY prx.id desc ";
         $query .= "LIMIT 1";
         return DB::select($query)[0];
