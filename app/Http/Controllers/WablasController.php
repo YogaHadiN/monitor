@@ -2129,8 +2129,8 @@ class WablasController extends Controller
         $query .= "FROM periksas as prx ";
         $query .= "JOIN stafs as sta on sta.id = prx.staf_id ";
         $query .= "JOIN titels as ttl on ttl.id = sta.titel_id ";
-        $query .= "WHERE prx.tanggal = '{$hari_ini}' ";
-        $query .= "or prx.tanggal = '{$kemarin}' ";
+        $query .= "WHERE (prx.tanggal = '{$hari_ini}' ";
+        $query .= "or prx.tanggal = '{$kemarin}') ";
         $query .= "and prx.tenant_id = 1 ";
         $query .= "and sta.tenant_id = 1 ";
         $query .= "ORDER BY prx.id desc ";
