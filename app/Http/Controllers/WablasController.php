@@ -2059,7 +2059,9 @@ class WablasController extends Controller
                         $nomor    = $i + 1;
                         $message .= $nomor . '. ';
                     }
-                    $message .=  $this->tambahkanGelar($d['titel'],ucwords($d['nama'])) . ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
+                    $message .=  $this->tambahkanGelar($d['titel'],ucwords($d['nama']));
+                    $message .= PHP_EOL;
+                    $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
                     $message .= PHP_EOL;
                 }
             }
