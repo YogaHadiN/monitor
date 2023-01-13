@@ -2067,6 +2067,7 @@ class WablasController extends Controller
             }
             if ( $param == 1 ) {
                 $staf = $this->lastStaf();
+                Log::info('staf',$staf);
                 $message .= PHP_EOL;
                 $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel, ucwords( strtolower($staf->nama) ) );
                 $message .= PHP_EOL;
