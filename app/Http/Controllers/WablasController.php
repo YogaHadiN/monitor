@@ -2236,7 +2236,8 @@ class WablasController extends Controller
                             ->whereNull('jumlah')
                             ->first();
     }
-    public function ($cek){
+
+    public function pesanCekListHarianBerikutnya($cek){
         return "Silahkan mulai cek " . $cek->cekList->cek_list . " di ruangan " . $cek->ruangan->ruangan;
     }
 }
