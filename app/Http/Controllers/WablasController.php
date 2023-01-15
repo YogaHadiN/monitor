@@ -149,6 +149,7 @@ class WablasController extends Controller
                 Log::info(140);
                 return $this->prosesCekListHarian(); // proses cek list harian
             } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
+                Log::info(153);
                 return $this->prosesCekListHarianInput(); // proses cek list harian
             } else if ( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
@@ -2201,6 +2202,7 @@ class WablasController extends Controller
         }
     }
     public function prosesCekListHarianInput(){
+        Log::info(2205);
         $cek                 = $this->cekListBelumDilakukan();
         $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
         if ( 
