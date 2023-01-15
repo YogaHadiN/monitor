@@ -86,6 +86,26 @@ class WablasController extends Controller
 
         if ( $this->no_telp == '6281381912803' ) {
             Log::info('oke');
+            $message = Input::get("message");
+            $phone = Input::get("phone");
+            $messageType = Input::get("messageType");
+            $file = Input::get("file");
+            $mimeType = Input::get("mimeType");
+            $deviceId = Input::get("deviceId");
+            $sender = Input::get("sender");
+            $timestamp = Input::get("timestamp");
+            Log::info(
+                [
+                    $message,
+                    $phone,
+                    $messageType,
+                    $file,
+                    $mimeType,
+                    $deviceId,
+                    $sender,
+                    $timestamp,
+                ]
+            );
         } else {
             $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
