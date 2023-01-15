@@ -91,6 +91,7 @@ class WablasController extends Controller
             /* $phone = Input::get("phone"); */
             /* $messageType = Input::get("messageType"); */
             $file = Input::get("file");
+            $file = Input::get("url");
             $mimeType = Input::get("mimeType");
             /* $deviceId = Input::get("deviceId"); */
             /* $sender = Input::get("sender"); */
