@@ -11,4 +11,7 @@ class CekListRuangan extends Model
     public function cekList(){
         return $this->belongsTo(CekList::class);
     }
+    public function ruangan(){
+        return $this->belongsTo(Ruangan::class);
+    }
 }
