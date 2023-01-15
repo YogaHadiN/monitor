@@ -2234,7 +2234,7 @@ class WablasController extends Controller
                             ->where('created_at', 'like', date('Y-m-d') . '%')
                             ->whereNull('image')
                             ->whereNull('jumlah')
-                            ->first()
+                            ->first();
     }
     public function ($cek){
         return "Silahkan mulai cek " . $cek->cekList->cek_list . " di ruangan " . $cek->ruangan->ruangan;
