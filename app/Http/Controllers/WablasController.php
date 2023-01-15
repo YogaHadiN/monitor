@@ -84,6 +84,8 @@ class WablasController extends Controller
 	public function webhook(){
         header('Content-Type: application/json');
 
+        Log::info('messageType');
+        Log::info($messageType);
         if ( $this->no_telp == '6281381912803' ) {
             Log::info('oke');
             $message = Input::get("message");
