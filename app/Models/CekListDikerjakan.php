@@ -7,5 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CekListDikerjakan extends Model
 {
+
     use HasFactory;
+    protected $guarded = [];
 }
