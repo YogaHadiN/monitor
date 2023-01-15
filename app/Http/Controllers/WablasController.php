@@ -108,6 +108,7 @@ class WablasController extends Controller
                     /* $timestamp, */
                 ]
             );
+            $this->uploadImage();
         } else {
             $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
@@ -945,7 +946,7 @@ class WablasController extends Controller
         $contents = file_get_contents($url);
         $name     = substr($url, strrpos($url, '/') + 1);
         $destination_path = 'image/whatsapp/';
-        $name = $destination_path . $name
+        $name = $destination_path . $name;
 
         Log::info("nama file yang akan disimpan");
         Log::info($name);
