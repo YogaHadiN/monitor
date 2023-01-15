@@ -143,14 +143,14 @@ class WablasController extends Controller
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
                 return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
-            } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
-                return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
             } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
                 Log::info(140);
                 return $this->prosesCekListHarian(); // proses cek list harian
             } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
                 Log::info(153);
                 return $this->prosesCekListHarianInput(); // proses cek list harian
+            } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
+                return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
             } else if ( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
             }

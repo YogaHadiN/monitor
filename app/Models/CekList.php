@@ -5,10 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CekListRuangan extends Model
+class CekList extends Model
 {
     use HasFactory;
-    public function cekList(){
-        return $this->belongsTo(CekList::class);
-    }
 }
