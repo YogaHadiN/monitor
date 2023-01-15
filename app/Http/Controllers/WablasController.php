@@ -85,6 +85,7 @@ class WablasController extends Controller
         header('Content-Type: application/json');
 
         Log::info('messageType');
+        $messageType = Input::get("messageType");
         Log::info($messageType);
         if ( $this->no_telp == '6281381912803' ) {
             Log::info('oke');
