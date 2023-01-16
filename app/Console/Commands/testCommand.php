@@ -48,7 +48,7 @@ class testCommand extends Command
             ->whereRaw('whatsapp_bot_service_id = 1 or whatsapp_bot_service_id = 2')
             ->where('created_at', 'like', date('Y-m-d'). '%')
             ->first();
-        dd( $whatsapp_bot );
+        /* dd( $whatsapp_bot ); */
         /* $this->refreshCekHarian(); */
     }
     /**
