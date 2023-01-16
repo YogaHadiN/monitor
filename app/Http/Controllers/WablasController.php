@@ -2183,17 +2183,27 @@ class WablasController extends Controller
         Log::info(2205);
         $cek                 = $this->cekListBelumDilakukan();
         $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+        $whatsapp_bot = WhatsappBot::with('staf')
+            ->where('no_telp', $this->no_telp)
+            ->where('created_at', date('Y-m-d'))
+            ->first();
         if ( 
-            is_null(  $cek_list_dikerjakan  )
+            is_null(  $cek_list_dikerjakan  ) &&
+            !is_null( $whatsapp_bot )
         ) {
+
             CekListDikerjakan::create([
-                'jumlah' => $this->message
+                'jumlah'              => $this->message,
+                'staf_id'             => $whatsapp_bot->staf_id,
+                'tenant_id'           => $whatsapp_bot->staf->tenant_id,
+                'cek_list_ruangan_id' => $cek->id
             ]);
             $message = $this->masukkanGambar($cek);
         }
         if ( 
             !is_null(  $cek_list_dikerjakan  ) &&
-            is_null( $cek_list_dikerjakan->jumlah )
+            is_null( $cek_list_dikerjakan->jumlah ) &&
+            !is_null( $whatsapp_bot )
         ) {
             $cek_list_dikerjakan->jumlah = $this->message;
             $cek_list_dikerjakan->save();
