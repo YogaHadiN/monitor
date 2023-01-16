@@ -118,6 +118,10 @@ class WablasController extends Controller
 
         $this->tenant = Tenant::find(1);
 
+        if ( Input::get('messageType') == 'image' ) {
+            Log::info('oooooooo;;;;;kkkkkkkkkkk');
+        }
+
         if (
             !is_null( $this->no_telp ) &&
             !is_null( $this->message ) &&
