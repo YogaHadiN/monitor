@@ -907,6 +907,7 @@ class WablasController extends Controller
     
     private function uploadImage()
     {
+        Log::info(910);
         $url      = Input::get('url');
         $contents = file_get_contents($url);
         $name     = substr($url, strrpos($url, '/') + 1);
@@ -2190,6 +2191,7 @@ class WablasController extends Controller
             is_null( $cek_list_dikerjakan->image )
         ) {
             if ( Input::get('messageType') == 'image' ) {
+                Log::info(2193);
                 $cek_list_dikerjakan->image = $this->uploadImage;
                 $cek_list_dikerjakan->save();
             }
