@@ -42,7 +42,14 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $this->refreshCekHarian();
+
+        $whatsapp_bot = WhatsappBot::with('staf')
+            ->where('no_telp', '6281381912803')
+            ->where('whatsapp_bot_service_id = 1 or whatsapp_bot_service_id = 2')
+            ->where('created_at', 'like', date('Y-m-d'). '%')
+            ->first();
+        dd( $whatsapp_bot );
+        /* $this->refreshCekHarian(); */
     }
     /**
      * undocumented function
