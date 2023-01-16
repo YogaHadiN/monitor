@@ -51,8 +51,9 @@ class WablasController extends Controller
 	public function __construct()
 	{
 		if (
-		 !is_null(Input::get('phone')) &&
-		 !is_null(Input::get('message'))
+            !is_null(Input::get('phone')) &&
+            !Input::get('isFromMe') 
+		 /* !is_null(Input::get('message')) */
 		) {
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
@@ -130,7 +131,7 @@ class WablasController extends Controller
 
         if (
             !is_null( $this->no_telp ) &&
-            !is_null( $this->message ) &&
+            /* !is_null( $this->message ) && */
             !Input::get('isFromMe') 
         ) {
             if ( !is_null( $this->whatsapp_registration ) ) {
