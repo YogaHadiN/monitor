@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Http\Controllers\WablasController;
 use App\Models\WhatsappBpjsDentistRegistration;
 use App\Models\WhatsappMainMenu;
+use App\Models\CekListDikerjakan;
+use App\Models\WhatsappBot;
 
 class testCommand extends Command
 {
@@ -40,9 +42,19 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $wa = new WablasController;
-        dd( $wa->lastStaf() );
+        $this->refreshCekHarian();
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function refreshCekHarian()
+    {
+        CekListDikerjakan::truncate();
+        WhatsappBot::truncate();
+    }
+    
 
     /**
      * undocumented function
