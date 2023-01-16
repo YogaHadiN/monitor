@@ -120,7 +120,10 @@ class WablasController extends Controller
 
         if ( Input::get('messageType') == 'image' ) {
             Log::info('oooooooo;;;;;kkkkkkkkkkk');
-            Log::info( $this->no_telp );
+            Log::info('$this->no_telp');
+            Log::info($this->no_telp);
+            Log::info('Input::get("no_telp")');
+            Log::info(Input::get('no_telp'));
         }
 
         if (
