@@ -2192,7 +2192,7 @@ class WablasController extends Controller
         ) {
             if ( Input::get('messageType') == 'image' ) {
                 Log::info(2193);
-                $cek_list_dikerjakan->image = $this->uploadImage;
+                $cek_list_dikerjakan->image = $this->uploadImage();
                 $cek_list_dikerjakan->save();
             }
             $cek = $this->cekListBelumDilakukan();
