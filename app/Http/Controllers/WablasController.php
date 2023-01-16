@@ -2212,6 +2212,7 @@ class WablasController extends Controller
             !is_null(  $cek_list_dikerjakan  ) &&
             is_null( $cek_list_dikerjakan->image )
         ) {
+            Log::info(2215);
             if ( Input::get('messageType') == 'image' ) {
                 Log::info(2193);
                 $cek_list_dikerjakan->image = $this->uploadImage();
@@ -2219,6 +2220,7 @@ class WablasController extends Controller
             }
             $cek = $this->cekListBelumDilakukan();
             $message = $this->pesanCekListHarianBerikutnya( $cek );
+            Log::info(2223);
         }
         echo $message;
     }
