@@ -2205,14 +2205,22 @@ class WablasController extends Controller
             is_null(  $cek_list_dikerjakan  ) &&
             !is_null( $whatsapp_bot )
         ) {
-            Log::info(2198);
-            CekListDikerjakan::create([
-                'jumlah'              => $this->message,
-                'staf_id'             => $whatsapp_bot->staf_id,
-                'tenant_id'           => $whatsapp_bot->staf->tenant_id,
-                'cek_list_ruangan_id' => $cek->id
-            ]);
-            $message = $this->masukkanGambar($cek);
+            if ( is_numeric( $this->message ) ) {
+                Log::info(2198);
+                CekListDikerjakan::create([
+                    'jumlah'              => $this->message,
+                    'staf_id'             => $whatsapp_bot->staf_id,
+                    'tenant_id'           => $whatsapp_bot->staf->tenant_id,
+                    'cek_list_ruangan_id' => $cek->id
+                ]);
+                $message = $this->masukkanGambar($cek);
+            } else {
+                $message = 'Balasan anda tidak dikenali. Mohon masukkan angka';
+                $message = PHP_EOL;
+                $message = PHP_EOL;
+                $cek = $this->cekListBelumDilakukan();
+                $message = $this->pesanCekListHarianBerikutnya( $cek );
+            }
         }
         if ( 
             !is_null(  $cek_list_dikerjakan  ) &&
