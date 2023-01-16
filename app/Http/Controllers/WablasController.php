@@ -124,6 +124,8 @@ class WablasController extends Controller
             Log::info($this->no_telp);
             Log::info('Input::get("no_telp")');
             Log::info(Input::get('no_telp'));
+            Log::info('Input::all()');
+            Log::info(Input::all());
         }
 
         if (
