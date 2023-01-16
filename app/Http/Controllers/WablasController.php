@@ -934,23 +934,14 @@ class WablasController extends Controller
     
     private function uploadImage()
     {
-        Log::info("===================");
-        Log::info( Input::get('phone') );
-        Log::info( Input::get('messageType') );
-        Log::info( Input::get('file') );
-        Log::info( Input::get('url') );
-        Log::info( Input::get('message') );
-        Log::info("===================");
-
         $url      = Input::get('url');
         $contents = file_get_contents($url);
         $name     = substr($url, strrpos($url, '/') + 1);
         $destination_path = 'image/whatsapp/';
         $name = $destination_path . $name;
 
-        Log::info("nama file yang akan disimpan");
-        Log::info($name);
         \Storage::disk('s3')->put($name, $contents);
+        return $name;
     }
     /**
      * undocumented function
@@ -2225,8 +2216,10 @@ class WablasController extends Controller
             !is_null(  $cek_list_dikerjakan  ) &&
             is_null( $cek_list_dikerjakan->image )
         ) {
-            $cek_list_dikerjakan->image = $this->message;
-            $cek_list_dikerjakan->save();
+            if ( Input::get('messageType') == 'image' ) {
+                $cek_list_dikerjakan->image = $this->uploadImage;
+                $cek_list_dikerjakan->save();
+            }
             $cek = $this->cekListBelumDilakukan();
             $message = $this->pesanCekListHarianBerikutnya( $cek );
         }
