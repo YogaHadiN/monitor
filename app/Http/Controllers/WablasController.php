@@ -2184,82 +2184,87 @@ class WablasController extends Controller
         }
     }
     public function prosesCekListHarianInput(){
-        Log::info(2205);
-        $cek                 = $this->cekListBelumDilakukan();
-        $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
-        $whatsapp_bot = WhatsappBot::with('staf')
-            ->where('no_telp', $this->no_telp)
-            ->whereRaw('whatsapp_bot_service_id = 1 or whatsapp_bot_service_id = 2')
-            ->where('created_at', 'like', date('Y-m-d'). '%')
-            ->first();
-        Log::info(
-            is_null(  $cek_list_dikerjakan  ) &&
-            !is_null( $whatsapp_bot )
-        );
+        $cek = $this->cekListBelumDilakukan();
+        if (!is_null($cek)) {
+            
+            $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+            $whatsapp_bot = WhatsappBot::with('staf')
+                ->where('no_telp', $this->no_telp)
+                ->whereRaw('whatsapp_bot_service_id = 1 or whatsapp_bot_service_id = 2')
+                ->where('created_at', 'like', date('Y-m-d'). '%')
+                ->first();
+            Log::info(
+                is_null(  $cek_list_dikerjakan  ) &&
+                !is_null( $whatsapp_bot )
+            );
 
-        Log::info(' is_null(  $cek_list_dikerjakan  ) ');
-        Log::info( is_null(  $cek_list_dikerjakan  ) );
-        Log::info('  !is_null( $whatsapp_bot ) ');
-        Log::info( !is_null( $whatsapp_bot ) );
-        Log::info('  !is_null(  $cek_list_dikerjakan  ) ');
-        Log::info( !is_null(  $cek_list_dikerjakan  ) );
-        /* Log::info('  is_null( $cek_list_dikerjakan->jumlah ) '); */
-        /* Log::info( is_null( $cek_list_dikerjakan->jumlah ) ); */
-        Log::info('  !is_null( $whatsapp_bot ) ');
-        Log::info( !is_null( $whatsapp_bot ) );
-        Log::info('  !is_null(  $cek_list_dikerjakan  ) ');
-        Log::info( !is_null(  $cek_list_dikerjakan  ) );
-        Log::info('  !is_null( $whatsapp_bot ) ');
-        Log::info( !is_null( $whatsapp_bot ) );
-        /* Log::info('  is_null( $cek_list_dikerjakan->image ) '); */
-        /* Log::info( is_null( $cek_list_dikerjakan->image ) ); */
+            Log::info(' is_null(  $cek_list_dikerjakan  ) ');
+            Log::info( is_null(  $cek_list_dikerjakan  ) );
+            Log::info('  !is_null( $whatsapp_bot ) ');
+            Log::info( !is_null( $whatsapp_bot ) );
+            Log::info('  !is_null(  $cek_list_dikerjakan  ) ');
+            Log::info( !is_null(  $cek_list_dikerjakan  ) );
+            /* Log::info('  is_null( $cek_list_dikerjakan->jumlah ) '); */
+            /* Log::info( is_null( $cek_list_dikerjakan->jumlah ) ); */
+            Log::info('  !is_null( $whatsapp_bot ) ');
+            Log::info( !is_null( $whatsapp_bot ) );
+            Log::info('  !is_null(  $cek_list_dikerjakan  ) ');
+            Log::info( !is_null(  $cek_list_dikerjakan  ) );
+            Log::info('  !is_null( $whatsapp_bot ) ');
+            Log::info( !is_null( $whatsapp_bot ) );
+            /* Log::info('  is_null( $cek_list_dikerjakan->image ) '); */
+            /* Log::info( is_null( $cek_list_dikerjakan->image ) ); */
 
-        if ( 
-            is_null(  $cek_list_dikerjakan  ) &&
-            !is_null( $whatsapp_bot )
-        ) {
-            if ( is_numeric( $this->message ) ) {
-                Log::info(2198);
-                CekListDikerjakan::create([
-                    'jumlah'              => $this->message,
-                    'staf_id'             => $whatsapp_bot->staf_id,
-                    'tenant_id'           => $whatsapp_bot->staf->tenant_id,
-                    'cek_list_ruangan_id' => $cek->id
-                ]);
+            if ( 
+                is_null(  $cek_list_dikerjakan  ) &&
+                !is_null( $whatsapp_bot )
+            ) {
+                if ( is_numeric( $this->message ) ) {
+                    Log::info(2198);
+                    CekListDikerjakan::create([
+                        'jumlah'              => $this->message,
+                        'staf_id'             => $whatsapp_bot->staf_id,
+                        'tenant_id'           => $whatsapp_bot->staf->tenant_id,
+                        'cek_list_ruangan_id' => $cek->id
+                    ]);
+                    $message = $this->masukkanGambar($cek);
+                } else {
+                    $message = 'Balasan anda tidak dikenali. Mohon masukkan angka';
+                    $message = PHP_EOL;
+                    $message = PHP_EOL;
+                    $cek = $this->cekListBelumDilakukan();
+                    $message = $this->pesanCekListHarianBerikutnya( $cek );
+                }
+            }
+            if ( 
+                !is_null(  $cek_list_dikerjakan  ) &&
+                is_null( $cek_list_dikerjakan->jumlah ) &&
+                !is_null( $whatsapp_bot )
+            ) {
+                Log::info(2212);
+                $cek_list_dikerjakan->jumlah = $this->message;
+                $cek_list_dikerjakan->save();
                 $message = $this->masukkanGambar($cek);
-            } else {
-                $message = 'Balasan anda tidak dikenali. Mohon masukkan angka';
-                $message = PHP_EOL;
-                $message = PHP_EOL;
+            } else if ( 
+                !is_null(  $cek_list_dikerjakan  ) &&
+                !is_null( $whatsapp_bot ) &&
+                is_null( $cek_list_dikerjakan->image )
+            ) {
+                Log::info(2215);
+                if ( Input::get('messageType') == 'image' ) {
+                    Log::info(2252);
+                    $cek_list_dikerjakan->image = $this->uploadImage();
+                    $cek_list_dikerjakan->save();
+                    Log::info(2223);
+                }
                 $cek = $this->cekListBelumDilakukan();
                 $message = $this->pesanCekListHarianBerikutnya( $cek );
             }
+            echo $message;
+        } else {
+            WhatsappBot::whereIn("whatsapp_bot_service_id", [1,2])->where('no_telp', $this->no_telp)->delete();
+            echo "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
         }
-        if ( 
-            !is_null(  $cek_list_dikerjakan  ) &&
-            is_null( $cek_list_dikerjakan->jumlah ) &&
-            !is_null( $whatsapp_bot )
-        ) {
-            Log::info(2212);
-            $cek_list_dikerjakan->jumlah = $this->message;
-            $cek_list_dikerjakan->save();
-            $message = $this->masukkanGambar($cek);
-        } else if ( 
-            !is_null(  $cek_list_dikerjakan  ) &&
-            !is_null( $whatsapp_bot ) &&
-            is_null( $cek_list_dikerjakan->image )
-        ) {
-            Log::info(2215);
-            if ( Input::get('messageType') == 'image' ) {
-                Log::info(2252);
-                $cek_list_dikerjakan->image = $this->uploadImage();
-                $cek_list_dikerjakan->save();
-                Log::info(2223);
-            }
-            $cek = $this->cekListBelumDilakukan();
-            $message = $this->pesanCekListHarianBerikutnya( $cek );
-        }
-        echo $message;
     }
     public function cekListDikerjakanUntukCekListRuanganIni( $cek_list_ruangan_id ){
         return CekListDikerjakan::where('cek_list_ruangan_id',  $cek_list_ruangan_id )
