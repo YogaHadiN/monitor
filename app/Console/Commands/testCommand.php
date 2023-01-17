@@ -59,9 +59,10 @@ class testCommand extends Command
     private function refreshCekHarian()
     {
         /* CekListDikerjakan::truncate(); */
-        /* WhatsappBot::truncate(); */
+        WhatsappBot::truncate();
+
         WhatsappBot::create([
-            'whatsapp_bot_service_id' => 2,
+            'whatsapp_bot_service_id' => 1,
             'staf_id'                 => 11,
             'no_telp'                 => '6281381912803'
         ]);
