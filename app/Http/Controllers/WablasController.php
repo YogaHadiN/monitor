@@ -2268,7 +2268,7 @@ class WablasController extends Controller
     }
 
     public function pesanCekListHarianBerikutnya($cek){
-        $message = "Silahkan cek " . $cek->cekList->cek_list . " di ruangan " . $cek->ruangan->nama;
+        $message = "Silahkan cek ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= $cek->cekList->cek_list;
