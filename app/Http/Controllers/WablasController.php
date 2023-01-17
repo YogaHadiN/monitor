@@ -2132,6 +2132,7 @@ class WablasController extends Controller
                 }
             }
         }
+        return null;
     }
     public function prosesCekListHarianInput(){
         $cek = $this->cekListBelumDilakukan();
