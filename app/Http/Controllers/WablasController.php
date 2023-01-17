@@ -2271,26 +2271,26 @@ class WablasController extends Controller
         $message = "Silahkan cek ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= $cek->cekList->cek_list;
+        $message .= '*'.$cek->cekList->cek_list . '*';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Di ruangan ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= $cek->ruangan->nama;
+        $message .= "*" . $cek->ruangan->nama . '*';
         return $message;
     }
     public function masukkanGambar($cek){
         $message = "Mohon masukkan gambar  ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= $cek->cekList->cek_list;
+        $message .= '*'.$cek->cekList->cek_list . '*';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Di ruangan ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= $cek->ruangan->nama;
+        $message .= "*" . $cek->ruangan->nama . '*';
         return $message;
     }
     
