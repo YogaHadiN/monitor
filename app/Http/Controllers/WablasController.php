@@ -2218,7 +2218,8 @@ class WablasController extends Controller
                 }
                 Log::info(2216);
                 $cek = $this->cekListBelumDilakukan();
-                $message = $this->pesanCekListHarianBerikutnya( $cek );
+                $message = 'Mohon masukkan hanya gambar';
+                $message .= $this->pesanCekListHarianBerikutnya( $cek );
             }
             echo $message;
         } else {
