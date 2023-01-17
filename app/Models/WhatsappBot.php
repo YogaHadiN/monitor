@@ -12,4 +12,10 @@ class WhatsappBot extends Model
     public function staf(){
         return $this->belongsTo(Staf::class);
     }
+    public static function boot(){
+        parent::boot();
+        self::creating(function($model){
+            resetWhatsappRegistration( $model->no_telp );
+        });
+    }
 }
