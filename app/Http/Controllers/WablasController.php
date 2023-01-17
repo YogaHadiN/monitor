@@ -2190,7 +2190,6 @@ class WablasController extends Controller
             ->whereRaw('whatsapp_bot_service_id = 1 or whatsapp_bot_service_id = 2')
             ->where('created_at', 'like', date('Y-m-d'). '%')
             ->first();
-        Log::info(2193);
         Log::info(
             is_null(  $cek_list_dikerjakan  ) &&
             !is_null( $whatsapp_bot )
@@ -2250,10 +2249,10 @@ class WablasController extends Controller
         ) {
             Log::info(2215);
             if ( Input::get('messageType') == 'image' ) {
-                Log::info(2193);
+                Log::info(2252);
                 $cek_list_dikerjakan->image = $this->uploadImage();
                 $cek_list_dikerjakan->save();
-            Log::info(2223);
+                Log::info(2223);
             }
             $cek = $this->cekListBelumDilakukan();
             $message = $this->pesanCekListHarianBerikutnya( $cek );
