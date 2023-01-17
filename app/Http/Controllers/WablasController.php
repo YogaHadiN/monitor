@@ -2129,6 +2129,8 @@ class WablasController extends Controller
         }
         $cek_list_harians_dikerjakans = CekListDikerjakan::whereIn('cek_list_ruangan_id', $cek_list_ruangan_ids)
                                                         ->where('created_at', 'like', date('Y-m-d') . '%')
+                                                        ->whereNotNull('image')
+                                                        ->whereNotNull('jumlah')
                                                         ->groupBy('cek_list_ruangan_id')
                                                         ->get();
         if ( $cek_list_ruangan_harians->count() !== $cek_list_harians_dikerjakans->count()) {
