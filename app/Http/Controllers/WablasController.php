@@ -2268,12 +2268,30 @@ class WablasController extends Controller
     }
 
     public function pesanCekListHarianBerikutnya($cek){
-        Log::info($cek);
-        return "Silahkan mulai cek " . $cek->cekList->cek_list . " di ruangan " . $cek->ruangan->nama;
+        $message = "Silahkan cek " . $cek->cekList->cek_list . " di ruangan " . $cek->ruangan->nama;
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= $cek->cekList->cek_list;
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Di ruangan ";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= $cek->ruangan->nama;
+        return $message;
     }
     public function masukkanGambar($cek){
-        Log::info($cek);
-        return 'Mohon masukkan gambar ' . $cek->cekList->cek_list . ' di Ruangan ' . $cek->ruangan->nama;
+        $message = "Mohon masukkan gambar  ";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= $cek->cekList->cek_list;
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Di ruangan ";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= $cek->ruangan->nama;
+        return $message;
     }
     
 }
