@@ -2263,8 +2263,6 @@ class WablasController extends Controller
     public function cekListDikerjakanUntukCekListRuanganIni( $cek_list_ruangan_id ){
         return CekListDikerjakan::where('cek_list_ruangan_id',  $cek_list_ruangan_id )
                             ->where('created_at', 'like', date('Y-m-d') . '%')
-                            ->whereNull('image')
-                            ->whereNull('jumlah')
                             ->first();
     }
 
