@@ -2174,8 +2174,8 @@ class WablasController extends Controller
                 $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                 if ( 
                     is_null(  $cek_list_dikerjakan  ) ||
-                    is_null(  $cek_list_dikerjakan->jumlah  ) ||
-                    is_null(  $cek_list_dikerjakan->image  ) 
+                    ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->jumlah  ) ) ||
+                    ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->image  ) ) 
                 ) {
                     return $cek;
                     break;
@@ -2268,9 +2268,11 @@ class WablasController extends Controller
     }
 
     public function pesanCekListHarianBerikutnya($cek){
+        Log::info($cek);
         return "Silahkan mulai cek " . $cek->cekList->cek_list . " di ruangan " . $cek->ruangan->ruangan;
     }
     public function masukkanGambar($cek){
+        Log::info($cek);
         return 'Mohon masukkan gambar ' . $cek->cekList->cek_list . ' di Ruangan ' . $cek->ruangan->ruangan;
     }
     
