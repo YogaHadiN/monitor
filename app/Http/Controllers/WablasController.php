@@ -2199,16 +2199,16 @@ class WablasController extends Controller
         Log::info( is_null(  $cek_list_dikerjakan  ) );
         Log::info('  !is_null( $whatsapp_bot ) ');
         Log::info( !is_null( $whatsapp_bot ) );
-        Log::info('  !is_null(  $cek_list_dikerjakan  ) '));
-        Log::info( !is_null(  $cek_list_dikerjakan  ) ));
-        Log::info('  is_null( $cek_list_dikerjakan->jumlah ) '));
-        Log::info( is_null( $cek_list_dikerjakan->jumlah ) ));
+        Log::info('  !is_null(  $cek_list_dikerjakan  ) ');
+        Log::info( !is_null(  $cek_list_dikerjakan  ) );
+        Log::info('  is_null( $cek_list_dikerjakan->jumlah ) ');
+        Log::info( is_null( $cek_list_dikerjakan->jumlah ) );
         Log::info('  !is_null( $whatsapp_bot ) ');
         Log::info( !is_null( $whatsapp_bot ) );
-        Log::info('  !is_null(  $cek_list_dikerjakan  ) '));
-        Log::info( !is_null(  $cek_list_dikerjakan  ) ));
-        Log::info('  !is_null( $whatsapp_bot ) '));
-        Log::info( !is_null( $whatsapp_bot ) ));
+        Log::info('  !is_null(  $cek_list_dikerjakan  ) ');
+        Log::info( !is_null(  $cek_list_dikerjakan  ) );
+        Log::info('  !is_null( $whatsapp_bot ) ');
+        Log::info( !is_null( $whatsapp_bot ) );
         Log::info('  is_null( $cek_list_dikerjakan->image ) ');
         Log::info( is_null( $cek_list_dikerjakan->image ) );
         if ( 
