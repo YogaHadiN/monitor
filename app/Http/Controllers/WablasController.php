@@ -2219,7 +2219,6 @@ class WablasController extends Controller
                 Log::info(2216);
                 $cek = $this->cekListBelumDilakukan();
                 if ($cek) {
-                    $message = 'Mohon masukkan hanya gambar';
                     $message .= $this->pesanCekListHarianBerikutnya( $cek );
                 } else {
                     $message = "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
