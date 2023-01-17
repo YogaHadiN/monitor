@@ -2219,7 +2219,7 @@ class WablasController extends Controller
                 Log::info(2216);
                 $cek = $this->cekListBelumDilakukan();
                 if ($cek) {
-                    $message .= $this->pesanCekListHarianBerikutnya( $cek );
+                    $message = $this->pesanCekListHarianBerikutnya( $cek );
                 } else {
                     $message = "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
                 }
