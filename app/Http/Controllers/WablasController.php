@@ -2099,10 +2099,13 @@ class WablasController extends Controller
     }
 
     public function prosesCekListHarian(){
+        Log::info(2102);
         $cek = $this->cekListBelumDilakukan();
         if ($cek) {
+            Log::info(2105);
             $message = $this->pesanCekListHarianBerikutnya( $cek );
         } else {
+            Log::info(2108);
             WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id',1)->delete();
             $message = 'Cek List selesai';
         }
