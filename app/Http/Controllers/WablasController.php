@@ -2117,6 +2117,7 @@ class WablasController extends Controller
         return $cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
     }
     public function cekListBelumDilakukan(){
+        Log::info(2120);
         $cek_list_ruangan_harians = CekListRuangan::with('cekList', 'ruangan')
                                     ->where('frekuensi_cek_id', 1)
                                     ->orderBy('ruangan_id', 'asc')
@@ -2134,8 +2135,10 @@ class WablasController extends Controller
             WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id',1)->update([
                 'whatsapp_bot_service_id' => 2
             ]);
+            Log::info(2138);
             foreach ($cek_list_ruangan_harians as $cek) {
                 $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+                Log::info(2139);
                 if ( 
                     is_null(  $cek_list_dikerjakan  ) ||
                     ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->jumlah  ) ) ||
@@ -2146,6 +2149,7 @@ class WablasController extends Controller
                 }
             }
         }
+        Log::info(2152);
         return null;
     }
     public function prosesCekListHarianInput(){
