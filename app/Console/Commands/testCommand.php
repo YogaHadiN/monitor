@@ -58,7 +58,7 @@ class testCommand extends Command
      */
     private function refreshCekHarian()
     {
-        /* CekListDikerjakan::truncate(); */
+        CekListDikerjakan::truncate();
         WhatsappBot::truncate();
 
         WhatsappBot::create([
