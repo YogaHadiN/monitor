@@ -60,6 +60,12 @@ class testCommand extends Command
     {
         CekListDikerjakan::truncate();
         WhatsappBot::truncate();
+        WhatsappBot::create([
+            'whatsapp_bot_service_id' => 1,
+            'staf_id'                 => 11,
+            'no_telp'                 => '6281381912803'
+        ]);
+
     }
     
 
