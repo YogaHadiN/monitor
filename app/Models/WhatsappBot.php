@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class WhatsappBot extends Model
 {
     use HasFactory;
+    protected $guarded = [];
     public function staf(){
         return $this->belongsTo(Staf::class);
     }
