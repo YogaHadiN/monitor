@@ -2189,6 +2189,7 @@ class WablasController extends Controller
                     $message = 'Balasan anda tidak dikenali. Mohon masukkan angka';
                     $message = PHP_EOL;
                     $message = PHP_EOL;
+                    Log::info(219);
                     $cek = $this->cekListBelumDilakukan();
                     $message = $this->pesanCekListHarianBerikutnya( $cek );
                 }
@@ -2212,6 +2213,7 @@ class WablasController extends Controller
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
                 }
+                Log::info(2216);
                 $cek = $this->cekListBelumDilakukan();
                 $message = $this->pesanCekListHarianBerikutnya( $cek );
             }
