@@ -2140,6 +2140,9 @@ class WablasController extends Controller
             Log::info(2138);
             foreach ($cek_list_ruangan_harians as $cek) {
                 $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+                if ( $cek->id == 20 ) {
+                    Log::info($cek);
+                }
                 if ( 
                     is_null(  $cek_list_dikerjakan  ) ||
                     ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->jumlah  ) ) ||
