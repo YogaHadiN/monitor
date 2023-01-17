@@ -2136,8 +2136,10 @@ class WablasController extends Controller
     }
     public function prosesCekListHarianInput(){
         $cek = $this->cekListBelumDilakukan();
+        Log::info(2139);
         if (!is_null($cek)) {
             
+            Log::info(2142);
             $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
             $whatsapp_bot = WhatsappBot::with('staf')
                 ->where('no_telp', $this->no_telp)
@@ -2149,7 +2151,9 @@ class WablasController extends Controller
                 is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot )
             ) {
+                Log::info(2154);
                 if ( is_numeric( $this->message ) ) {
+                    Log::info(2156);
                     CekListDikerjakan::create([
                         'jumlah'              => $this->message,
                         'staf_id'             => $whatsapp_bot->staf_id,
@@ -2170,6 +2174,7 @@ class WablasController extends Controller
                 is_null( $cek_list_dikerjakan->jumlah ) &&
                 !is_null( $whatsapp_bot )
             ) {
+                Log::info(2177);
                 $cek_list_dikerjakan->jumlah = $this->message;
                 $cek_list_dikerjakan->save();
                 $message = $this->masukkanGambar($cek);
@@ -2178,6 +2183,7 @@ class WablasController extends Controller
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
             ) {
+                Log::info(2186);
                 if ( Input::get('messageType') == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
@@ -2187,6 +2193,7 @@ class WablasController extends Controller
             }
             echo $message;
         } else {
+            Log::info(2196);
             WhatsappBot::whereIn("whatsapp_bot_service_id", [1,2])->where('no_telp', $this->no_telp)->delete();
             echo "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
         }
