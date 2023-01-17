@@ -2173,7 +2173,9 @@ class WablasController extends Controller
             foreach ($cek_list_ruangan_harians as $cek) {
                 $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                 if ( 
-                    is_null(  $cek_list_dikerjakan  )
+                    is_null(  $cek_list_dikerjakan  ) ||
+                    is_null(  $cek_list_dikerjakan->jumlah  ) ||
+                    is_null(  $cek_list_dikerjakan->image  ) 
                 ) {
                     return $cek;
                     break;
