@@ -2221,7 +2221,7 @@ class WablasController extends Controller
                 if (
                     !is_null( $cek ) &&
                     !is_null( $cek_list_dikerjakan ) &&
-                    is_null( $cek_list_dikerjakan->jumlah ) &&
+                    is_null( $cek_list_dikerjakan->jumlah )
                 ) {
                     $message = $this->pesanCekListHarianBerikutnya( $cek );
                 }  else if (
