@@ -2217,20 +2217,26 @@ class WablasController extends Controller
                 }
                 Log::info(2216);
                 $cek = $this->cekListBelumDilakukan();
-                $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                 if (
                     !is_null( $cek ) &&
-                    !is_null( $cek_list_dikerjakan ) &&
-                    is_null( $cek_list_dikerjakan->jumlah )
                 ) {
+                    $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+                    if ( 
+                        !is_null($cek_list_dikerjakan)
+                    ) {
+                        if (  
+                            is_null($cek_list_dikerjakan->jumlah)
+                        ) {
+                            $message = $this->pesanCekListHarianBerikutnya( $cek );
+                        } else if (
+                            is_null($cek_list_dikerjakan->image)
+                        ) {
+                            $message = $this->masukkanGambar( $cek );
+                        }
+                    } else {
+                        $message = $this->pesanCekListHarianBerikutnya( $cek );
+                    }
                     $message = $this->pesanCekListHarianBerikutnya( $cek );
-                }  else if (
-                    !is_null( $cek ) &&
-                    !is_null( $cek_list_dikerjakan ) &&
-                    !is_null( $cek_list_dikerjakan->jumlah ) &&
-                    is_null( $cek_list_dikerjakan->image )
-                ){ 
-                    $message = $this->masukkanGambar($cek);
                 } else { 
                     $message = "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
                 }
