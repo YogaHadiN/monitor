@@ -2218,7 +2218,7 @@ class WablasController extends Controller
                 Log::info(2216);
                 $cek = $this->cekListBelumDilakukan();
                 if (
-                    !is_null( $cek ) &&
+                    !is_null( $cek )
                 ) {
                     $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                     if ( 
