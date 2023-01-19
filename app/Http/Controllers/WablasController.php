@@ -2178,7 +2178,6 @@ class WablasController extends Controller
                 is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot )
             ) {
-                Log::info(2154);
                 if ( is_numeric( $this->message ) ) {
                     Log::info(2156);
                     CekListDikerjakan::create([
@@ -2218,9 +2217,21 @@ class WablasController extends Controller
                 }
                 Log::info(2216);
                 $cek = $this->cekListBelumDilakukan();
-                if ($cek) {
+                $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+                if (
+                    !is_null( $cek ) &&
+                    !is_null( $cek_list_dikerjakan ) &&
+                    is_null( $cek_list_dikerjakan->jumlah ) &&
+                ) {
                     $message = $this->pesanCekListHarianBerikutnya( $cek );
-                } else {
+                }  else if (
+                    !is_null( $cek ) &&
+                    !is_null( $cek_list_dikerjakan ) &&
+                    !is_null( $cek_list_dikerjakan->jumlah ) &&
+                    is_null( $cek_list_dikerjakan->image )
+                ){ 
+                    $message = $this->masukkanGambar($cek);
+                } else { 
                     $message = "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
                 }
             }
