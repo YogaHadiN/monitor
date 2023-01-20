@@ -2157,7 +2157,6 @@ class WablasController extends Controller
                     ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->image  ) ) 
                 ) {
                     Log::info(2148);
-                    Log::info($cek);
                     return $cek;
                     break;
                 }
