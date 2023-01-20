@@ -149,7 +149,7 @@ class WablasController extends Controller
                 Log::info(153);
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
-                Log::info(156)
+                Log::info(156);
                 return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
             } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
                 Log::info(159);
