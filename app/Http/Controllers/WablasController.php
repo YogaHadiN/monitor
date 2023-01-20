@@ -2326,14 +2326,18 @@ class WablasController extends Controller
                     }
                     $message = $this->pesanCekListHarianBerikutnya( $cek );
                 } else { 
-                    $message = "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
+                    $message = $this->cekListSelesai();
                 }
             }
             echo $message;
         } else {
             Log::info(2196);
             WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->delete();
-            echo "Cek List Harian sudah selesai dikerjakan. Good Work!!!";
+            echo $this->cekListSelesai();
         }
     }
+    public function cekListSelesai(){
+        return "Cek List sudah selesai dikerjakan. Good Work!!!";
+    }
+    
 }
