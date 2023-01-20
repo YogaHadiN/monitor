@@ -122,7 +122,6 @@ class WablasController extends Controller
 
         if (
             !is_null( $this->no_telp ) &&
-            /* !is_null( $this->message ) && */
             !Input::get('isFromMe') 
         ) {
             if ( !is_null( $this->whatsapp_registration ) ) {
@@ -143,9 +142,6 @@ class WablasController extends Controller
             } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
                 Log::info(144);
                 return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
-            } else if (!is_null( $this->whatsapp_main_menu  )) {
-                Log::info(147);
-                return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                 Log::info(150);
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
@@ -153,8 +149,14 @@ class WablasController extends Controller
                 Log::info(153);
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
-                Log::info(156);
+                Log::info(156)
                 return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
+            } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
+                Log::info(159);
+                return $this->prosesCekListBulanan(); // proses cek list bulanan
+            } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
+                Log::info(162);
+                return $this->prosesCekListBulananInput(); // proses cek list bulanan
             } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
                 Log::info(159);
                 return $this->prosesCekListHarian(); // proses cek list harian
@@ -533,6 +535,8 @@ class WablasController extends Controller
              is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ) {
 			$text = 'Bisa dibantu menggunakan pembayaran apa? ';
+            $text .=  PHP_EOL;
+            $text .=  'Untuk nomor antrian *' . $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
 			$text = PHP_EOL;
 
             if ( $this->tenant->iphone_whatsapp_button_available ) {
@@ -589,9 +593,12 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
+            $message =  'Bisa dibantu *Nama Lengkap* pasien?';
+            $message .=  PHP_EOL;
+            $message .=  'Untuk nomor antrian *' . $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
             $payload[] = [
                 'category' => 'text',
-                'message' => 'Bisa dibantu *Nama Lengkap* pasien?'
+                'message' => $message
             ];
 			return $payload;
 		}
@@ -603,6 +610,8 @@ class WablasController extends Controller
         ) {
 			$text    = $this->tanyaTanggalLahirPasien();
             $message = $text;
+            $message .=  PHP_EOL;
+            $message .=  'Untuk nomor antrian *' . $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
             $payload[] = [
                 'category' => 'text',
                 'message'  => $message
@@ -972,7 +981,9 @@ class WablasController extends Controller
             $this->message == '1' ||
             $this->message == 'puas' ||
             $this->message == '2' ||
-            $this->message == '3'
+            $this->message == 'biasa' ||
+            $this->message == '3' ||
+            $this->message == 'tidak puas'
         ) {
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
             $no_telp = $this->whatsapp_satisfaction_survey->antrian->no_telp;
@@ -988,7 +999,10 @@ class WablasController extends Controller
                  $this->message == 'puas'
             ){
                 echo $this->kirimkanLinkGoogleReview();
-            } else if( $this->message == '3' ){
+            } else if(
+                 $this->message == '3' ||
+                 $this->message == 'tidak puas'
+            ){
 
                 $complaint             = new WhatsappComplaint;
                 $complaint->no_telp    = $this->whatsapp_satisfaction_survey->antrian->no_telp;
@@ -1001,7 +1015,10 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= "Bisa diinfokan kendala yang kakak alami?";
                 echo $message;
-            } else {
+            } else if (
+                 $this->message == '2' ||
+                 $this->message == 'biasa'
+            ) {
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 $message .= PHP_EOL;
                 $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
@@ -1027,15 +1044,21 @@ class WablasController extends Controller
         $this->message = $this->message[0];
         if (
             $this->message == '1' ||
+            $this->message == 'sudah sembuh' ||
             $this->message == '2' ||
-            $this->message == '3'
+            $this->message == 'membaik' ||
+            $this->message == '3' ||
+            $this->message == 'tidak ada perubahan'
         ) {
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
             $this->whatsapp_recovery_index->antrian->recovery_index_id = $recovery_index_ini; 
             $this->whatsapp_recovery_index->antrian->save();
             $nama = ucwords($this->whatsapp_recovery_index->antrian->antriable->pasien->nama);
 
-            if( $this->message == '3' ){
+            if(
+                 $this->message == '3' ||
+                 $this->message == 'tidak ada perubahan' 
+            ){
                 $fail             = new FailedTherapy;
                 $fail->no_telp    = $this->no_telp;
                 $fail->antrian_id = $this->whatsapp_recovery_index->antrian->id;
@@ -2100,7 +2123,7 @@ class WablasController extends Controller
 
     public function prosesCekListHarian(){
         Log::info(2102);
-        $cek = $this->cekListBelumDilakukan();
+        $cek = $this->cekListBelumDilakukan(1,1,2);
         if ($cek) {
             Log::info(2105);
             $message = $this->pesanCekListHarianBerikutnya( $cek );
@@ -2119,10 +2142,10 @@ class WablasController extends Controller
                                                         ->get();
         return $cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
     }
-    public function cekListBelumDilakukan(){
+    public function cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
         Log::info(2120);
         $cek_list_ruangan_harians = CekListRuangan::with('cekList', 'ruangan')
-                                    ->where('frekuensi_cek_id', 1)
+                                    ->where('frekuensi_cek_id', $frekuensi_cek_id)
                                     ->orderBy('ruangan_id', 'asc')
                                     ->orderBy('cek_list_id', 'asc')
                                     ->get();
@@ -2137,8 +2160,8 @@ class WablasController extends Controller
                                                         ->groupBy('cek_list_ruangan_id')
                                                         ->get();
         if ( $cek_list_ruangan_harians->count() !== $cek_list_harians_dikerjakans->count()) {
-            WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id',1)->update([
-                'whatsapp_bot_service_id' => 2
+            WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id', $whatsapp_bot_service_id)->update([
+                'whatsapp_bot_service_id' => $whatsapp_bot_service_id_input
             ]);
             Log::info(2138);
             foreach ($cek_list_ruangan_harians as $cek) {
@@ -2162,7 +2185,7 @@ class WablasController extends Controller
         return null;
     }
     public function prosesCekListHarianInput(){
-        $cek = $this->cekListBelumDilakukan();
+        $cek = $this->cekListBelumDilakukan(1,1,2);
         Log::info(2139);
         if (!is_null($cek)) {
             
@@ -2192,7 +2215,7 @@ class WablasController extends Controller
                     $message = PHP_EOL;
                     $message = PHP_EOL;
                     Log::info(219);
-                    $cek = $this->cekListBelumDilakukan();
+                    $cek = $this->cekListBelumDilakukan(1,1,2);
                     $message = $this->pesanCekListHarianBerikutnya( $cek );
                 }
             }
@@ -2216,7 +2239,7 @@ class WablasController extends Controller
                     $cek_list_dikerjakan->save();
                 }
                 Log::info(2216);
-                $cek = $this->cekListBelumDilakukan();
+                $cek = $this->cekListBelumDilakukan(1,1,2);
                 if (
                     !is_null( $cek )
                 ) {
@@ -2280,5 +2303,17 @@ class WablasController extends Controller
         $message .= "*" . $cek->ruangan->nama . '*';
         return $message;
     }
-    
+
+    public function cekListBulananExists(){
+        return WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id',5)->exists();
+    }
+    public function prosesCekListBulanan(){
+        
+    }
+    public function cekListBulananInputExists(){
+        
+    }
+    public function prosesCekListBulananInput(){
+        
+    }
 }
