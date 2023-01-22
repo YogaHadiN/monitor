@@ -2267,7 +2267,7 @@ class WablasController extends Controller
             Log::info('is_null(   $cek_list_dikerjakan   )');
             Log::info(is_null(  $cek_list_dikerjakan  ));
             Log::info('( $whatsapp_bot )');
-            Log::info($whatsapp_bot);
+            Log::info(is_null( $whatsapp_bot ) ? 'null' : 'ada');
             
             if ( 
                 is_null(  $cek_list_dikerjakan  ) &&
