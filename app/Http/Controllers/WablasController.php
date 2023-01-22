@@ -2331,7 +2331,6 @@ class WablasController extends Controller
                     } else {
                         echo $this->pesanCekListHarianBerikutnya( $cek );
                     }
-                    echo $this->pesanCekListHarianBerikutnya( $cek );
                 } else { 
                     echo $this->cekListSelesai();
                 }
