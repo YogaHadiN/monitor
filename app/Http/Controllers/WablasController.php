@@ -2332,16 +2332,16 @@ class WablasController extends Controller
                         echo $this->pesanCekListHarianBerikutnya( $cek );
                     }
                 } else { 
-                    echo $this->cekListSelesai();
+                    echo $this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input);
                 }
             }
         } else {
             Log::info(2196);
-            WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->delete();
-            echo $this->cekListSelesai();
+            echo $this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input);
         }
     }
-    public function cekListSelesai(){
+    public function cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input){
+        WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->delete();
         return "Cek List sudah selesai dikerjakan. Good Work!!!";
     }
     
