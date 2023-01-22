@@ -2261,7 +2261,6 @@ class WablasController extends Controller
             $whatsapp_bot = WhatsappBot::with('staf')
                 ->where('no_telp', $this->no_telp)
                 ->whereRaw('whatsapp_bot_service_id = ' . $whatsapp_bot_service_id. ' or whatsapp_bot_service_id = ' . $whatsapp_bot_service_id_input)
-                ->where('created_at', 'like', date('Y-m-d'). '%')
                 ->first();
 
             Log::info('is_null(   $cek_list_dikerjakan   )');
