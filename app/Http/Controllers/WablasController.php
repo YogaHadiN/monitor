@@ -172,7 +172,6 @@ class WablasController extends Controller
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
-
 	}
     /**
      * undocumented function
@@ -2265,6 +2264,8 @@ class WablasController extends Controller
                 ->where('created_at', 'like', date('Y-m-d'). '%')
                 ->first();
 
+            Log::info('is_null(   $cek_list_dikerjakan   )');
+            Log::info(is_null(  $cek_list_dikerjakan  ));
             if ( 
                 is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot )
