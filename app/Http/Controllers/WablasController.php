@@ -124,6 +124,7 @@ class WablasController extends Controller
             !is_null( $this->no_telp ) &&
             !Input::get('isFromMe') 
         ) {
+            Log::info(127);
             if ( !is_null( $this->whatsapp_registration ) ) {
                 Log::info(129);
                 return $this->proceedRegistering(); //register untuk pendaftaran pasien
