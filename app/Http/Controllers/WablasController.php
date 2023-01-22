@@ -2240,7 +2240,10 @@ class WablasController extends Controller
             $message = $this->pesanCekListHarianBerikutnya( $cek );
         } else {
             Log::info(2108);
-            WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id',$whatsapp_bot_service_id)->delete();
+            WhatsappBot::where('no_telp', $this->no_telp)->whereIn('whatsapp_bot_service_id',[
+                $whatsapp_bot_service_id,
+                $whatsapp_bot_service_id_input
+            ])->delete();
             $message = 'Cek List selesai';
         }
         echo $message;
