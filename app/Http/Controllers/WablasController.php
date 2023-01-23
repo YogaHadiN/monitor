@@ -2333,7 +2333,7 @@ class WablasController extends Controller
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->registrasi_pembayaran_id )
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
