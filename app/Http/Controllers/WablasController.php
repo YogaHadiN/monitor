@@ -2537,6 +2537,7 @@ class WablasController extends Controller
     }
 
     public function tanyaLanjutkanAtauUlangi($model){
+        Log::info(2540);
         $message = $this->uraianPengisian( $model );
         $message .= $this->lanjutAtauUlangi();
         return $message;
@@ -2573,6 +2574,7 @@ class WablasController extends Controller
             $response .= PHP_EOL;
             $response .= PHP_EOL;
         }
+        return $response;
     }
     public function lanjutAtauUlangi(){
         $text = PHP_EOL;
