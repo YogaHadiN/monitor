@@ -846,6 +846,7 @@ class WablasController extends Controller
     private function queryPreviouslySavedPatientRegistry()
     {
         $query  = "SELECT ";
+        $query .= "psn.alamat as alamat, ";
         $query .= "psn.nama as nama, ";
         $query .= "psn.nomor_asuransi_bpjs as nomor_asuransi_bpjs, ";
         $query .= "psn.tanggal_lahir as tanggal_lahir, ";
