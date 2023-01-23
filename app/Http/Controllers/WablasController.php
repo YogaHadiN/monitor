@@ -2345,7 +2345,7 @@ class WablasController extends Controller
                 $reservasi_online->alamat                              = $data[ (int)$this->message -1 ]->alamat;
                 $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
                 $reservasi_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
-                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online):
+                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
             } else {
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
