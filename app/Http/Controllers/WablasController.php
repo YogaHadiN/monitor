@@ -2476,7 +2476,7 @@ class WablasController extends Controller
                     $this->ulangiRegistrasiWhatsapp($reservasi_online);
                 }
             } else {
-                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online):
+                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
                 $message .= $this->pesanMintaKlienBalasUlang():
                 echo $message;
             }
