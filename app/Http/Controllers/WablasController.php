@@ -2176,22 +2176,20 @@ class WablasController extends Controller
     //Cek List Bulanan
     public function cekListBulananExists(){
         Log::info(2218);
-        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5);
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(3);
     }
     public function cekListBulananInputExists(){
         Log::info(2222);
-        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(4);
     }
     public function prosesCekListBulanan(){
         Log::info(2226);
-        return $this->prosesCekListDilakukan(3,5,6); // bulanan
+        return $this->prosesCekListDilakukan(3,3,4); // bulanan
     }
     public function prosesCekListBulananInput(){
         Log::info(2230);
-        $this->prosesCekListDikerjakanInput(3,5,6);
+        $this->prosesCekListDikerjakanInput(3,3,4);
     }
-
-
     public function prosesCekListDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
         Log::info(2102);
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
