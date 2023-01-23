@@ -174,12 +174,12 @@ class WablasController extends Controller
             } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
                 Log::info(165);
                 return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
-            } else if ( $this->pasienTidakDalamAntrian() ) {
-                Log::info(168);
-                return $this->createWhatsappMainMenu(); // buat main menu
             } else if ( $this->whatsappAntrianOnlineExists() ) {
                 Log::info(181);
                 return $this->prosesAntrianOnline(); // buat main menu
+            } else if ( $this->pasienTidakDalamAntrian() ) {
+                Log::info(168);
+                return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
 	}
