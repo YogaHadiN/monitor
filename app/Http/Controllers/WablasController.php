@@ -226,7 +226,7 @@ class WablasController extends Controller
             if (
                 $this->validasiRegistrasiPembayaran()
             ) {
-                $this->lanjutkanRegistrasiPembayaran($this->whatsapp_registration->antrian)
+                $this->lanjutkanRegistrasiPembayaran($this->whatsapp_registration->antrian);
             } else {
                 $input_tidak_tepat = true;
             }
