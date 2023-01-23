@@ -301,7 +301,7 @@ class WablasController extends Controller
             isset( $this->whatsapp_registration ) &&
             !is_null($this->whatsapp_registration->antrian)
         ) {
-            $response .= $this->uraianPengisian();
+            $response .= $this->uraianPengisian($this->whatsapp_registration->antrian);
         }
 
         if ( 
