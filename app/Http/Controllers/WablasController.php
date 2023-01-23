@@ -2305,7 +2305,7 @@ class WablasController extends Controller
         return "Cek List sudah selesai dikerjakan. Good Work!!!";
     }
     public function whatsappAntrianOnlineExists(){
-        return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == 8
+        return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == 8;
     }
     public function prosesAntrianOnline(){
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
