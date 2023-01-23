@@ -178,7 +178,7 @@ class WablasController extends Controller
                 Log::info(168);
                 return $this->createWhatsappMainMenu(); // buat main menu
             } else if ( $this->whatsappAntrianOnlineExists() ) {
-                Log::info(168);
+                Log::info(181);
                 return $this->prosesAntrianOnline(); // buat main menu
             }
         }   
@@ -307,7 +307,14 @@ class WablasController extends Controller
         if ( 
             !is_null($this->whatsapp_registration)
         ) {
-            $payload   = $this->botKirim($this->whatsapp_registration)[0];
+            $botKirim = $this->botKirim($this->whatsapp_registration)
+            if ( is_null( $botKirim ) ) {
+                Log::info('no_telp');
+                Log::info($this->no_telp);
+                Log::info('message');
+                Log::info($this->message);
+            }
+            $payload   = $botKirim[0];
             $category = $payload['category'];
             $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
