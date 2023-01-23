@@ -2477,7 +2477,7 @@ class WablasController extends Controller
                 }
             } else {
                 $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
-                $message .= $this->pesanMintaKlienBalasUlang():
+                $message .= $this->pesanMintaKlienBalasUlang();
                 echo $message;
             }
         }
