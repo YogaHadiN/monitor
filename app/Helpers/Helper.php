@@ -29,3 +29,16 @@ if (!function_exists('resetWhatsappRegistration')) {
         \App\Models\KuesionerMenungguObat::where('no_telp', $no_telp)->delete();
     }
 }
+
+if (!function_exists('validateName')) {
+     function validateName($value) {
+        return ctype_alpha(str_replace(' ', '', $value));
+    }
+}
+
+if (!function_exists('validateNomorAsuransiBpjs')) {
+     function validateNomorAsuransiBpjs($value) {
+         return is_numeric($value) && strlen($value) == 13;
+    }
+}
+

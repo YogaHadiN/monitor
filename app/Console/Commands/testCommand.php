@@ -49,7 +49,8 @@ class testCommand extends Command
         /*     ->where('created_at', 'like', date('Y-m-d'). '%') */
         /*     ->first(); */
         /* dd( $whatsapp_bot ); */
-        $this->refreshCekHarian();
+        $no ='0001642243702' ;
+        dd( is_numeric($no) && strlen($no) == 11 );
     }
     /**
      * undocumented function

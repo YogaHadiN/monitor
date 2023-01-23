@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Models\AntrianPeriksa; 
 use App\Models\AntrianPoli;
 use App\Models\DentistReservation;
+use App\Models\ReservasiOnline;
 use App\Models\Antrian;
 use App\Models\CekListDikerjakan;
 use App\Models\Tenant;
@@ -43,6 +44,7 @@ class WablasController extends Controller
 	public $whatsapp_complaint;
 	public $tenant;
 	public $failed_therapy;
+	public $whatsapp_bot;
 	public $no_telp;
 	public $message;
     public $whatsapp_satisfaction_survey;
@@ -119,6 +121,11 @@ class WablasController extends Controller
 
         $this->tenant = Tenant::find(1);
 
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                             ->whereRaw("DATE_ADD( updated_at, interval 24 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                             ->first();
+
+
 
         if (
             !is_null( $this->no_telp ) &&
@@ -170,6 +177,9 @@ class WablasController extends Controller
             } else if ( $this->pasienTidakDalamAntrian() ) {
                 Log::info(168);
                 return $this->createWhatsappMainMenu(); // buat main menu
+            } else if ( $this->whatsappAntrianOnlineExists() ) {
+                Log::info(168);
+                return $this->prosesAntrianOnline(); // buat main menu
             }
         }   
 	}
@@ -196,7 +206,7 @@ class WablasController extends Controller
             isset( $this->whatsapp_registration ) &&
             !is_null($this->whatsapp_registration->antrian)
         ) {
-            $this->ulangiRegistrasiWhatsapp();
+            $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antrian);
         } else if ( 
             isset( $this->whatsapp_registration ) &&
             $this->whatsapp_registration->registering_confirmation < 1
@@ -214,36 +224,9 @@ class WablasController extends Controller
             is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ){
             if (
-                ( $this->message    == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message    == 'bpjs' && $this->tenant->iphone_whatsapp_button_available) ||
-                ( $this->message    == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
-                ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
+                $this->validasiRegistrasiPembayaran()
             ) {
-                if (
-                    ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
-                ) {
-                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 1;
-                }
-                if (
-                    ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
-                ) {
-                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 2;
-                }
-                if (
-                    ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
-                ) {
-                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id  = 3;
-                }
-                $data = $this->queryPreviouslySavedPatientRegistry();
-                if (count($data) < 1) {
-                    $this->whatsapp_registration->antrian->register_previously_saved_patient = 0;
-                }
-                $this->whatsapp_registration->antrian->save();
+                $this->lanjutkanRegistrasiPembayaran($this->whatsapp_registration->antrian)
             } else {
                 $input_tidak_tepat = true;
             }
@@ -307,7 +290,7 @@ class WablasController extends Controller
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
                     ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-                    $this->ulangiRegistrasiWhatsapp();
+                    $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antria);
                 }
             } else {
                 $input_tidak_tepat = true;
@@ -318,37 +301,7 @@ class WablasController extends Controller
             isset( $this->whatsapp_registration ) &&
             !is_null($this->whatsapp_registration->antrian)
         ) {
-            if (
-                !is_null( $this->whatsapp_registration->antrian->nama ) ||
-                !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) ||
-                !is_null( $this->whatsapp_registration->antrian->tanggal_lahir )
-            ) {
-                $response .=  "*Uraian Pengisian Anda*";
-                $response .= PHP_EOL;
-                $response .= PHP_EOL;
-            }
-            if ( !is_null( $this->whatsapp_registration->antrian->nama ) ) {
-                $response .= 'Nama Pasien: ' . ucwords($this->whatsapp_registration->antrian->nama)  ;
-                $response .= PHP_EOL;
-            }
-            if ( !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) ) {
-                $response .= 'Pembayaran : ';
-                $response .= ucwords($this->whatsapp_registration->antrian->registrasiPembayaran->pembayaran);
-                $response .= PHP_EOL;
-            }
-            if ( !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) ) {
-                $response .= 'Tanggal Lahir : '.  Carbon::parse($this->whatsapp_registration->antrian->tanggal_lahir)->format('d M Y');;
-                $response .= PHP_EOL;
-            }
-            if (
-                !is_null( $this->whatsapp_registration->antrian->nama ) ||
-                !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id) ||
-                !is_null( $this->whatsapp_registration->antrian->tanggal_lahir )
-            ) {
-                $response .= "==================";
-                $response .= PHP_EOL;
-                $response .= PHP_EOL;
-            }
+            $response .= $this->uraianPengisian();
         }
 
         if ( 
@@ -566,7 +519,7 @@ class WablasController extends Controller
                     'message' => $message
                 ];
             } else {
-                $text .= $this->pertanyaanPertamaWaBpjsDentistRegistration();
+                $text .= $this->pertanyaanPembayaranPasien();
 
                 $payload[] = [
                     'category' => 'text',
@@ -593,7 +546,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
-            $message =  'Bisa dibantu *Nama Lengkap* pasien';
+            $message =  $this->tanyaNamaLengkapPasien();
             $message .=  PHP_EOL;
             $message .=  'Untuk nomor antrian *' . $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
             $payload[] = [
@@ -643,13 +596,7 @@ class WablasController extends Controller
                     'message' => $message
                 ];
             } else {
-                $text .= PHP_EOL;
-                $text .= '1. Lanjutkan';
-                $text .= PHP_EOL;
-                $text .= '2. Ulangi';
-                $text .= PHP_EOL;
-                $text .= PHP_EOL;
-                $text .= "Balas dengan angka *1 atau 2* sesuai informasi di atas";
+                $text .= $this->lanjutAtauUlangi();
 
                 $payload[] = [
                     'category' => 'text',
@@ -801,14 +748,14 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function ulangiRegistrasiWhatsapp()
+    private function ulangiRegistrasiWhatsapp($model)
     {
-        $this->whatsapp_registration->antrian->registrasi_pembayaran_id          = null;
-        $this->whatsapp_registration->antrian->nama                              = null;
-        $this->whatsapp_registration->antrian->tanggal_lahir                     = null;
-        $this->whatsapp_registration->antrian->register_previously_saved_patient = null;
-        $this->whatsapp_registration->antrian->pasien_id                         = null;
-        $this->whatsapp_registration->antrian->save();
+        $model->registrasi_pembayaran_id          = null;
+        $model->nama                              = null;
+        $model->tanggal_lahir                     = null;
+        $model->register_previously_saved_patient = null;
+        $model->pasien_id                         = null;
+        $model->save();
     }
     /**
      * undocumented function
@@ -1171,7 +1118,7 @@ class WablasController extends Controller
                 WhatsappBpjsDentistRegistration::create([
                     'no_telp' => $this->no_telp
                 ]);
-                echo $this->pertanyaanPertamaWaBpjsDentistRegistration();
+                echo $this->pertanyaanPembayaranPasien();
             }
         } else {
             $message = "Balasan yang kakak masukkan tidak dikenali";
@@ -1191,13 +1138,14 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '1. Jadwal Pelayanan';
-        /* $message .= PHP_EOL; */
-        /* $message .= '2. Saya ingin memberikan masukan dan saran'; */
+        $message .= PHP_EOL;
+        $message .= '2. Reservasi Online';
         /* $message .= PHP_EOL; */
         /* $message .= '3. Saya ingin berbicara dengan admin'; */
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Balas dengan *1* sesuai dengan informasi di atas';
+        /* $message .= 'Balas dengan *1* sesuai dengan informasi di atas'; */
+        $message .= 'Balas dengan *1 atau 2* sesuai dengan informasi di atas';
         /* $message .= 'Balas dengan *1, 2 atau 3* sesuai dengan informasi di atas'; */
         return $message;
     }
@@ -1370,7 +1318,7 @@ class WablasController extends Controller
                     WhatsappBpjsDentistRegistration::create([
                         'no_telp' => $this->no_telp
                     ]);
-                    echo $this->pertanyaanPertamaWaBpjsDentistRegistration();
+                    echo $this->pertanyaanPembayaranPasien();
                 }
             }
 
@@ -1697,7 +1645,7 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function pertanyaanPertamaWaBpjsDentistRegistration()
+    private function pertanyaanPembayaranPasien()
     {
         $message = 'Bisa dibantu menggunakan pembayaran apa?';
         $message .= PHP_EOL;
@@ -1977,6 +1925,18 @@ class WablasController extends Controller
                 'no_telp' => $this->no_telp
             ]);
             echo $this->pertanyaanTipeKonsultasi();
+        }
+        if ( $this->message == 2 ) {
+            $whatsapp_bot = WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 8
+            ]);
+
+            ReservasiOnline::create([
+                'no_telp'         => $this->no_telp,
+                'whatsapp_bot_id' => $whatsapp_bot->id
+            ]);
+            echo $this->pertanyaanPembayaranPasien();
         }
     }
     public function balasJadwalDokterUmum(){
@@ -2344,5 +2304,291 @@ class WablasController extends Controller
         WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->delete();
         return "Cek List sudah selesai dikerjakan. Good Work!!!";
     }
-    
+    public function whatsappAntrianOnlineExists(){
+        return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == 8
+    }
+    public function prosesAntrianOnline(){
+        $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
+             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+             ->first();
+        if (
+            !is_null( $reservasi_online ) &&
+            is_null( $reservasi_online->registrasi_pembayaran_id )
+        ) {
+            if ( $this->validasiRegistrasiPembayaran()) {
+                $reservasi_online = $this->lanjutkanRegistrasiPembayaran($reservasi_online);
+                $data = $this->queryPreviouslySavedPatientRegistry();
+
+                if (count($data)) {
+                    echo $this->pesanUntukPilihPasien();
+                } else {
+                    $reservasi_online->register_previously_saved_patient = 0;
+                    $reservasi_online->save();
+                    echo $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
+                }
+            } else {
+                $message = $this->pertanyaanPembayaranPasien();
+                $message .= $this->pesanMintaKlienBalasUlang();
+                echo $message;
+            }
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )
+            is_null( $reservasi_online->register_previously_saved_patient ) 
+        ) {
+            $data = $this->queryPreviouslySavedPatientRegistry();
+            $dataCount = count($data);
+            if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                $reservasi_online->register_previously_saved_patient = $this->message;
+                $reservasi_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
+                $reservasi_online->nama                              = $data[ (int)$this->message -1 ]->nama;
+                $reservasi_online->alamat                              = $data[ (int)$this->message -1 ]->alamat;
+                $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
+                $reservasi_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online):
+            } else {
+                $reservasi_online->register_previously_saved_patient = $this->message;
+                $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
+            }
+            $reservasi_online->save();
+            echo $message;
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            is_null( $reservasi_online->nomor_asuransi_bpjs ) 
+        ) {
+            if ( validateNomorAsuransiBpjs( $this->message ) ) {
+                $reservasi_online->nomor_asuransi_bpjs  = $this->message;
+                $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
+                if ( !is_null( $pasien ) ) {
+                    $reservasi_online->pasien_id           = $pasien->id;
+                    $reservasi_online->nama                = $pasien->nama;
+                    $reservasi_online->alamat              = $pasien->alamat;
+                    $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
+                    $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
+                    echo $this->tanyaLanjutkanAtauUlangi();
+                } else {
+                    echo $this->tanyaNamaLengkapPasien();
+                }
+                $reservasi_online->save();
+            } else {
+                $message =  $this->tanyaNomorBpjsPasien();
+                $message .= $this->pesanMintaKlienBalasUlang();
+                echo $message;
+            }
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            is_null( $reservasi_online->nama ) 
+        ) {
+            if ( validateName( $this->message ) ) {
+                $reservasi_online->nama  = ucwords(strtolower($this->message));;
+                $reservasi_online->save();
+                echo $this->tanyaTanggalLahirPasien();
+            } else {
+                $message =  $this->tanyaNamaLengkapPasien();
+                $message .= $this->pesanMintaKlienBalasUlang();
+                echo $message;
+            }
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            is_null( $reservasi_online->tanggal_lahir ) 
+        ) {
+            $tanggal = $this->convertToPropperDate();
+            if (!is_null( $tanggal )) {
+                $reservasi_online->tanggal_lahir  = $tanggal;
+                $reservasi_online->save();
+                echo $this->tanyaAlamatLengkapPasien();
+            } else {
+                $message =  $this->tanyaTanggalLahirPasien();
+                $message .= $this->pesanMintaKlienBalasUlang();
+            }
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            is_null( $reservasi_online->alamat )
+        ) {
+            $reservasi_online->alamat  = $this->message;
+            $reservasi_online->save();
+            echo $this->tanyaLanjutkanAtauUlangi( $reservasi_online );
+
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat )
+        ) {
+            if (
+                ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
+                ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
+                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+            ) {
+                if (
+                    ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
+                ) {
+                    WhatsappBot::where('no_telp', $this->no_telp)->delete();
+
+                    /* Antrian::create([ */
+                    /*     jenis_antrian_id	bigint(20)	YES	MUL	NULL */	
+                    /*     nomor	int(11)	YES		NULL */	
+                    /*     antriable_id	bigint(20)	YES	MUL	NULL */	
+                    /*     antriable_type	varchar(30)	YES	MUL	NULL */	
+                    /*     no_telp	varchar(255)	YES		NULL */	
+                    /*     nama	varchar(255)	YES		NULL */	
+                    /*     tanggal_lahir	date	YES		NULL */	
+                    /*     tenant_id	bigint(20)	NO	MUL	NULL */	
+                    /*     registrasi_pembayaran_id	int(1)	YES		NULL */	
+                    /*     nomor_bpjs	varchar(255)	YES		NULL */	
+                    /*     satisfaction_index	int(1)	YES		NULL */	
+                    /*     complaint	varchar(255)	NO		NULL */	
+                    /*     register_previously_saved_patient	int(11)	YES		NULL */	
+                    /*     pasien_id	int(11)	YES		NULL */	
+                    /*     recovery_index_id	int(11)	YES		NULL */	
+                    /*     informasi_terapi_gagal	varchar(255)	NO		NULL */	
+                    /*     menunggu	tinyint(4)	NO		1 */	
+                    /*     notifikasi_panggilan_aktif	tinyint(4)	NO		1 */	
+                    /* ]) */
+
+                    // buat antrian berdasarkan informasi antrian online
+                    // msukkan ke antrian nurse station
+                    // echo kalau pasien sudah didaftarkan secara online dan akan dihapus kalau sudah terlewat lebih dari 3 antrian
+                }
+                if (
+                    ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                ) {
+                    $this->ulangiRegistrasiWhatsapp($reservasi_online);
+                }
+            } else {
+                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online):
+                $message .= $this->pesanMintaKlienBalasUlang():
+                echo $message;
+            }
+        }
+    }
+    public function pesanMintaKlienBalasUlang(){
+        $message = PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '_Balasan yang kakak masukkan tidak dikenali_';
+        $message .= PHP_EOL;
+        $message .= '_Mohon kesediaannya untuk input hanya satu pasien_';
+        $message .= PHP_EOL;
+        $message .= '_Mohon ulangi_';
+        return $message;
+    }
+    public function lanjutkanRegistrasiPembayaran($model){
+        if (
+            ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
+            ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
+        ) {
+            $model->registrasi_pembayaran_id  = 1;
+        }
+        if (
+            ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
+            ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+        ) {
+            $model->registrasi_pembayaran_id  = 2;
+        }
+        if (
+            ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
+            ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
+        ) {
+            $model->registrasi_pembayaran_id  = 3;
+        }
+
+        $data = $this->queryPreviouslySavedPatientRegistry();
+        if (count($data) < 1) {
+            $this->whatsapp_registration->antrian->register_previously_saved_patient = 0;
+        }
+        $model->save();
+        return $model;
+    }
+
+    public function validasiRegistrasiPembayaran(){
+        return
+                ( $this->message    == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message    == 'bpjs' && $this->tenant->iphone_whatsapp_button_available) ||
+                ( $this->message    == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
+                ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available );
+    }
+
+    public function tanyaLanjutkanAtauUlangi($model){
+        $message = $this->uraianPengisian( $model );
+        $message .= $this->lanjutAtauUlangi();
+        return $message;
+    }
+    public function uraianPengisian($model){
+        if (
+            !is_null( $model->nama ) ||
+            !is_null( $model->registrasi_pembayaran_id ) ||
+            !is_null( $model->tanggal_lahir )
+        ) {
+            $response .=  "*Uraian Pengisian Anda*";
+            $response .= PHP_EOL;
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $model->nama ) ) {
+            $response .= 'Nama Pasien: ' . ucwords($model->nama)  ;
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $model->registrasi_pembayaran_id ) ) {
+            $response .= 'Pembayaran : ';
+            $response .= ucwords($model->registrasiPembayaran->pembayaran);
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $model->tanggal_lahir ) ) {
+            $response .= 'Tanggal Lahir : '.  Carbon::parse($model->tanggal_lahir)->format('d M Y');;
+            $response .= PHP_EOL;
+        }
+        if (
+            !is_null( $model->nama ) ||
+            !is_null( $model->registrasi_pembayaran_id) ||
+            !is_null( $model->tanggal_lahir )
+        ) {
+            $response .= "==================";
+            $response .= PHP_EOL;
+            $response .= PHP_EOL;
+        }
+    }
+    public function lanjutAtauUlangi(){
+        $text = PHP_EOL;
+        $text .= '1. Lanjutkan';
+        $text .= PHP_EOL;
+        $text .= '2. Ulangi';
+        $text .= PHP_EOL;
+        $text .= PHP_EOL;
+        $text .= "Balas dengan angka *1 atau 2* sesuai informasi di atas";
+        return $text;
+    }
+    public function tanyaNamaAtauNomorBpjsPasien($model){
+        
+        if ( $model->registrasi_pembayaran_id !== 2 ) {
+            $model->nomor_asuransi_bpjs = 0;
+            $model->save();
+            return $this->tanyaNamaLengkapPasien();
+        } else {
+            return $this->tanyaNomorBpjsPasien();
+        }
+    }
+    public function tanyaAlamatLengkapPasien(){
+         return 'Bisa dibantu *Alamat Lengkap* pasien?';
+    }
 }
