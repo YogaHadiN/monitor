@@ -1138,14 +1138,14 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '1. Jadwal Pelayanan';
-        $message .= PHP_EOL;
-        $message .= '2. Reservasi Online';
+        /* $message .= PHP_EOL; */
+        /* $message .= '2. Reservasi Online'; */
         /* $message .= PHP_EOL; */
         /* $message .= '3. Saya ingin berbicara dengan admin'; */
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        /* $message .= 'Balas dengan *1* sesuai dengan informasi di atas'; */
-        $message .= 'Balas dengan *1 atau 2* sesuai dengan informasi di atas';
+        $message .= 'Balas dengan *1* sesuai dengan informasi di atas';
+        /* $message .= 'Balas dengan *1 atau 2* sesuai dengan informasi di atas'; */
         /* $message .= 'Balas dengan *1, 2 atau 3* sesuai dengan informasi di atas'; */
         return $message;
     }
