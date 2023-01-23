@@ -2543,12 +2543,13 @@ class WablasController extends Controller
         return $message;
     }
     public function uraianPengisian($model){
+        $response='';
         if (
             !is_null( $model->nama ) ||
             !is_null( $model->registrasi_pembayaran_id ) ||
             !is_null( $model->tanggal_lahir )
         ) {
-            $response =  "*Uraian Pengisian Anda*";
+            $response .=  "*Uraian Pengisian Anda*";
             $response .= PHP_EOL;
             $response .= PHP_EOL;
         }
