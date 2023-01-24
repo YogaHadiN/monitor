@@ -1952,9 +1952,7 @@ class WablasController extends Controller
 
             $message = 'Kakak akan melakukan registrasi secara online';
             $message .= PHP_EOL;
-            $message .= 'Reservasi yang kakak lakukan akan otomatis dibatalkan apabila antrian yang kakak buat telah terlewat tiga panggilan';
-            $message .= PHP_EOL;
-            $message .= 'Jika hal itu terjadi. Kakak kami persilahkan untuk membuat ulang reservasi online, atau melakukan reservasi manual di Klinik';
+            $message .= 'Reservasi ini akan *dibatalkan secara otomatis* apabila antrian telah terlewat lebih dari tiga panggilan';
             $message .= PHP_EOL;
             $message .= 'Apakah kakak setuju dengan ketentuan tersebut?';
             $message .= PHP_EOL;
@@ -2364,6 +2362,10 @@ class WablasController extends Controller
                 $reservasi_online->save();
 
                 echo $this->pertanyaanPembayaranPasien();
+            } else {
+                $message = $this->pertanyaanPoliYangDituju();
+                $message .= $this->pesanMintaKlienBalasUlang();
+                echo $message;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2426,7 +2428,7 @@ class WablasController extends Controller
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
             Log::info(2424);
-            if ( validateNomorAsuransiBpjs( $this->message ) ) {
+            if (empty(  pesanErrorValidateNomorAsuransiBpjs( $this->message )  )) {
                 $reservasi_online->nomor_asuransi_bpjs  = $this->message;
                 $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
                 if ( !is_null( $pasien ) ) {
@@ -2445,7 +2447,10 @@ class WablasController extends Controller
             } else {
                 Log::info(2442);
                 $message =  $this->tanyaNomorBpjsPasien();
-                $message .= $this->pesanMintaKlienBalasUlang();
+                $message .= PHP_EOL;
+                $message .= '======================';
+                $message .= PHP_EOL;
+                $message .= pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
                 echo $message;
             }
         } else if ( 
@@ -2535,9 +2540,6 @@ class WablasController extends Controller
                     $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
                     $antrian                = $this->antrianPost( $reservasi_online->jenis_antrian_id );
 
-                    Log::info('Antrian');
-                    Log::info($antrian);
-
                     $antrian->nama                     = $reservasi_online->nama;
                     $antrian->nomor_bpjs               = $reservasi_online->nomor_asuransi_bpjs;
                     $antrian->no_telp                  = $reservasi_online->no_telp;
@@ -2575,8 +2577,6 @@ class WablasController extends Controller
         $message = PHP_EOL;
         $message .= PHP_EOL;
         $message .= '_Balasan yang kakak masukkan tidak dikenali_';
-        $message .= PHP_EOL;
-        $message .= '_Mohon kesediaannya untuk input hanya satu pasien_';
         $message .= PHP_EOL;
         $message .= '_Mohon ulangi_';
         return $message;

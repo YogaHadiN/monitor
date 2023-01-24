@@ -39,9 +39,19 @@ if (!function_exists('validateName')) {
     }
 }
 
-if (!function_exists('validateNomorAsuransiBpjs')) {
-     function validateNomorAsuransiBpjs($value) {
-         return is_numeric($value) && strlen($value) == 13;
+if (!function_exists('pesanErrorValidateNomorAsuransiBpjs')) {
+     function pesanErrorValidateNomorAsuransiBpjs($value) {
+         $pesan = '';
+         if (!is_numeric($value)) {
+             $pesan .= '_Nomor BPJS harus semuanya angka_';
+         }
+         if (!is_numeric($value) && !strlen($value) == 13 ) {
+             $pesan .= PHP_EOL;
+         }
+         if (!strlen($value) == 13) {
+             $pesan .= '_Nomor BPJS harus terdiri dari 13 angka_';
+         }
+         return $pesan;
     }
 }
 
