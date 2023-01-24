@@ -2527,6 +2527,10 @@ class WablasController extends Controller
                     WhatsappBot::where('no_telp', $this->no_telp)->delete();
                     $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
                     $antrian                           = $this->antrianPost( $reservasi_online->jenis_antrian_id );
+
+                    Log::info('Antrian');
+                    Log::info($antrian);
+
                     $antrian->nama                     = $reservasi_online->nama;
                     $antrian->nomor_asuransi_bpjs      = $reservasi_online->nomor_asuransi_bpjs;
                     $antrian->no_telp                  = $reservasi_online->no_telp;
