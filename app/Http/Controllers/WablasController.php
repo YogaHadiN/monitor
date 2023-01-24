@@ -1952,7 +1952,13 @@ class WablasController extends Controller
 
             $message = 'Kakak akan melakukan registrasi secara online';
             $message .= PHP_EOL;
-            $message .= 'Reservasi ini akan *dibatalkan secara otomatis* apabila antrian telah terlewat lebih dari tiga panggilan';
+            $message .= 'Reservasi ini akan ';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= '*dibatalkan secara otomatis*';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= 'Apabila antrian telah terlewat lebih dari tiga panggilan';
             $message .= PHP_EOL;
             $message .= 'Apakah kakak setuju dengan ketentuan tersebut?';
             $message .= PHP_EOL;
