@@ -1942,7 +1942,7 @@ class WablasController extends Controller
         if ( $this->message == 2 ) {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 8
+                'whatsapp_bot_service_id' => 6
             ]);
 
             ReservasiOnline::create([
@@ -2327,7 +2327,7 @@ class WablasController extends Controller
         return "Cek List sudah selesai dikerjakan. Good Work!!!";
     }
     public function whatsappAntrianOnlineExists(){
-        return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == 8;
+        return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == 6;
     }
     public function prosesAntrianOnline(){
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
@@ -2530,7 +2530,6 @@ class WablasController extends Controller
                 ) {
                     Log::info(2527);
                     WhatsappBot::where('no_telp', $this->no_telp)
-                        ->where('whatsapp_bot_service_id', 6)
                         ->delete();
                     ReservasiOnline::where('no_telp', $this->no_telp)->delete();
                     $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
