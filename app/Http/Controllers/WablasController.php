@@ -2647,7 +2647,7 @@ class WablasController extends Controller
         return $response;
     }
     public function lanjutAtauUlangi(){
-        $text .= '1. Lanjutkan';
+        $text = '1. Lanjutkan';
         $text .= PHP_EOL;
         $text .= '2. Ulangi';
         $text .= PHP_EOL;
