@@ -124,7 +124,7 @@ class WablasController extends Controller
         $this->tenant = Tenant::find(1);
 
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                             ->whereRaw("DATE_ADD( updated_at, interval 24 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                              ->first();
 
 
@@ -2331,6 +2331,9 @@ class WablasController extends Controller
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
+        if( is_null( $reservasi_online ) ){
+            $this->whatsapp_bot->delete();
+        }
         Log::info(2334);
         Log::info('Reservasi Online');
         Log::info( $reservasi_online );
