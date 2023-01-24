@@ -2535,7 +2535,7 @@ class WablasController extends Controller
                     Log::info($antrian);
 
                     $antrian->nama                     = $reservasi_online->nama;
-                    $antrian->nomor_asuransi_bpjs      = $reservasi_online->nomor_asuransi_bpjs;
+                    $antrian->nomor_bpjs               = $reservasi_online->nomor_asuransi_bpjs;
                     $antrian->no_telp                  = $reservasi_online->no_telp;
                     $antrian->tanggal_lahir            = $reservasi_online->tanggal_lahir;
                     $antrian->alamat                   = $reservasi_online->alamat;
