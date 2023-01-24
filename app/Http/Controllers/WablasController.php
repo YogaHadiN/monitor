@@ -570,7 +570,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
-			$text    = $this->tanyaTanggalLahirPasien();
+			$text    = $this->tanyaTanggalLahirPasien($this->whatsapp_registration->antrian);
             $message = $text;
             $message .=  PHP_EOL;
             $payload[] = [
@@ -1286,7 +1286,7 @@ class WablasController extends Controller
             ) {
                 $this->whatsapp_bpjs_dentist_registrations->nama  = ucwords($this->message);
                 $this->whatsapp_bpjs_dentist_registrations->save();
-                echo $this->tanyaTanggalLahirPasien();
+                echo $this->tanyaTanggalLahirPasien($this->whatsapp_bpjs_dentist_registrations->antrian);
             } else {
                 $message = 'Input yang kakak masukkan tidak tepat';
                 $message .= PHP_EOL;
@@ -1307,7 +1307,7 @@ class WablasController extends Controller
             } else {
                 $message .= 'Input yang kakak masukkan tidak dikenali';
                 $message .= PHP_EOL;
-                $message .= $this->tanyaTanggalLahirPasien();
+                $message .= $this->tanyaTanggalLahirPasien($this->whatsapp_bpjs_dentist_registrations->antrian);
             }
             echo $message;
         } else if ( 
@@ -1543,10 +1543,12 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tanyaTanggalLahirPasien()
+    private function tanyaTanggalLahirPasien($antrian = null)
     {
         $message  = 'Bisa dibantu *Tanggal Lahir* pasien ';
-        $message .= 'Untuk nomor antrian *' . $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
+        if (!is_null( $antrian )) {
+            $message .= 'Untuk nomor antrian *' . $antrian->nomor_antrian . '* ?';
+        }
         $message .= PHP_EOL . PHP_EOL . 'Contoh : 19-07-2003';
         return $message;
     }
