@@ -8,6 +8,7 @@ use App\Models\WhatsappBpjsDentistRegistration;
 use App\Models\WhatsappMainMenu;
 use App\Models\CekListDikerjakan;
 use App\Models\WhatsappBot;
+use App\Models\ReservasiOnline;
 
 class testCommand extends Command
 {
@@ -42,16 +43,14 @@ class testCommand extends Command
      */
     public function handle()
     {
-
-        /* $whatsapp_bot = WhatsappBot::with('staf') */
-        /*     ->where('no_telp', '6281381912803') */
-        /*     ->whereRaw('whatsapp_bot_service_id = 1 or whatsapp_bot_service_id = 2') */
-        /*     ->where('created_at', 'like', date('Y-m-d'). '%') */
-        /*     ->first(); */
-        /* dd( $whatsapp_bot ); */
         $no ='0001642243702' ;
         dd( is_numeric($no) && strlen($no) == 11 );
     }
+    public function refreshAntrianOnline(){
+        WhatsappBot::where('no_telp', '6281381912803')->delete();
+        ReservasiOnline::where('no_telp', '6281381912803')->delete();
+    }
+    
     /**
      * undocumented function
      *
