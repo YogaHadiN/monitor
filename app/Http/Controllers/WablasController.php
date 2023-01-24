@@ -2503,7 +2503,6 @@ class WablasController extends Controller
             echo $this->tanyaLanjutkanAtauUlangi( $reservasi_online );
 
         } else if ( 
-            Log::info(2506);
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
