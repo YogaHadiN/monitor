@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Models\AntrianPeriksa; 
 use App\Models\AntrianPoli;
 use App\Models\DentistReservation;
+use App\Events\FormSubmitted;
 use App\Models\ReservasiOnline;
 use App\Models\Antrian;
 use App\Models\CekListDikerjakan;
@@ -25,6 +26,7 @@ use App\Models\FailedTherapy;
 use App\Models\Periksa;
 use App\Models\Pasien;
 use App\Models\User;
+use App\Http\Controllers\AntrianPolisController;
 use Input;
 use Carbon\Carbon;
 use Log;
@@ -2513,6 +2515,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->tanggal_lahir ) &&
             !is_null( $reservasi_online->alamat )
         ) {
+            Log::info(2516);
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                 ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -2717,8 +2720,7 @@ class WablasController extends Controller
 		$antrian->antriable_type = 'App\\Models\\Antrian';
 		$antrian->save();
 
-		$apc                     = new AntrianPolisController;
-		$apc->updateJumlahAntrian(false, null);
+		$this->updateJumlahAntrian(false, null);
 		return $antrian;
 	}
 
@@ -2730,4 +2732,8 @@ class WablasController extends Controller
         }
         return $kode_unik;
     }
+
+	public function updateJumlahAntrian($panggil_pasien, $ruangan){
+		event(new FormSubmitted($panggil_pasien, $ruangan));
+	}
 }
