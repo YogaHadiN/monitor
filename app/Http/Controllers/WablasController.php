@@ -2717,4 +2717,13 @@ class WablasController extends Controller
 		$apc->updateJumlahAntrian(false, null);
 		return $antrian;
 	}
+
+    private function kodeUnik()
+    {
+        $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
+        while (Antrian::where('created_at', 'like', date('Y-m-d') . '%')->where('kode_unik', $kode_unik)->exists()) {
+            $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
+        }
+        return $kode_unik;
+    }
 }
