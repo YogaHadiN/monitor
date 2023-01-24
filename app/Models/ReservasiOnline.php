@@ -12,4 +12,10 @@ class ReservasiOnline extends Model
     public function registrasiPembayaran(){
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
+    public static function boot(){
+        parent::boot();
+        self::creating(function($model){
+            ReservasiOnline::where('no_telp', $model->no_telp )->delete();
+        });
+    }
 }

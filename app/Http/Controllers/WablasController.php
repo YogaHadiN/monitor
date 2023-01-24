@@ -2527,9 +2527,12 @@ class WablasController extends Controller
                     ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     Log::info(2527);
-                    WhatsappBot::where('no_telp', $this->no_telp)->delete();
+                    WhatsappBot::where('no_telp', $this->no_telp)
+                        ->where('whatsapp_bot_service_id', 6)
+                        ->delete();
+                    ReservasiOnline::where('no_telp', $this->no_telp)->delete();
                     $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
-                    $antrian                           = $this->antrianPost( $reservasi_online->jenis_antrian_id );
+                    $antrian                = $this->antrianPost( $reservasi_online->jenis_antrian_id );
 
                     Log::info('Antrian');
                     Log::info($antrian);
@@ -2549,11 +2552,13 @@ class WablasController extends Controller
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
                     ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-                    Log::info(2545);
-                    $reservasi_online = $this->ulangiRegistrasiWhatsapp($reservasi_online);
-                    $reservasi_online->nomor_asuransi_bpjs = null;
-                    $reservasi_online->alamat = null;
-                    $reservasi_online->save();
+
+                    $whatsapp_bot_id = $reservasi_online->whatsapp_bot_id;
+                    ReservasiOnline::create([
+                        'no_telp'         => $this->no_telp,
+                        'whatsapp_bot_id' => $whatsapp_bot_id,
+                        'konfirmasi_sdk'  => 1,
+                    ]);
 
                     echo $this->pertanyaanPoliYangDituju();
                 }
