@@ -2436,7 +2436,7 @@ class WablasController extends Controller
                     $reservasi_online->alamat              = $pasien->alamat;
                     $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                     $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
-                    echo $this->tanyaLanjutkanAtauUlangi();
+                    echo $this->tanyaLanjutkanAtauUlangi($reservasi_online);
                 } else {
                     Log::info(2437);
                     echo $this->tanyaNamaLengkapPasien();
