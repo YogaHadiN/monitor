@@ -2331,6 +2331,9 @@ class WablasController extends Controller
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
+        Log::info(2334);
+        Log::info('Reservasi Online');
+        Log::info( $reservasi_online );
         if (
             !is_null( $reservasi_online ) &&
             !$reservasi_online->konfirmasi_sdk
