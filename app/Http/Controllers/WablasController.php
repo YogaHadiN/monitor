@@ -2338,9 +2338,9 @@ class WablasController extends Controller
                 $this->message == 'iya' || 
                 $this->message == 'y'
             ) {
+                Log::info(2341);
                 $reservasi_online->konfirmasi_sdk = 1;
                 $reservasi_online->save();
-
                 echo $this->pertanyaanPoliYangDituju();
             }
         } else if (
