@@ -2331,7 +2331,7 @@ class WablasController extends Controller
              ->first();
         if (
             !is_null( $reservasi_online ) &&
-            is_null( $reservasi_online->konfirmasi_sdk )
+            $reservasi_online->konfirmasi_sdk
         ) {
             if ( 
                 $this->message == 'ya' || 
@@ -2345,7 +2345,7 @@ class WablasController extends Controller
             }
         } else if (
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             is_null( $reservasi_online->jenis_antrian_id )
         ) {
             if ( 
@@ -2360,7 +2360,7 @@ class WablasController extends Controller
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             is_null( $reservasi_online->registrasi_pembayaran_id )
         ) {
@@ -2382,7 +2382,7 @@ class WablasController extends Controller
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
@@ -2405,7 +2405,7 @@ class WablasController extends Controller
             echo $message;
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
@@ -2432,7 +2432,7 @@ class WablasController extends Controller
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
@@ -2450,7 +2450,7 @@ class WablasController extends Controller
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
@@ -2469,7 +2469,7 @@ class WablasController extends Controller
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
@@ -2484,7 +2484,7 @@ class WablasController extends Controller
 
         } else if ( 
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->konfirmasi_sdk ) &&
+            $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id )&&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
