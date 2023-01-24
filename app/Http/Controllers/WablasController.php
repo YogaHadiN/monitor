@@ -2331,7 +2331,7 @@ class WablasController extends Controller
              ->first();
         if (
             !is_null( $reservasi_online ) &&
-            $reservasi_online->konfirmasi_sdk
+            !$reservasi_online->konfirmasi_sdk
         ) {
             Log::info(2336);
             if ( 
