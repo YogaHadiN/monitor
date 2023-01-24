@@ -1955,7 +1955,7 @@ class WablasController extends Controller
             $message .= 'Reservasi ini akan ';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= '*dibatalkan secara otomatis*';
+            $message .= '*Dibatalkan secara otomatis*';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat lebih dari tiga panggilan';
