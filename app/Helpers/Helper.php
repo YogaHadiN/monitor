@@ -46,16 +46,10 @@ if (!function_exists('pesanErrorValidateNomorAsuransiBpjs')) {
          if (!is_numeric($value)) {
              $pesan .= '_Nomor BPJS harus semuanya angka_';
          }
-         if (!is_numeric($value) && !strlen($value) == 13 ) {
+         if (!is_numeric($value) && !( strlen($value) == 13 ) ) {
              $pesan .= PHP_EOL;
          }
-         Log::info('strlen($value)');
-         Log::info(strlen($value));
-         Log::info('strlen($value) == 13');
-         Log::info(strlen($value) == '13');
-         Log::info('strlen($value) == 6');
-         Log::info(strlen($value) == 6);
-         if (!strlen($value) == 13) {
+         if (!(strlen($value) == 13)) {
              $pesan .= '_Nomor BPJS harus terdiri dari 13 angka_';
          }
          return $pesan;
