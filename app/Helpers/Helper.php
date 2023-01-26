@@ -1,4 +1,5 @@
 <?php
+use Log;
 
 if (!function_exists('flex_url')) {
 
@@ -48,6 +49,8 @@ if (!function_exists('pesanErrorValidateNomorAsuransiBpjs')) {
          if (!is_numeric($value) && !strlen($value) == 13 ) {
              $pesan .= PHP_EOL;
          }
+         Log::info('strlen($value)');
+         Log::info(strlen($value));
          if (!strlen($value) == 13) {
              $pesan .= '_Nomor BPJS harus terdiri dari 13 angka_';
          }
