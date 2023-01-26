@@ -2337,13 +2337,21 @@ class WablasController extends Controller
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
+        $message = '';
+
         if( is_null( $reservasi_online ) ){
             $this->whatsapp_bot->delete();
         }
-        Log::info(2334);
-        Log::info('Reservasi Online');
-        Log::info( $reservasi_online );
+
         if (
+            !is_null( $reservasi_online ) &&
+            !$reservasi_online->konfirmasi_sdk &&
+            $this->message == 'batalkan'
+        ) {
+            $reservasi_online->delete();
+            $this->whatsapp_bot->delete();
+            echo 'Reservasi online dibatalkan';
+        } else if (
             !is_null( $reservasi_online ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
@@ -2356,7 +2364,7 @@ class WablasController extends Controller
                 Log::info(2341);
                 $reservasi_online->konfirmasi_sdk = 1;
                 $reservasi_online->save();
-                echo $this->pertanyaanPoliYangDituju();
+                $message = $this->pertanyaanPoliYangDituju();
             }
         } else if (
             !is_null( $reservasi_online ) &&
@@ -2373,11 +2381,10 @@ class WablasController extends Controller
                 $reservasi_online->jenis_antrian_id = $this->message;
                 $reservasi_online->save();
 
-                echo $this->pertanyaanPembayaranPasien();
+                $message = $this->pertanyaanPembayaranPasien();
             } else {
                 $message = $this->pertanyaanPoliYangDituju();
                 $message .= $this->pesanMintaKlienBalasUlang();
-                echo $message;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2392,18 +2399,17 @@ class WablasController extends Controller
                 Log::info(2374);
                 if (count($data)) {
                     Log::info(2376);
-                    echo $this->pesanUntukPilihPasien();
+                    $message = $this->pesanUntukPilihPasien();
                 } else {
                     Log::info(2379);
                     $reservasi_online->register_previously_saved_patient = 0;
                     $reservasi_online->save();
-                    echo $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
+                    $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);;
                 }
             } else {
                 Log::info(2385);
                 $message = $this->pertanyaanPembayaranPasien();
                 $message .= $this->pesanMintaKlienBalasUlang();
-                echo $message;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2430,7 +2436,6 @@ class WablasController extends Controller
                 $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
             }
             $reservasi_online->save();
-            echo $message;
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -2450,10 +2455,10 @@ class WablasController extends Controller
                     $reservasi_online->alamat              = $pasien->alamat;
                     $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                     $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
-                    echo $this->tanyaLanjutkanAtauUlangi($reservasi_online);
+                    $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
                 } else {
                     Log::info(2437);
-                    echo $this->tanyaNamaLengkapPasien();
+                    $message = $this->tanyaNamaLengkapPasien();
                 }
                 $reservasi_online->save();
             } else {
@@ -2463,7 +2468,6 @@ class WablasController extends Controller
                 $message .= '======================';
                 $message .= PHP_EOL;
                 $message .= pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
-                echo $message;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2479,12 +2483,11 @@ class WablasController extends Controller
                 Log::info(2458);
                 $reservasi_online->nama  = ucwords(strtolower($this->message));;
                 $reservasi_online->save();
-                echo $this->tanyaTanggalLahirPasien();
+                $message = $this->tanyaTanggalLahirPasien();
             } else {
                 Log::info(2463);
                 $message =  $this->tanyaNamaLengkapPasien();
                 $message .= $this->pesanMintaKlienBalasUlang();
-                echo $message;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2501,7 +2504,7 @@ class WablasController extends Controller
                 Log::info(2480);
                 $reservasi_online->tanggal_lahir  = $tanggal;
                 $reservasi_online->save();
-                echo $this->tanyaAlamatLengkapPasien();
+                $message = $this->tanyaAlamatLengkapPasien();
             } else {
                 Log::info(2485);
                 $message =  $this->tanyaTanggalLahirPasien();
@@ -2521,7 +2524,7 @@ class WablasController extends Controller
             Log::info(2500);
             $reservasi_online->alamat  = $this->message;
             $reservasi_online->save();
-            echo $this->tanyaLanjutkanAtauUlangi( $reservasi_online );
+            $message = $this->tanyaLanjutkanAtauUlangi( $reservasi_online );
 
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2561,7 +2564,7 @@ class WablasController extends Controller
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
                     $antrian->save();
 
-                    echo $this->pesanBalasanBilaTerdaftar( $antrian->nomor_antrian );
+                    $message = $this->pesanBalasanBilaTerdaftar( $antrian->nomor_antrian );
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -2575,14 +2578,18 @@ class WablasController extends Controller
                         'konfirmasi_sdk'  => 1,
                     ]);
 
-                    echo $this->pertanyaanPoliYangDituju();
+                    $message = $this->pertanyaanPoliYangDituju();
                 }
             } else {
                 Log::info(2554);
                 $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
                 $message .= $this->pesanMintaKlienBalasUlang();
-                echo $message;
             }
+        }
+        if (!empty(trim($message))) {
+            $message .= PHP_EOL;
+            $message .= '===============';
+            $message .= 'Ketik *batalkan* untuk membatalkan reservasi';
         }
     }
     public function pesanMintaKlienBalasUlang(){
