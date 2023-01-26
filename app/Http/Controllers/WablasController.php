@@ -2345,7 +2345,6 @@ class WablasController extends Controller
 
         if (
             !is_null( $reservasi_online ) &&
-            !$reservasi_online->konfirmasi_sdk &&
             $this->message == 'batalkan'
         ) {
             $reservasi_online->delete();
