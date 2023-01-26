@@ -2589,6 +2589,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= '===============';
             $message .= 'Ketik *batalkan* untuk membatalkan reservasi';
+            echo $message;
             Log::info(2592);
         } else {
             Log::info(2594);
