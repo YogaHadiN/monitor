@@ -2338,6 +2338,7 @@ class WablasController extends Controller
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
         $message = '';
+        $input_tidak_tepat = false;
 
         if( is_null( $reservasi_online ) ){
             $this->whatsapp_bot->delete();
@@ -2383,7 +2384,7 @@ class WablasController extends Controller
                 $message = $this->pertanyaanPembayaranPasien();
             } else {
                 $message = $this->pertanyaanPoliYangDituju();
-                $message .= $this->pesanMintaKlienBalasUlang();
+                $input_tidak_tepat = true;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2408,7 +2409,7 @@ class WablasController extends Controller
             } else {
                 Log::info(2385);
                 $message = $this->pertanyaanPembayaranPasien();
-                $message .= $this->pesanMintaKlienBalasUlang();
+                $input_tidak_tepat = true;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2486,7 +2487,7 @@ class WablasController extends Controller
             } else {
                 Log::info(2463);
                 $message =  $this->tanyaNamaLengkapPasien();
-                $message .= $this->pesanMintaKlienBalasUlang();
+                $input_tidak_tepat = true;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2507,7 +2508,7 @@ class WablasController extends Controller
             } else {
                 Log::info(2485);
                 $message =  $this->tanyaTanggalLahirPasien();
-                $message .= $this->pesanMintaKlienBalasUlang();
+                $input_tidak_tepat = true;
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2582,13 +2583,17 @@ class WablasController extends Controller
             } else {
                 Log::info(2554);
                 $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
-                $message .= $this->pesanMintaKlienBalasUlang();
+                $input_tidak_tepat = true;
             }
         }
         if (!empty(trim($message))) {
             $message .= PHP_EOL;
             $message .= '===============';
+            $message .= PHP_EOL;
             $message .= 'Ketik *batalkan* untuk membatalkan reservasi';
+            if ( $input_tidak_tepat ) {
+                $message .= $this->pesanMintaKlienBalasUlang();
+            }
             echo $message;
             Log::info(2592);
         } else {
