@@ -333,7 +333,7 @@ class WablasController extends Controller
             if ( $input_tidak_tepat ) {
                 $response .=  PHP_EOL;
                 $response .=  PHP_EOL;
-                $response .=    "==================";
+                $response .=  $this->samaDengan();
                 $response .= PHP_EOL;
                 $response .= '```Input yang anda masukkan salah```';
                 $response .= PHP_EOL;
@@ -371,10 +371,7 @@ class WablasController extends Controller
             }
         }
 
-
-
         // dokumentasikan kegagalan terapi
-
         // Cek kepuasan pelanggan
 
         if ( str_contains( $this->message, '(pqid' ) ) {
@@ -460,7 +457,7 @@ class WablasController extends Controller
             $payload = [];
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
-			$text .= "==============";
+			$text .= $this->samaDengan();
 			$text .= PHP_EOL;
 			$text .= PHP_EOL;
 			$text .= 'Fasilitas ini akan memproses antrian Untuk berkonsultasi ke *Dokter Umum*';
@@ -529,13 +526,11 @@ class WablasController extends Controller
                 ];
             } else {
                 $text .= $this->pertanyaanPembayaranPasien();
-
                 $payload[] = [
                     'category' => 'text',
                     'message' => $text
                 ];
             }
-
 			return $payload;
 		}
 		if (
@@ -577,7 +572,6 @@ class WablasController extends Controller
                 'category' => 'text',
                 'message'  => $message
             ];
-
 			return $payload;
 		}
 
@@ -599,14 +593,12 @@ class WablasController extends Controller
                     'content' => $text,
                     'footer' => ''
                 ];
-
                 $payload[] = [
                     'category' => 'button',
                     'message' => $message
                 ];
             } else {
                 $text .= $this->lanjutAtauUlangi();
-
                 $payload[] = [
                     'category' => 'text',
                     'message' => $text
@@ -628,7 +620,7 @@ class WablasController extends Controller
 
                 $text .= PHP_EOL;
                 $text .= PHP_EOL;
-                $text .= '=======================';
+                $text .= $this->samaDengan();
                 $text .= PHP_EOL;
                 $text .= 'Selanjutnya Anda akan memproses antrian ' . $registeredWhatsapp->antrian->nomor_antrian;
                 $text .= PHP_EOL;
@@ -1101,7 +1093,7 @@ class WablasController extends Controller
     private function createWhatsappMainMenu(){
         $message = '*Klinik Jati Elok*';
         $message .= PHP_EOL;
-        $message .= '=================';
+        $message .= $this->samaDengan();
         $message .= PHP_EOL;
         $message .= 'Selamat Datang di Klinik Jati Elok';
         $message .= PHP_EOL;
@@ -1705,7 +1697,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir )
         ) {
-            $response .= "==================";
+            $response .= $this->samaDengan();
             $response .= PHP_EOL;
             $response .= PHP_EOL;
         }
@@ -1841,7 +1833,7 @@ class WablasController extends Controller
                 ]);
             $message = 'Klinik Jati Elok';
             $message .= PHP_EOL;
-            $message .= '================';
+            $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Notifikasi Panggilan *dinonaktifkan*';
             $message .= PHP_EOL;
@@ -1859,7 +1851,7 @@ class WablasController extends Controller
                 ]);
             $message = 'Klinik Jati Elok';
             $message .= PHP_EOL;
-            $message .= '================';
+            $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Notifikasi Panggilan *diaktifkan*.';
             $message .= PHP_EOL;
@@ -2465,7 +2457,7 @@ class WablasController extends Controller
                 Log::info(2442);
                 $message =  $this->tanyaNomorBpjsPasien();
                 $message .= PHP_EOL;
-                $message .= '======================';
+                $message .= $this->samaDengan();
                 $message .= PHP_EOL;
                 $message .= pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
             }
@@ -2564,7 +2556,7 @@ class WablasController extends Controller
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
                     $antrian->save();
 
-                    $message = $this->pesanBalasanBilaTerdaftar( $antrian->nomor_antrian );
+                    echo $this->pesanBalasanBilaTerdaftar( $antrian->nomor_antrian );
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -2588,7 +2580,7 @@ class WablasController extends Controller
         }
         if (!empty(trim($message))) {
             $message .= PHP_EOL;
-            $message .= '===============';
+            $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Ketik *batalkan* untuk membatalkan reservasi';
             if ( $input_tidak_tepat ) {
@@ -2681,7 +2673,7 @@ class WablasController extends Controller
             !is_null( $model->registrasi_pembayaran_id) ||
             !is_null( $model->tanggal_lahir )
         ) {
-            $response .= "==================";
+            $response .= $this->samaDengan();
             $response .= PHP_EOL;
             $response .= PHP_EOL;
         }
@@ -2769,4 +2761,8 @@ class WablasController extends Controller
 	public function updateJumlahAntrian($panggil_pasien, $ruangan){
 		event(new FormSubmitted($panggil_pasien, $ruangan));
 	}
+    public function samaDengan(){
+        return '=======================';
+    }
+    
 }
