@@ -1,5 +1,4 @@
 <?php
-use Log;
 
 if (!function_exists('flex_url')) {
 

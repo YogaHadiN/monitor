@@ -176,6 +176,9 @@ class WablasController extends Controller
             } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
                 Log::info(165);
                 return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
+            } else if ( $this->whatsappKonsultasiEstetikExists() ) {
+                Log::info(181);
+                return $this->prosesKonsultasiEstetik(); // buat main menu
             } else if ( $this->whatsappAntrianOnlineExists() ) {
                 Log::info(181);
                 return $this->prosesAntrianOnline(); // buat main menu
@@ -1144,7 +1147,11 @@ class WablasController extends Controller
         /* $message .= PHP_EOL; */
         /* $message .= '2. Reservasi Online'; */
         /* $message .= PHP_EOL; */
-        /* $message .= '3. Saya ingin berbicara dengan admin'; */
+        /* $message .= '3. Cek status kepesertaan BPJS'; */
+        /* $message .= PHP_EOL; */
+        /* $message .= '4. Konsultasi Estetika'; */
+        /* $message .= PHP_EOL; */
+        /* $message .= '5. Saya ingin berbicara dengan admin'; */
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan *1* sesuai dengan informasi di atas';
@@ -1930,8 +1937,7 @@ class WablasController extends Controller
                 'no_telp' => $this->no_telp
             ]);
             echo $this->pertanyaanTipeKonsultasi();
-        }
-        if ( $this->message == 2 ) {
+        } else if ( $this->message == 2 ) {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 6
@@ -1956,6 +1962,24 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya*';
+            echo $message;
+        } else if ( $this->message == 4 ) {
+            $whatsapp_bot = WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 5
+            ]);
+
+            KonsultasiEstetikOnline::create([
+                'no_telp'         => $this->no_telp,
+                'whatsapp_bot_id' => $whatsapp_bot->id
+            ]);
+
+            $message = 'Kakak akan melakukan registrasi untuk konsultasi estetis secara online';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= 'Ketik *ya* untuk melanjutkan ';
+            $message .= PHP_EOL;
+            $message .= 'Ketik *batalkan* untuk membatalkan ';
             echo $message;
         }
     }
@@ -2764,5 +2788,242 @@ class WablasController extends Controller
     public function samaDengan(){
         return '=======================';
     }
+    public function whatsappKonsultasiEstetikExists(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5){
+    }
+    public function prosesKonsultasiEstetik(){
+        $konsultasi_estetik_online = KonsultasiEstetikOnline::where('no_telp', $this->no_telp)
+             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+             ->first();
+        $message = '';
+        $input_tidak_tepat = false;
+
+        if( is_null( $konsultasi_estetik_online ) ){
+            $this->whatsapp_bot->delete();
+        }
+        if (
+            !is_null( $konsultasi_estetik_online ) &&
+            $this->message == 'batalkan'
+        ) {
+            $konsultasi_estetik_online->delete();
+            $this->whatsapp_bot->delete();
+            echo 'Reservasi online dibatalkan';
+        } else if (
+            !is_null( $konsultasi_estetik_online ) &&
+            !$konsultasi_estetik_online->konfirmasi_sdk
+        ) {
+            Log::info(2336);
+            if ( 
+                $this->message == 'ya' || 
+                $this->message == 'iya' || 
+                $this->message == 'y'
+            ) {
+                Log::info(2341);
+                $konsultasi_estetik_online->konfirmasi_sdk = 1;
+                $konsultasi_estetik_online->save();
+                $message = $this->pertanyaanPoliYangDituju();
+            }
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            is_null( $konsultasi_estetik_online->register_previously_saved_patient ) 
+        ) {
+            $data = $this->queryPreviouslySavedPatientRegistry();
+            $dataCount = count($data);
+            if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                Log::info(2401);
+                $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
+                $konsultasi_estetik_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
+                $konsultasi_estetik_online->nama                              = $data[ (int)$this->message -1 ]->nama;
+                $konsultasi_estetik_online->alamat                              = $data[ (int)$this->message -1 ]->alamat;
+                $konsultasi_estetik_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                $message = $this->tanyaLanjutkanAtauUlangi($konsultasi_estetik_online);
+            } else {
+                Log::info(2410);
+                $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
+                $message = $this->tanyaNamaAtauNomorBpjsPasien($konsultasi_estetik_online);
+            }
+            $konsultasi_estetik_online->save();
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            is_null( $konsultasi_estetik_online->nama ) 
+        ) {
+            Log::info(2456);
+            if ( validateName( $this->message ) ) {
+                Log::info(2458);
+                $konsultasi_estetik_online->nama  = ucwords(strtolower($this->message));;
+                $konsultasi_estetik_online->save();
+                $message = $this->tanyaTanggalLahirPasien();
+            } else {
+                Log::info(2463);
+                $message =  $this->tanyaNamaLengkapPasien();
+                $input_tidak_tepat = true;
+            }
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            is_null( $konsultasi_estetik_online->tanggal_lahir ) 
+        ) {
+            $tanggal = $this->convertToPropperDate();
+            if (!is_null( $tanggal )) {
+                Log::info(2480);
+                $konsultasi_estetik_online->tanggal_lahir  = $tanggal;
+                $konsultasi_estetik_online->save();
+                $message = $this->tanyaAlamatLengkapPasien();
+            } else {
+                Log::info(2485);
+                $message =  $this->tanyaTanggalLahirPasien();
+                $input_tidak_tepat = true;
+            }
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            is_null( $konsultasi_estetik_online->alamat )
+        ) {
+            Log::info(2500);
+            $konsultasi_estetik_online->alamat  = $this->message;
+            $konsultasi_estetik_online->save();
+            $message = "Bisa dibantu sebutkan keluhan yang dialami?"
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
+            is_null( $konsultasi_estetik_online->keluhan_utama )
+        ) {
+            $konsultasi_estetik_online->keluhan_utama = $this->message;
+            $konsultasi_estetik_online->save();
+            $message = $this->tanyaPeriodeKeluhanUtama();
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->keluhan_utama )
+            is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )
+        ) {
+            if (
+                $this->message == '1' || 
+                $this->message == '2' || 
+                $this->message == '3' || 
+                $this->message == '4' || 
+                $this->message == '5'
+            ) {
+                $konsultasi_estetik_online->periode_keluhan_utama_id = $this->message;
+                $konsultasi_estetik_online->save();
+
+                $message = "Bisa dibantu infokan pengobatan yang sudah dijalani sebelumnya?";
+            } else {
+                $message = $this->tanyaPeriodeKeluhanUtama();
+                $message .= $this->pesanMintaKlienBalasUlang();
+            }
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->keluhan_utama )
+            !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )
+            is_null( $konsultasi_estetik_online->pengobatan_sebelumnya )
+        ) {
+            $konsultasi_estetik_online->pengobatan_sebelumnya = $this->message;
+            $konsultasi_estetik_online->save();
+            $message = $this->pertanyaanJenisKulit();
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->keluhan_utama )
+            !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )
+            !is_null( $konsultasi_estetik_online->pengobatan_sebelumnya )
+            !is_null( $konsultasi_estetik_online->jenis_kulit_id )
+        ) {
+            if (
+                $this->message == '1' || 
+                $this->message == '2' || 
+                $this->message == '3' || 
+                $this->message == '4' || 
+                $this->message == '5'
+            ) {
+                $konsultasi_estetik_online->jenis_kulit_id = $this->message;
+                $konsultasi_estetik_online->save();
+
+                $message = "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
+                $this->whatsapp_bot->delete();
+            } else {
+                $message = $this->pertanyaanJenisKulit();
+                $message .= $this->pesanMintaKlienBalasUlang();
+            }
+        }
+
+        if (!empty(trim($message))) {
+            $message .= PHP_EOL;
+            $message .= $this->samaDengan();
+            $message .= PHP_EOL;
+            $message .= 'Ketik *batalkan* untuk membatalkan reservasi';
+            if ( $input_tidak_tepat ) {
+                $message .= $this->pesanMintaKlienBalasUlang();
+            }
+            echo $message;
+            Log::info(2592);
+        } else {
+            Log::info(2594);
+        }
+    }
+
+    public function tanyaPeriodeKeluhanUtama(){
+        $message = "Sudah berapa lama keluhan tersebut dialami";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "1. Kurang dari seminggu";
+        $message .= PHP_EOL;
+        $message .= "2. 1 minggu - 1 bulan";
+        $message .= PHP_EOL;
+        $message .= "3. 1 bulan - 3 bulan";
+        $message .= PHP_EOL;
+        $message .= "4. 3 bulan - 1 tahun";
+        $message .= PHP_EOL;
+        $message .= "5. Lebih dari 1 tahun";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Balas dengan angka *1,2,3,4 atau 5* sesuai informasi di atas";
+        return $message;
+    }
+    public function pertanyaanJenisKulit(){
+        $messsage = 'Bisa dibantu jenis kulit kakak?'
+        $messsage .= PHP_EOL;
+        $messsage .= PHP_EOL;
+        $messsage .= '1. Normal';
+        $messsage .= PHP_EOL;
+        $messsage .= '2. Sensitif';
+        $messsage .= PHP_EOL;
+        $messsage .= '3. Kering';
+        $messsage .= PHP_EOL;
+        $messsage .= '4. Berminyak';
+        $messsage .= PHP_EOL;
+        $messsage .= '5. Tidak Tahu';
+        return $message;
+    }
+    
     
 }
+
+            $table->text('pengobatan_sebelumnya')->nullable();
+            $table->integer('jenis_kulit_id')->nullable();
+            $table->bigInteger('tenant_id')->index();
