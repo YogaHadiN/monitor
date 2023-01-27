@@ -3032,7 +3032,7 @@ class WablasController extends Controller
                 $message .=  PHP_EOL;
                 $message .=  "Silahkan balas dengan gambar berikutnya atau";
                 $message .=  PHP_EOL;
-                $message .= 'ketik *selesai* untuk selesai mengirim gambar'
+                $message .= 'ketik *selesai* untuk selesai mengirim gambar';
             } else if ( $this->message == 'selesai' ) {
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
