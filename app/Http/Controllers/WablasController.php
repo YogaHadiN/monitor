@@ -3001,8 +3001,8 @@ class WablasController extends Controller
                 ]);
 
                 $message =  "Gambar sudah disimpan";
+                $message .=  PHP_EOL;
                 $message .=  "Silahkan balas dengan gambar berikutnya atau ketik *selesai* untuk selesai mengirim gambar";
-                echo $message;
             } else if ( $this->message == 'selesai' ) {
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
