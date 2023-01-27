@@ -3015,18 +3015,18 @@ class WablasController extends Controller
         return $message;
     }
     public function pertanyaanJenisKulit(){
-        $messsage = 'Bisa dibantu jenis kulit kakak?';
-        $messsage .= PHP_EOL;
-        $messsage .= PHP_EOL;
-        $messsage .= '1. Normal';
-        $messsage .= PHP_EOL;
-        $messsage .= '2. Sensitif';
-        $messsage .= PHP_EOL;
-        $messsage .= '3. Kering';
-        $messsage .= PHP_EOL;
-        $messsage .= '4. Berminyak';
-        $messsage .= PHP_EOL;
-        $messsage .= '5. Tidak Tahu';
+        $message = 'Bisa dibantu jenis kulit kakak?';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '1. Normal';
+        $message .= PHP_EOL;
+        $message .= '2. Sensitif';
+        $message .= PHP_EOL;
+        $message .= '3. Kering';
+        $message .= PHP_EOL;
+        $message .= '4. Berminyak';
+        $message .= PHP_EOL;
+        $message .= '5. Tidak Tahu';
         return $message;
     }
     
