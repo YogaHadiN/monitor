@@ -17,4 +17,6 @@ class KonsultasiEstetikOnline extends Model
         self::creating(function($model){
             KonsultasiEstetikOnline::where('no_telp', $model->no_telp )->delete();
         });
+        
+    }
 }
