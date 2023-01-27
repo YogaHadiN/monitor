@@ -2823,7 +2823,14 @@ class WablasController extends Controller
                 Log::info(2341);
                 $konsultasi_estetik_online->konfirmasi_sdk = 1;
                 $konsultasi_estetik_online->save();
-                $message = $this->pertanyaanPoliYangDituju();
+                $data = $this->queryPreviouslySavedPatientRegistry();
+                if (count($data)) {
+                    $message = $this->pesanUntukPilihPasien();
+                } else {
+                    $konsultasi_estetik_online->register_previously_saved_patient = 0;
+                    $konsultasi_estetik_online->save();
+                    $message = $this->tanyaNamaLengkapPasien();
+                }
             }
         } else if ( 
             !is_null( $konsultasi_estetik_online ) &&
@@ -2843,7 +2850,7 @@ class WablasController extends Controller
             } else {
                 Log::info(2410);
                 $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
-                $message = $this->tanyaNamaAtauNomorBpjsPasien($konsultasi_estetik_online);
+                $message = $this->tanyaNamaLengkapPasien();
             }
             $konsultasi_estetik_online->save();
         } else if ( 
