@@ -2970,12 +2970,14 @@ class WablasController extends Controller
                 $this->message == '4' || 
                 $this->message == '5'
             ) {
+                Log::info(2973);
                 $konsultasi_estetik_online->jenis_kulit_id = $this->message;
                 $konsultasi_estetik_online->save();
 
                 $message = "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
                 $this->whatsapp_bot->delete();
             } else {
+                Log::info(2980);
                 $message = $this->pertanyaanJenisKulit();
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
@@ -3012,6 +3014,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Balas dengan angka *1,2,3,4 atau 5* sesuai informasi di atas";
+        $message .= PHP_EOL;
         return $message;
     }
     public function pertanyaanJenisKulit(){
@@ -3027,6 +3030,7 @@ class WablasController extends Controller
         $message .= '4. Berminyak';
         $message .= PHP_EOL;
         $message .= '5. Tidak Tahu';
+        $message .= PHP_EOL;
         return $message;
     }
     
