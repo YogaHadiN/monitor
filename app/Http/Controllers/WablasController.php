@@ -11,6 +11,7 @@ use App\Models\CekListDikerjakan;
 use App\Models\Tenant;
 use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
+use App\Models\KonsultasiEstetikOnline;
 use App\Models\WhatsappBot;
 use App\Models\WhatsappBotService;
 use App\Models\WhatsappSatisfactionSurvey;
