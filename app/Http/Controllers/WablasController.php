@@ -2974,12 +2974,40 @@ class WablasController extends Controller
                 $konsultasi_estetik_online->jenis_kulit_id = $this->message;
                 $konsultasi_estetik_online->save();
 
-                $message = "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
-                $this->whatsapp_bot->delete();
+                echo "Silahkan difoto bagian kulit yang dikeluhkan";
+                /* echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik"; */
             } else {
                 Log::info(2980);
                 $message = $this->pertanyaanJenisKulit();
                 $message .= $this->pesanMintaKlienBalasUlang();
+            }
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->keluhan_utama )&&
+            !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )&&
+            !is_null( $konsultasi_estetik_online->pengobatan_sebelumnya )&&
+            !is_null( $konsultasi_estetik_online->jenis_kulit_id )
+        ) {
+            if ( $this->isPicture() ) {
+                $file_name = $this->uploadImage();
+                $konsultasi_estetik_online->gambar()->create([
+                    'nama' => $filename,
+                    'keterangan' => 'konsultasi estetik online'
+                ]);
+
+                $message =  "Gambar sudah disimpan";
+                $message .=  "Silahkan balas dengan gambar berikutnya atau ketik *selesai* untuk selesai mengirim gambar";
+                echo $message;
+            } else if ( $this->message == 'selesai' ) {
+                $this->whatsapp_bot->delete();
+                echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
+            } else  {
+                echo "Balasan yang kakak buat bukan gambar. Mohon masukkan gambar";
             }
         }
 
@@ -2997,6 +3025,13 @@ class WablasController extends Controller
             Log::info(2594);
         }
     }
+    public function isPicture(){
+        if ( Input::get('messageType') == 'image' ) {
+            return true;
+        }
+        return false;
+    }
+    
 
     public function tanyaPeriodeKeluhanUtama(){
         $message = "Sudah berapa lama keluhan tersebut dialami";

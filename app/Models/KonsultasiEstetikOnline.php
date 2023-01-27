@@ -9,4 +9,7 @@ class KonsultasiEstetikOnline extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    public function gambarPeriksa(){
+        return $this->morphMany(GambarPeriksa::class, 'gambarable');
+    }
 }
