@@ -1965,6 +1965,7 @@ class WablasController extends Controller
             $message .= 'Jika setuju balas *ya*';
             echo $message;
         } else if ( $this->message == 4 ) {
+            Log::info(1968);
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 5
