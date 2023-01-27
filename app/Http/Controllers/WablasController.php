@@ -3027,10 +3027,7 @@ class WablasController extends Controller
                     'keterangan' => 'konsultasi estetik online'
                 ]);
 
-                $message =  "Gambar sudah disimpan";
-                $message .=  PHP_EOL;
-                $message .=  PHP_EOL;
-                $message .=  "Silahkan balas dengan gambar berikutnya atau";
+                $message =  "Silahkan balas dengan gambar berikutnya atau";
                 $message .=  PHP_EOL;
                 $message .=  PHP_EOL;
                 $message .=  "atau";
