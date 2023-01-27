@@ -2961,7 +2961,7 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->keluhan_utama )&&
             !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )&&
             !is_null( $konsultasi_estetik_online->pengobatan_sebelumnya )&&
-            !is_null( $konsultasi_estetik_online->jenis_kulit_id )
+            is_null( $konsultasi_estetik_online->jenis_kulit_id )
         ) {
             if (
                 $this->message == '1' || 
