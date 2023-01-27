@@ -9,6 +9,7 @@ class GambarPeriksa extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
 	public function gambarable(){
 		return $this->morphTo();
 	}
