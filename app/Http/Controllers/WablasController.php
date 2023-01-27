@@ -3006,7 +3006,7 @@ class WablasController extends Controller
         return $message;
     }
     public function pertanyaanJenisKulit(){
-        $messsage = 'Bisa dibantu jenis kulit kakak?'
+        $messsage = 'Bisa dibantu jenis kulit kakak?';
         $messsage .= PHP_EOL;
         $messsage .= PHP_EOL;
         $messsage .= '1. Normal';
