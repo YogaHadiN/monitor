@@ -12,4 +12,9 @@ class KonsultasiEstetikOnline extends Model
     public function gambarPeriksa(){
         return $this->morphMany(GambarPeriksa::class, 'gambarable');
     }
+    public static function boot(){
+        parent::boot();
+        self::creating(function($model){
+            KonsultasiEstetikOnline::where('no_telp', $model->no_telp )->delete();
+        });
 }
