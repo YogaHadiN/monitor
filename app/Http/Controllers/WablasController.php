@@ -2994,7 +2994,7 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->jenis_kulit_id )
         ) {
             if ( $this->isPicture() ) {
-                $file_name = $this->uploadImage();
+                $filename = $this->uploadImage();
                 $konsultasi_estetik_online->gambarPeriksa()->create([
                     'nama' => $filename,
                     'keterangan' => 'konsultasi estetik online'
