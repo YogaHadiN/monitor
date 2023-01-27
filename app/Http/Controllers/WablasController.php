@@ -2789,7 +2789,7 @@ class WablasController extends Controller
         return '=======================';
     }
     public function whatsappKonsultasiEstetikExists(){
-        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5);
     }
     public function prosesKonsultasiEstetik(){
         $konsultasi_estetik_online = KonsultasiEstetikOnline::where('no_telp', $this->no_telp)
