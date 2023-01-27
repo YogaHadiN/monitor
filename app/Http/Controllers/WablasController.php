@@ -3023,7 +3023,3 @@ class WablasController extends Controller
     
     
 }
-
-            $table->text('pengobatan_sebelumnya')->nullable();
-            $table->integer('jenis_kulit_id')->nullable();
-            $table->bigInteger('tenant_id')->index();
