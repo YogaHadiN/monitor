@@ -2353,7 +2353,7 @@ class WablasController extends Controller
     }
     public function prosesAntrianOnline(){
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
-             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+             ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->first();
         $message = '';
         $input_tidak_tepat = false;
@@ -2795,7 +2795,7 @@ class WablasController extends Controller
     }
     public function prosesKonsultasiEstetik(){
         $konsultasi_estetik_online = KonsultasiEstetikOnline::where('no_telp', $this->no_telp)
-             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+             ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->first();
         $message = '';
         $input_tidak_tepat = false;
