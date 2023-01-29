@@ -309,8 +309,7 @@ class WablasController extends Controller
         }
 
         if ( 
-            !is_null($this->whatsapp_registration) &&
-            !is_null( $this->botKirim )
+            !is_null($this->whatsapp_registration)
         ) {
             $botKirim = $this->botKirim($this->whatsapp_registration);
             if (!is_null( $botKirim )) {
