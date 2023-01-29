@@ -3111,7 +3111,7 @@ class WablasController extends Controller
     }
     public function syaratFoto(){
         $text = PHP_EOL;
-        $text = PHP_EOL;
+        $text .= PHP_EOL;
         $text .= "_Ambil gambar foto tampak kanan, kiri dan tampak depan_";
         $text .= PHP_EOL;
         $text .= PHP_EOL;
