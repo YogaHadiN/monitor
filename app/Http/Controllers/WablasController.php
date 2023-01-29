@@ -177,6 +177,9 @@ class WablasController extends Controller
             } else if ( $this->whatsappAntrianOnlineExists() ) {
                 Log::info(181);
                 return $this->prosesAntrianOnline(); // buat main menu
+            } else if ( $this->whatsappGambarPeriksaExists() ) {
+                Log::info(181);
+                return $this->prosesGambarPeriksa(); // buat main menu
             } else if ( $this->pasienTidakDalamAntrian() ) {
                 Log::info(168);
                 return $this->createWhatsappMainMenu(); // buat main menu
@@ -3019,14 +3022,7 @@ class WablasController extends Controller
                     'nama' => $filename,
                     'keterangan' => 'konsultasi estetik online'
                 ]);
-
-                $message =  "Silahkan balas dengan gambar berikutnya";
-                $message .=  PHP_EOL;
-                $message .=  PHP_EOL;
-                $message .=  "atau";
-                $message .=  PHP_EOL;
-                $message .=  PHP_EOL;
-                $message .= 'ketik *selesai* untuk mengakhiri';
+                $message = $this->nextPicturePlease();
                 $message .= $this->syaratFoto();
             } else if ( $this->message == 'selesai' ) {
                 $this->whatsapp_bot->delete();
@@ -3111,15 +3107,50 @@ class WablasController extends Controller
     public function syaratFoto(){
         $text = PHP_EOL;
         $text .= PHP_EOL;
-        $text .= "_Ambil gambar foto tampak kanan, kiri dan tampak depan satu per satu_";
+        $text .= "_Ambil gambar foto tampak kanan, kiri dan tampak depan_";
+        $text .= PHP_EOL;
+        $text .= PHP_EOL;
+        $text .= "_Ambil gambar satu per satu_";
         $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= "_Foto tanpa filter dan tanpa make up_";
         return $text;
     }
-    
-    
-    
+
+    public function whatsappGambarPeriksaExists(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(7);
+    }
+    public function prosesGambarPeriksa(){
+        $antrian_periksa = AntrianPeriksa::where('whatsapp_bot_id', $this->whatsapp_bot->id)->first();
+        if ( is_null( $antrian_periksa ) ) {
+            $this->whatsapp_bot->delete();
+            echo "Pemeriksaan telah seleai, Gambar tidak dimasukkan ke pemeriksaan";
+
+        } else if ( $this->isPicture() ) {
+            $filename = $this->uploadImage();
+            $antrian_periksa->gambarPeriksa()->create([
+                'nama' => $filename,
+                'keterangan' => 'Gambar Periksa '
+            ]);
+            echo $this->nextPicturePlease();
+        } else if ( $this->message == 'selesai' ) {
+            $this->whatsapp_bot->delete();
+            echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
+        } else  {
+            echo "Balasan yang kakak buat bukan gambar. Mohon masukkan gambar";
+        }
+    }
+    public function nextPicturePlease(){
+        
+        $message =  "Silahkan balas dengan gambar berikutnya";
+        $message .=  PHP_EOL;
+        $message .=  PHP_EOL;
+        $message .=  "atau";
+        $message .=  PHP_EOL;
+        $message .=  PHP_EOL;
+        $message .= 'ketik *selesai* untuk mengakhiri';
+        return $message;
+    }
     
     
 }
