@@ -2919,7 +2919,7 @@ class WablasController extends Controller
                     $message = $this->tanyaNamaLengkapAtauPilihPasien( $konsultasi_estetik_online );
                 }
             } else {
-                $message = $this->tanyaLanjutkanAtauUlangi();
+                $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
         } else if ( 
