@@ -1095,8 +1095,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= 'Selamat Datang di Klinik Jati Elok';
         $message .= PHP_EOL;
-        $message .= 'Pesan ini adalah pesan robot';
-        $message .= PHP_EOL;
         $message .= $this->messageWhatsappMainMenu();
 
         WhatsappMainMenu::create([
@@ -1977,6 +1975,10 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Ketik *batalkan* untuk membatalkan ';
             echo $message;
+        } else {
+            $message = $this->messageWhatsappMainMenu();
+            $message .= $this->pesanMintaKlienBalasUlang();
+            echo $message;
         }
     }
     public function balasJadwalDokterUmum(){
@@ -2828,9 +2830,9 @@ class WablasController extends Controller
                 $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
                 $konsultasi_estetik_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $konsultasi_estetik_online->nama                              = $data[ (int)$this->message -1 ]->nama;
-                $konsultasi_estetik_online->alamat                              = $data[ (int)$this->message -1 ]->alamat;
+                $konsultasi_estetik_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
                 $konsultasi_estetik_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
-                $message = $this->tanyaLanjutkanAtauUlangi($konsultasi_estetik_online);
+                $message                                                      = $this->tanyaLanjutkanAtauUlangi($konsultasi_estetik_online);
             } else {
                 Log::info(2410);
                 $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
