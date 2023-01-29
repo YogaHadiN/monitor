@@ -2779,7 +2779,7 @@ class WablasController extends Controller
 		event(new FormSubmitted($panggil_pasien, $ruangan));
 	}
     public function samaDengan(){
-        return '=======================';
+        return '==================';
     }
     public function whatsappKonsultasiEstetikExists(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5);
