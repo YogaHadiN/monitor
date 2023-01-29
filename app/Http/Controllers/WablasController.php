@@ -310,40 +310,36 @@ class WablasController extends Controller
 
         if ( 
             !is_null($this->whatsapp_registration) &&
-            isset( $this->botKirim )
+            !is_null( $this->botKirim )
         ) {
             $botKirim = $this->botKirim($this->whatsapp_registration);
-            if ( is_null( $botKirim ) ) {
-                Log::info('no_telp');
-                Log::info($this->no_telp);
-                Log::info('message');
-                Log::info($this->message);
-            }
-            $payload   = $botKirim[0];
-            $category = $payload['category'];
-            $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
+            if (!is_null( $botKirim )) {
+                $payload   = $botKirim[0];
+                $category = $payload['category'];
+                $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
-            if (is_null($this->whatsapp_registration_deleted)) {
-                /* $response .=  PHP_EOL; */
-                /* $response .=  PHP_EOL; */
-                /* $response .= "=============="; */
-                /* $response .=  PHP_EOL; */
-                /* $response .=  PHP_EOL; */
-                /* $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal"; */
-            }
+                if (is_null($this->whatsapp_registration_deleted)) {
+                    /* $response .=  PHP_EOL; */
+                    /* $response .=  PHP_EOL; */
+                    /* $response .= "=============="; */
+                    /* $response .=  PHP_EOL; */
+                    /* $response .=  PHP_EOL; */
+                    /* $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal"; */
+                }
 
 
-            if ( $input_tidak_tepat ) {
-                $response .=  PHP_EOL;
-                $response .=  PHP_EOL;
-                $response .=  $this->samaDengan();
-                $response .= PHP_EOL;
-                $response .= '```Input yang anda masukkan salah```';
-                $response .= PHP_EOL;
-                $response .= '```Mohon Diulangi```';
-                $response .= PHP_EOL;
+                if ( $input_tidak_tepat ) {
+                    $response .=  PHP_EOL;
+                    $response .=  PHP_EOL;
+                    $response .=  $this->samaDengan();
+                    $response .= PHP_EOL;
+                    $response .= '```Input yang anda masukkan salah```';
+                    $response .= PHP_EOL;
+                    $response .= '```Mohon Diulangi```';
+                    $response .= PHP_EOL;
+                }
+                $input_tidak_tepat = false;
             }
-            $input_tidak_tepat = false;
         }
 
         if (!empty($response)) {
