@@ -365,8 +365,8 @@
 
 	Pusher.logToConsole = true;
 
-	var pusher = new Pusher('7d5ef12846803696f64d', {
-	  cluster: 'ap1',
+	var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
+	  cluster:"{{ env('PUSHER_APP_CLUSTER') }}",
 	  forceTLS: true
 	});
 
