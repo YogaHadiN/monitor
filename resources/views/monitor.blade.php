@@ -351,7 +351,6 @@
 
 <script>
 	var base = "{{ secure_url('/') }}";
-	{{-- var base = "{{ url('/') }}"; --}}
 	var hitung = 0
 	setInterval(function(){
 		var d = new Date(); // for now
@@ -374,6 +373,7 @@
 	var channel = pusher.subscribe(channel_name);
 	var nomor_antrian = '';
 	channel.bind(event_name, function(data) {
+        console.log('data', data);
 		if( data.panggil ){
 			var panggil_pasien = 1;
 		} else {
