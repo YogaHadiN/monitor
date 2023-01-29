@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Models\AntrianPoli;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
+use App\Events\GambarSubmitted;
 use App\Models\ReservasiOnline;
 use App\Models\Antrian;
 use App\Models\CekListDikerjakan;
@@ -3132,7 +3133,10 @@ class WablasController extends Controller
                 'nama' => $filename,
                 'keterangan' => 'Gambar Periksa '
             ]);
+
+            event(new GambarSubmitted($antrian_periksa->id));
             echo $this->nextPicturePlease();
+
         } else if ( $this->message == 'selesai' ) {
             $this->whatsapp_bot->delete();
             echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
