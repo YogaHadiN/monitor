@@ -13,6 +13,7 @@ use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
 use App\Models\KonsultasiEstetikOnline;
 use App\Models\WhatsappBot;
+use App\Models\AntrianPeriksa;
 use App\Models\WhatsappBotService;
 use App\Models\WhatsappSatisfactionSurvey;
 use App\Models\WhatsappRecoveryIndex;
