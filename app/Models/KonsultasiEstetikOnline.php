@@ -17,6 +17,7 @@ class KonsultasiEstetikOnline extends Model
         self::creating(function($model){
             KonsultasiEstetikOnline::where('no_telp', $model->no_telp )->delete();
         });
+
         self::created(function($model){
             $model->tenant_id = 1;
             $model->save();

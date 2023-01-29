@@ -2993,7 +2993,6 @@ class WablasController extends Controller
                 $konsultasi_estetik_online->save();
 
                 $text = "Silahkan difoto bagian kulit yang dikeluhkan";
-                $text .= $this->syaratFoto();
                 echo $text;
                 /* echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik"; */
             } else {
@@ -3112,7 +3111,7 @@ class WablasController extends Controller
     public function syaratFoto(){
         $text = PHP_EOL;
         $text .= PHP_EOL;
-        $text .= "_Ambil gambar foto tampak kanan, kiri dan tampak depan_";
+        $text .= "_Ambil gambar foto tampak kanan, kiri dan tampak depan satu per satu_";
         $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= "_Foto tanpa filter dan tanpa make up_";
