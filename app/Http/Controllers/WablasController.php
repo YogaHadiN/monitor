@@ -294,7 +294,7 @@ class WablasController extends Controller
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
                     ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-                    $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antria);
+                    $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antrian);
                 }
             } else {
                 $input_tidak_tepat = true;
@@ -927,13 +927,12 @@ class WablasController extends Controller
      */
     private function registerWhatsappSatisfactionSurvey()
     {
-        $this->message = $this->message[0];
         if (
-            $this->message == '1' ||
+            $this->message[0] == '1' ||
             $this->message == 'puas' ||
-            $this->message == '2' ||
+            $this->message[0] == '2' ||
             $this->message == 'biasa' ||
-            $this->message == '3' ||
+            $this->message[0] == '3' ||
             $this->message == 'tidak puas'
         ) {
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
