@@ -15,10 +15,10 @@ class GambarPeriksa extends Model
     public static function boot(){
         parent::boot();
         self::created(function($model){
-            Log::info(' $model->tenant_id == 0 ');
-            Log::info( $model->tenant_id == 0 );
-            $model->tenant_id = 1;
-            $model->save();
+            if ( !( $model->tenant_id ) ) {
+                $model->tenant_id = 1;
+                $model->save();
+            }
         });
     }
 }
