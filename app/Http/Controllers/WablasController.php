@@ -2885,7 +2885,7 @@ class WablasController extends Controller
             Log::info(2500);
             $konsultasi_estetik_online->alamat  = $this->message;
             $konsultasi_estetik_online->save();
-            $message = $this->tanyaKeluhanUtama();
+            $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
         } else if ( 
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
