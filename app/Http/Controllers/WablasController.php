@@ -2992,7 +2992,9 @@ class WablasController extends Controller
                 $konsultasi_estetik_online->jenis_kulit_id = $this->message;
                 $konsultasi_estetik_online->save();
 
-                echo "Silahkan difoto bagian kulit yang dikeluhkan";
+                $text = "Silahkan difoto bagian kulit yang dikeluhkan";
+                $text .= $this->syaratFoto();
+                echo $text;
                 /* echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik"; */
             } else {
                 Log::info(2980);
@@ -3026,6 +3028,7 @@ class WablasController extends Controller
                 $message .=  PHP_EOL;
                 $message .=  PHP_EOL;
                 $message .= 'ketik *selesai* untuk mengakhiri';
+                $message .= $this->syaratFoto();
             } else if ( $this->message == 'selesai' ) {
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
@@ -3106,6 +3109,14 @@ class WablasController extends Controller
         }
         return $message;
     }
+    public function syaratFoto(){
+        $text = PHP_EOL;
+        $text .= "_Pastikan juga ambil gambar foto tampak kanan, kiri dan tampak depan_";
+        $text .= PHP_EOL;
+        $text .= "_Mohon pastikan foto yang diambil natural tanpa filter handphone dan tanpa make up_";
+        return $text;
+    }
+    
     
     
     
