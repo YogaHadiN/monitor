@@ -2248,8 +2248,8 @@ class WablasController extends Controller
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
-        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id', $whatsapp_bot_service_id )->exists();
-        return $this->whatsapp_bot;
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id', $whatsapp_bot_service_id )->first();
+        return !is_null( $this->whatsapp_bot );
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
@@ -2262,11 +2262,6 @@ class WablasController extends Controller
                 ->whereRaw('whatsapp_bot_service_id = ' . $whatsapp_bot_service_id. ' or whatsapp_bot_service_id = ' . $whatsapp_bot_service_id_input)
                 ->first();
 
-            Log::info('is_null(   $cek_list_dikerjakan   )');
-            Log::info(is_null(  $cek_list_dikerjakan  ));
-            Log::info('( $whatsapp_bot )');
-            Log::info(is_null( $whatsapp_bot ) ? 'null' : 'ada');
-            
             if ( 
                 is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot )
