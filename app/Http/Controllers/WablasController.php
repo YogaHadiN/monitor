@@ -1,7 +1,6 @@
 <?php 
 namespace App\Http\Controllers; 
 use Illuminate\Http\Request; 
-use App\Models\AntrianPeriksa; 
 use App\Models\AntrianPoli;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
