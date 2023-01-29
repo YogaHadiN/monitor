@@ -339,6 +339,8 @@ class WablasController extends Controller
                     $response .= PHP_EOL;
                 }
                 $input_tidak_tepat = false;
+            } else {
+                echo 'Antrian kakak sudah berhasil kami daftarkan';
             }
         }
 
