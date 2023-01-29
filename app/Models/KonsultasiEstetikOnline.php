@@ -21,6 +21,5 @@ class KonsultasiEstetikOnline extends Model
             $model->tenant_id = 1;
             $model->save();
         });
-        
     }
 }
