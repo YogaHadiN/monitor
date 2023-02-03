@@ -925,6 +925,9 @@ class WablasController extends Controller
      */
     private function registerWhatsappSatisfactionSurvey()
     {
+        if ( is_null( $this->message ) ) {
+            Log::info( Input::get('all') );
+        }
         if (
             $this->message[0] == '1' ||
             $this->message == 'puas' ||

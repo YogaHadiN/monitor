@@ -203,8 +203,8 @@ class AntrianController extends Controller
 		$jenis_antrians = JenisAntrian::all();
 		$reversed_antrians                                    = $antrians->reverse();
 
-		if ( $panggil_pasien ) {
-			$antrian_dipanggil = $antrians->sortByDesc('updated_at')->first();
+        $antrian_dipanggil = $antrians->sortByDesc('updated_at')->first();
+		if ( $panggil_pasien && !is_null( $antrian_dipanggil ) ) {
 			$data['panggilan']['nomor_antrian'] = $antrian_dipanggil->nomor_antrian;
 			if (
 				$antrian_dipanggil->antriable_type == 'App\Models\Antrian'
