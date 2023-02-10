@@ -995,6 +995,11 @@ class WablasController extends Controller
         }
     }
     private function registerWhatsappRecoveryIndex(){
+        if (is_null( $this->message )) {
+            Log::info("==============================================");
+            Log::info( Input::all() );
+            Log::info("==============================================");
+        }
         $this->message = $this->message[0];
         if (
             $this->message == '1' ||
@@ -1933,14 +1938,16 @@ class WablasController extends Controller
     public function prosesMainMenuInquiry(){
         $message = '';
         if ( $this->message == 1 ) {
+            Log::info(1941);
             WhatsappJadwalKonsultasiInquiry::create([
                 'no_telp' => $this->no_telp
             ]);
             echo $this->pertanyaanTipeKonsultasi();
         } else if ( $this->message == 2 ) {
+            Log::info(1947);
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 6
+                'whatsapp_bot_service_id' => 6 //registrasi online
             ]);
 
             ReservasiOnline::create([
@@ -1962,9 +1969,11 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya*';
+
             echo $message;
+
         } else if ( $this->message == 4 ) {
-            Log::info(1968);
+            Log::info(1976);
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 5
@@ -1983,6 +1992,7 @@ class WablasController extends Controller
             $message .= 'Ketik *batalkan* untuk membatalkan ';
             echo $message;
         } else {
+            Log::info(1995);
             $message = $this->messageWhatsappMainMenu();
             $message .= $this->pesanMintaKlienBalasUlang();
             echo $message;
