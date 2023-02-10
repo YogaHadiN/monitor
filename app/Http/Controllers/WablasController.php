@@ -123,6 +123,10 @@ class WablasController extends Controller
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
 
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                 ->first();
+
         $this->tenant = Tenant::find(1);
 
         if (
@@ -2234,7 +2238,6 @@ class WablasController extends Controller
     //
     //Cek List Bulanan
     public function cekListBulananExists(){
-        Log::info(2218);
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(3);
     }
     public function cekListBulananInputExists(){
