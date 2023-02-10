@@ -2361,6 +2361,10 @@ class WablasController extends Controller
         return "Cek List sudah selesai dikerjakan. Good Work!!!";
     }
     public function whatsappAntrianOnlineExists(){
+        Log::info(2264);
+        Log::info("========================================");
+        Log::info( $this->whatsapp_bot );
+        Log::info("========================================");
         return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == 6;
     }
     public function prosesAntrianOnline(){
