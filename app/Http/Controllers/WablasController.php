@@ -199,7 +199,7 @@ class WablasController extends Controller
                 Log::info('wa_bot');
                 Log::info( $this->whatsapp_bot );
                 Log::info('========================');
-                /* return $this->createWhatsappMainMenu(); // buat main menu */
+                return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
 	}
