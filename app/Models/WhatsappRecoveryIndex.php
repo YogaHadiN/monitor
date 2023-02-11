@@ -12,6 +12,7 @@ class WhatsappRecoveryIndex extends Model
     public static function boot(){
         parent::boot();
         self::creating(function($model){
+            Log::info('creating WhatsappRecoveryIndex');
             resetWhatsappRegistration( $model->no_telp );
         });
     }

@@ -15,6 +15,7 @@ class WhatsappComplaint extends Model
     public static function boot(){
         parent::boot();
         self::creating(function($model){
+            Log::info('creating WhatsappComplaint');
             resetWhatsappRegistration( $model->no_telp );
         });
     }
