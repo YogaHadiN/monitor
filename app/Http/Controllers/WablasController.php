@@ -2433,8 +2433,24 @@ class WablasController extends Controller
                 Log::info(2358);
                 $reservasi_online->jenis_antrian_id = $this->message;
                 $reservasi_online->save();
-
-                $message = $this->pertanyaanPembayaranPasien();
+                if ( 
+                    $this->message[0] == '2' && 
+                    ( 
+                        idate('H') > 18
+                        idate('H') < 6
+                    )
+                ) {
+                    $reservasi_online->whatsappBot->delete();
+                    $reservasi_online->delete();
+                    $text = "Reservasi secara online untuk pelayanan dokter gigi dimulai pukul 06.00 - 18.00.";
+                    if ( idate('H') < 19 ) {
+                        $text .= PHP_EOL;
+                        $text .= 'Kakak dapat mencoba mendaftar secara langsung sebelum jam 19.00 untuk mengecek ketersediaan tempat.'
+                    }
+                    echo $text;
+                } else {
+                    $message = $this->pertanyaanPembayaranPasien();
+                }
             } else {
                 $message = $this->pertanyaanPoliYangDituju();
                 $input_tidak_tepat = true;

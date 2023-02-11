@@ -9,6 +9,9 @@ class ReservasiOnline extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    public function whatsappBot(){
+        return $this->belongsTo(WhatsappBot::class);
+    }
     public function registrasiPembayaran(){
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
