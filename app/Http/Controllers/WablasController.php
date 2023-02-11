@@ -129,9 +129,6 @@ class WablasController extends Controller
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->first();
 
-        Log::info($sql_query);
-        Log::info('whatsapp_bot');
-        Log::info($this->whatsapp_bot);
         $this->tenant = Tenant::find(1);
 
         if (
