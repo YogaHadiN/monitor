@@ -1125,6 +1125,8 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= $this->messageWhatsappMainMenu();
 
+        Log::info(1127);
+
         WhatsappMainMenu::create([
             'no_telp' => $this->no_telp
         ]);
