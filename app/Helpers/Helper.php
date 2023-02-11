@@ -21,6 +21,7 @@ if (!function_exists('flex_url')) {
 
 if (!function_exists('resetWhatsappRegistration')) {
      function resetWhatsappRegistration($no_telp) {
+         Log::info('masuk sini nih');
         \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappRecoveryIndex::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappMainMenu::where('no_telp', $no_telp)->delete();
