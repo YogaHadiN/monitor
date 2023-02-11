@@ -2292,7 +2292,7 @@ class WablasController extends Controller
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
-        return $this->whatsapp_bot == $whatsapp_bot_service_id;
+        return $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id;
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
