@@ -1902,6 +1902,7 @@ class WablasController extends Controller
         echo $message;
     }
     public function pasienTidakDalamAntrian(){
+        Log::info('pasienTidakDalamAntrian');
         return !Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->whereRaw("antriable_type not like 'App\\\Models\\\Periksa' ")
@@ -2382,6 +2383,7 @@ class WablasController extends Controller
         return "Cek List sudah selesai dikerjakan. Good Work!!!";
     }
     public function whatsappAntrianOnlineExists(){
+        Log::info('whatsappAntrianOnlineExists');
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
     }
     public function prosesAntrianOnline(){
@@ -3158,6 +3160,7 @@ class WablasController extends Controller
     }
 
     public function whatsappGambarPeriksaExists(){
+        Log::info('whatsappGambarPeriksaExists');
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(7);
     }
     public function prosesGambarPeriksa(){
