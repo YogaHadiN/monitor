@@ -128,9 +128,6 @@ class WablasController extends Controller
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->first();
-        $sql_query = WhatsappBot::where('no_telp', $this->no_telp)
-                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                 ->toSql();
 
         Log::info($sql_query);
         Log::info('whatsapp_bot');
@@ -2298,11 +2295,7 @@ class WablasController extends Controller
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
-        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                                 ->where('whatsapp_bot_service_id', $whatsapp_bot_service_id )
-                                 ->where('created_at', 'like', date('Y-m-d') . '%' )
-                                 ->first();
-        return !is_null( $this->whatsapp_bot );
+        return $this->whatsapp_bot == $whatsapp_bot_service_id;
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
