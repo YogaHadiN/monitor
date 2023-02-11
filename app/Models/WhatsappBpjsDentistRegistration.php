@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Asuransi;
 
+use Log;
 class WhatsappBpjsDentistRegistration extends Model
 {
     use HasFactory;

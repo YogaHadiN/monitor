@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Log;
 use Illuminate\Database\Eloquent\Model;
 
 class WhatsappJadwalKonsultasiInquiry extends Model
