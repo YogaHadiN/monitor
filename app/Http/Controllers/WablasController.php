@@ -187,7 +187,7 @@ class WablasController extends Controller
             } else if ( $this->whatsappGambarPeriksaExists() ) {
                 Log::info(194);
                 return $this->prosesGambarPeriksa(); // buat main menu
-            } else if ( $this->pasienTidakDalamAntrian() ) {
+            } else {
                 Log::info(197);
                 Log::info('========================');
                 Log::info('wa_bot');
