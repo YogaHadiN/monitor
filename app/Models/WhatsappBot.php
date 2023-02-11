@@ -19,5 +19,8 @@ class WhatsappBot extends Model
             Log::info('creating WhatsappBot');
             resetWhatsappRegistration( $model->no_telp );
         });
+        self::deleted(function($model){
+            Log::info('deleted WhatsappBot');
+        });
     }
 }
