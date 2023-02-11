@@ -1846,6 +1846,8 @@ class WablasController extends Controller
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->where('antriable_type', 'App\\Models\\AntrianPeriksa')
                 ->first();
+        Log::info('noTelpAdaDiAntrianPeriksa');
+        Log::info( $this->whatsapp_bot );
         return !is_null( $this->antrian );
     }
     /**
@@ -1913,12 +1915,16 @@ class WablasController extends Controller
         /* && $this->no_telp = '6281381912803'; */
     }
     public function whatsappMainMenuExists(){
+        Log::info('whatsappMainMenuExists');
+        Log::info( $this->whatsapp_bot );
         return WhatsappMainMenu::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->exists();
     }
 
     public function whatsappJadwalKonsultasiInquiryExists(){
+        Log::info('whatsappJadwalKonsultasiInquiryExists');
+        Log::info( $this->whatsapp_bot );
         return WhatsappJadwalKonsultasiInquiry::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->exists();
@@ -2238,9 +2244,13 @@ class WablasController extends Controller
     //
     //Cek List Harian
     public function cekListHarianExists(){
+        Log::info('cekListHarianExists');
+        Log::info( $this->whatsapp_bot );
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(1);
     }
     public function cekListHarianInputExists(){
+        Log::info('cekListHarianInputExists');
+        Log::info( $this->whatsapp_bot );
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(2);
     }
     public function prosesCekListHarian(){
@@ -2252,9 +2262,13 @@ class WablasController extends Controller
     //
     //Cek List Bulanan
     public function cekListBulananExists(){
+        Log::info('cekListBulananExists');
+        Log::info( $this->whatsapp_bot );
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(3);
     }
     public function cekListBulananInputExists(){
+        Log::info('cekListBulananInputExists');
+        Log::info( $this->whatsapp_bot );
         Log::info(2222);
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(4);
     }
@@ -2825,6 +2839,8 @@ class WablasController extends Controller
         return '==================';
     }
     public function whatsappKonsultasiEstetikExists(){
+        Log::info('whatsappKonsultasiEstetikExists');
+        Log::info( $this->whatsapp_bot );
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5);
     }
     public function prosesKonsultasiEstetik(){
