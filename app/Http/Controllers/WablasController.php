@@ -2356,7 +2356,7 @@ class WablasController extends Controller
                 if ( 
                     $this->message[0] == '2' && 
                     ( 
-                        idate('H') > 18
+                        idate('H') > 18 ||
                         idate('H') < 6
                     )
                 ) {
