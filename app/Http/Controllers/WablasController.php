@@ -2392,11 +2392,7 @@ class WablasController extends Controller
         return "Cek List sudah selesai dikerjakan. Good Work!!!";
     }
     public function whatsappAntrianOnlineExists(){
-        Log::info(2264);
-        Log::info("========================================");
-        Log::info( $this->whatsapp_bot );
-        Log::info("========================================");
-        return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == 6;
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
     }
     public function prosesAntrianOnline(){
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
