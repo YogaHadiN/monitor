@@ -133,6 +133,8 @@ class WablasController extends Controller
                                  ->toSql();
 
         Log::info($sql_query);
+        Log::info('whatsapp_bot');
+        Log::info($this->whatsapp_bot);
         $this->tenant = Tenant::find(1);
 
         if (
