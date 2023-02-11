@@ -2365,7 +2365,7 @@ class WablasController extends Controller
                     $text = "Reservasi secara online untuk pelayanan dokter gigi dimulai pukul 06.00 - 18.00.";
                     if ( idate('H') < 19 ) {
                         $text .= PHP_EOL;
-                        $text .= 'Kakak dapat mencoba mendaftar secara langsung sebelum jam 19.00 untuk mengecek ketersediaan tempat.'
+                        $text .= 'Kakak dapat mencoba mendaftar secara langsung sebelum jam 19.00 untuk mengecek ketersediaan tempat.';
                     }
                     echo $text;
                 } else {
