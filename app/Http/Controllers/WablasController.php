@@ -195,6 +195,10 @@ class WablasController extends Controller
                 return $this->prosesGambarPeriksa(); // buat main menu
             } else if ( $this->pasienTidakDalamAntrian() ) {
                 Log::info(168);
+                Log::info('========================');
+                Log::info('wa_bot');
+                Log::info( $this->whatsapp_bot );
+                Log::info('========================');
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
@@ -2278,7 +2282,10 @@ class WablasController extends Controller
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
-        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)->where('whatsapp_bot_service_id', $whatsapp_bot_service_id )->first();
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                                 ->where('whatsapp_bot_service_id', $whatsapp_bot_service_id )
+                                 ->where('created_at', 'like', date('Y-m-d') . '%' )
+                                 ->first();
         return !is_null( $this->whatsapp_bot );
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
