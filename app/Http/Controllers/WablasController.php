@@ -749,7 +749,7 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function pesanBalasanBilaTerdaftar($nomor_antrian)
+    private function pesanBalasanBilaTerdaftar($nomor_antrian, $online = false)
     {
         $response = "Anda telah terdaftar dengan Nomor Antrian";
         $response .= PHP_EOL;
@@ -759,7 +759,11 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= "Anda akan menerima notifikasi setiap kali ada panggilan pasien.";
         $response .= PHP_EOL;
-        $response .= "Silahkan menunggu untuk dilayani";
+        if ($online) {
+            $response .= "Mohon kesediaannya _menghubungi petugas administrasi_ untuk daftar ulang dan pemeriksaan fisik saat sudah tiba di klinik.";
+        } else {
+            $response .= "Silahkan menunggu untuk dilayani";
+        }
 
         return $response;
     }
