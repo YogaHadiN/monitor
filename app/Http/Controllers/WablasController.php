@@ -850,12 +850,20 @@ class WablasController extends Controller
      */
     private function recoveryIndexConverter()
     {
-        $this->message = $this->message[0];
-        if ( $this->message == '1' ) {
+        if (
+             ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
+             $this->message  == 'sudah sembuh'
+        ) {
             return 3;
-        } else if ( $this->message == '2' ){
+        } else if (
+             ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
+             $this->message  == 'membaik'
+        ){
             return 2;
-        } else if ( $this->message == '3' ){
+        } else if (
+             ( !is_null( $this->message ) && $this->message[0] == '3' ) ||
+             $this->message  == 'tidak ada perubahan'
+        ){
             return 1;
         }
     }
@@ -978,13 +986,12 @@ class WablasController extends Controller
         }
     }
     private function registerWhatsappRecoveryIndex(){
-        $this->message = $this->message[0];
         if (
-            $this->message == '1' ||
+            !is_null($this->message) && $this->message[0] == '1' ||
             $this->message == 'sudah sembuh' ||
-            $this->message == '2' ||
+            !is_null($this->message) && $this->message[0] == '2' ||
             $this->message == 'membaik' ||
-            $this->message == '3' ||
+            !is_null($this->message) && $this->message[0] == '3' ||
             $this->message == 'tidak ada perubahan'
         ) {
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
@@ -993,7 +1000,7 @@ class WablasController extends Controller
             $nama = ucwords($this->whatsapp_recovery_index->antrian->antriable->pasien->nama);
 
             if(
-                 $this->message == '3' ||
+                 !is_null($this->message) && $this->message[0] == '3' ||
                  $this->message == 'tidak ada perubahan' 
             ){
                 $fail             = new FailedTherapy;
