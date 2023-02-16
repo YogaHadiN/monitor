@@ -987,11 +987,11 @@ class WablasController extends Controller
     }
     private function registerWhatsappRecoveryIndex(){
         if (
-            !is_null($this->message) && $this->message[0] == '1' ||
+            ( !is_null($this->message) && $this->message[0] == '1' ) ||
             $this->message == 'sudah sembuh' ||
-            !is_null($this->message) && $this->message[0] == '2' ||
+            ( !is_null($this->message) && $this->message[0] == '2' ) ||
             $this->message == 'membaik' ||
-            !is_null($this->message) && $this->message[0] == '3' ||
+            ( !is_null($this->message) && $this->message[0] == '3' ) ||
             $this->message == 'tidak ada perubahan'
         ) {
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
