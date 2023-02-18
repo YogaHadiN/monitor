@@ -266,18 +266,18 @@ class WablasController extends Controller
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                 ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
-                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
+                (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
                 if (
                     ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
+                    (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                    (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antrian);
                 }
@@ -417,7 +417,7 @@ class WablasController extends Controller
             $this->antrian->antriable_type != 'App\\Models\\Antrian'
         ){
             $this->saveNomorTeleponPasien();
-            echo $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
+            echo $this->pesanBalasanBilaTerdaftar( $this->antrian );
         }
     }
     
@@ -599,7 +599,7 @@ class WablasController extends Controller
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->get();
 
-            $text = $this->pesanBalasanBilaTerdaftar( $this->antrian->nomor_antrian );
+            $text = $this->pesanBalasanBilaTerdaftar( $this->antrian );
             if ( $registeredWhatsapp->count() ) {
                 $registeredWhatsapp = $registeredWhatsapp->first();
 
@@ -749,18 +749,22 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function pesanBalasanBilaTerdaftar($nomor_antrian, $online = false)
+    private function pesanBalasanBilaTerdaftar($antrian, $online = false)
     {
         $response = "Anda telah terdaftar dengan Nomor Antrian";
         $response .= PHP_EOL;
         $response .= PHP_EOL;
-        $response .= "```" . $nomor_antrian . "```" ;
+        $response .= "```" . $antrian->nomor_antrian . "```" ;
         $response .= PHP_EOL;
         $response .= PHP_EOL;
         $response .= "Anda akan menerima notifikasi setiap kali ada panggilan pasien.";
         $response .= PHP_EOL;
         if ($online) {
             $response .= "Mohon kesediaannya _menghubungi petugas administrasi_ untuk daftar ulang dan pemeriksaan fisik saat sudah tiba di klinik.";
+            if ( $antrian->jenis_antrian_id == 2 ) {
+                $response .= PHP_EOL;
+                $response .= "Panggilan akan dimulai pukul 15.00 saat dokter gigi mulai praktek";
+            }
         } else {
             $response .= "Silahkan menunggu untuk dilayani";
         }
@@ -921,13 +925,12 @@ class WablasController extends Controller
      * @return void
      */
     private function registerWhatsappSatisfactionSurvey()
-    {
         if (
-            $this->message[0] == '1' ||
+            ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
             $this->message == 'puas' ||
-            $this->message[0] == '2' ||
+            ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
             $this->message == 'biasa' ||
-            $this->message[0] == '3' ||
+            ( !is_null( $this->message ) && $this->message[0] == '3' ) ||
             $this->message == 'tidak puas'
         ) {
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
@@ -940,12 +943,12 @@ class WablasController extends Controller
                     ]);
             
             if(
-                 $this->message == '1'  ||
+                 ( !is_null( $this->message ) && $this->message[0] == '1' )  ||
                  $this->message == 'puas'
             ){
                 echo $this->kirimkanLinkGoogleReview();
             } else if(
-                 $this->message == '3' ||
+                  ( !is_null( $this->message ) && $this->message[0] == '3' )  ||
                  $this->message == 'tidak puas'
             ){
 
@@ -961,7 +964,7 @@ class WablasController extends Controller
                 $message .= "Bisa diinfokan kendala yang kakak alami?";
                 echo $message;
             } else if (
-                 $this->message == '2' ||
+                 ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
                  $this->message == 'biasa'
             ) {
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
@@ -1039,10 +1042,9 @@ class WablasController extends Controller
      */
     private function registerKuesionerMenungguObat()
     {
-        $this->message = $this->message[0];
         if (
-            $this->message == '1' ||
-            $this->message == '2'
+            ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
+            ( !is_null( $this->message ) && $this->message[0] == '2' )
         ) {
             $menunggu_ini = $this->menungguConverter( $this->message );
             $this->kuesioner_menunggu_obat->antrian->menunggu = $menunggu_ini; 
@@ -1107,16 +1109,13 @@ class WablasController extends Controller
      */
     private function registerWhatsappMainMenu()
     {
-        $this->message = $this->message[0];
         if (
-            $this->message == '1'
+            ( !is_null( $this->message ) && $this->message[0] == '1' )
         ) {
-            if ( $this->message == '1' ) {
-                WhatsappBpjsDentistRegistration::create([
-                    'no_telp' => $this->no_telp
-                ]);
-                echo $this->pertanyaanPembayaranPasien();
-            }
+            WhatsappBpjsDentistRegistration::create([
+                'no_telp' => $this->no_telp
+            ]);
+            echo $this->pertanyaanPembayaranPasien();
         } else {
             $message = "Balasan yang kakak masukkan tidak dikenali";
             $message .= $this->messageWhatsappMainMenu();
@@ -1177,14 +1176,13 @@ class WablasController extends Controller
     private function registerWhatsappBpjsDentistRegistration()
     {
 
-        $this->message = $this->message[0];
         if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id)
         ) {
             if (
-                 $this->message == '1' ||
-                 $this->message == '2' ||
-                 $this->message == '3'
+                 ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
+                 ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
+                 ( !is_null( $this->message ) && $this->message[0] == '3' )
             ) {
                 $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id = $this->message;
                 $this->whatsapp_bpjs_dentist_registrations->save();
@@ -2070,9 +2068,26 @@ class WablasController extends Controller
         $message = 'Bisa dibantu infokan Jadwal Konsultasi yang ingin diketahui?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= '1. Dokter Umum';
+        $antrians = Antrian::whereRaw('
+                                    antriable_type = "App\\\Models\\\AntrianPeriksa" or
+                                    antriable_type = "App\\\Models\\\AntrianPoli" or
+                                    antriable_type = "App\\\Models\\\Antrian"
+                                ')
+                                ->where('created_at', 'like', date('Y-m-d') . '%')
+                                ->get();
+
+        $jumlah_antrian_dokter_umum = 0;
+        $jumlah_antrian_dokter_gigi = 0;
+        foreach ($antrians as $antrian) {
+            if ( $antrian->jenis_antrian_id == 1 ) {
+                $jumlah_antrian_dokter_umum++;
+            } else if (  $antrian->jenis_antrian_id == 2  ){
+                $jumlah_antrian_dokter_gigi++;
+            }
+        }
+        $message .= '1. Dokter Umum (ada ' . $jumlah_antrian_dokter_umum. ' antrian)';
         $message .= PHP_EOL;
-        $message .= '2. Dokter Gigi';
+        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian_dokter_gigi. ' antrian)';
         $message .= PHP_EOL;
         $message .= '3. Bidan';
         $message .= PHP_EOL;
@@ -2365,7 +2380,7 @@ class WablasController extends Controller
                 $reservasi_online->jenis_antrian_id = $this->message;
                 $reservasi_online->save();
                 if ( 
-                    $this->message[0] == '2' && 
+                    ( !is_null( $this->message ) && $this->message[0] == '2' ) && 
                     ( 
                         idate('H') > 18 ||
                         idate('H') < 6
@@ -2523,12 +2538,12 @@ class WablasController extends Controller
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                 ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
-                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
+                ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
                 if (
                     ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     WhatsappBot::where('no_telp', $this->no_telp)
                         ->delete();
@@ -2545,11 +2560,11 @@ class WablasController extends Controller
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
                     $antrian->save();
 
-                    echo $this->pesanBalasanBilaTerdaftar( $antrian->nomor_antrian );
+                    echo $this->pesanBalasanBilaTerdaftar( $antrian, true );
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
 
                     $whatsapp_bot_id = $reservasi_online->whatsapp_bot_id;
@@ -2589,19 +2604,19 @@ class WablasController extends Controller
     public function lanjutkanRegistrasiPembayaran($model){
         if (
             ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
-            ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
+            ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
         ) {
             $model->registrasi_pembayaran_id  = 1;
         }
         if (
             ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
-            ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+            ( !is_null( $this->message ) &&  $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
         ) {
             $model->registrasi_pembayaran_id  = 2;
         }
         if (
             ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-            ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
+            (  !is_null( $this->message ) && $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
         ) {
             $model->registrasi_pembayaran_id  = 3;
         }
@@ -2619,9 +2634,9 @@ class WablasController extends Controller
                 ( $this->message    == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
                 ( $this->message    == 'bpjs' && $this->tenant->iphone_whatsapp_button_available) ||
                 ( $this->message    == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
-                ( $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available );
+                (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
+                (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
+                (  !is_null( $this->message ) && $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available );
     }
 
     public function tanyaLanjutkanAtauUlangi($model){
