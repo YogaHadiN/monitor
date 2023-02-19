@@ -924,7 +924,7 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function registerWhatsappSatisfactionSurvey()
+    private function registerWhatsappSatisfactionSurvey(){
         if (
             ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
             $this->message == 'puas' ||
