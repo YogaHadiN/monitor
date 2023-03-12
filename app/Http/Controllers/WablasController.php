@@ -167,7 +167,7 @@ class WablasController extends Controller
                 return $this->prosesAntrianOnline(); // buat main menu
             } else if ( $this->whatsappGambarPeriksaExists() ) {
                 return $this->prosesGambarPeriksa(); // buat main menu
-            } else {
+            } else if( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
@@ -1810,7 +1810,13 @@ class WablasController extends Controller
     {
         $this->antrian = Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
-                ->where('antriable_type', 'App\\Models\\AntrianPeriksa')
+                ->whereRaw(
+                    "
+                        antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                        antriable_type = 'App\\\Models\\\Antrian' or
+                        antriable_type = 'App\\\Models\\\AntrianPoli'
+                    "
+                )
                 ->first();
         return !is_null( $this->antrian );
     }
@@ -1821,7 +1827,10 @@ class WablasController extends Controller
      */
     private function updateNotifikasPanggilanUntukAntrian()
     {
-        if ( str_contains( $this->message,'stop' ) ) {
+        if (
+             str_contains( $this->message,'stop' ) ||
+             str_contains( $this->message,'setop' )
+        ) {
             Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->update([
@@ -1835,6 +1844,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
+
         } else if (
              str_contains($this->message, 'aktivkan') ||
              str_contains($this->message, 'aktipkan') ||
@@ -2187,6 +2197,8 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '*'.$cek->cekList->cek_list . '*';
+        $message .= PHP_EOL;
+        $message .= "jumlah " . $cek->limit->limit . ' ' . $cek->jumlah_normal;
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Di ruangan ";
