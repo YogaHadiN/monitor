@@ -1808,7 +1808,7 @@ class WablasController extends Controller
      */
     private function noTelpAdaDiAntrianPeriksa()
     {
-        $this->antrian = Antrian::where('no_telp', $this->no_telp)
+        return Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->whereRaw(
                     "
@@ -1817,18 +1817,7 @@ class WablasController extends Controller
                         antriable_type = 'App\\\Models\\\AntrianPoli'
                     "
                 )
-                ->first();
-        Log::info( "===================================" );
-        Log::info( "Antrian" );
-        Log::info( $this->antrian );
-        Log::info( "No Telp Antrian" );
-        Log::info( $this->antrian->no_telp );
-        Log::info( "No Telp" );
-        Log::info( "date('Y-m-d')" );
-        Log::info( date('Y-m-d') );
-        Log::info( $this->no_telp );
-        Log::info( "===================================" );
-        return !is_null( $this->antrian );
+                ->exists();
     }
     /**
      * undocumented function
