@@ -1817,18 +1817,18 @@ class WablasController extends Controller
                 /*         antriable_type = 'App\\\Models\\\AntrianPoli' */
                 /*     " */
                 /* ) */
-                ->first();
+                ->toSql();
         Log::info( "===================================" );
-        Log::info( "tosql" );
-        Log::info( $this->antrian->toSql() );
-        Log::info( "Antrian" );
+        /* Log::info( "tosql" ); */
+        /* Log::info( $this->antrian->toSql() ); */
+        /* Log::info( "Antrian" ); */
         Log::info( $this->antrian );
-        Log::info( "No Telp Antrian" );
-        Log::info( $this->antrian->no_telp );
-        Log::info( "No Telp" );
-        Log::info( "date('Y-m-d')" );
-        Log::info( date('Y-m-d') );
-        Log::info( $this->no_telp );
+        /* Log::info( "No Telp Antrian" ); */
+        /* Log::info( $this->antrian->no_telp ); */
+        /* Log::info( "No Telp" ); */
+        /* Log::info( "date('Y-m-d')" ); */
+        /* Log::info( date('Y-m-d') ); */
+        /* Log::info( $this->no_telp ); */
         Log::info( "===================================" );
         return !is_null( $this->antrian );
     }
