@@ -1823,6 +1823,7 @@ class WablasController extends Controller
         /* Log::info( $this->antrian->toSql() ); */
         /* Log::info( "Antrian" ); */
         Log::info( $this->antrian );
+        Log::info(1826);
         /* Log::info( "No Telp Antrian" ); */
         /* Log::info( $this->antrian->no_telp ); */
         /* Log::info( "No Telp" ); */
@@ -2090,11 +2091,13 @@ class WablasController extends Controller
         $message = 'Bisa dibantu infokan Jadwal Konsultasi yang ingin diketahui?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $antrians = Antrian::whereRaw('
-                                    antriable_type = "App\\\Models\\\AntrianPeriksa" or
-                                    antriable_type = "App\\\Models\\\AntrianPoli" or
-                                    antriable_type = "App\\\Models\\\Antrian"
-                                ')
+        $antrians = Antrian::whereRaw(
+                                "(
+                                    antriable_type = 'App\\\\\\Models\\\\\\AntrianPeriksa' or
+                                    antriable_type = 'App\\\\\\Models\\\\\\Antrian' or
+                                    antriable_type = 'App\\\\\\Models\\\\\\AntrianPoli'
+                                )"
+                                )
                                 ->where('created_at', 'like', date('Y-m-d') . '%')
                                 ->get();
 
