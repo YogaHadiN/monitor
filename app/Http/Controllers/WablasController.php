@@ -147,8 +147,6 @@ class WablasController extends Controller
                 return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
-            } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
-                return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
                 return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
             } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
@@ -167,6 +165,8 @@ class WablasController extends Controller
                 return $this->prosesAntrianOnline(); // buat main menu
             } else if ( $this->whatsappGambarPeriksaExists() ) {
                 return $this->prosesGambarPeriksa(); // buat main menu
+            } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
+                return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
@@ -1813,24 +1813,10 @@ class WablasController extends Controller
                 ->whereRaw(
                     "(
                         antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                        antriable_type = 'App\\\Models\\\Antrian' or
                         antriable_type = 'App\\\Models\\\AntrianPoli'
                     )"
                 )
                 ->first();
-        Log::info( "===================================" );
-        /* Log::info( "tosql" ); */
-        /* Log::info( $this->antrian->toSql() ); */
-        /* Log::info( "Antrian" ); */
-        Log::info( $this->antrian );
-        Log::info(1826);
-        /* Log::info( "No Telp Antrian" ); */
-        /* Log::info( $this->antrian->no_telp ); */
-        /* Log::info( "No Telp" ); */
-        /* Log::info( "date('Y-m-d')" ); */
-        /* Log::info( date('Y-m-d') ); */
-        /* Log::info( $this->no_telp ); */
-        Log::info( "===================================" );
         return !is_null( $this->antrian );
     }
     /**
@@ -2094,7 +2080,6 @@ class WablasController extends Controller
         $antrians = Antrian::whereRaw(
                                 "(
                                     antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                                    antriable_type = 'App\\\Models\\\Antrian' or
                                     antriable_type = 'App\\\Models\\\AntrianPoli'
                                 )"
                                 )
