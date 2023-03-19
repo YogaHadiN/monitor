@@ -2093,9 +2093,9 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $antrians = Antrian::whereRaw(
                                 "(
-                                    antriable_type = 'App\\\\\\Models\\\\\\AntrianPeriksa' or
-                                    antriable_type = 'App\\\\\\Models\\\\\\Antrian' or
-                                    antriable_type = 'App\\\\\\Models\\\\\\AntrianPoli'
+                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                    antriable_type = 'App\\\Models\\\Antrian' or
+                                    antriable_type = 'App\\\Models\\\AntrianPoli'
                                 )"
                                 )
                                 ->where('created_at', 'like', date('Y-m-d') . '%')
