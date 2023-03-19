@@ -1817,7 +1817,7 @@ class WablasController extends Controller
                         antriable_type = 'App\\\\\\Models\\\\\\AntrianPoli'
                     )"
                 )
-                ->toSql();
+                ->first();
         Log::info( "===================================" );
         /* Log::info( "tosql" ); */
         /* Log::info( $this->antrian->toSql() ); */
