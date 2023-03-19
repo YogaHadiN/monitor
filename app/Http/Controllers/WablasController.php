@@ -1810,13 +1810,13 @@ class WablasController extends Controller
     {
         $this->antrian = Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
-                ->whereRaw(
-                    "
-                        antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                        antriable_type = 'App\\\Models\\\Antrian' or
-                        antriable_type = 'App\\\Models\\\AntrianPoli'
-                    "
-                )
+                /* ->whereRaw( */
+                /*     " */
+                /*         antriable_type = 'App\\\Models\\\AntrianPeriksa' or */
+                /*         antriable_type = 'App\\\Models\\\Antrian' or */
+                /*         antriable_type = 'App\\\Models\\\AntrianPoli' */
+                /*     " */
+                /* ) */
                 ->first();
         Log::info( "===================================" );
         Log::info( "tosql" );
