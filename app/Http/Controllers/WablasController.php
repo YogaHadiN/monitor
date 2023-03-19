@@ -1819,7 +1819,8 @@ class WablasController extends Controller
                 )
                 ->first();
         Log::info( "===================================" );
-        Log::info( $this->antrian );
+        Log::info( "No Telp Antrian" );
+        Log::info( $this->antrian->no_telp );
         Log::info( "No Telp" );
         Log::info( "date('Y-m-d')" );
         Log::info( date('Y-m-d') );
