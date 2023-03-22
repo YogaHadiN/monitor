@@ -150,7 +150,6 @@ class WablasController extends Controller
             } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
                 return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
             } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
-                Log::info(153);
                 return $this->prosesCekListBulanan(); // proses cek list bulanan
             } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
                 return $this->prosesCekListBulananInput(); // proses cek list bulanan
@@ -903,6 +902,8 @@ class WablasController extends Controller
         $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
         $message .= PHP_EOL;
         $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
+        $message .= PHP_EOL;
+        $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
@@ -2343,8 +2344,59 @@ class WablasController extends Controller
         }
     }
     public function cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input){
-        WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->delete();
-        return "Cek List sudah selesai dikerjakan. Good Work!!!";
+        $whatsapp_bot_service = WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->first();
+
+        if (
+            $whatsapp_bot_service->whatsapp_bot_service_id == 1 || 
+            $whatsapp_bot_service->whatsapp_bot_service_id == 2 // input harian
+        ) {
+            $frekuensi_cek_id = 1;
+        } else if (
+            $whatsapp_bot_service->whatsapp_bot_service_id == 3 || 
+            $whatsapp_bot_service->whatsapp_bot_service_id == 4 // input bulanan
+        ) {
+            $frekuensi_cek_id = 3;
+        }
+        $whatsapp_bot_service->delete();
+
+        $hari_ini = date('Y-m-d'); 
+
+        $query  = "SELECT ";
+        $query .= "cls.cek_list as cek_list, ";
+        $query .= "lmt.limit as limit, ";
+        $query .= "cld.jumlah as jumlah, ";
+        $query .= "clr.jumlah_normal as jumlah_normal, ";
+        $query .= "rgn.ruangan as ruangan ";
+        $query .= "FROM cek_list_dikerjakans as cld ";
+        $query .= "JOIN cek_list_ruangans as clr on cld.cek_list_ruangan_id = clr.id ";
+        $query .= "JOIN ruangans as rgn on clr.ruangan_id = rgn.id ";
+        $query .= "JOIN cek_lists as cls on clr.cek_list_id = cls.id ";
+        $query .= "JOIN limits as lmt on cld.cek_list_ruangan_id = clr.id ";
+        $query .= "WHERE cld.frekuensi_cek_id = {$frekuensi_cek_id} ";
+        $query .= "AND cld.created_at like '{$hari_ini}%' ";
+        $query .= "AND ";
+        $query .= "(";
+        $query .= "limit_id = 1 and cld.jumlah < clr.jumlah_normal or ";
+        $query .= "limit_id = 2 and cld.jumlah > clr.jumlah_normal or ";
+        $query .= "limit_id = 3 and cld.jumlah not like clr.jumlah_normal ";
+        $query .= ")";
+
+        $data = DB::select($query);
+        $message = "Cek List sudah selesai dikerjakan. Good Work!!!";
+
+        if (count($data)) {
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            foreach ($data as $k => $d) {
+                $nomor = $k +1;
+                $message .= $nomor . '. ' $d->cek_list . ' di ' . $d->ruangan . ' jumlah ' . $d->jumlah . '(' . $d->limit. ' ' .$d->jumlah_normal. ')';
+                $message .= PHP_EOL;
+            }
+            $message .= PHP_EOL;
+            $message .= 'harap segera tindakan umpan balik';
+        }
+
+        return $message;
     }
     public function whatsappAntrianOnlineExists(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
