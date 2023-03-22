@@ -2361,7 +2361,7 @@ class WablasController extends Controller
         }
         $whatsapp_bot_service->delete();
 
-        $hari_ini = date('Y-m-d'); 
+        $hari_ini = date('Y-m'); 
 
         $query  = "SELECT ";
         $query .= "cls.cek_list as cek_list, ";
@@ -2375,13 +2375,14 @@ class WablasController extends Controller
         $query .= "JOIN cek_lists as cls on clr.cek_list_id = cls.id ";
         $query .= "JOIN limits as lmt on cld.cek_list_ruangan_id = clr.id ";
         $query .= "WHERE clr.frekuensi_cek_id = {$frekuensi_cek_id} ";
-        $query .= "AND cld.created_at like '{$hari_ini}%' ";
+        $query .= "AND cld.created_at like '{$bulan_ini}%' ";
         $query .= "AND ";
         $query .= "(";
         $query .= "limit_id = 1 and cld.jumlah < clr.jumlah_normal or ";
         $query .= "limit_id = 2 and cld.jumlah > clr.jumlah_normal or ";
         $query .= "limit_id = 3 and cld.jumlah not like clr.jumlah_normal ";
-        $query .= ")";
+        $query .= ") ";
+        $query .= "GROUP BY cld.id ";
 
         $data = DB::select($query);
         $message = "Cek List sudah selesai dikerjakan. Good Work!!!";
