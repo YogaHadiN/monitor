@@ -2391,11 +2391,14 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             foreach ($data as $k => $d) {
                 $nomor    = $k +1;
-                $message .= $nomor . '. '. $d->cek_list . ' di ' . $d->ruangan . ' jumlah ' . $d->jumlah . '(' . $d->patokan. ' ' .$d->jumlah_normal. ')';
+                $message .= $nomor . '. '. $d->cek_list . ' di ' . $d->ruangan;
+                $message .= PHP_EOL;
+                $message .= '*jumlah ' . $d->jumlah . '(' . $d->patokan. ' ' .$d->jumlah_normal. ')*';
+                $message .= PHP_EOL;
                 $message .= PHP_EOL;
             }
             $message .= PHP_EOL;
-            $message .= 'harap segera tindakan umpan balik';
+            $message .= 'harap segera ditindak lanjuti';
         }
 
         return $message;
