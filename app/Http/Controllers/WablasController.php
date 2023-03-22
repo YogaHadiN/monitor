@@ -2365,10 +2365,10 @@ class WablasController extends Controller
 
         $query  = "SELECT ";
         $query .= "cls.cek_list as cek_list, ";
-        $query .= "lmt.limit as limit, ";
+        $query .= "lmt.limit as patokan, ";
         $query .= "cld.jumlah as jumlah, ";
         $query .= "clr.jumlah_normal as jumlah_normal, ";
-        $query .= "rgn.ruangan as ruangan ";
+        $query .= "rgn.nama as ruangan ";
         $query .= "FROM cek_list_dikerjakans as cld ";
         $query .= "JOIN cek_list_ruangans as clr on cld.cek_list_ruangan_id = clr.id ";
         $query .= "JOIN ruangans as rgn on clr.ruangan_id = rgn.id ";
@@ -2391,7 +2391,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             foreach ($data as $k => $d) {
                 $nomor    = $k +1;
-                $message .= $nomor . '. '. $d->cek_list . ' di ' . $d->ruangan . ' jumlah ' . $d->jumlah . '(' . $d->limit. ' ' .$d->jumlah_normal. ')';
+                $message .= $nomor . '. '. $d->cek_list . ' di ' . $d->ruangan . ' jumlah ' . $d->jumlah . '(' . $d->patokan. ' ' .$d->jumlah_normal. ')';
                 $message .= PHP_EOL;
             }
             $message .= PHP_EOL;
