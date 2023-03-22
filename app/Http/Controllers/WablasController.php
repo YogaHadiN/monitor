@@ -2374,7 +2374,7 @@ class WablasController extends Controller
         $query .= "JOIN ruangans as rgn on clr.ruangan_id = rgn.id ";
         $query .= "JOIN cek_lists as cls on clr.cek_list_id = cls.id ";
         $query .= "JOIN limits as lmt on cld.cek_list_ruangan_id = clr.id ";
-        $query .= "WHERE cld.frekuensi_cek_id = {$frekuensi_cek_id} ";
+        $query .= "WHERE clr.frekuensi_cek_id = {$frekuensi_cek_id} ";
         $query .= "AND cld.created_at like '{$hari_ini}%' ";
         $query .= "AND ";
         $query .= "(";
