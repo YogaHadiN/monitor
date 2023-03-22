@@ -2378,9 +2378,9 @@ class WablasController extends Controller
         $query .= "AND cld.created_at like '{$bulan_ini}%' ";
         $query .= "AND ";
         $query .= "(";
-        $query .= "limit_id = 1 and cld.jumlah < clr.jumlah_normal or ";
-        $query .= "limit_id = 2 and cld.jumlah > clr.jumlah_normal or ";
-        $query .= "limit_id = 3 and cld.jumlah not like clr.jumlah_normal ";
+        $query .= "limit_id = 1 and cld.jumlah < clr.jumlah_normal or "; // limit 1 minimal
+        $query .= "limit_id = 2 and cld.jumlah > clr.jumlah_normal or "; // limit 2 maksimal
+        $query .= "limit_id = 3 and cld.jumlah not like clr.jumlah_normal "; // limit 3 sama dengan
         $query .= ") ";
         $query .= "GROUP BY cld.id ";
 
