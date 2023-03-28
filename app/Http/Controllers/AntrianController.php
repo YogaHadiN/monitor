@@ -22,6 +22,7 @@ class AntrianController extends Controller
 
 	  public function __construct()
     {
+        Log::info('construct');
         $this->middleware('avail')->only('antri');
     }
   public function index(){
