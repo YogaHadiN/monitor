@@ -343,4 +343,8 @@ class AntrianController extends Controller
 
 		return $data;
 	}
+    public function register(){
+        Log::info('this is it');
+    }
+    
 }

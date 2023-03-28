@@ -21,6 +21,7 @@ Route::get('phpinfo', function(){
 });
 Route::get('/', [AntrianController::class, 'index']);
 Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']);
+Route::get('fingerprint/register', [AntrianController::class, 'register']);
 Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
 Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'webhook']);
 Route::get('antrianperiksa/monitor/convert_sound_to_array', [AntrianController::class, 'convertSoundToArray']);
