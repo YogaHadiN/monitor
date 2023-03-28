@@ -19,7 +19,6 @@
 </head>
 <body class="text-center">
     <h1>Hi Sparta</h1>
-
-
+    <a href='finspot:FingerspotReg;{{ $url_register }}' class='btn btn-sm btn-primary'>Register</a> 
 </body>
 </html>

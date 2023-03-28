@@ -25,7 +25,10 @@ class AntrianController extends Controller
         $this->middleware('avail')->only('antri');
     }
   public function index(){
-      return view('antrians.index');
+     $url_register  = base64_encode(  'fingerprint/register?user_id=1' );
+     return view('antrians.index', [
+         'url_register' => $url_register
+     ]);
   }
 	  
 	public function antri($id){
