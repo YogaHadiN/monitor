@@ -24,9 +24,9 @@ class AntrianController extends Controller
     {
         $this->middleware('avail')->only('antri');
     }
-	  public function index(){
-          return view('antrians.index');
-	  }
+  public function index(){
+      return view('antrians.index');
+  }
 	  
 	public function antri($id){
 		$ap                 = AntrianPoli::find($id);
