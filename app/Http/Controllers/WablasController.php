@@ -2361,7 +2361,7 @@ class WablasController extends Controller
         }
         $whatsapp_bot_service->delete();
 
-        $bulan_ini = date('Y-m'); 
+        $bulan_ini = date('Y-m-d'); 
 
         $query  = "SELECT ";
         $query .= "cls.cek_list as cek_list, ";
