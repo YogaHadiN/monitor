@@ -16,7 +16,6 @@ class WhatsappSatisfactionSurvey extends Model
     public static function boot(){
         parent::boot();
         self::creating(function($model){
-            Log::info('creating WhatsappSatisfactionSurvey');
             resetWhatsappRegistration( $model->no_telp );
         });
     }

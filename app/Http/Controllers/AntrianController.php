@@ -22,7 +22,6 @@ class AntrianController extends Controller
 
 	  public function __construct()
     {
-        Log::info('construct');
         $this->middleware('avail')->only('antri');
     }
   public function index(){
@@ -345,7 +344,6 @@ class AntrianController extends Controller
 		return $data;
 	}
     public function register(){
-        Log::info('this is it');
     }
     
 }

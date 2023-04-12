@@ -13,7 +13,6 @@ class WhatsappJadwalKonsultasiInquiry extends Model
     public static function boot(){
         parent::boot();
         self::creating(function($model){
-            Log::info('creating WhatsappJadwalKonsultasiInquiry');
             resetWhatsappRegistration( $model->no_telp );
         });
     }

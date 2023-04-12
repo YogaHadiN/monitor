@@ -13,7 +13,6 @@ class WhatsappMainMenu extends Model
     public static function boot(){
         parent::boot();
         self::creating(function($model){
-            Log::info('creating WhatsappMainMenu');
             resetWhatsappRegistration( $model->no_telp );
         });
     }

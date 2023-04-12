@@ -14,7 +14,6 @@ class WhatsappBpjsDentistRegistration extends Model
     public static function boot(){
         parent::boot();
         self::creating(function($model){
-            Log::info('creating WhatsappBotDentistRegistration');
             resetWhatsappRegistration( $model->no_telp );
         });
     }

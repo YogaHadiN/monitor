@@ -352,8 +352,9 @@
 <script>
 	var base = "{{ secure_url('/') }}";
 	var hitung = 0
+
 	setInterval(function(){
-		var d = new Date(); // for now
+		var d = new Date();
 		hitung += 1;
 		jam = d.toLocaleTimeString();
 		$('#jam').html(jam);
@@ -377,97 +378,92 @@
             typeof data.panggil !== 'undefined' &&
             typeof data.ruangan !== 'undefined'
         ){
-            console.log(376);
-            console.log('data', data);
-            console.log("====================");
-            console.log("====================");
-            console.log("====================");
-            console.log("====================");
-            console.log("====================");
-            console.log("====================");
-            if( data.panggil ){
-                var panggil_pasien = 1;
-            } else {
-                var panggil_pasien = 0;
-            }
-            var ruangan = data.ruangan;
-
-            $.get(base + '/antrianperiksa/monitor/getData/' + panggil_pasien,
-                {
-                    ruangan : ruangan
-                },
-                function (data, textStatus, jqXHR) {
-                    var panggilan                 = data.panggilan;
-                    var dt                        = data.data;
-                    var antrian_by_type           = data.antrian_by_type;
-                    clear(panggilan);
-                    console.log("yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy")
-                    console.log('dt', dt);
-                    console.log("yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy")
-
-                    $("#antrian_terakhir_poli_umum").html(dt[1].nomor_antrian_terakhir);
-                    $("#antrian_terakhir_poli_gigi").html(dt[2].nomor_antrian_terakhir);
-                    $("#antrian_terakhir_poli_bidan").html(dt[3].nomor_antrian_terakhir);
-                    $("#antrian_terakhir_poli_estetik").html(dt[4].nomor_antrian_terakhir);
-                    $("#antrian_terakhir_poli_rapid_test").html(dt[7].nomor_antrian_terakhir);
-                    $("#antrian_terakhir_kasir").html(dt['pendaftaran'].nomor_antrian_terakhir);
-                    $("#antrian_terakhir_farmasi").html(dt['timbang_tensi'].nomor_antrian_terakhir);
-
-                    var jenis_antrian_ids = data.jenis_antrian_ids;
-
-                    for (let a = 0; a < jenis_antrian_ids.length; a++) {
-                        var temp            = '';
-                        var antrian_periksa = antrian_by_type.antrian_periksa[jenis_antrian_ids[a].id]
-                        if (typeof antrian_periksa !== 'undefined') {
-                            for (let i = 0; i < antrian_periksa.length; i++) {
-                                temp += '<div>'
-                                temp += ' ' + antrian_periksa[i].nomor_antrian + ' '
-                                temp += '</div>'
-                            }
-                            $("#antrian_poli" + "_" + jenis_antrian_ids[a].id).html(temp);
-                        }
-                    }
-
-                    var pendaftaran = antrian_by_type.pendaftaran
-                    if (typeof pendaftaran !== 'undefined') {
-                        var temp = '';
-                        for (let a = 0; a < pendaftaran.length; a++) {
-                            temp += '<div>';
-                            temp += ' ' + pendaftaran[a].nomor_antrian + '';
-                            temp += '</div>';
-                        }
-                        $("#pendaftaran").html(temp);
-                    }
-
-                    var timbang_tensi = antrian_by_type['timbang_tensi'];
-                    if (typeof timbang_tensi !== 'undefined') {
-                        var temp = '';
-                        for (let a = 0; a < timbang_tensi.length; a++) {
-                            temp += '<div>';
-                            temp += ' ' + timbang_tensi[a].nomor_antrian + '';
-                            temp += '</div>';
-                        }
-                        $("#timbang_tensi").html(temp);
-                    }
-                    console.log('data.ruangan', data.ruangan);
-                    console.log("============================================")
-                    console.log('data', data);
-                    console.log('ruangan', ruangan);
-                    if(
-                        typeof ruangan !== 'undefined' 
-                        && ruangan !== ''
-                        && ruangan !== null
-                    ){
-                        refreshElement('#dipanggil');
-                        console.log('displayRuangan',displayRuangan( ruangan ));
-                        $('#poli_panggilan').html( displayRuangan(ruangan) );
-                        $('#nomor_panggilan').html(panggilan.nomor_antrian);
-                        $('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
-                        panggilPasien(ruangan);
-                    }
+            //untuk antrian monitor
+            if( 
+                data.panggil == 1 ||
+                data.panggil == 0
+            ) {
+                if( data.panggil ){
+                    var panggil_pasien = 1;
+                } else {
+                    var panggil_pasien = 0;
                 }
-            );
+                var ruangan = data.ruangan;
 
+                $.get(base + '/antrianperiksa/monitor/getData/' + panggil_pasien,
+                    {
+                        ruangan : ruangan
+                    },
+                    function (data, textStatus, jqXHR) {
+                        var panggilan                 = data.panggilan;
+                        var dt                        = data.data;
+                        var antrian_by_type           = data.antrian_by_type;
+                        clear(panggilan);
+
+                        $("#antrian_terakhir_poli_umum").html(dt[1].nomor_antrian_terakhir);
+                        $("#antrian_terakhir_poli_gigi").html(dt[2].nomor_antrian_terakhir);
+                        $("#antrian_terakhir_poli_bidan").html(dt[3].nomor_antrian_terakhir);
+                        $("#antrian_terakhir_poli_estetik").html(dt[4].nomor_antrian_terakhir);
+                        $("#antrian_terakhir_poli_rapid_test").html(dt[7].nomor_antrian_terakhir);
+                        $("#antrian_terakhir_kasir").html(dt['pendaftaran'].nomor_antrian_terakhir);
+                        $("#antrian_terakhir_farmasi").html(dt['timbang_tensi'].nomor_antrian_terakhir);
+
+                        var jenis_antrian_ids = data.jenis_antrian_ids;
+
+                        for (let a = 0; a < jenis_antrian_ids.length; a++) {
+                            var temp            = '';
+                            var antrian_periksa = antrian_by_type.antrian_periksa[jenis_antrian_ids[a].id]
+                            if (typeof antrian_periksa !== 'undefined') {
+                                for (let i = 0; i < antrian_periksa.length; i++) {
+                                    temp += '<div>'
+                                    temp += ' ' + antrian_periksa[i].nomor_antrian + ' '
+                                    temp += '</div>'
+                                }
+                                $("#antrian_poli" + "_" + jenis_antrian_ids[a].id).html(temp);
+                            }
+                        }
+
+                        var pendaftaran = antrian_by_type.pendaftaran
+                        if (typeof pendaftaran !== 'undefined') {
+                            var temp = '';
+                            for (let a = 0; a < pendaftaran.length; a++) {
+                                temp += '<div>';
+                                temp += ' ' + pendaftaran[a].nomor_antrian + '';
+                                temp += '</div>';
+                            }
+                            $("#pendaftaran").html(temp);
+                        }
+
+                        var timbang_tensi = antrian_by_type['timbang_tensi'];
+                        if (typeof timbang_tensi !== 'undefined') {
+                            var temp = '';
+                            for (let a = 0; a < timbang_tensi.length; a++) {
+                                temp += '<div>';
+                                temp += ' ' + timbang_tensi[a].nomor_antrian + '';
+                                temp += '</div>';
+                            }
+                            $("#timbang_tensi").html(temp);
+                        }
+                        console.log('data.ruangan', data.ruangan);
+                        console.log("============================================")
+                        console.log('data', data);
+                        console.log('ruangan', ruangan);
+                        if(
+                            typeof ruangan !== 'undefined' 
+                            && ruangan !== ''
+                            && ruangan !== null
+                        ){
+                            refreshElement('#dipanggil');
+                            console.log('displayRuangan',displayRuangan( ruangan ));
+                            $('#poli_panggilan').html( displayRuangan(ruangan) );
+                            $('#nomor_panggilan').html(panggilan.nomor_antrian);
+                            $('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
+                            panggilPasien(ruangan);
+                        }
+                    }
+                );
+
+            }
         }
 	});
 
