@@ -382,8 +382,9 @@
             console.log("data.panggil");
             console.log(data.panggil);
             if( 
-                data.panggil == 1 ||
-                data.panggil == 0
+                !isNumber(data.panggil)
+                {{-- data.panggil == 1 || --}}
+                {{-- data.panggil == 0 --}}
             ) {
                 if( data.panggil ){
                     var panggil_pasien = 1;
@@ -609,6 +610,9 @@
 			return 'Ruang Pemeriksaan Fisik';
 		}
 	}
+    function isNumber(num){
+        return !isNaN(parseFloat(num)) && isFinite(num);
+    }
 </script>
 </body>
 </html>
