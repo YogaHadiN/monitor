@@ -388,6 +388,7 @@
                 } else {
                     var panggil_pasien = 0;
                 }
+                console.log('dipanggil');
                 var ruangan = data.ruangan;
 
                 $.get(base + '/antrianperiksa/monitor/getData/' + panggil_pasien,
@@ -444,17 +445,12 @@
                             }
                             $("#timbang_tensi").html(temp);
                         }
-                        console.log('data.ruangan', data.ruangan);
-                        console.log("============================================")
-                        console.log('data', data);
-                        console.log('ruangan', ruangan);
                         if(
                             typeof ruangan !== 'undefined' 
                             && ruangan !== ''
                             && ruangan !== null
                         ){
                             refreshElement('#dipanggil');
-                            console.log('displayRuangan',displayRuangan( ruangan ));
                             $('#poli_panggilan').html( displayRuangan(ruangan) );
                             $('#nomor_panggilan').html(panggilan.nomor_antrian);
                             $('#dipanggil').addClass('animate__animated animate__tada animate__repeat-3');
