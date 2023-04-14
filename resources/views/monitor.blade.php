@@ -379,6 +379,8 @@
             typeof data.ruangan !== 'undefined'
         ){
             //untuk antrian monitor
+            console.log("data.panggil");
+            console.log(data.panggil);
             if( 
                 data.panggil == 1 ||
                 data.panggil == 0
