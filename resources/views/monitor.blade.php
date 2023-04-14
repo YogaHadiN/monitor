@@ -389,6 +389,8 @@
                     var panggil_pasien = 0;
                 }
                 console.log('dipanggil');
+                console.log('data');
+                console.log(data);
                 var ruangan = data.ruangan;
 
                 $.get(base + '/antrianperiksa/monitor/getData/' + panggil_pasien,
