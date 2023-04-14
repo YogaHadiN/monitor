@@ -1,7 +1,6 @@
 <?php
 
 if (!function_exists('flex_url')) {
-
     /**
      * description
      *
