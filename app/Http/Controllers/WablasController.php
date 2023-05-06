@@ -2,6 +2,7 @@
 namespace App\Http\Controllers; 
 use Illuminate\Http\Request; 
 use App\Models\AntrianPoli;
+use App\Models\Complain;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
 use App\Events\GambarSubmitted;
@@ -893,11 +894,18 @@ class WablasController extends Controller
         $tanggal_berobat = $this->whatsapp_complaint->antrian->created_at->format('Y-m-d');
         $this->whatsapp_complaint->delete();
 
+        $conplain = Complain::create([
+            'tanggal'  => $tanggal_berobat,
+            'media'    => 'Whatsapp Bot',
+            'complain' => $this->message
+        ]);
         Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', $tanggal_berobat . '%')
             ->update([
-                'complaint' => $this->message
+                'complaint'   => $this->message,
+                'complain_id' => $complain->id
             ]);
+
 
         $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
         $message .= PHP_EOL;
@@ -1816,6 +1824,7 @@ class WablasController extends Controller
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->whereRaw(
                     "(
+                        antriable_type = 'App\\\Models\\\Antrian' or
                         antriable_type = 'App\\\Models\\\AntrianPeriksa' or
                         antriable_type = 'App\\\Models\\\AntrianPoli'
                     )"
