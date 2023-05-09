@@ -536,7 +536,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
-            $message =  $this->tanyaNamaLengkapPasien();
+            $message =  $this->tanyaNamaLengkapPasien(false);
             $message .=  PHP_EOL;
             $message .=  'Untuk nomor antrian *' . $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
             $payload[] = [
@@ -894,16 +894,16 @@ class WablasController extends Controller
         $tanggal_berobat = $this->whatsapp_complaint->antrian->created_at->format('Y-m-d');
         $this->whatsapp_complaint->delete();
 
-        $conplain = Complain::create([
-            'tanggal'  => $tanggal_berobat,
-            'media'    => 'Whatsapp Bot',
-            'complain' => $this->message
-        ]);
+        /* $complain = Complain::create([ */
+        /*     'tanggal'  => $tanggal_berobat, */
+        /*     'media'    => 'Whatsapp Bot', */
+        /*     'complain' => $this->message */
+        /* ]); */
         Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', $tanggal_berobat . '%')
             ->update([
                 'complaint'   => $this->message,
-                'complain_id' => $complain->id
+                /* 'complain_id' => $complain->id */
             ]);
 
 
@@ -1378,9 +1378,9 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tanyaNamaLengkapPasien()
-    {
-         return 'Bisa dibantu *Nama Lengkap* pasien?';
+    private function tanyaNamaLengkapPasien($question = true) {
+        $tanda_tanya = $question ? '?' : '';
+        return 'Bisa dibantu *Nama Lengkap* pasien ' . $tanda_tanya;
     }
     
     /**
