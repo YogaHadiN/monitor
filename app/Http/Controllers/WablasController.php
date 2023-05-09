@@ -856,22 +856,32 @@ class WablasController extends Controller
     private function recoveryIndexConverter()
     {
         if (
-             ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
+             $this->angkaPertama('1') ||
              $this->message  == 'sudah sembuh'
         ) {
             return 3;
         } else if (
-             ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
+             $this->angkaPertama('2') ||
              $this->message  == 'membaik'
         ){
             return 2;
         } else if (
-             ( !is_null( $this->message ) && $this->message[0] == '3' ) ||
+             $this->angkaPertama('3') ||
              $this->message  == 'tidak ada perubahan'
         ){
             return 1;
         }
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function angkaPertama($pembanding) {
+        $number = preg_replace("/[^0-9]/", "", $this->message);
+        return !is_null( $this->message ) && ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding)   
+    }
+    
     
     private function uploadImage()
     {
@@ -938,11 +948,11 @@ class WablasController extends Controller
      */
     private function registerWhatsappSatisfactionSurvey(){
         if (
-            ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
+            $this->angkaPertama("1") ||
             $this->message == 'puas' ||
-            ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
+            $this->angkaPertama("2") ||
             $this->message == 'biasa' ||
-            ( !is_null( $this->message ) && $this->message[0] == '3' ) ||
+            $this->angkaPertama("3") ||
             $this->message == 'tidak puas'
         ) {
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
@@ -955,12 +965,12 @@ class WablasController extends Controller
                     ]);
             
             if(
-                 ( !is_null( $this->message ) && $this->message[0] == '1' )  ||
+                 $this->angkaPertama("1")  ||
                  $this->message == 'puas'
             ){
                 echo $this->kirimkanLinkGoogleReview();
             } else if(
-                  ( !is_null( $this->message ) && $this->message[0] == '3' )  ||
+                 $this->angkaPertama("3")  ||
                  $this->message == 'tidak puas'
             ){
 
@@ -976,7 +986,7 @@ class WablasController extends Controller
                 $message .= "Bisa diinfokan kendala yang kakak alami?";
                 echo $message;
             } else if (
-                 ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
+                 $this->angkaPertama("2")  ||
                  $this->message == 'biasa'
             ) {
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
@@ -1002,11 +1012,11 @@ class WablasController extends Controller
     }
     private function registerWhatsappRecoveryIndex(){
         if (
-            ( !is_null($this->message) && $this->message[0] == '1' ) ||
+            $this->angkaPertama("1") ||
             $this->message == 'sudah sembuh' ||
-            ( !is_null($this->message) && $this->message[0] == '2' ) ||
+            $this->angkaPertama("2") ||
             $this->message == 'membaik' ||
-            ( !is_null($this->message) && $this->message[0] == '3' ) ||
+            $this->angkaPertama("3") ||
             $this->message == 'tidak ada perubahan'
         ) {
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
@@ -1015,7 +1025,7 @@ class WablasController extends Controller
             $nama = ucwords($this->whatsapp_recovery_index->antrian->antriable->pasien->nama);
 
             if(
-                 !is_null($this->message) && $this->message[0] == '3' ||
+                 $this->angkaPertama("3") ||
                  $this->message == 'tidak ada perubahan' 
             ){
                 $fail             = new FailedTherapy;
@@ -1055,7 +1065,7 @@ class WablasController extends Controller
     private function registerKuesionerMenungguObat()
     {
         if (
-            ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
+            $this->angkaPertama("1") ||
             ( !is_null( $this->message ) && $this->message[0] == '2' )
         ) {
             $menunggu_ini = $this->menungguConverter( $this->message );
@@ -1122,7 +1132,7 @@ class WablasController extends Controller
     private function registerWhatsappMainMenu()
     {
         if (
-            ( !is_null( $this->message ) && $this->message[0] == '1' )
+            $this->angkaPertama("1")
         ) {
             WhatsappBpjsDentistRegistration::create([
                 'no_telp' => $this->no_telp
@@ -1192,7 +1202,7 @@ class WablasController extends Controller
             is_null($this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id)
         ) {
             if (
-                 ( !is_null( $this->message ) && $this->message[0] == '1' ) ||
+                 $this->angkaPertama("1") ||
                  ( !is_null( $this->message ) && $this->message[0] == '2' ) ||
                  ( !is_null( $this->message ) && $this->message[0] == '3' )
             ) {
