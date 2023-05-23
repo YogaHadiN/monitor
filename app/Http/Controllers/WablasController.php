@@ -919,7 +919,9 @@ class WablasController extends Controller
      */
     private function angkaPertama($pembanding) {
         $number = preg_replace("/[^0-9]/", "", $this->message);
-        return !is_null( $this->message ) && ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
+        return !empty( $this->message ) 
+            && ( Input::get('messageType') != 'image' )
+            && ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
     }
     
     
