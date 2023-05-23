@@ -16,6 +16,10 @@ class Antrian extends Model
 		return $this->belongsTo('App\Models\WhatsappRegistration');
 	}
 
+    public function pasien(){
+        return $this->belongsTo(Pasien::class);
+    }
+
 	public function antriable(){
 		return $this->morphto()->withDefault();
 	}
