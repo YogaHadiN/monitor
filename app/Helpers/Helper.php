@@ -54,3 +54,24 @@ if (!function_exists('pesanErrorValidateNomorAsuransiBpjs')) {
     }
 }
 
+if (!function_exists('datePrep')) {
+     function datePrep($tanggal) {
+        if ($tanggal == null) {
+            return null;
+        } else {
+            $date = substr($tanggal, 6, 4) . "-" . substr($tanggal, 3, 2). "-" . substr($tanggal, 0, 2);
+            return $date;
+        }
+    }
+}
+
+if (!function_exists('gagalFlash')) {
+     function gagalFlash($text) {
+        $temp = '<div class="text-left alert alert-danger">';
+        $temp .= '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><strong>GAGAL !! </strong>';
+        $temp .= $text;
+        $temp .= '</div>';
+        return $temp;
+    }
+}
+

@@ -14,6 +14,8 @@ use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
 use App\Models\KonsultasiEstetikOnline;
 use App\Models\WhatsappBot;
+use App\Models\Asuransi;
+use App\Models\Poli;
 use App\Models\AntrianPeriksa;
 use App\Models\WhatsappBotService;
 use App\Models\WhatsappSatisfactionSurvey;
@@ -235,13 +237,26 @@ class WablasController extends Controller
                 $this->whatsapp_registration->antrian->pasien_id                          = $data[ (int)$this->message -1 ]->pasien_id;
                 $this->whatsapp_registration->antrian->nama                               = $data[ (int)$this->message -1 ]->nama;
                 $this->whatsapp_registration->antrian->tanggal_lahir                      = $data[ (int)$this->message -1 ]->tanggal_lahir;
+
                 $pasien = $this->whatsapp_registration->antrian->pasien;
+
                 if (
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 && // jika pembayaran BPJS
                     !empty($pasien->bpjs_image)  // dan gambar kartu BPJS tidak kosong
                 ) {
                     $this->whatsapp_registration->antrian->kartu_asuransi_image = $pasien->bpjs_image;
                     $this->whatsapp_registration->antrian->nomor_bpjs           = $pasien->nomor_asuransi_bpjs;
+                } else if ( 
+                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 1
+                ) {
+                    /* $ap = new AntrianPolisController; */
+                    /* $ap->input_pasien_id           = $pasien->id; */
+                    /* $ap->input_asuransi_id         = Asuransi::BiayaPribadi()->id; */
+                    /* $ap->input_poli_id             = Poli::konsultasiDokterUmum()->id; */
+                    /* $ap->input_staf_id             = null; */
+                    /* $ap->input_tanggal             = $this->whatsapp_registration->antrian->created_at; */
+                    /* $ap->input_bukan_peserta       = 0; */
+                    /* $ap->processData(); */
                 }
             } else {
                 $this->whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
@@ -590,7 +605,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
-            is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image ) 
+            is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
             $message = 'Bisa dibantu kirimkan';
             $message .=  PHP_EOL;
@@ -610,8 +625,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
-            !is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image ) &&
-            is_null( $this->whatsapp_registration_deleted ) 
+            !is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
             $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?';
             $text .= PHP_EOL;
@@ -2745,7 +2759,7 @@ class WablasController extends Controller
             ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
         ) {
             $model->registrasi_pembayaran_id = 1;
-            $model->kartu_asuransi_image     = '';
+            $model->kartu_asuransi_image     = '0';
         }
         if (
             ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -2764,6 +2778,7 @@ class WablasController extends Controller
         if (count($data) < 1) {
             $this->whatsapp_registration->antrian->register_previously_saved_patient = 0;
         }
+
         $model->save();
         return $model;
     }
