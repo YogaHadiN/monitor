@@ -594,7 +594,7 @@ class WablasController extends Controller
         ) {
             $message = 'Bisa dibantu kirimkan';
             $message .=  PHP_EOL;
-            $message = $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 ? '*Foto Kartu BPJS*' :  '*Foto Kartu Asuransi*';
+            $message .= $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 ? '*Foto Kartu BPJS*' :  '*Foto Kartu Asuransi*';
             $message .= ' pasien';
             $message .=  PHP_EOL;
             $message .= 'Untuk nomor antrian *' .  $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
