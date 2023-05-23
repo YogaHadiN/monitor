@@ -591,7 +591,7 @@ class WablasController extends Controller
             is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image ) 
         ) {
             $message = 'Bisa dibantu kirimkan *Foto Kartu Asuransi* pasien ';
-            $message .= 'Untuk nomor antrian *' . $antrian->nomor_antrian . '* ?';
+            $message .= 'Untuk nomor antrian *' .  $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
             $message .=  PHP_EOL;
             $payload[] = [
                 'category' => 'text',
