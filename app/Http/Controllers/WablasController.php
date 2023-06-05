@@ -313,19 +313,19 @@ class WablasController extends Controller
                     ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
                     (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-                    Log::info('$this->whatsapp_registration');
-                    Log::info('');
-                    Log::info($this->whatsapp_registration);
-                    Log::info('');
-                    Log::info('');
+                    /* Log::info('$this->whatsapp_registration'); */
+                    /* Log::info(''); */
+                    /* Log::info($this->whatsapp_registration); */
+                    /* Log::info(''); */
+                    /* Log::info(''); */
 
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
 
                     Log::info(316);
-                    Log::info('');
-                    Log::info('');
-                    Log::info('$this->whatsapp_registration_deleted');
-                    Log::info($this->whatsapp_registration_deleted);
+                    /* Log::info(''); */
+                    /* Log::info(''); */
+                    /* Log::info('$this->whatsapp_registration_deleted'); */
+                    /* Log::info($this->whatsapp_registration_deleted); */
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -623,7 +623,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
             is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
         ) {
-            Log::info(610);
+            /* Log::info(610); */
             $message = 'Bisa dibantu kirimkan';
             $message .=  PHP_EOL;
             $message .= $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 ? '*Foto Kartu BPJS*' :  '*Foto Kartu Asuransi*';
@@ -668,7 +668,7 @@ class WablasController extends Controller
             /* Log::info('$this->whatsapp_registration->antrian->kartu_asuransi_image'); */
             /* Log::info(''); */
             /* Log::info(''); */
-            Log::info($this->whatsapp_registration->antrian->kartu_asuransi_image);
+            /* Log::info($this->whatsapp_registration->antrian->kartu_asuransi_image); */
             $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?';
             $text .= PHP_EOL;
 
@@ -698,7 +698,7 @@ class WablasController extends Controller
 		if (
             !is_null( $this->whatsapp_registration_deleted ) 
         ) {
-            Log::info(678);
+            /* Log::info(678); */
             $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->get();
