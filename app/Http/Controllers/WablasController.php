@@ -322,18 +322,6 @@ class WablasController extends Controller
                     $whatsapp_registration_id = $this->whatsapp_registration->id;
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
 
-                    $whatsapp_registration = WhatsappRegistration::find('id');
-                    Log::info(316);
-                    Log::info('');
-                    Log::info('');
-                    Log::info('$whatsapp_registration');
-                    Log::info(is_null( $whatsapp_registration ) ? 'is_null' : 'not_null');
-                    Log::info('');
-                    Log::info('');
-                    Log::info('$this->whatsapp_registration->trashed()');
-                    Log::info($this->whatsapp_registration->trashed() ? 'trashed' : 'not trasehd');
-                    Log::info('');
-                    Log::info('');
                     /* Log::info(''); */
                     /* Log::info(''); */
                     /* Log::info('$this->whatsapp_registration_deleted'); */
@@ -501,7 +489,7 @@ class WablasController extends Controller
 	{
         if (
             !is_null($this->whatsapp_registration) &&
-            !empty($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
              $this->whatsapp_registration->registering_confirmation < 1
         ) {
             $payload = [];
@@ -540,7 +528,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
-            !empty($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ) {
@@ -586,7 +574,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
-            !empty($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
@@ -599,7 +587,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
-            !empty($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
@@ -614,7 +602,7 @@ class WablasController extends Controller
 
 		if (
             !is_null($this->whatsapp_registration) &&
-            !empty($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
@@ -630,7 +618,7 @@ class WablasController extends Controller
 
 		if (
             !is_null($this->whatsapp_registration) &&
-            !empty($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
             !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
             is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
@@ -651,7 +639,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
-            !empty($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
             !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
             !is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
@@ -713,9 +701,7 @@ class WablasController extends Controller
 			return $payload;
 		}
 
-		if (
-            !is_null( $this->whatsapp_registration_deleted ) 
-        ) {
+		if ($this->whatsapp_registration_deleted) {
             /* Log::info(678); */
             $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
