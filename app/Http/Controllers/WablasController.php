@@ -330,6 +330,10 @@ class WablasController extends Controller
                     Log::info(is_null( $whatsapp_registration ) ? 'is_null' : 'not_null');
                     Log::info('');
                     Log::info('');
+                    Log::info('$this->whatsapp_registration->trashed()');
+                    Log::info($this->whatsapp_registration->trashed() ? 'trashed' : 'not trasehd');
+                    Log::info('');
+                    Log::info('');
                     /* Log::info(''); */
                     /* Log::info(''); */
                     /* Log::info('$this->whatsapp_registration_deleted'); */
