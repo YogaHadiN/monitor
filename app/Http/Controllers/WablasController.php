@@ -640,6 +640,10 @@ class WablasController extends Controller
             Log::info(629);
             Log::info('$this->whatsapp_registration');
             Log::info($this->whatsapp_registration);
+            Log::info('!is_null($this->whatsapp_registration)');
+            Log::info(!is_null($this->whatsapp_registration) ? 'true'  : 'false');
+            
+            Log::info($this->whatsapp_registration);
             Log::info('$this->whatsapp_registration->antrian');
             Log::info($this->whatsapp_registration->antrian);
             Log::info('$this->whatsapp_registration->antrian->tanggal_lahir');
@@ -675,6 +679,7 @@ class WablasController extends Controller
 		if (
             !is_null( $this->whatsapp_registration_deleted ) 
         ) {
+            Log::info(678);
             $registeredWhatsapp = WhatsappRegistration::where('no_telp', $this->no_telp)
                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                 ->get();
