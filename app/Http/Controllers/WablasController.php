@@ -314,11 +314,16 @@ class WablasController extends Controller
                     (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     Log::info('$this->whatsapp_registration');
+                    Log::info('');
                     Log::info($this->whatsapp_registration);
+                    Log::info('');
+                    Log::info('');
 
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
 
                     Log::info(316);
+                    Log::info('');
+                    Log::info('');
                     Log::info('$this->whatsapp_registration_deleted');
                     Log::info($this->whatsapp_registration_deleted);
                 }
