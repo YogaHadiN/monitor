@@ -645,10 +645,10 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
         ) {
             Log::info(629);
-            Log::info('');
-            Log::info('');
-            Log::info('$this->whatsapp_registration');
-            Log::info($this->whatsapp_registration);
+            /* Log::info(''); */
+            /* Log::info(''); */
+            /* Log::info('$this->whatsapp_registration'); */
+            /* Log::info($this->whatsapp_registration); */
             Log::info('');
             Log::info('');
             Log::info('!is_null($this->whatsapp_registration)');
@@ -659,18 +659,18 @@ class WablasController extends Controller
             Log::info(!is_null( $this->whatsapp_registration_deleted ));
             Log::info('');
             Log::info('');
-            Log::info($this->whatsapp_registration);
-            Log::info('$this->whatsapp_registration->antrian');
-            Log::info('');
-            Log::info('');
-            Log::info($this->whatsapp_registration->antrian);
-            Log::info('$this->whatsapp_registration->antrian->tanggal_lahir');
-            Log::info('');
-            Log::info('');
-            Log::info($this->whatsapp_registration->antrian->tanggal_lahir);
-            Log::info('$this->whatsapp_registration->antrian->kartu_asuransi_image');
-            Log::info('');
-            Log::info('');
+           /* Log::info($this->whatsapp_registration); */
+            /* Log::info('$this->whatsapp_registration->antrian'); */
+            /* Log::info(''); */
+            /* Log::info(''); */
+            /* Log::info($this->whatsapp_registration->antrian); */
+            /* Log::info('$this->whatsapp_registration->antrian->tanggal_lahir'); */
+            /* Log::info(''); */
+            /* Log::info(''); */
+            /* Log::info($this->whatsapp_registration->antrian->tanggal_lahir); */
+            /* Log::info('$this->whatsapp_registration->antrian->kartu_asuransi_image'); */
+            /* Log::info(''); */
+            /* Log::info(''); */
             Log::info($this->whatsapp_registration->antrian->kartu_asuransi_image);
             $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?';
             $text .= PHP_EOL;
