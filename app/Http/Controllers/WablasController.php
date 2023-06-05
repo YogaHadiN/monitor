@@ -645,10 +645,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
         ) {
             Log::info(629);
-            /* Log::info(''); */
-            /* Log::info(''); */
-            /* Log::info('$this->whatsapp_registration'); */
-            /* Log::info($this->whatsapp_registration); */
+            Log::info('this is sparta');
             Log::info('');
             Log::info('');
             Log::info('!is_null($this->whatsapp_registration)');
