@@ -489,6 +489,7 @@ class WablasController extends Controller
 	{
         if (
             !is_null($this->whatsapp_registration) &&
+            !empty($this->whatsapp_registration) &&
              $this->whatsapp_registration->registering_confirmation < 1
         ) {
             $payload = [];
@@ -527,6 +528,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
+            !empty($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ) {
@@ -572,6 +574,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
+            !empty($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
@@ -584,6 +587,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
+            !empty($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
@@ -598,6 +602,7 @@ class WablasController extends Controller
 
 		if (
             !is_null($this->whatsapp_registration) &&
+            !empty($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
              is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
@@ -613,6 +618,7 @@ class WablasController extends Controller
 
 		if (
             !is_null($this->whatsapp_registration) &&
+            !empty($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
             !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
             is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
@@ -633,6 +639,7 @@ class WablasController extends Controller
 		}
 		if (
             !is_null($this->whatsapp_registration) &&
+            !empty($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
             !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
             !is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
