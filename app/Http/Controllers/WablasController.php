@@ -93,8 +93,6 @@ class WablasController extends Controller
 	
 	public function webhook(){
         header('Content-Type: application/json');
-        Log::info('messageType');
-        Log::info( Input::get('messageType') );
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
@@ -604,9 +602,10 @@ class WablasController extends Controller
 		if (
             !is_null($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
-            !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
-            is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
+            !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
+            is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
         ) {
+            Log::info(610);
             $message = 'Bisa dibantu kirimkan';
             $message .=  PHP_EOL;
             $message .= $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 ? '*Foto Kartu BPJS*' :  '*Foto Kartu Asuransi*';
@@ -620,13 +619,21 @@ class WablasController extends Controller
             ];
 			return $payload;
 		}
-
 		if (
             !is_null($this->whatsapp_registration) &&
             !is_null($this->whatsapp_registration->antrian) &&
-            !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
-            !is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
+            !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
+            !is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
         ) {
+            Log::info(629);
+            Log::('$this->whatsapp_registration');
+            Log::($this->whatsapp_registration);
+            Log::('$this->whatsapp_registration->antrian');
+            Log::($this->whatsapp_registration->antrian);
+            Log::('$this->whatsapp_registration->antrian->tanggal_lahir');
+            Log::($this->whatsapp_registration->antrian->tanggal_lahir);
+            Log::('$this->whatsapp_registration->antrian->kartu_asuransi_image');
+            Log::($this->whatsapp_registration->antrian->kartu_asuransi_image);
             $text = 'Data anda sudah kami terima. Apakah anda ingin melanjutkan atau ulangi karena ada kesalahan input data?';
             $text .= PHP_EOL;
 
