@@ -3301,10 +3301,10 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(9);
     }
     public function prosesCekListMingguan(){
-        return $this->prosesCekListDilakukan(3,3,4); // bulanan
+        return $this->prosesCekListDilakukan(2,8,9); // bulanan
     }
     public function prosesCekListMingguanInput(){
-        $this->prosesCekListDikerjakanInput(3,3,4);
+        $this->prosesCekListDikerjakanInput(2,8,9);
     }
 
     /**
