@@ -27,6 +27,7 @@ use App\Models\WhatsappBpjsDentistRegistration;
 use App\Models\WhatsappComplaint;
 use App\Models\CekListRuangan;
 use App\Models\CekListHarian;
+use App\Models\CekListMingguan;
 use App\Models\FailedTherapy;
 use App\Models\Periksa;
 use App\Models\Pasien;
@@ -156,6 +157,10 @@ class WablasController extends Controller
                 return $this->prosesCekListBulanan(); // proses cek list bulanan
             } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
                 return $this->prosesCekListBulananInput(); // proses cek list bulanan
+            } else if ( $this->cekListMingguanExists() ) { // Jika ada cek list bulanan
+                return $this->prosesCekListMingguan(); // proses cek list bulanan
+            } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan
+                return $this->prosesCekListMingguanInput(); // proses cek list bulanan
             } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
                 return $this->prosesCekListHarian(); // proses cek list harian
             } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
@@ -205,7 +210,10 @@ class WablasController extends Controller
         ){
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == 'ya' && !$this->tenant->iphone_whatsapp_button_available )
+                ( $this->message == 'ya' && !$this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == 'iya' && !$this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == 'iy' && !$this->tenant->iphone_whatsapp_button_available ) ||
+                ( $this->message == 'y' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
                 $this->whatsapp_registration->registering_confirmation = 1;
                 $this->whatsapp_registration->save();
@@ -227,8 +235,8 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
+            Log::info(230);
             $data = $this->queryPreviouslySavedPatientRegistry();
-
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
@@ -313,10 +321,10 @@ class WablasController extends Controller
                     ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
                     (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-
                     $whatsapp_registration_id = $this->whatsapp_registration->id;
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
-
+                    //jika pasien_id tidak kosong, maka pasien langsung masuk saja ke antrianpoli
+                    //==========================================================================
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -927,7 +935,10 @@ class WablasController extends Controller
             return 3;
         } else if (
              $this->angkaPertama('2') ||
-             $this->message  == 'membaik'
+             str_contains(strtolower( $this->message ), 'alhamdulillah') ||
+             str_contains(strtolower( $this->message ), 'alhamdulilah') ||
+             str_contains(strtolower( $this->message ), 'alhmdulilah') ||
+             getFirstWord( $this->message )  == 'membaik'
         ){
             return 2;
         } else if (
@@ -2518,6 +2529,7 @@ class WablasController extends Controller
             if ( 
                 $this->message == 'ya' || 
                 $this->message == 'iya' || 
+                $this->message == 'iy' || 
                 $this->message == 'y'
             ) {
                 $reservasi_online->konfirmasi_sdk = 1;
@@ -2949,6 +2961,7 @@ class WablasController extends Controller
         ) {
             if ( 
                 $this->message == 'ya' || 
+                $this->message == 'iy' || 
                 $this->message == 'iya' || 
                 $this->message == 'y'
             ) {
@@ -3277,6 +3290,26 @@ class WablasController extends Controller
         $message .= 'ketik *selesai* untuk mengakhiri';
         return $message;
     }
+
+    public function cekListMingguanExists(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(8);
+    }
+    public function cekListMingguanInputExists(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(9);
+    }
+    public function prosesCekListMingguan(){
+        return $this->prosesCekListDilakukan(3,3,4); // bulanan
+    }
+    public function prosesCekListMingguanInput(){
+        $this->prosesCekListDikerjakanInput(3,3,4);
+    }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    
     
     
 }

@@ -75,3 +75,11 @@ if (!function_exists('gagalFlash')) {
     }
 }
 
+
+if (!function_exists('getFirstWord')) {
+     function getFirstWord($text) {
+        $arr = explode(' ',trim($text));
+        return $arr[0]; // will print Test
+    }
+}
+
