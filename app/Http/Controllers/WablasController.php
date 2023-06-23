@@ -2454,6 +2454,11 @@ class WablasController extends Controller
         ) {
             $frekuensi_cek_id = 1;
         } else if (
+            $whatsapp_bot_service->whatsapp_bot_service_id == 8 || 
+            $whatsapp_bot_service->whatsapp_bot_service_id == 9 // input mingguan
+        ) {
+            $frekuensi_cek_id = 2;
+        } else if (
             $whatsapp_bot_service->whatsapp_bot_service_id == 3 || 
             $whatsapp_bot_service->whatsapp_bot_service_id == 4 // input bulanan
         ) {
