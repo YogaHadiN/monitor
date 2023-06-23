@@ -948,6 +948,7 @@ class WablasController extends Controller
             return 1;
         }
     }
+
     /**
      * undocumented function
      *
