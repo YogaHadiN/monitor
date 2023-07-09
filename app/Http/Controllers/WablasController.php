@@ -2728,12 +2728,12 @@ class WablasController extends Controller
                     $antrian->alamat                   = $reservasi_online->alamat;
                     $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
-                    $antrian->qr_code_path_s3 = $this->generateQrCodeForOnlineReservation($antrian);
+                    $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
                     $antrian->save();
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $fakeUrlFile =  'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155757.png';
+                    $fakeUrlFile =  'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155774.png';
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
@@ -2742,26 +2742,22 @@ class WablasController extends Controller
 
                     $urlFile = trim( \Storage::disk('s3')->url($antrian->qr_code_path_s3) );
 
-                    $payloadReal[] = [
-                        'category' => 'image',
-                        'caption' => $response,
-                        'urlFile' => $urlFile
-                    ];
+                    /* $payload[] = [ */
+                    /*     'category' => 'image', */
+                    /*     'caption' => $response, */
+                    /*     'urlFile' => $urlFile */
+                    /* ]; */
 
                     Log::info(2742);
                     Log::info( json_encode( $payload ) );
-                    Log::info(2742);
-                    Log::info( json_encode( $payloadReal ) );
                     Log::info(2744);
                     Log::info( $urlFile );
-                    Log::info(2755);
-                    Log::info( $fakeUrlFile );
 
                     /* sleep(3); */
 
                     return response()->json([
                         'status' => true,
-                        'data'   => $payloadReal
+                        'data'   => $payload
                     ])->header('Content-Type', 'application/json');
 
                 }
