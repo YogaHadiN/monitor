@@ -2056,10 +2056,13 @@ class WablasController extends Controller
                 'whatsapp_bot_service_id' => 6 //registrasi online
             ]);
 
-            ReservasiOnline::create([
+            $reservasi_online = ReservasiOnline::create([
                 'no_telp'         => $this->no_telp,
                 'whatsapp_bot_id' => $whatsapp_bot->id
             ]);
+
+            $reservasi_online->qr_code_path_s3 = $this->generateQrCodeForOnlineReservation( $reservasi_online );
+            $reservasi_online->save();
 
 
             $message = 'Kakak akan melakukan registrasi secara online';
@@ -2733,27 +2736,20 @@ class WablasController extends Controller
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $fakeUrlFile =  'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155774.png';
-                    $payload[] = [
-                        'category' => 'image',
-                        'caption' => $response,
-                        'urlFile' => $fakeUrlFile
-                    ];
+                    /* $fakeUrlFile =  'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155774.png'; */
+                    /* $payload[] = [ */
+                    /*     'category' => 'image', */
+                    /*     'caption' => $response, */
+                    /*     'urlFile' => $fakeUrlFile */
+                    /* ]; */
 
-                    $urlFile = trim( \Storage::disk('s3')->url($antrian->qr_code_path_s3) );
+                    $urlFile = trim( \Storage::disk('s3')->url($reservasi_online->qr_code_path_s3) );
 
                     $payloadReal[] = [
                         'category' => 'image',
-                        'caption' => $response,
-                        'urlFile' => $urlFile
+                        'caption'  => $response,
+                        'urlFile'  => $urlFile
                     ];
-
-                    Log::info(2742);
-                    Log::info( json_encode( $payload ) );
-                    Log::info(2744);
-                    Log::info( $urlFile );
-
-                    sleep(5);
 
                     return response()->json([
                         'status' => true,
