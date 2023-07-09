@@ -2742,14 +2742,16 @@ class WablasController extends Controller
 
                     $urlFile = trim( \Storage::disk('s3')->url($antrian->qr_code_path_s3) );
 
-                    /* $payload[] = [ */
-                    /*     'category' => 'image', */
-                    /*     'caption' => $response, */
-                    /*     'urlFile' => $urlFile */
-                    /* ]; */
+                    $payloadReal[] = [
+                        'category' => 'image',
+                        'caption' => $response,
+                        'urlFile' => $urlFile
+                    ];
 
                     Log::info(2742);
                     Log::info( json_encode( $payload ) );
+                    Log::info(2742);
+                    Log::info( json_encode( $payloadReal ) );
                     Log::info(2744);
                     Log::info( $urlFile );
                     Log::info(2755);
