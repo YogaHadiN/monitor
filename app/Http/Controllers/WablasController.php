@@ -960,6 +960,7 @@ class WablasController extends Controller
         $number = preg_replace("/[^0-9]/", "", $this->message);
         return !empty( $this->message ) 
             && ( Input::get('messageType') == 'text' )
+            && ( !empty( $number ) )
             && ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
     }
     
