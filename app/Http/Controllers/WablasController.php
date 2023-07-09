@@ -842,7 +842,22 @@ class WablasController extends Controller
             $response .= "Silahkan menunggu untuk dilayani";
         }
 
-        return $response;
+        if ($online) {
+            $payload[] = [
+                'category' => 'image',
+                'caption' => $response,
+                'urlFile' => 'https://jatielok.s3.ap-southeast-1.amazonaws.com/image/qr-code.png'
+            ];
+
+            return response()->json([
+                'status' => true,
+                'data'   => $payload
+            ])->header('Content-Type', 'application/json');
+
+        } else {
+            return $response;
+        }
+
     }
     /**
      * undocumented function
@@ -3324,6 +3339,33 @@ class WablasController extends Controller
             'dokter_umum' => $jumlah_antrian_dokter_umum,
             'dokter_gigi' => $jumlah_antrian_dokter_gigi
         ];
+    }
+
+    private function sendWhatsappImage()
+    {
+        $curl = curl_init();
+        $token = env('WABLAS_TOKEN');
+        $data = [
+        'phone' => '6281381912803',
+        'image' => 'https://jatielok.s3.ap-southeast-1.amazonaws.com/image/qr-code.png',
+        'caption' => 'tes',
+        ];
+        curl_setopt($curl, CURLOPT_HTTPHEADER,
+            array(
+                "Authorization: $token",
+            )
+        );
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/send-image");
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+
+        $result = curl_exec($curl);
+        curl_close($curl);
+        echo "<pre>";
+        print_r($result);
     }
     
 
