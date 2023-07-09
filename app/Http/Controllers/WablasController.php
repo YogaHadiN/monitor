@@ -2735,12 +2735,12 @@ class WablasController extends Controller
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $fakeUrlFile =  'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A151.png';
-                    $payload[] = [
-                        'category' => 'image',
-                        'caption' => $response,
-                        'urlFile' => $fakeUrlFile
-                    ];
+                    /* $fakeUrlFile =  'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A151.png'; */
+                    /* $payload[] = [ */
+                    /*     'category' => 'image', */
+                    /*     'caption' => $response, */
+                    /*     'urlFile' => $fakeUrlFile */
+                    /* ]; */
 
                     $urlFile = trim( \Storage::disk('s3')->url($reservasi_online->qr_code_path_s3) );
                     $payloadReal[] = [
@@ -2754,7 +2754,7 @@ class WablasController extends Controller
 
                     return response()->json([
                         'status' => true,
-                        'data'   => $payload
+                        'data'   => $payloadReal
                     ])->header('Content-Type', 'application/json');
 
                 }
