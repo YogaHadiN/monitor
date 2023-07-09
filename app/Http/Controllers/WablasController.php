@@ -2749,12 +2749,14 @@ class WablasController extends Controller
                         'urlFile'  => $urlFile
                     ];
 
+                    Log::info(2752);
+                    Log::info($payload);
                     Log::info(2735);
                     Log::info($payloadReal);
 
                     return response()->json([
                         'status' => true,
-                        'data'   => $payload
+                        'data'   => $payloadReal
                     ])->header('Content-Type', 'application/json');
 
                 }
