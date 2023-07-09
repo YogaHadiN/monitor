@@ -2738,20 +2738,20 @@ class WablasController extends Controller
                     /*     'caption' => $response, */
                     /*     'urlFile' => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155757.png' */
                     /* ]; */
+                    $urlFile = trim( \Storage::disk('s3')->url($antrian->qr_code_path_s3) );
+
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
-                        'urlFile' => trim( \Storage::disk('s3')->url($antrian->qr_code_path_s3) )
+                        'urlFile' => $urlFile
                     ];
 
                     Log::info(2742);
                     Log::info( json_encode( $payload ) );
                     Log::info(2744);
-                    Log::info(\Storage::disk('s3')->url($antrian->qr_code_path_s3));
-                    Log::info(2746);
-                    Log::info(\Storage::disk('s3')->exists($antrian->qr_code_path_s3));
+                    Log::info( $urlFile );
 
-                    sleep(30);
+                    sleep(3);
 
                     return response()->json([
                         'status' => true,
