@@ -2736,7 +2736,7 @@ class WablasController extends Controller
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
-                        'urlFile' => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155757.png '
+                        'urlFile' => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155757.png'
                     ];
 
                     Log::info(2742);
