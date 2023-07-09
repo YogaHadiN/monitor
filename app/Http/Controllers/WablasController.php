@@ -234,7 +234,6 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
-            Log::info(230);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
@@ -841,23 +840,7 @@ class WablasController extends Controller
         } else {
             $response .= "Silahkan menunggu untuk dilayani";
         }
-
-        if ($online) {
-            $payload[] = [
-                'category' => 'image',
-                'caption' => $response,
-                'urlFile' => 'https://jatielok.s3.ap-southeast-1.amazonaws.com/image/qr-code.png'
-            ];
-
-            return response()->json([
-                'status' => true,
-                'data'   => $payload
-            ])->header('Content-Type', 'application/json');
-
-        } else {
-            return $response;
-        }
-
+        return $response;
     }
     /**
      * undocumented function
@@ -2735,7 +2718,19 @@ class WablasController extends Controller
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
                     $antrian->save();
 
-                    echo $this->pesanBalasanBilaTerdaftar( $antrian, true );
+                    $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
+
+                    $payload[] = [
+                        'category' => 'image',
+                        'caption' => $response,
+                        'urlFile' => 'https://jatielok.s3.ap-southeast-1.amazonaws.com/image/qr-code.png'
+                    ];
+
+                    return response()->json([
+                        'status' => true,
+                        'data'   => $payload
+                    ])->header('Content-Type', 'application/json');
+
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
