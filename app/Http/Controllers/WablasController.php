@@ -2761,7 +2761,7 @@ class WablasController extends Controller
 
                     return response()->json([
                         'status' => true,
-                        'data'   => $payload
+                        'data'   => $payloadReal
                     ])->header('Content-Type', 'application/json');
 
                 }
