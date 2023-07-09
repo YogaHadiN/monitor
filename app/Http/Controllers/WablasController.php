@@ -2742,15 +2742,15 @@ class WablasController extends Controller
                     /*     'urlFile' => $fakeUrlFile */
                     /* ]; */
 
-                    $urlFile = trim( \Storage::disk('s3')->url($reservasi_online->qr_code_path_s3) );
+                    $urlFile = 'https://jatielok.s3.ap-southeast-1.amazonaws.com/' .  $reservasi_online->qr_code_path_s3;
                     $payloadReal[] = [
                         'category' => 'image',
                         'caption'  => $response,
                         'urlFile'  => $urlFile
                     ];
-
-                    Log::info(2735);
+                    Log::info('payloadReal');
                     Log::info($payloadReal);
+
 
                     return response()->json([
                         'status' => true,
