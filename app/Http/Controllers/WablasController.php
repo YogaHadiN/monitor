@@ -2751,7 +2751,7 @@ class WablasController extends Controller
                     Log::info(2746);
                     Log::info(\Storage::disk('s3')->exists($antrian->qr_code_path_s3));
 
-                    sleep(1);
+                    sleep(30);
 
                     return response()->json([
                         'status' => true,
