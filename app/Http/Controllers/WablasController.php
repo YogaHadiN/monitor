@@ -112,12 +112,17 @@ class WablasController extends Controller
         Log::info(112);
         Log::info( $this->message );
         if ( $this->message == 'kupret' ) {
+
              $payload[] = [
                 'category' => 'image',
                 'caption'  => 'caption image',
-                'urlFile'  => 'https://cdn-asset.jawapos.com/wp-content/uploads/2019/01/keluarga-pawang-di-jepang-maafkan-macan-putih-yang-membunuhnya_m_.jpg'
+                'urlFile'  => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A152.png'
              ];
-             echo json_encode(['data' => $payload]);
+
+            return response()->json([
+                'status' => true,
+                'data'   => $payload
+            ])->header('Content-Type', 'application/json');
         }
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
