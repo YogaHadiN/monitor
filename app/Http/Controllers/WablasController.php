@@ -2741,6 +2741,8 @@ class WablasController extends Controller
 
                     Log::info(2742);
                     Log::info( json_encode( $payload ) );
+                    Log::info(2744);
+                    Log::info(\Storage::disk('s3')->url($antrian->qr_code_path_s3));
 
 
 
