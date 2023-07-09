@@ -117,11 +117,7 @@ class WablasController extends Controller
                 'caption'  => 'caption image',
                 'urlFile'  => 'https://cdn-asset.jawapos.com/wp-content/uploads/2019/01/keluarga-pawang-di-jepang-maafkan-macan-putih-yang-membunuhnya_m_.jpg'
              ];
-
-            return response()->json([
-                'status' => true,
-                'data'   => $payload
-            ])->header('Content-Type', 'application/json');
+             echo json_encode(['data' => $payload]);
         }
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
