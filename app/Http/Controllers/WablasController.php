@@ -109,6 +109,9 @@ class WablasController extends Controller
 	public function webhook(){
         header('Content-Type: application/json');
 
+        Log::info(112);
+        Log::info( $this->message );
+
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
