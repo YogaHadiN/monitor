@@ -3389,8 +3389,9 @@ class WablasController extends Controller
      */
     public function generateQrCodeForOnlineReservation($antrian){
 
-        $filename = 'A' . $antrian->id;
-        $qr_code = QrCode::create($filename)
+        $text = 'A' . $antrian->id;
+        $filename = $text. '.png';
+        $qr_code = QrCode::create($text)
                          ->setSize(600)
                          ->setMargin(40)
                          ->setErrorCorrectionLevel(new ErrorCorrectionLevelHigh);
