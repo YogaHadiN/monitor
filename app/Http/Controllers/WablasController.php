@@ -2750,7 +2750,7 @@ class WablasController extends Controller
                     ];
 
                     Log::info(2735);
-                    Log::info($payload);
+                    Log::info($payloadReal);
 
                     return response()->json([
                         'status' => true,
