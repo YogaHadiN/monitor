@@ -2058,8 +2058,6 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat';
             $message .= PHP_EOL;
-            $message .= 'Apakah kakak setuju dengan ketentuan tersebut?';
-            $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
 
@@ -2716,6 +2714,7 @@ class WablasController extends Controller
                     $antrian->alamat                   = $reservasi_online->alamat;
                     $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
+                    $antrian->qr_code_path_s3 = $this->generateQrCodeForOnlineReservation($antrian);
                     $antrian->save();
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
@@ -2723,8 +2722,11 @@ class WablasController extends Controller
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
-                        'urlFile' => 'https://jatielok.s3.ap-southeast-1.amazonaws.com/image/qr-code.png'
+                        'urlFile' => \Storage::disk('s3')->url($antrian->qr_code_path_s3) 
                     ];
+
+
+
 
                     return response()->json([
                         'status' => true,
@@ -3362,6 +3364,37 @@ class WablasController extends Controller
         echo "<pre>";
         print_r($result);
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    public function generateQrCodeForOnlineReservation($antrian){
+
+        $filename = 'A' . $antrian->id;
+        $qr_code = QrCode::create($filename)
+                         ->setSize(600)
+                         ->setMargin(40)
+                         ->setErrorCorrectionLevel(new ErrorCorrectionLevelHigh);
+
+        $writer = new PngWriter;
+
+        $result = $writer->write($qr_code);
+
+        // Output the QR code image to the browser
+        /* header("Content-Type: " . $result->getMimeType()); */
+        $destination_path = 'image/online_reservation/qr_code/';
+
+        \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
+
+        return $destination_path.$filename;
+
+        /* echo $result->getString(); */
+
+        // Save the image to a file
+        /* $result->saveToFile("qr-code.png"); */
+    }
+    
     
 
     /**
