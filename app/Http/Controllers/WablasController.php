@@ -2731,7 +2731,6 @@ class WablasController extends Controller
                     $antrian->alamat                   = $reservasi_online->alamat;
                     $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
-                    $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
                     $antrian->save();
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
@@ -2750,6 +2749,11 @@ class WablasController extends Controller
                         'caption'  => $response,
                         'urlFile'  => $urlFile
                     ];
+
+                    Log::info(2735);
+                    Log::info($payloadReal);
+
+
 
                     return response()->json([
                         'status' => true,
