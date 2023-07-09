@@ -2733,10 +2733,15 @@ class WablasController extends Controller
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
+                    /* $payload[] = [ */
+                    /*     'category' => 'image', */
+                    /*     'caption' => $response, */
+                    /*     'urlFile' => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155757.png' */
+                    /* ]; */
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
-                        'urlFile' => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A155757.png'
+                        'urlFile' => trim( \Storage::disk('s3')->url($antrian->qr_code_path_s3) )
                     ];
 
                     Log::info(2742);
