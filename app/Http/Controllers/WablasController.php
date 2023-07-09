@@ -111,19 +111,19 @@ class WablasController extends Controller
 
         Log::info(112);
         Log::info( $this->message );
-        /* if ( $this->message == 'kupret' ) { */
+        if ( $this->message == 'kupret' ) {
 
-        /*      $payload[] = [ */
-        /*         'category' => 'image', */
-        /*         'caption'  => 'caption image', */
-        /*         'urlFile'  => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A160.png' */
-        /*      ]; */
+             $payload[] = [
+                'category' => 'image',
+                'caption'  => 'caption image',
+                'urlFile'  => 'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A163.png'
+             ];
 
-        /*     return response()->json([ */
-        /*         'status' => true, */
-        /*         'data'   => $payload */
-        /*     ])->header('Content-Type', 'application/json'); */
-        /* } */
+            return response()->json([
+                'status' => true,
+                'data'   => $payload
+            ])->header('Content-Type', 'application/json');
+        }
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
@@ -2758,14 +2758,12 @@ class WablasController extends Controller
                     /*     'urlFile' => $fakeUrlFile */
                     /* ]; */
 
-                    $urlFile = 'https://jatielok.s3.ap-southeast-1.amazonaws.com/' .  $reservasi_online->qr_code_path_s3;
+                    $urlFile =  \Storage::disk('s3')->url($reservasi_online->qr_code_path_s3) ;
                     $payloadReal[] = [
                         'category' => 'image',
                         'caption'  => $response,
                         'urlFile'  => $urlFile
                     ];
-                    Log::info('payloadReal');
-                    Log::info($payloadReal);
 
 
                     response()->json([
