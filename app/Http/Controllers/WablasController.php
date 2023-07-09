@@ -130,9 +130,6 @@ class WablasController extends Controller
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->first();
-        Log::info(199);
-        Log::info( $this->whatsapp_bot );
-
         $this->tenant = Tenant::find(1);
 
         if (
@@ -2041,6 +2038,7 @@ class WablasController extends Controller
             ]);
             echo $this->pertanyaanTipeKonsultasi();
         } else if ( $this->message == 2 ) {
+
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 6 //registrasi online
@@ -2051,6 +2049,7 @@ class WablasController extends Controller
                 'whatsapp_bot_id' => $whatsapp_bot->id
             ]);
 
+
             $message = 'Kakak akan melakukan registrasi secara online';
             $message .= PHP_EOL;
             $message .= 'Reservasi ini akan ';
@@ -2059,12 +2058,12 @@ class WablasController extends Controller
             $message .= '*Dibatalkan secara otomatis*';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= 'Apabila antrian telah terlewat lebih dari tiga panggilan';
+            $message .= 'Apabila antrian telah terlewat';
             $message .= PHP_EOL;
             $message .= 'Apakah kakak setuju dengan ketentuan tersebut?';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= 'Jika setuju balas *ya*';
+            $message .= 'Jika setuju balas *ya* untuk melanjutkan';
 
             echo $message;
 
@@ -2182,27 +2181,10 @@ class WablasController extends Controller
         $message = 'Bisa dibantu infokan Jadwal Konsultasi yang ingin diketahui?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $antrians = Antrian::whereRaw(
-                                "(
-                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                                    antriable_type = 'App\\\Models\\\AntrianPoli'
-                                )"
-                                )
-                                ->where('created_at', 'like', date('Y-m-d') . '%')
-                                ->get();
-
-        $jumlah_antrian_dokter_umum = 0;
-        $jumlah_antrian_dokter_gigi = 0;
-        foreach ($antrians as $antrian) {
-            if ( $antrian->jenis_antrian_id == 1 ) {
-                $jumlah_antrian_dokter_umum++;
-            } else if (  $antrian->jenis_antrian_id == 2  ){
-                $jumlah_antrian_dokter_gigi++;
-            }
-        }
-        $message .= '1. Dokter Umum (ada ' . $jumlah_antrian_dokter_umum. ' antrian)';
+        $jumlah_antrian = $this->jumlahAntrian();
+        $message .= '1. Dokter Umum (ada ' . $jumlah_antrian['dokter_umum']. ' antrian)';
         $message .= PHP_EOL;
-        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian_dokter_gigi. ' antrian)';
+        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian['dokter_gigi']. ' antrian)';
         $message .= PHP_EOL;
         $message .= '3. Bidan';
         $message .= PHP_EOL;
@@ -2887,11 +2869,10 @@ class WablasController extends Controller
         $message = 'Bisa dibantu poli yang dituju?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= '1. Dokter Umum';
+        $jumlah_antrian = $this->jumlahAntrian();
+        $message .= '1. Dokter Umum (ada ' . $jumlah_antrian['dokter_umum']. ' antrian)';
         $message .= PHP_EOL;
-        $message .= '2. Dokter Gigi';
-        $message .= PHP_EOL;
-        $message .= '3. Bidan';
+        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian['dokter_gigi']. ' antrian)';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
@@ -3312,6 +3293,39 @@ class WablasController extends Controller
     public function prosesCekListMingguanInput(){
         $this->prosesCekListDikerjakanInput(2,8,9);
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function jumlahAntrian()
+    {
+        $antrians = Antrian::whereRaw(
+                                "(
+                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                    antriable_type = 'App\\\Models\\\Antrian' or
+                                    antriable_type = 'App\\\Models\\\AntrianPoli'
+                                )"
+                                )
+                                ->where('created_at', 'like', date('Y-m-d') . '%')
+                                ->get();
+
+        $jumlah_antrian_dokter_umum = 0;
+        $jumlah_antrian_dokter_gigi = 0;
+        foreach ($antrians as $antrian) {
+            if ( $antrian->jenis_antrian_id == 1 ) {
+                $jumlah_antrian_dokter_umum++;
+            } else if (  $antrian->jenis_antrian_id == 2  ){
+                $jumlah_antrian_dokter_gigi++;
+            }
+        }
+
+        return [
+            'dokter_umum' => $jumlah_antrian_dokter_umum,
+            'dokter_gigi' => $jumlah_antrian_dokter_gigi
+        ];
+    }
+    
 
     /**
      * undocumented function
