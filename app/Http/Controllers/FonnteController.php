@@ -120,7 +120,7 @@ class FonnteController extends Controller
                 'filename' => $data['filename'],
             ),
           CURLOPT_HTTPHEADER => array(
-            "Authorization: -tUA@BAcJHq3je2K!1c#"
+            "Authorization: " . env('FONNTE_TOKEN')
           ),
         ));
 
