@@ -106,10 +106,12 @@ class WablasController extends Controller
 		}
 	}
     public function webhook(){
+        Log::info(109);
         /* header('Content-Type: application/json'); */
         /**
         * for auto reply or bot with multiple message. currently only supports text and images
         */
+
         $content = json_decode(file_get_contents('php://input'), true);
 
         // reply with image message
