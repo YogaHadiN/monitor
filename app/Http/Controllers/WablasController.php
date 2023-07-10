@@ -105,7 +105,7 @@ class WablasController extends Controller
 			}
 		}
 	}
-    public function webhook(){
+    public function webhook2(){
         Log::info(109);
         /**
          * for auto reply or bot with multiple message. currently only supports text and images
@@ -128,7 +128,7 @@ class WablasController extends Controller
     }
     
 	
-	public function webhook2(){
+	public function webhook(){
         header('Content-Type: application/json');
 
         Log::info(112);
