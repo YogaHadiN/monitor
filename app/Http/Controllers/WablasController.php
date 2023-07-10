@@ -2620,6 +2620,11 @@ class WablasController extends Controller
             if ( $this->validasiRegistrasiPembayaran()) {
                 $reservasi_online = $this->lanjutkanRegistrasiPembayaran($reservasi_online);
                 $data = $this->queryPreviouslySavedPatientRegistry();
+                if ( $reservasi_online->registrasi_pembayaran_id == 1 ) {
+                    $reservasi_online->kartu_asuransi_image = 0;
+                    $reservasi_online->save();
+                }
+
                 if (count($data)) {
                     $message = $this->pesanUntukPilihPasien();
                 } else {
@@ -2647,6 +2652,9 @@ class WablasController extends Controller
                 $reservasi_online->alamat                              = $data[ (int)$this->message -1 ]->alamat;
                 $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
                 $reservasi_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                if ( $reservasi_online->registrasi_pembayaran_id == 2 ) {
+                    $reservasi_online->kartu_asuransi_image = $data[ (int)$this->message -1 ]->bpjs_image;
+                }
                 $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
             } else {
                 $reservasi_online->register_previously_saved_patient = $this->message;
@@ -2732,8 +2740,7 @@ class WablasController extends Controller
         ) {
             $reservasi_online->alamat  = $this->message;
             $reservasi_online->save();
-            $message = $this->tanyaLanjutkanAtauUlangi( $reservasi_online );
-
+            $message = $this->tanyaKartuAsuransiImage( $reservasi_online );
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -2743,7 +2750,30 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
             !is_null( $reservasi_online->nama ) &&
             !is_null( $reservasi_online->tanggal_lahir ) &&
-            !is_null( $reservasi_online->alamat )
+            !is_null( $reservasi_online->alamat ) &&
+            is_null( $reservasi_online->kartu_asuransi_image )
+        ) {
+            if (
+                $this->isPicture()
+            ) {
+                $reservasi_online->kartu_asuransi_image = $this->uploadImage(); 
+                $reservasi_online->save();
+                $message =  $this->tanyaLanjutkanAtauUlangi($reservasi_online);
+            } else {
+                $message = $this->tanyaKartuAsuransiImage($reservasi_online);
+                $input_tidak_tepat = true;
+            }
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat ) &&
+            !is_null( $reservasi_online->kartu_asuransi_image )
         ) {
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
@@ -2775,31 +2805,10 @@ class WablasController extends Controller
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    /* $fakeUrlFile =  'https://d3ldh8wclelidt.cloudfront.net/image/online_reservation/qr_code/A151.png'; */
-                    /* $payload[] = [ */
-                    /*     'category' => 'image', */
-                    /*     'caption' => $response, */
-                    /*     'urlFile' => $fakeUrlFile */
-                    /* ]; */
-
                     $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
                     echo 'Mohon ditunggu sistem akan segera membuat qr code anda';
 
                     $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
-
-                    /* $payloadReal[] = [ */
-                    /*     'category' => 'image', */
-                    /*     'caption'  => $response, */
-                    /*     'urlFile'  => $urlFile */
-                    /* ]; */
-                    /* Log::info('payloadReal'); */
-                    /* Log::info($payloadReal); */
-
-                    /* return response()->json([ */
-                    /*     'status' => true, */
-                    /*     'data'   => $payloadReal */
-                    /* ])->header('Content-Type', 'application/json'); */
-
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -3458,6 +3467,21 @@ class WablasController extends Controller
         // Save the image to a file
         /* $result->saveToFile("qr-code.png"); */
     }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function tanyaKartuAsuransiImage($reservasi_online){
+        if ($reservasi_online->registrasi_pembayaran_id == 2) {
+            return 'Bisa dibantu kirimkan foto *Kartu Asuransi BPJS* pasien ?';
+        } else {
+            return 'Bisa dibantu kirimkan foto *Kartu Asuransi* pasien ?';
+        }
+
+    }
+    
     /**
      * undocumented function
      *
