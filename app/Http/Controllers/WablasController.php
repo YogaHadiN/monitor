@@ -107,7 +107,6 @@ class WablasController extends Controller
 	}
     public function webhook(){
         Log::info(109);
-        header('Content-Type: application/json');
         /**
          * for auto reply or bot with multiple message. currently only supports text and images
          */
@@ -120,7 +119,7 @@ class WablasController extends Controller
             'urlFile' => 'https://cdn-asset.jawapos.com/wp-content/uploads/2019/01/keluarga-pawang-di-jepang-maafkan-macan-putih-yang-membunuhnya_m_.jpg'
         ];
 
-
+        header('Content-Type: application/json');
         echo json_encode(['data' => $payload]);
     }
     
