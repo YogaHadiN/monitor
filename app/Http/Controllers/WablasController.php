@@ -116,11 +116,12 @@ class WablasController extends Controller
         $payload[] = [
             'category' => 'image',
             'caption' => 'caption image',
-            'urlFile' => 'https://cdn-asset.jawapos.com/wp-content/uploads/2019/01/keluarga-pawang-di-jepang-maafkan-macan-putih-yang-membunuhnya_m_.jpg'
+            'urlFile' => \Storage::disk('S3')->url('image/online_reservation/qr_code/A166.png')
         ];
 
         $response = json_encode(['data' => $payload]);
         Log::info($response);
+
         return response()->json([
             'status' => true,
             'data'   => $payload
