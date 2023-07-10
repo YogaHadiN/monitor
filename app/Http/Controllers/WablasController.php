@@ -884,7 +884,7 @@ class WablasController extends Controller
         $response .= "Anda akan menerima notifikasi setiap kali ada panggilan pasien.";
         $response .= PHP_EOL;
         if ($online) {
-            $response .= "Mohon kesediaannya _menghubungi petugas administrasi_ untuk daftar ulang dan pemeriksaan fisik saat sudah tiba di klinik.";
+            $response .= "Silahkan scan *QRCODE* ini di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
             if ( $antrian->jenis_antrian_id == 2 ) {
                 $response .= PHP_EOL;
                 $response .= "Panggilan akan dimulai pukul 15.00 saat dokter gigi mulai praktek";
@@ -2099,10 +2099,6 @@ class WablasController extends Controller
                 'whatsapp_bot_id' => $whatsapp_bot->id
             ]);
 
-            $reservasi_online->qr_code_path_s3 = $this->generateQrCodeForOnlineReservation( $reservasi_online );
-            $reservasi_online->save();
-
-
             $message = 'Kakak akan melakukan registrasi secara online';
             $message .= PHP_EOL;
             $message .= 'Reservasi ini akan ';
@@ -2769,6 +2765,9 @@ class WablasController extends Controller
                     $antrian->alamat                   = $reservasi_online->alamat;
                     $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
+                    $antrian->qr_code_path_s3                = $this->generateQrCodeForOnlineReservation($antrian);
+
+
                     $antrian->save();
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
