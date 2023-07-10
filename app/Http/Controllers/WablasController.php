@@ -74,7 +74,6 @@ class WablasController extends Controller
 
 	public function __construct()
 	{
-        Log::info(77);
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -108,7 +107,6 @@ class WablasController extends Controller
 	}
     public function webhook(){
         Log::info(109);
-        header('Content-Type: application/json');
         /* header('Content-Type: application/json'); */
         /**
         * for auto reply or bot with multiple message. currently only supports text and images
@@ -124,6 +122,7 @@ class WablasController extends Controller
         ];
 
         $jsonResponse = json_encode(['data' => $payload]);
+        header('Content-Type: application/json');
         echo $jsonResponse;
     }
     
