@@ -3422,8 +3422,6 @@ class WablasController extends Controller
 
         $result = curl_exec($curl);
         curl_close($curl);
-        echo "<pre>";
-        print_r($result);
     }
     /**
      * undocumented function
