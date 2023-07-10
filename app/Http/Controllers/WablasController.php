@@ -136,13 +136,16 @@ class WablasController extends Controller
         Log::info( $this->message );
         if ( $this->message == 'kupret' ) {
 
-             $payload[] = [
+            $payload[] = [
                 'category' => 'image',
-                'caption'  => 'caption image',
-                'urlFile'  => 'https://d3ldh8wclelidt.cloudfront.net/image/setor_pph21/setorPph211_1685965654_JhqM5HUGUg.jpg'
-             ];
+                'caption' => 'caption image',
+                'urlFile' => \Storage::disk('S3')->url('image/online_reservation/qr_code/A166.png')
+            ];
 
-            echo json_encode(['data' => $payload]);
+            return response()->json([
+                'status' => true,
+                'data'   => $payload
+            ])->header('Content-Type', 'application/json');
         }
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
