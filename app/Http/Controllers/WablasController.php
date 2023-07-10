@@ -134,12 +134,12 @@ class WablasController extends Controller
 
         Log::info(112);
         Log::info( $this->message );
-        if ( $this->message == 'kupret' ) {
+        if ( $this->message == 'eureka' ) {
 
             $payload[] = [
                 'category' => 'image',
                 'caption' => 'caption image',
-                'urlFile' => \Storage::disk('s3')->url('image/online_reservation/qr_code/A167.png')
+                'urlFile' => \Storage::disk('s3')->url('image/online_reservation/qr_code/A168.png')
             ];
 
             return response()->json([
