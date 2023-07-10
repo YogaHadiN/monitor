@@ -141,7 +141,7 @@ class WablasController extends Controller
                     [
                         "category" => "image",
                         "caption" => "caption here",
-                        "urlFile" => "https://jatielok.s3.ap-southeast-1.amazonaws.com/image/online_reservation/qr_code/A169.png",
+                        "urlFile" => "https://jatielok.s3.ap-southeast-1.amazonaws.com/image/online_reservation/qr_code/A171.png",
                     ],
                 ],
             ], 200)->header('Content-Type', 'application/json');
