@@ -119,10 +119,7 @@ class WablasController extends Controller
                 'urlFile'  => 'https://d3ldh8wclelidt.cloudfront.net/image/setor_pph21/setorPph211_1685965654_JhqM5HUGUg.jpg'
              ];
 
-            return response()->json([
-                'status' => true,
-                'data'   => $payload
-            ])->header('Content-Type', 'application/json');
+            echo json_encode(['data' => $payload]);
         }
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
