@@ -120,9 +120,7 @@ class WablasController extends Controller
         ];
 
         $jsonResponse = json_encode(['data' => $payload]);
-
         header('Content-Type: application/json');
-
         echo $jsonResponse;
     }
     
