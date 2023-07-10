@@ -884,7 +884,10 @@ class WablasController extends Controller
         $response .= "Anda akan menerima notifikasi setiap kali ada panggilan pasien.";
         $response .= PHP_EOL;
         if ($online) {
-            $response .= "Silahkan scan *QRCODE* ini di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
+            $response .= "Silahkan scan *QRCODE* ini ";
+            $response .= PHP_EOL;
+            $response .= "di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
+            $response .= PHP_EOL;
             if ( $antrian->jenis_antrian_id == 2 ) {
                 $response .= PHP_EOL;
                 $response .= "Panggilan akan dimulai pukul 15.00 saat dokter gigi mulai praktek";
