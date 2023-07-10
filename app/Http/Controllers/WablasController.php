@@ -119,11 +119,6 @@ class WablasController extends Controller
             'urlFile' => 'https://cdn-asset.jawapos.com/wp-content/uploads/2019/01/keluarga-pawang-di-jepang-maafkan-macan-putih-yang-membunuhnya_m_.jpg'
         ];
 
-        // reply with list message
-        $payload[] = [
-            'category' => 'list',
-            'message' => '{"title":"title","description":"descript","buttonText":"button text","lists":[{"title":"1","description":"promo 1"},{"title":"2","description":"promo 2"}],"footer":"footer"}'
-        ];
 
         echo json_encode(['data' => $payload]);
     }
