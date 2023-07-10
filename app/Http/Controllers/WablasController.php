@@ -2779,7 +2779,7 @@ class WablasController extends Controller
                     /*     'urlFile' => $fakeUrlFile */
                     /* ]; */
 
-                    $urlFile =  \Storage::disk('s3')->url($reservasi_online->qr_code_path_s3) ;
+                    $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
                     echo 'Mohon ditunggu sistem akan segera membuat qr code anda';
 
                     $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
