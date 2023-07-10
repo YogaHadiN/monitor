@@ -116,7 +116,7 @@ class WablasController extends Controller
         $payload[] = [
             'category' => 'image',
             'caption' => 'caption image',
-            'urlFile' => \Storage::disk('S3')->url('image/online_reservation/qr_code/A166.png')
+            'urlFile' => \Storage::disk('s3')->url('image/online_reservation/qr_code/A166.png')
         ];
 
         $response = json_encode(['data' => $payload]);
