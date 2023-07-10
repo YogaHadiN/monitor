@@ -74,6 +74,7 @@ class WablasController extends Controller
 
 	public function __construct()
 	{
+        Log::info(77);
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
