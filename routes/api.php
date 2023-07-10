@@ -16,12 +16,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
 Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'webhook']);
-Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']);
-Route::get('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'getStatus']);
-Route::get('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'getChaning']);
-Route::post('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'postWebhook']);
-Route::post('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'postStatus']);
-Route::post('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'postChaining']);
+/* Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']); */
+/* Route::get('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'getStatus']); */
+/* Route::get('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'getChaning']); */
+/* Route::post('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'postWebhook']); */
+/* Route::post('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'postStatus']); */
+/* Route::post('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'postChaining']); */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
