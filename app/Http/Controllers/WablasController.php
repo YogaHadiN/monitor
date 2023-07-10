@@ -135,17 +135,16 @@ class WablasController extends Controller
         Log::info(112);
         Log::info( $this->message );
         if ( $this->message == 'eureka' ) {
-
-            $payload[] = [
-                'category' => 'image',
-                'caption' => 'caption image',
-                'urlFile' => \Storage::disk('s3')->url('image/online_reservation/qr_code/A168.png')
-            ];
-
             return response()->json([
                 'status' => true,
-                'data'   => $payload
-            ])->header('Content-Type', 'application/json');
+                'data' => [
+                    [
+                        "category" => "image",
+                        "caption" => "caption here",
+                        "urlFile" => "https://jatielok.s3.ap-southeast-1.amazonaws.com/image/online_reservation/qr_code/A170.png",
+                    ],
+                ],
+            ], 200)->header('Content-Type', 'application/json');
         }
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
