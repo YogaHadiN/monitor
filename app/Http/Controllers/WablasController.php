@@ -2783,12 +2783,8 @@ class WablasController extends Controller
                         'caption'  => $response,
                         'urlFile'  => $urlFile
                     ];
-
-
-                    response()->json([
-                        'status' => true,
-                        'data'   => $payloadReal
-                    ])->header('Content-Type', 'application/json');
+                    Log::info('payloadReal');
+                    Log::info($payloadReal);
 
                     return response()->json([
                         'status' => true,
@@ -2800,14 +2796,12 @@ class WablasController extends Controller
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
                     ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-
                     $whatsapp_bot_id = $reservasi_online->whatsapp_bot_id;
                     ReservasiOnline::create([
                         'no_telp'         => $this->no_telp,
                         'whatsapp_bot_id' => $whatsapp_bot_id,
                         'konfirmasi_sdk'  => 1,
                     ]);
-
                     $message = $this->pertanyaanPoliYangDituju();
                 }
             } else {
