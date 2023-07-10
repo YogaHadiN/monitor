@@ -3447,11 +3447,10 @@ class WablasController extends Controller
         // Output the QR code image to the browser
         /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
-        $respon = $this->uploadToWablas($result->getString(), 'png', $filename);
 
         Log::info(3449);
         Log::info($respon);
-        /* \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() ); */
+        \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
 
         return $destination_path.$filename;
 
@@ -3465,29 +3464,6 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function uploadToWablas($file, $mime, $name)
-    {
-        $type = 'image'; //type = document,image,audio,video;
-        $data = new \CURLFile($file,$mime,$name);
-
-        $curl = curl_init();
-        $token = "";
-        curl_setopt($curl, CURLOPT_HTTPHEADER,
-            array(
-                "Authorization: $token",
-            )
-        );
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, array('file'=>$data));
-        curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/upload/$type");
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        $result = curl_exec($curl);
-        curl_close($curl);
-        echo "<pre>";
-        print_r($result);
-    }
     
     
     
