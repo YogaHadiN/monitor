@@ -2780,7 +2780,10 @@ class WablasController extends Controller
                     /*     'urlFile' => $fakeUrlFile */
                     /* ]; */
 
+                    Log::info('$reservasi_online');
+                    Log::info($reservasi_online);
                     $urlFile =  \Storage::disk('s3')->url($reservasi_online->qr_code_path_s3) ;
+
                     $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
 
                     /* $payloadReal[] = [ */
