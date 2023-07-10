@@ -105,26 +105,8 @@ class WablasController extends Controller
 			}
 		}
 	}
-    public function webhook(){
-        header('Content-Type: application/json');
-        /**
-        * for auto reply or bot with multiple message. currently only supports text and images
-        */
-        $content = json_decode(file_get_contents('php://input'), true);
-
-        // reply with image message
-        $payload[] = [
-            'category' => 'image',
-            'caption' => 'caption image',
-            'urlFile' => 'https://cdn-asset.jawapos.com/wp-content/uploads/2019/01/keluarga-pawang-di-jepang-maafkan-macan-putih-yang-membunuhnya_m_.jpg'
-        ];
-
-
-        echo json_encode(['data' => $payload]);
-    }
-    
 	
-	public function webhook2(){
+	public function webhook(){
         header('Content-Type: application/json');
 
         Log::info(112);
