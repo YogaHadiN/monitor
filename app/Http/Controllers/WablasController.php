@@ -3448,8 +3448,6 @@ class WablasController extends Controller
         /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
 
-        Log::info(3449);
-        Log::info($respon);
         \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
 
         return $destination_path.$filename;
