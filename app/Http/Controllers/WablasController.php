@@ -2781,18 +2781,20 @@ class WablasController extends Controller
                     /* ]; */
 
                     $urlFile =  \Storage::disk('s3')->url($reservasi_online->qr_code_path_s3) ;
-                    $payloadReal[] = [
-                        'category' => 'image',
-                        'caption'  => $response,
-                        'urlFile'  => $urlFile
-                    ];
-                    Log::info('payloadReal');
-                    Log::info($payloadReal);
+                    $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
 
-                    return response()->json([
-                        'status' => true,
-                        'data'   => $payloadReal
-                    ])->header('Content-Type', 'application/json');
+                    /* $payloadReal[] = [ */
+                    /*     'category' => 'image', */
+                    /*     'caption'  => $response, */
+                    /*     'urlFile'  => $urlFile */
+                    /* ]; */
+                    /* Log::info('payloadReal'); */
+                    /* Log::info($payloadReal); */
+
+                    /* return response()->json([ */
+                    /*     'status' => true, */
+                    /*     'data'   => $payloadReal */
+                    /* ])->header('Content-Type', 'application/json'); */
 
                 }
                 if (
@@ -3397,14 +3399,14 @@ class WablasController extends Controller
         ];
     }
 
-    private function sendWhatsappImage()
+    private function sendWhatsappImage($noTelp, $urlFile, $caption)
     {
         $curl = curl_init();
         $token = env('WABLAS_TOKEN');
         $data = [
-        'phone' => '6281381912803',
-        'image' => 'https://jatielok.s3.ap-southeast-1.amazonaws.com/image/qr-code.png',
-        'caption' => 'tes',
+            'phone'   => $noTelp,
+            'image'   => $urlFile,
+            'caption' => $caption,
         ];
         curl_setopt($curl, CURLOPT_HTTPHEADER,
             array(
@@ -3444,8 +3446,11 @@ class WablasController extends Controller
         // Output the QR code image to the browser
         /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
+        $respon = $this->uploadToWablas($result->getString(), 'png', $filename);
 
-        \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
+        Log::info(3449);
+        Log::info($respon);
+        /* \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() ); */
 
         return $destination_path.$filename;
 
@@ -3454,6 +3459,35 @@ class WablasController extends Controller
         // Save the image to a file
         /* $result->saveToFile("qr-code.png"); */
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function uploadToWablas($file, $mime, $name)
+    {
+        $type = 'image'; //type = document,image,audio,video;
+        $data = new \CURLFile($file,$mime,$name);
+
+        $curl = curl_init();
+        $token = "";
+        curl_setopt($curl, CURLOPT_HTTPHEADER,
+            array(
+                "Authorization: $token",
+            )
+        );
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, array('file'=>$data));
+        curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/upload/$type");
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        $result = curl_exec($curl);
+        curl_close($curl);
+        echo "<pre>";
+        print_r($result);
+    }
+    
     
     
 
