@@ -121,7 +121,7 @@ class WablasController extends Controller
 
         $response = json_encode(['data' => $payload]);
         Log::info($response);
-        header('Content-Type: application/json');
+        header("Content-Type: application/json");
         echo 'kk';
     }
     
