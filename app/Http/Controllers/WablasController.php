@@ -672,10 +672,7 @@ class WablasController extends Controller
             !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
             is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
         ) {
-            $message = 'Bisa dibantu kirimkan';
-            $message .=  PHP_EOL;
-            $message .= $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 ? '*Foto Kartu BPJS*' :  '*Foto Kartu Asuransi*';
-            $message .= ' pasien';
+            $message = $this->tanyaKartuAsuransiImage($this->whatsapp_registration->antrian);
             $message .=  PHP_EOL;
             $message .= 'Untuk nomor antrian *' .  $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
             $message .=  PHP_EOL;
@@ -2798,9 +2795,9 @@ class WablasController extends Controller
                     $antrian->alamat                   = $reservasi_online->alamat;
                     $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
-                    $antrian->qr_code_path_s3                = $this->generateQrCodeForOnlineReservation($antrian);
-
-
+                    $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
+                    $antrian->reservasi_online         = 1;
+                    $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
                     $antrian->save();
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
@@ -3474,11 +3471,11 @@ class WablasController extends Controller
      * @return void
      */
     private function tanyaKartuAsuransiImage($reservasi_online){
-        if ($reservasi_online->registrasi_pembayaran_id == 2) {
-            return 'Bisa dibantu kirimkan foto *Kartu Asuransi BPJS* pasien ?';
-        } else {
-            return 'Bisa dibantu kirimkan foto *Kartu Asuransi* pasien ?';
-        }
+        $message = 'Bisa dibantu kirimkan';
+        $message .=  PHP_EOL;
+        $message .= $reservasi_online->registrasi_pembayaran_id == 2 ? '*Foto Kartu BPJS*' :  '*Foto Kartu Asuransi*';
+        $message .= ' pasien';
+        return $message;
 
     }
     
