@@ -106,7 +106,6 @@ class WablasController extends Controller
 		}
 	}
     public function webhook2(){
-        Log::info(109);
         /**
          * for auto reply or bot with multiple message. currently only supports text and images
          */
@@ -120,7 +119,6 @@ class WablasController extends Controller
         ];
 
         $response = json_encode(['data' => $payload]);
-        Log::info($response);
 
         return response()->json([
             'status' => true,
@@ -132,8 +130,6 @@ class WablasController extends Controller
 	public function webhook(){
         header('Content-Type: application/json');
 
-        Log::info(112);
-        Log::info( $this->message );
         if ( $this->message == 'eureka' ) {
             return response()->json([
                 'status' => true,
@@ -789,7 +785,6 @@ class WablasController extends Controller
 		$pcarePWD 	= env('PASSWORD_BPJS');// "*Bpjs2020"; //password pcare anda
 		$kdAplikasi	= env('KODE_APLIKASI_BPJS');// "095"; //kode aplikasi
 
-		/* dd( $consID, $secretKey, $pcareUname, $pcarePWD, $kdAplikasi ); */
 
 		$stamp		= time();
 		$data 		= $consID.'&'.$stamp;
@@ -961,6 +956,7 @@ class WablasController extends Controller
         $query .= "psn.nama as nama, ";
         $query .= "psn.nomor_asuransi_bpjs as nomor_asuransi_bpjs, ";
         $query .= "psn.tanggal_lahir as tanggal_lahir, ";
+        $query .= "psn.bpjs_image as bpjs_image, ";
         $query .= "psn.id as pasien_id ";
         $query .= "FROM antrians as ant ";
         $query .= "JOIN periksas as prx on prx.id = ant.antriable_id and ant.antriable_type ='App\\\Models\\\Periksa' ";
@@ -2108,7 +2104,6 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat';
-            $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
 
