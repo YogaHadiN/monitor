@@ -2019,20 +2019,7 @@ class WablasController extends Controller
                 }
             }
 
-            $message = 'Klinik Jati Elok';
-            $message .= PHP_EOL;
-            $message .= $this->samaDengan();
-            $message .= PHP_EOL;
-            $message .= 'Anda akan membatalkan antrian ' . $text;
-            $message .= PHP_EOL;
-            $message .= 'Apakah anda ingin yakin ingin membatalkan antrian tersebut?';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '1. Ya, batalkan ';
-            $message .= PHP_EOL;
-            $message .= '2. Tidak, jangan batalkan ';
-            $message .= PHP_EOL;
-            $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+            $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
 
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
@@ -3539,7 +3526,7 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function batalkan(){
+    private function batalkanAntrian(){
         $from = date('Y-m-d 00:00:00');
         $to = date('Y-m-d 23:59:59');
         if ( $this->message == 1 ) {
@@ -3561,9 +3548,37 @@ class WablasController extends Controller
                 ->delete();
             echo 'Reservasi Online Dilanjutkan';
         } else {
+            $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
+            $message .= $this->samaDengan();
+            $message .= "_Balasan yang anda masukkan tidak dikenali. Mohon diulangi_";
+            echo $message;
 
         }
     }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function tanyaApakahMauMembatalkanReservasiOnline(){
+        $message = 'Klinik Jati Elok';
+        $message .= PHP_EOL;
+        $message .= $this->samaDengan();
+        $message .= PHP_EOL;
+        $message .= 'Anda akan membatalkan antrian ' . $text;
+        $message .= PHP_EOL;
+        $message .= 'Apakah anda ingin yakin ingin membatalkan antrian tersebut?';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '1. Ya, batalkan ';
+        $message .= PHP_EOL;
+        $message .= '2. Tidak, jangan batalkan ';
+        $message .= PHP_EOL;
+        $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+        return $message
+    }
+    
     
     
     
