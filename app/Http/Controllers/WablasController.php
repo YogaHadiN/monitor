@@ -216,6 +216,8 @@ class WablasController extends Controller
                 return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
             } else if ( $this->whatsappKonsultasiEstetikExists() ) {
                 return $this->prosesKonsultasiEstetik(); // buat main menu
+            } else if ( $this->batalkanAntrianExists() ) {
+                return $this->batalkanAntrian(); // buat main menu
             } else if ( $this->whatsappAntrianOnlineExists() ) {
                 return $this->prosesAntrianOnline(); // buat main menu
             } else if ( $this->whatsappGambarPeriksaExists() ) {
@@ -2022,6 +2024,11 @@ class WablasController extends Controller
             $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Anda akan membatalkan antrian ' . $text;
+            $message .= PHP_EOL;
+            $message .= 'Apakah anda ingin melanjutkan?';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= '1. Lanjutkan ';
 
         } else if (
              str_contains($this->message, 'aktivkan') ||
@@ -2136,6 +2143,10 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat';
             $message .= PHP_EOL;
+            $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum dipanggil';
+            $message .= PHP_EOL;
+            $message .= 'Karena akan ada pemeriksaan fisik oleh perawat sebelum diperiksa oleh dokter';
+            $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
 
             echo $message;
@@ -2155,8 +2166,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Ketik *ya* untuk melanjutkan ';
-            $message .= PHP_EOL;
-            $message .= 'Ketik *batalkan* untuk membatalkan ';
+            $message .= $this->batalkan();
             echo $message;
         } else {
             $message = $this->messageWhatsappMainMenu();
@@ -3271,8 +3281,7 @@ class WablasController extends Controller
         if (!empty(trim($message))) {
             $message .= PHP_EOL;
             $message .= $this->samaDengan();
-            $message .= PHP_EOL;
-            $message .= 'Ketik *batalkan* untuk membatalkan reservasi';
+            $message .= $this->batalkan();
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
@@ -3503,6 +3512,28 @@ class WablasController extends Controller
         return $message;
 
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function batalkanAntrianExists()
+    {
+        return null;
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function batalkan()
+    {
+        $message = PHP_EOL;
+        $message .= 'Ketik *batalkan* untuk membatalkan ';
+        return $message;
+    }
+    
+    
     
     /**
      * undocumented function
