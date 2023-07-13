@@ -3577,6 +3577,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= '2. Tidak, jangan batalkan ';
         $message .= PHP_EOL;
+        $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
         return $message;
 
