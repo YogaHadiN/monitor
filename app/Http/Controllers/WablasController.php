@@ -2678,9 +2678,18 @@ class WablasController extends Controller
                 $reservasi_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $reservasi_online->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $reservasi_online->alamat                              = $data[ (int)$this->message -1 ]->alamat;
-                $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
+                if (
+                     !is_null( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs ) &&
+                     !empty( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs )
+                ) {
+                    $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
+                }
                 $reservasi_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
-                if ( $reservasi_online->registrasi_pembayaran_id == 2 ) {
+                if (
+                     !is_null( $data[ (int)$this->message -1 ]->bpjs_image ) &&
+                     !empty( $data[ (int)$this->message -1 ]->bpjs_image ) &&
+                     $reservasi_online->registrasi_pembayaran_id == 2 
+                ) {
                     $reservasi_online->kartu_asuransi_image = $data[ (int)$this->message -1 ]->bpjs_image;
                 }
                 $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
