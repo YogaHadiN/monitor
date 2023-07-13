@@ -876,6 +876,7 @@ class WablasController extends Controller
         $response .= "```" . $antrian->nomor_antrian . "```" ;
         $response .= PHP_EOL;
         if ($online) {
+            $response .= PHP_EOL;
             $response     .= "Silahkan scan *QRCODE* ini ";
             $response     .= PHP_EOL;
             $response     .= "di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
@@ -901,7 +902,6 @@ class WablasController extends Controller
         }
         $response .= PHP_EOL;
         $response .= $this->samaDengan();
-        $response .= PHP_EOL;
         $response .= $this->batalkan();
         $response .= " reservasi";
         return $response;
