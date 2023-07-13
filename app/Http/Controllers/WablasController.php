@@ -2143,11 +2143,16 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat';
             $message .= PHP_EOL;
-            $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum dipanggil';
+            $message .= $this->samaDengan();
+            $message .= PHP_EOL;
+            $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum antrian anda dipanggil';
             $message .= PHP_EOL;
             $message .= 'Karena akan ada pemeriksaan fisik oleh perawat sebelum diperiksa oleh dokter';
             $message .= PHP_EOL;
+            $message .= $this->samaDengan();
+            $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
+            $message .= $this->batalkan();
 
             echo $message;
 
