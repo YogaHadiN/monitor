@@ -1991,6 +1991,37 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
+        } else if (
+             str_contains($this->message, 'batalkan') ||
+             str_contains($this->message, 'btlkan') ||
+             str_contains($this->message, 'batalkn') ||
+             str_contains($this->message, 'batlkan')
+        ) {
+            $antrians = Antrian::where('no_telp', $this->no_telp)
+                ->where('created_at', 'like', date('Y-m-d') . '%')
+                ->get();
+
+            $nomor_antrians = [];
+
+            foreach ($antrians as $antrian) {
+                $nomor_antrians[] = $antrian->nomor_antrian;
+            }
+
+            $text = '';
+
+            foreach ($nomor_antrians as $k => $nomor) {
+                if ($k) {
+                    $text .= ',' . $nomor;
+                } else {
+                    $text .= $nomor;
+                }
+            }
+
+            $message = 'Klinik Jati Elok';
+            $message .= PHP_EOL;
+            $message .= $this->samaDengan();
+            $message .= PHP_EOL;
+            $message .= 'Anda akan membatalkan antrian ' . $text;
 
         } else if (
              str_contains($this->message, 'aktivkan') ||
@@ -2798,8 +2829,7 @@ class WablasController extends Controller
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
                     $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
-                    echo 'Mohon ditunggu sistem akan segera membuat qr code anda';
-
+                    echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
                     $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
                 }
                 if (
