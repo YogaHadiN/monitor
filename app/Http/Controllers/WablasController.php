@@ -879,15 +879,16 @@ class WablasController extends Controller
         $response .= "Anda akan menerima notifikasi setiap kali ada panggilan pasien.";
         $response .= PHP_EOL;
         if ($online) {
-            $response .= "Silahkan scan *QRCODE* ini ";
-            $response .= PHP_EOL;
-            $response .= "di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
-            $response .= PHP_EOL;
-            $response .= PHP_EOL;
-            $response .= 'Mohon kehadirannya di klinik 20 menit sebelum perkiraan panggilan untuk dilakukan pemeriksaan fisik sebelum pemeriksaan dokter';
-            $response .= $this->batalkan();
-            $response .= " reservasi";
-            $response .= PHP_EOL;
+            $response     .= "Silahkan scan *QRCODE* ini ";
+            $response     .= PHP_EOL;
+            $response     .= "di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
+            $response     .= PHP_EOL;
+            $sisa_antrian  = $antrian->sisa_antrian;
+            $response     .= "masih ada *{$sisa_antrian} antrian* lagi";
+            $response     .= PHP_EOL;
+            $waktu_tunggu  = $this->waktuTunggu( $antrian->sisa_antrian );
+            $response     .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
+            $response     .= PHP_EOL;
             if ( $antrian->jenis_antrian_id == 2 ) {
                 $response .= PHP_EOL;
                 $response .= "Panggilan akan dimulai pukul 15.00 saat dokter gigi mulai praktek";
@@ -3595,26 +3596,11 @@ class WablasController extends Controller
         $message .= 'Ketik *batalkan* untuk membatalkan';
         return $message;
     }
-    
-    
-    
-    
-    
-    /**
-     * undocumented function
-     *
-     * @return void
-     */
-    
-    
-    
-
-    /**
-     * undocumented function
-     *
-     * @return void
-     */
-    
-    
+    private function waktuTunggu($sisa_antrian)
+    {
+        $from = $sisa_antrian * 3;
+        $to = $sisa_antrian * 10;
+        return $from . ' - ' . $to;
+    }
     
 }

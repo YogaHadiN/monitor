@@ -89,5 +89,19 @@ class Antrian extends Model
     public function registrasiPembayaran(){
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
-    
+    public function getSisaAntrianAttribute(){
+        $from = date('Y-m-d 00:00:00');
+        $to   = date('Y-m-d 23:59:59');
+        return Antrian::where('jenis_antrian_id', $this->jenis_antrian_id)// hapus antrian yang memiliki jenis_antrian_id yang sama 
+            ->whereRaw("created_at between '{$from}' and '{$to}'")// yang di lakukan hari ini, 
+            ->where('id', '<', $this->id)// yang antriannya sudah terlewat
+            ->whereRaw(
+                                "(
+                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                    antriable_type = 'App\\\Models\\\Antrian' or
+                                    antriable_type = 'App\\\Models\\\AntrianPoli'
+                                )"
+                                )
+            ->count();
+    }
 }
