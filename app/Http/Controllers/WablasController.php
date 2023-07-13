@@ -129,6 +129,7 @@ class WablasController extends Controller
 	
 	public function webhook(){
         header('Content-Type: application/json');
+        Log::info( $this->message );
 
         if ( $this->message == 'eureka' ) {
             return response()->json([
