@@ -887,8 +887,6 @@ class WablasController extends Controller
             $response     .= PHP_EOL;
             $waktu_tunggu  = $this->waktuTunggu( $antrian->sisa_antrian );
             $response     .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
-            $response     .= PHP_EOL;
-            $response     .= PHP_EOL;
             if ( $antrian->jenis_antrian_id == 2 ) {
                 $response .= PHP_EOL;
                 $response .= "Panggilan akan dimulai pukul 15.00 saat dokter gigi mulai praktek";
