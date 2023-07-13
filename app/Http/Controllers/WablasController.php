@@ -2025,10 +2025,19 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Anda akan membatalkan antrian ' . $text;
             $message .= PHP_EOL;
-            $message .= 'Apakah anda ingin melanjutkan?';
+            $message .= 'Apakah anda ingin yakin ingin membatalkan antrian tersebut?';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= '1. Lanjutkan ';
+            $message .= '1. Ya, batalkan ';
+            $message .= PHP_EOL;
+            $message .= '2. Tidak, jangan batalkan ';
+            $message .= PHP_EOL;
+            $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+
+            $whatsapp_bot = WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 10 //registrasi online
+            ]);
 
         } else if (
              str_contains($this->message, 'aktivkan') ||
@@ -3522,20 +3531,38 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function batalkanAntrianExists()
-    {
-        return null;
+    private function batalkanAntrianExists(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(10);
     }
     /**
      * undocumented function
      *
      * @return void
      */
-    private function batalkan()
-    {
-        $message = PHP_EOL;
-        $message .= 'Ketik *batalkan* untuk membatalkan ';
-        return $message;
+    private function batalkan(){
+        $from = date('Y-m-d 00:00:00');
+        $to = date('Y-m-d 23:59:59');
+        if ( $this->message == 1 ) {
+            Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
+                ->where('no_telp', $this->no_telp)
+                ->delete();
+            ReservasiOnline::whereRaw("created_at between '{$from}' and '{$to}'")
+                ->where('no_telp', $this->no_telp)
+                ->delete();
+            WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
+                ->where('no_telp', $this->no_telp)
+                ->delete();
+            echo 'Reservasi Online Dibatalkan';
+        } else if(
+             $this->message == 2
+        ) {
+            WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
+                ->where('no_telp', $this->no_telp)
+                ->delete();
+            echo 'Reservasi Online Dilanjutkan';
+        } else {
+
+        }
     }
     
     
