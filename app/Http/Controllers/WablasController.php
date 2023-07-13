@@ -3578,11 +3578,7 @@ class WablasController extends Controller
             }
         }
 
-        $message = 'Klinik Jati Elok';
-        $message .= PHP_EOL;
-        $message .= $this->samaDengan();
-        $message .= PHP_EOL;
-        $message .= 'Anda akan membatalkan antrian ' . $text;
+        $message = 'Anda akan membatalkan antrian ' . $text;
         $message .= PHP_EOL;
         $message .= 'Apakah anda ingin yakin ingin membatalkan antrian tersebut?';
         $message .= PHP_EOL;
