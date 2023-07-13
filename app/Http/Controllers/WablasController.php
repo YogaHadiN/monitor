@@ -1999,25 +1999,6 @@ class WablasController extends Controller
              str_contains($this->message, 'batalkn') ||
              str_contains($this->message, 'batlkan')
         ) {
-            $antrians = Antrian::where('no_telp', $this->no_telp)
-                ->where('created_at', 'like', date('Y-m-d') . '%')
-                ->get();
-
-            $nomor_antrians = [];
-
-            foreach ($antrians as $antrian) {
-                $nomor_antrians[] = $antrian->nomor_antrian;
-            }
-
-            $text = '';
-
-            foreach ($nomor_antrians as $k => $nomor) {
-                if ($k) {
-                    $text .= ',' . $nomor;
-                } else {
-                    $text .= $nomor;
-                }
-            }
 
             $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
 
@@ -2863,8 +2844,8 @@ class WablasController extends Controller
         if (!empty(trim($message))) {
             $message .= PHP_EOL;
             $message .= $this->samaDengan();
-            $message .= PHP_EOL;
-            $message .= 'Ketik *batalkan* untuk membatalkan reservasi';
+            $message .= $this->batalkan();
+            $message .= " reservasi";
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
@@ -3562,6 +3543,27 @@ class WablasController extends Controller
      * @return void
      */
     private function tanyaApakahMauMembatalkanReservasiOnline(){
+
+        $antrians = Antrian::where('no_telp', $this->no_telp)
+            ->where('created_at', 'like', date('Y-m-d') . '%')
+            ->get();
+
+        $nomor_antrians = [];
+
+        foreach ($antrians as $antrian) {
+            $nomor_antrians[] = $antrian->nomor_antrian;
+        }
+
+        $text = '';
+
+        foreach ($nomor_antrians as $k => $nomor) {
+            if ($k) {
+                $text .= ',' . $nomor;
+            } else {
+                $text .= $nomor;
+            }
+        }
+
         $message = 'Klinik Jati Elok';
         $message .= PHP_EOL;
         $message .= $this->samaDengan();
@@ -3582,7 +3584,7 @@ class WablasController extends Controller
     }
     public function batalkan(){
         $message = PHP_EOL;
-        $message .= "ketik *batalkan* untuk membatalkan";
+        $message .= 'Ketik *batalkan* untuk membatalkan';
         return $message;
     }
     
