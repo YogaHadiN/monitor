@@ -2815,6 +2815,7 @@ class WablasController extends Controller
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
                     $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
                     $antrian->reservasi_online         = 1;
+                    $antrian->sudah_hadir_di_klinik    = 0;
                     $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
                     $antrian->save();
 
