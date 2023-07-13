@@ -883,6 +883,11 @@ class WablasController extends Controller
             $response .= PHP_EOL;
             $response .= "di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
             $response .= PHP_EOL;
+            $response .= PHP_EOL;
+            $response .= 'Mohon kehadirannya di klinik 20 menit sebelum perkiraan panggilan untuk dilakukan pemeriksaan fisik sebelum pemeriksaan dokter';
+            $response .= $this->batalkan();
+            $response .= " reservasi";
+            $response .= PHP_EOL;
             if ( $antrian->jenis_antrian_id == 2 ) {
                 $response .= PHP_EOL;
                 $response .= "Panggilan akan dimulai pukul 15.00 saat dokter gigi mulai praktek";
