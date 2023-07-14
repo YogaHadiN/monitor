@@ -2559,10 +2559,12 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
     }
     public function prosesAntrianOnline(){
+
         $reservasi_online = ReservasiOnline::where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->first();
-        $message = '';
+
+        $message           = '';
         $input_tidak_tepat = false;
 
         if( is_null( $reservasi_online ) ){
@@ -2576,6 +2578,7 @@ class WablasController extends Controller
             $reservasi_online->delete();
             $this->whatsapp_bot->delete();
             echo 'Reservasi online dibatalkan';
+            return false;
         } else if (
             !is_null( $reservasi_online ) &&
             !$reservasi_online->konfirmasi_sdk
@@ -2730,7 +2733,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->tanggal_lahir ) &&
             is_null( $reservasi_online->alamat )
         ) {
-            Log::info(2795);
             $reservasi_online->alamat  = $this->message;
             $reservasi_online->save();
         } else if ( 
