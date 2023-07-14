@@ -2678,12 +2678,17 @@ class WablasController extends Controller
             if (empty(  pesanErrorValidateNomorAsuransiBpjs( $this->message )  )) {
                 $reservasi_online->nomor_asuransi_bpjs  = $this->message;
                 $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
-                if ( !is_null( $pasien ) ) {
+                if ( 
+                    !is_null( $pasien ) &&
+                    is_null( $reservasi_online->pasien )
+                ) {
                     $reservasi_online->pasien_id           = $pasien->id;
                     $reservasi_online->nama                = $pasien->nama;
                     $reservasi_online->alamat              = $pasien->alamat;
-                    $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                     $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
+                } else if ( !is_null( $reservasi_online->pasien ) ) {
+                    $reservasi_online->pasien->nomor_asuransi_bpjs = $this->message;
+                    $reservasi_online->pasien->save();
                 }
                 $reservasi_online->save();
             } else {
@@ -2747,7 +2752,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->alamat ) &&
             is_null( $reservasi_online->kartu_asuransi_image )
         ) {
-            Log::info(2811);
             if (
                 $this->isPicture()
             ) {
