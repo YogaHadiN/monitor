@@ -2807,6 +2807,7 @@ class WablasController extends Controller
                     $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
                     echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
                     $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
+                    return false;
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
