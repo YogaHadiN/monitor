@@ -21,4 +21,7 @@ class ReservasiOnline extends Model
             ReservasiOnline::where('no_telp', $model->no_telp )->delete();
         });
     }
+    public function pasien(){
+        return $this->belongsTo(Pasien::class);
+    }
 }
