@@ -2682,6 +2682,7 @@ class WablasController extends Controller
                     !is_null( $pasien ) &&
                     is_null( $reservasi_online->pasien )
                 ) {
+                    Log::info(2685);
                     $reservasi_online->pasien_id           = $pasien->id;
                     $reservasi_online->nama                = $pasien->nama;
                     $reservasi_online->alamat              = $pasien->alamat;
