@@ -1707,7 +1707,7 @@ class WablasController extends Controller
     {
         $message =  'Bisa dibantu *Nomor Asuransi BPJS* pasien?';
         $message .= PHP_EOL;
-        $message .=   '_Nomor BPJS harus terdiri dari 13 angka_'
+        $message .=   '_Nomor BPJS harus terdiri dari 13 angka_';
 
         return $message;
     }
