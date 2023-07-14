@@ -2661,7 +2661,7 @@ class WablasController extends Controller
                     $message = $this->pesanUntukPilihPasien();
                 } else {
                     $reservasi_online->register_previously_saved_patient = 0;
-                    $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);;
+                    $message = $this->tanyaNomorBpjsPasien($reservasi_online);;
                 }
                 $reservasi_online->save();
             } else {
