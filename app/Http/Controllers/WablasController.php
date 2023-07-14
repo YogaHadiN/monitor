@@ -1705,7 +1705,11 @@ class WablasController extends Controller
 
     private function tanyaNomorBpjsPasien()
     {
-        return 'Bisa dibantu *Nomor Asuransi BPJS* pasien?';
+        $message =  'Bisa dibantu *Nomor Asuransi BPJS* pasien?';
+        $message .= PHP_EOL;
+        $message .=   '_Nomor BPJS harus terdiri dari 13 angka_'
+
+        return $message;
     }
 
     /**
@@ -2123,26 +2127,7 @@ class WablasController extends Controller
                 'whatsapp_bot_id' => $whatsapp_bot->id
             ]);
 
-            $message = 'Kakak akan melakukan registrasi secara online';
-            $message .= PHP_EOL;
-            $message .= 'Reservasi ini akan ';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '*Dibatalkan secara otomatis*';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Apabila antrian telah terlewat';
-            $message .= PHP_EOL;
-            $message .= $this->samaDengan();
-            $message .= PHP_EOL;
-            $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum antrian anda dipanggil';
-            $message .= PHP_EOL;
-            $message .= 'Karena akan ada pemeriksaan fisik oleh perawat sebelum diperiksa oleh dokter';
-            $message .= PHP_EOL;
-            $message .= $this->samaDengan();
-            $message .= PHP_EOL;
-            $message .= 'Jika setuju balas *ya* untuk melanjutkan';
-            $message .= $this->batalkan();
+            $message = $this->tanyaSyaratdanKetentuan();
 
             echo $message;
 
@@ -2603,7 +2588,6 @@ class WablasController extends Controller
             ) {
                 $reservasi_online->konfirmasi_sdk = 1;
                 $reservasi_online->save();
-                $message = $this->pertanyaanPoliYangDituju();
             }
         } else if (
             !is_null( $reservasi_online ) &&
@@ -2618,26 +2602,7 @@ class WablasController extends Controller
             ) {
                 $reservasi_online->jenis_antrian_id = $this->message;
                 $reservasi_online->save();
-                if ( 
-                    ( !is_null( $this->message ) && $this->message[0] == '2' ) && 
-                    ( 
-                        idate('H') > 18 ||
-                        idate('H') < 6
-                    )
-                ) {
-                    $reservasi_online->whatsappBot->delete();
-                    $reservasi_online->delete();
-                    $text = "Reservasi secara online untuk pelayanan dokter gigi dimulai pukul 06.00 - 18.00.";
-                    if ( idate('H') < 19 ) {
-                        $text .= PHP_EOL;
-                        $text .= 'Kakak dapat mencoba mendaftar secara langsung sebelum jam 19.00 untuk mengecek ketersediaan tempat.';
-                    }
-                    echo $text;
-                } else {
-                    $message = $this->pertanyaanPembayaranPasien();
-                }
             } else {
-                $message = $this->pertanyaanPoliYangDituju();
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -2659,15 +2624,11 @@ class WablasController extends Controller
                     $reservasi_online->nomor_asuransi_bpjs = '';
                 }
 
-                if (count($data)) {
-                    $message = $this->pesanUntukPilihPasien();
-                } else {
+                if (!count($data)) {
                     $reservasi_online->register_previously_saved_patient = 0;
-                    $message = $this->tanyaNomorBpjsPasien($reservasi_online);;
                 }
                 $reservasi_online->save();
             } else {
-                $message = $this->pertanyaanPembayaranPasien();
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -2677,7 +2638,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
-            Log::info(2680);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
@@ -2699,18 +2659,9 @@ class WablasController extends Controller
                 ) {
                     $reservasi_online->kartu_asuransi_image = $data[ (int)$this->message -1 ]->bpjs_image;
                 }
-                if ( is_null(  $reservasi_online->nomor_asuransi_bpjs  ) ) {
-                    $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
-                } else if (  is_null(  $reservasi_online->kartu_asuransi_image  )  ){
-                    $message = $this->tanyaKartuAsuransiImage($reservasi_online);
-                } else {
-                    $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
-                }
-
             } else {
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->registering_confirmation = 0;
-                $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
             }
             $reservasi_online->save();
         } else if ( 
@@ -2721,7 +2672,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
-            Log::info(2724);
             if (empty(  pesanErrorValidateNomorAsuransiBpjs( $this->message )  )) {
                 $reservasi_online->nomor_asuransi_bpjs  = $this->message;
                 $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
@@ -2731,18 +2681,12 @@ class WablasController extends Controller
                     $reservasi_online->alamat              = $pasien->alamat;
                     $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                     $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
-                    $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
-                } else {
-                    $message = $this->tanyaNamaLengkapPasien();
                 }
                 $reservasi_online->save();
             } else {
-                $message =  $this->tanyaNomorBpjsPasien();
-                $message .= PHP_EOL;
-                $message .= $this->samaDengan();
-                $message .= PHP_EOL;
-                $message .= pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
+                $input_tidak_tepat = true;
             }
+
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -2752,13 +2696,10 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
             is_null( $reservasi_online->nama ) 
         ) {
-            Log::info(2755);
             if ( validateName( $this->message ) ) {
                 $reservasi_online->nama  = ucwords(strtolower($this->message));;
                 $reservasi_online->save();
-                $message = $this->tanyaTanggalLahirPasien();
             } else {
-                $message =  $this->tanyaNamaLengkapPasien();
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -2771,14 +2712,11 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nama ) &&
             is_null( $reservasi_online->tanggal_lahir ) 
         ) {
-            Log::info(2774);
             $tanggal = $this->convertToPropperDate();
             if (!is_null( $tanggal )) {
                 $reservasi_online->tanggal_lahir  = $tanggal;
                 $reservasi_online->save();
-                $message = $this->tanyaAlamatLengkapPasien();
             } else {
-                $message =  $this->tanyaTanggalLahirPasien();
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -2795,7 +2733,6 @@ class WablasController extends Controller
             Log::info(2795);
             $reservasi_online->alamat  = $this->message;
             $reservasi_online->save();
-            $message = $this->tanyaKartuAsuransiImage( $reservasi_online );
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -2814,9 +2751,7 @@ class WablasController extends Controller
             ) {
                 $reservasi_online->kartu_asuransi_image = $this->uploadImage(); 
                 $reservasi_online->save();
-                $message =  $this->tanyaLanjutkanAtauUlangi($reservasi_online);
             } else {
-                $message = $this->tanyaKartuAsuransiImage($reservasi_online);
                 $input_tidak_tepat = true;
             }
         } else if ( 
@@ -2877,18 +2812,114 @@ class WablasController extends Controller
                         'whatsapp_bot_id' => $whatsapp_bot_id,
                         'konfirmasi_sdk'  => 1,
                     ]);
-                    $message = $this->pertanyaanPoliYangDituju();
                 }
             } else {
-                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
                 $input_tidak_tepat = true;
             }
         }
+
+        if (
+            !is_null( $reservasi_online ) &&
+            !$reservasi_online->konfirmasi_sdk
+        ) {
+            $message = $this->tanyaSyaratdanKetentuan();
+        } else if (
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            is_null( $reservasi_online->jenis_antrian_id )
+        ) {
+            $message = $this->pertanyaanPoliYangDituju();
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            is_null( $reservasi_online->registrasi_pembayaran_id )
+        ) {
+            $message = $this->pertanyaanPembayaranPasien();
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            is_null( $reservasi_online->register_previously_saved_patient ) 
+        ) {
+            $message = $this->pesanUntukPilihPasien();
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            is_null( $reservasi_online->nomor_asuransi_bpjs ) 
+        ) {
+            $message = $this->tanyaNomorBpjsPasien();
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            is_null( $reservasi_online->nama ) 
+        ) {
+            $message = $this->tanyaNamaLengkapPasien();
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            is_null( $reservasi_online->tanggal_lahir ) 
+        ) {
+            $message = $this->tanyaTanggalLahirPasien();
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            is_null( $reservasi_online->alamat )
+        ) {
+            $message = $this->tanyaAlamatLengkapPasien();
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat ) &&
+            is_null( $reservasi_online->kartu_asuransi_image )
+        ) {
+            $message = $this->tanyaKartuAsuransiImage($reservasi_online);
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat ) &&
+            !is_null( $reservasi_online->kartu_asuransi_image )
+        ) {
+            $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
+        }
+
         if (!empty(trim($message))) {
             $message .= PHP_EOL;
             $message .= $this->samaDengan();
             $message .= $this->batalkan();
             $message .= " reservasi";
+            $message .= PHP_EOL;
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
@@ -3633,5 +3664,35 @@ class WablasController extends Controller
         $to = $sisa_antrian * 10;
         return $from . ' - ' . $to;
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function tanyaSyaratdanKetentuan()
+    {
+            $message = 'Kakak akan melakukan registrasi secara online';
+            $message .= PHP_EOL;
+            $message .= 'Reservasi ini akan ';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= '*Dibatalkan secara otomatis*';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= 'Apabila antrian telah terlewat';
+            $message .= PHP_EOL;
+            $message .= $this->samaDengan();
+            $message .= PHP_EOL;
+            $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum antrian anda dipanggil';
+            $message .= PHP_EOL;
+            $message .= 'Karena akan ada pemeriksaan fisik oleh perawat sebelum diperiksa oleh dokter';
+            $message .= PHP_EOL;
+            $message .= $this->samaDengan();
+            $message .= PHP_EOL;
+            $message .= 'Jika setuju balas *ya* untuk melanjutkan';
+            $message .= $this->batalkan();
+            return $message;
+    }
+    
     
 }
