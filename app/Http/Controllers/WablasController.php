@@ -2648,18 +2648,22 @@ class WablasController extends Controller
             if ( $this->validasiRegistrasiPembayaran()) {
                 $reservasi_online = $this->lanjutkanRegistrasiPembayaran($reservasi_online);
                 $data = $this->queryPreviouslySavedPatientRegistry();
+
                 if ( $reservasi_online->registrasi_pembayaran_id == 1 ) {
-                    $reservasi_online->kartu_asuransi_image = 0;
-                    $reservasi_online->save();
+                    $reservasi_online->kartu_asuransi_image = '';
+                }
+
+                if ( $reservasi_online->registrasi_pembayaran_id !== 2 ) {
+                    $reservasi_online->nomor_asuransi_bpjs = '';
                 }
 
                 if (count($data)) {
                     $message = $this->pesanUntukPilihPasien();
                 } else {
                     $reservasi_online->register_previously_saved_patient = 0;
-                    $reservasi_online->save();
                     $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);;
                 }
+                $reservasi_online->save();
             } else {
                 $message = $this->pertanyaanPembayaranPasien();
                 $input_tidak_tepat = true;
@@ -2692,7 +2696,14 @@ class WablasController extends Controller
                 ) {
                     $reservasi_online->kartu_asuransi_image = $data[ (int)$this->message -1 ]->bpjs_image;
                 }
-                $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
+                if ( is_null(  $reservasi_online->nomor_asuransi_bpjs  ) ) {
+                    $message = $this->tanyaNamaAtauNomorBpjsPasien($reservasi_online);
+                } else if (  is_null(  $reservasi_online->kartu_asuransi_image  )  ){
+                    $message = $this->tanyaKartuAsuransiImage($reservasi_online);
+                } else {
+                    $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
+                }
+
             } else {
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->registering_confirmation = 0;
