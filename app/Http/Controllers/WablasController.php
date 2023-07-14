@@ -2676,6 +2676,7 @@ class WablasController extends Controller
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
             if (empty(  pesanErrorValidateNomorAsuransiBpjs( $this->message )  )) {
+                Log::info(2679);
                 $reservasi_online->nomor_asuransi_bpjs  = $this->message;
                 $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
                 if ( 
