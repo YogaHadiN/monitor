@@ -2588,14 +2588,21 @@ class WablasController extends Controller
             $reservasi_online->konfirmasi_sdk &&
             is_null( $reservasi_online->jenis_antrian_id )
         ) {
-            Log::info(2613);
             if ( 
                 $this->message == '1' || 
                 $this->message == '2' || 
                 $this->message == '3'
             ) {
-                $reservasi_online->jenis_antrian_id = $this->message;
-                $reservasi_online->save();
+                if ( $this->sudahAdaAntrianUntukJenisAntrian( $this->message ) ) {
+                    $reservasi_online->jenis_antrian_id = $this->message;
+                    $reservasi_online->save();
+                } else {
+                    $message = 'Saat ini tidak ada antrian. Anda kami persilahkan untuk datang langsung dan mengambil antrian secara manual';
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+                }
             } else {
                 $input_tidak_tepat = true;
             }
@@ -3590,16 +3597,7 @@ class WablasController extends Controller
         $from = date('Y-m-d 00:00:00');
         $to = date('Y-m-d 23:59:59');
         if ( $this->message == 1 ) {
-            Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
-                ->where('no_telp', $this->no_telp)
-                ->delete();
-            ReservasiOnline::whereRaw("created_at between '{$from}' and '{$to}'")
-                ->where('no_telp', $this->no_telp)
-                ->delete();
-            WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
-                ->where('no_telp', $this->no_telp)
-                ->delete();
-            echo 'Reservasi Online Dibatalkan';
+            echo $this->hapusAntrianWhatsappBotReservasiOnline();
         } else if(
              $this->message == 2
         ) {
@@ -3706,6 +3704,27 @@ class WablasController extends Controller
         ]);
         return $message;
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function name(${param})
+    {
+        $from = date('Y-m-d 00:00:00');
+        $to = date('Y-m-d 23:59:59');
+        Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
+            ->where('no_telp', $this->no_telp)
+            ->delete();
+        ReservasiOnline::whereRaw("created_at between '{$from}' and '{$to}'")
+            ->where('no_telp', $this->no_telp)
+            ->delete();
+        WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
+            ->where('no_telp', $this->no_telp)
+            ->delete();
+        return 'Reservasi Online Dibatalkan';
+    }
+    
     
     
     
