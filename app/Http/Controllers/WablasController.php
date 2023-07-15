@@ -3709,7 +3709,7 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function name(${param})
+    private function hapusAntrianWhatsappBotReservasiOnline()
     {
         $from = date('Y-m-d 00:00:00');
         $to = date('Y-m-d 23:59:59');
