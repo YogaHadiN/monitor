@@ -2016,14 +2016,7 @@ class WablasController extends Controller
              str_contains($this->message, 'batalkn') ||
              str_contains($this->message, 'batlkan')
         ) {
-
-            $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
-
-            $whatsapp_bot = WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 10 //registrasi online
-            ]);
-
+            $message = $this->konfirmasiPembatalan();
         } else if (
              str_contains($this->message, 'aktivkan') ||
              str_contains($this->message, 'aktipkan') ||
@@ -2575,9 +2568,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online ) &&
             $this->message == 'batalkan'
         ) {
-            $reservasi_online->delete();
-            $this->whatsapp_bot->delete();
-            echo 'Reservasi online dibatalkan';
+            echo $this->konfirmasiPembatalan();
             return false;
         } else if (
             !is_null( $reservasi_online ) &&
@@ -3707,6 +3698,15 @@ class WablasController extends Controller
             $message .= $this->batalkan();
             return $message;
     }
+    public function konfirmasiPembatalan(){
+        $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
+        $whatsapp_bot = WhatsappBot::create([
+            'no_telp' => $this->no_telp,
+            'whatsapp_bot_service_id' => 10 //registrasi online
+        ]);
+        return $message;
+    }
+    
     
     
 }
