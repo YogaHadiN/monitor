@@ -3724,8 +3724,19 @@ class WablasController extends Controller
             ->delete();
         return 'Reservasi Online Dibatalkan';
     }
-    
-    
-    
-    
+
+    public function sudahAdaAntrianUntukJenisAntrian($jenis_antrian_id){
+        $from = date('Y-m-d 00:00:00');
+        $to = date('Y-m-d 23:59:59');
+        return Antrian::whereRaw(
+                                "(
+                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                    antriable_type = 'App\\\Models\\\Antrian' or
+                                    antriable_type = 'App\\\Models\\\AntrianPoli'
+                                )"
+                                )
+                                ->whereRaw("created_at between '{$from}' and '{$to}'")
+                                ->where('jenis_antrian_id', $jenis_antrian_id)
+                                ->count();
+    }
 }
