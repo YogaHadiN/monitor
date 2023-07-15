@@ -2593,11 +2593,26 @@ class WablasController extends Controller
                 $this->message == '2' || 
                 $this->message == '3'
             ) {
-                if ( $this->sudahAdaAntrianUntukJenisAntrian( $this->message ) ) {
+                if (
+                     $this->message == '2' && //antrian poli gigi
+                     (
+                         date('w') == 6 || // hari sabtu atau
+                         date('w') == 0 // hari minggu
+                     )
+                ) {
+                    $message = 'Haru sabtu dan hari minggu pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+                } else if ( $this->sudahAdaAntrianUntukJenisAntrian( $this->message ) ) {
                     $reservasi_online->jenis_antrian_id = $this->message;
                     $reservasi_online->save();
                 } else {
-                    $message = 'Saat ini tidak ada antrian. Anda kami persilahkan untuk datang langsung dan mengambil antrian secara manual';
+                    $jenis_antrian = JenisAntrian::find( $this->message );
+                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang langsung dan mengambil antrian secara manual';
+                    $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                     echo $message;
