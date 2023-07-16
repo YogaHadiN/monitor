@@ -2647,7 +2647,7 @@ class WablasController extends Controller
                 $reservasi_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
 
                 $bpjs                = new BpjsApiController;
-                $response            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
+                $response            = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ], true);
                 if ( !$this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ) {
                     $reservasi_online->data_bpjs_cocok = 0;
                 }
@@ -3692,6 +3692,7 @@ class WablasController extends Controller
 			$message = '*KLINIK JATI ELOK*' ;
 			$message .= PHP_EOL;
 			$message .= $this->samaDengan();
+			$message .= PHP_EOL;
             $message .= 'Kakak akan melakukan registrasi secara online';
             $message .= PHP_EOL;
             $message .= 'Reservasi ini akan ';
