@@ -2638,7 +2638,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
-            Log::info(2641);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
@@ -2647,8 +2646,8 @@ class WablasController extends Controller
                 $reservasi_online->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $reservasi_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
 
-                $bpjs                = new BpjsApiController;
-                $response            = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
+                $bpjs     = new BpjsApiController;
+                $response = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
                 if ( !$this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ) {
                     $reservasi_online->data_bpjs_cocok = 0;
                 }
