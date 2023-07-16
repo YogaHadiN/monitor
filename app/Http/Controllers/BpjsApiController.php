@@ -688,45 +688,29 @@ class BpjsApiController extends Controller
         $response      = $this->apiBpjsGetRequest('dokter/1/1', true);
         return $response['list'][0]['kdDokter'];
     }
-    public function returnDecryptedResponse($data, $returnResponse)
+    public function returnDecryptedResponse($data)
     {
         $data = json_decode($data, true);
         if (!is_null( $data )) {
             if (
                 $data['metaData']['code'] >= 200 &&
-                $data['metaData']['code'] <= 299 &&
-                $data['metaData']['code'] != 204
+                $data['metaData']['code'] <= 299
             ) {
-                if ($returnResponse) {
-                    return json_decode( $this->decompress( $this->stringDecrypt(  $data['response']  ) ), true );
-                } else {
-                    dd([
-                            'url'          => $this->url,
-                            'request'      => $this->post ,
-                            'request_type' => $this->request_type ,
-                            'code'         => $data['metaData']['code'],
-                            'response'     => json_decode( $this->decompress( $this->stringDecrypt(  $data['response']  ) ), true )
-                    ]);
-                }
+                return [
+                    'code'     => $data['metaData']['code'],
+                    'response' => $data['response']
+                ];
             } else {
-                dd(
-                    [
-                        'url'                => $this->url,
-                        'request'            => $this->post ,
-                        'response'           => $data['response'],
-                        'request_type'       => $this->request_type ,
-                        'decrypted_response' => is_array( $data['response'] ) ? $data['response'] : json_decode( $this->decompress( $this->stringDecrypt(  $data['response']  ) ), true ),
-                        'data'               => $data,
-                    ]
-                );
+                return [
+                    'code'     => $data['metaData']['code'],
+                    'response' => $data['metaData']['message']
+                ];
             }
         } else {
-            dd([
-                'data is null',
-                'url'      => $this->url,
-                 'data'    => $data,
-                 'request' => $this->post
-            ]);
+            return [
+                'code'     => 503,
+                'response' => 'Service Unavailable'
+            ];
         }
     }
     public function postKunjunganDoubleEntry($noKartu){
