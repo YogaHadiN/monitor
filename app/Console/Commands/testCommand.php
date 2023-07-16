@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Http\Controllers\WablasController;
+use App\Http\Controllers\BpjsApiController;
 use App\Models\WhatsappBpjsDentistRegistration;
 use App\Models\WhatsappMainMenu;
 use App\Models\CekListDikerjakan;
@@ -43,8 +44,8 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $no ='0001642243702' ;
-        dd( is_numeric($no) && strlen($no) == 11 );
+        $bpjs = new BpjsApiController;
+        dd( $bpjs->pencarianNoKartuValid( '1231231231230', true ) );
     }
     public function refreshAntrianOnline(){
         WhatsappBot::where('no_telp', '6281381912803')->delete();
