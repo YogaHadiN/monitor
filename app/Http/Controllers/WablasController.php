@@ -2638,9 +2638,11 @@ class WablasController extends Controller
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
+            Log::info(2641);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                Log::info(2645);
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $reservasi_online->nama                              = $data[ (int)$this->message -1 ]->nama;
@@ -2649,6 +2651,7 @@ class WablasController extends Controller
                 $bpjs     = new BpjsApiController;
                 $response = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
                 if ( !$this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ) {
+                    Log::info(2654);
                     $reservasi_online->data_bpjs_cocok = 0;
                 }
 
@@ -2656,6 +2659,7 @@ class WablasController extends Controller
                      !is_null( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs ) &&
                      !empty( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs )
                 ) {
+                    Log::info(2662);
                     $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
                 }
 
@@ -2665,12 +2669,15 @@ class WablasController extends Controller
                      !empty( $data[ (int)$this->message -1 ]->bpjs_image ) &&
                      $reservasi_online->registrasi_pembayaran_id == 2 
                 ) {
+                    Log::info(2672);
                     $reservasi_online->kartu_asuransi_image = $data[ (int)$this->message -1 ]->bpjs_image;
                 }
             } else {
+                Log::info(2676);
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->registering_confirmation = 0;
             }
+            Log::info(2680);
             $reservasi_online->save();
         } else if ( 
             !is_null( $reservasi_online ) &&
