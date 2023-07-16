@@ -2938,6 +2938,7 @@ class WablasController extends Controller
         }
 
         if (!empty(trim($message))) {
+            Log::info(2941);
             $message .= PHP_EOL;
             $message .= $this->samaDengan();
             $message .= $this->batalkan();
@@ -2946,6 +2947,7 @@ class WablasController extends Controller
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
+            Log::info(2950);
             echo $message;
         } else {
         }
@@ -2960,6 +2962,7 @@ class WablasController extends Controller
         }
         $message .= PHP_EOL;
         $message .= '_Mohon ulangi_';
+
         return $message;
     }
     public function lanjutkanRegistrasiPembayaran($model){
