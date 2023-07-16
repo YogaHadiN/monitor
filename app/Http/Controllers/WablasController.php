@@ -135,14 +135,14 @@ class WablasController extends Controller
             echo $this->registrasiAntrianOnline();
             return false;
         } else if (
-            $this->message !== '1' &&
-            $this->message !== '2' &&
-            $this->message !== '3' &&
-            $this->message !== '4' &&
-            $this->message !== '5' &&
-            $this->message !== 'ya' &&
-            $this->message !== 'batalkan' &&
-             Input::get('messageType') == 'text' 
+            $this->message            != = '1' &&
+            $this->message            != = '2' &&
+            $this->message            != = '3' &&
+            $this->message            != = '4' &&
+            $this->message            != = '5' &&
+            $this->message            != = 'ya' &&
+            $this->message            != = 'batalkan' &&
+            Input::get('messageType') == 'text'
         ) {
             WhatsappInbox::create([
                 'message' => $this->message,
