@@ -141,7 +141,8 @@ class WablasController extends Controller
             $this->message !== '4' &&
             $this->message !== '5' &&
             $this->message !== 'ya' &&
-            $this->message !== 'batalkan'
+            $this->message !== 'batalkan' &&
+             Input::get('messageType') == 'text' 
         ) {
             WhatsappInbox::create([
                 'message' => $this->message,
