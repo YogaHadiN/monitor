@@ -53,6 +53,7 @@ class BpjsApiController extends Controller
          $this->apiBpjsGetRequest('spesialis/rujuk/subspesialis/26/sarana/1/tglEstRujuk/' . date('d-m-Y')) ;
     }
     public function pencarianNoKartuValid($no_kartu){
+        Log::info('no_kartu : ' . $no_kartu);
          return $this->apiBpjsGetRequest('peserta/noka/'.$no_kartu, true);
     }
     public function pencarianNoKartuLebihDari13Digit(){
