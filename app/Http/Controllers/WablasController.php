@@ -2650,7 +2650,9 @@ class WablasController extends Controller
                 Log::info(2650);
                 $bpjs     = new BpjsApiController;
                 $response = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
+                Log::info(2653);
                 Log::info( $response );
+                Log::info(2655);
                 if ( !$this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ) {
                     Log::info(2654);
                     $reservasi_online->data_bpjs_cocok = 0;
