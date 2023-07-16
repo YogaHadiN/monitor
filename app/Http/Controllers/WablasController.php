@@ -2,7 +2,7 @@
 namespace App\Http\Controllers; 
 use Illuminate\Http\Request; 
 use App\Models\AntrianPoli;
-use App\Models\PesanMasuk;
+use App\Models\WhatsappInbox;
 use App\Models\Complain;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
@@ -48,6 +48,7 @@ use App\Models\Periksa;
 use App\Models\Pasien;
 use App\Models\User;
 use App\Http\Controllers\AntrianPolisController;
+use App\Http\Controllers\BpjsApiController;
 use Input;
 use Carbon\Carbon;
 use Log;
@@ -142,7 +143,7 @@ class WablasController extends Controller
             $this->message !== 'ya' &&
             $this->message !== 'batalkan'
         ) {
-            PesanMasuk::create([
+            WhatsappInbox::create([
                 'message' => $this->message,
                 'no_telp' => $this->no_telp
             ]);
@@ -234,11 +235,6 @@ class WablasController extends Controller
             }
         }   
 	}
-    /**
-     * undocumented function
-     *
-     * @return void
-     */
     private function proceedRegistering()
     {
         header('Content-Type: application/json');
@@ -2553,7 +2549,6 @@ class WablasController extends Controller
         if( is_null( $reservasi_online ) ){
             $this->whatsapp_bot->delete();
         }
-
         if (
             !is_null( $reservasi_online ) &&
             $this->message == 'batalkan'
@@ -2601,7 +2596,7 @@ class WablasController extends Controller
                     $reservasi_online->save();
                 } else {
                     $jenis_antrian = JenisAntrian::find( $this->message );
-                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang langsung dan mengambil antrian secara manual';
+                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang langsung dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -2617,7 +2612,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             is_null( $reservasi_online->registrasi_pembayaran_id )
         ) {
-            Log::info(2649);
             if ( $this->validasiRegistrasiPembayaran()) {
                 $reservasi_online = $this->lanjutkanRegistrasiPembayaran($reservasi_online);
                 $data = $this->queryPreviouslySavedPatientRegistry();
@@ -2650,13 +2644,21 @@ class WablasController extends Controller
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $reservasi_online->nama                              = $data[ (int)$this->message -1 ]->nama;
-                $reservasi_online->alamat                              = $data[ (int)$this->message -1 ]->alamat;
+                $reservasi_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
+
+                $bpjs                = new BpjsApiController;
+                $response            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
+                if ( !$this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ) {
+                    $reservasi_online->data_bpjs_cocok = 0;
+                }
+
                 if (
                      !is_null( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs ) &&
                      !empty( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs )
                 ) {
                     $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
                 }
+
                 $reservasi_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
                 if (
                      !is_null( $data[ (int)$this->message -1 ]->bpjs_image ) &&
@@ -2679,32 +2681,36 @@ class WablasController extends Controller
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
             if (empty(  pesanErrorValidateNomorAsuransiBpjs( $this->message )  )) {
-                Log::info(2679);
-                Log::info('$reservasi_online');
-                Log::info($reservasi_online);
-                $reservasi_online->nomor_asuransi_bpjs  = $this->message;
-                $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
-                if ( 
-                    !is_null( $pasien ) &&
-                    is_null( $reservasi_online->pasien )
-                ) {
-                    Log::info(2685);
-                    $reservasi_online->pasien_id           = $pasien->id;
-                    $reservasi_online->nama                = $pasien->nama;
-                    $reservasi_online->alamat              = $pasien->alamat;
-                    $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
-                } else if ( !is_null( $reservasi_online->pasien ) ) {
-                    Log::info(2690);
-                    Log::info('$reservasi_online->pasien');
-                    Log::info($reservasi_online->pasien);
-                    $reservasi_online->pasien->nomor_asuransi_bpjs = $this->message;
-                    $reservasi_online->pasien->save();
+                $bpjs = new BpjsApiController;
+                $response = $bpjs->pencarianNoKartuValid( $this->message, true );
+                if ( !is_null( $response ) ) {
+                    $reservasi_online->nomor_asuransi_bpjs  = $this->message;
+                    $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
+                    if ( 
+                        !is_null( $pasien ) &&
+                        is_null( $reservasi_online->pasien )
+                    ) {
+                        $bpjs                = new BpjsApiController;
+                        $response            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
+                        if ( $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien ) ) {
+                            $reservasi_online->data_bpjs_cocok           = 0;
+                        }
+                        $reservasi_online->pasien_id           = $pasien->id;
+                        $reservasi_online->nama                = $pasien->nama;
+                        $reservasi_online->alamat              = $pasien->alamat;
+                        $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
+                    } else if ( !is_null( $reservasi_online->pasien ) ) {
+                        $reservasi_online->pasien->nomor_asuransi_bpjs = $this->message;
+                        $reservasi_online->pasien->save();
+                    }
+                } else {
+                    $input_tidak_tepat = true;
+                    $this->pesan_error = 'Nomor BPJS tidak ditemukan di sistem BPJS';
                 }
-                $reservasi_online->save();
             } else {
                 $input_tidak_tepat = true;
             }
-
+            $reservasi_online->save();
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -2947,7 +2953,11 @@ class WablasController extends Controller
     public function pesanMintaKlienBalasUlang(){
         $message = PHP_EOL;
         $message .= PHP_EOL;
-        $message .= '_Balasan yang kakak masukkan tidak dikenali_';
+        if (is_null( $this->pesan_error )) {
+            $message .= '_Balasan yang kakak masukkan tidak dikenali_';
+        } else {
+            $message .= '_'. $this->pesan_error .'_';
+        }
         $message .= PHP_EOL;
         $message .= '_Mohon ulangi_';
         return $message;
@@ -3679,7 +3689,10 @@ class WablasController extends Controller
      */
     private function tanyaSyaratdanKetentuan()
     {
-            $message = 'Kakak akan melakukan registrasi secara online';
+			$message = '*KLINIK JATI ELOK*' ;
+			$message .= PHP_EOL;
+			$message .= $this->samaDengan();
+            $message .= 'Kakak akan melakukan registrasi secara online';
             $message .= PHP_EOL;
             $message .= 'Reservasi ini akan ';
             $message .= PHP_EOL;
@@ -3757,4 +3770,18 @@ class WablasController extends Controller
 
         return $this->tanyaSyaratdanKetentuan();
     }
+    public function nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien){
+        if (is_null($response)) {
+            return false;
+        }
+        $tanggal_lahir_cocok = $pasien->tanggal_lahir == $response['tglLahir'];
+        $ktp_oke = false;
+        if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
+            $ktp_oke = 
+                ( !empty( $pasien->nomor_ktp ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
+                $pasien->nomor_ktp == $response['noKTP']; // nomor ktp di sistem dan di pcare sama
+        }
+        return $tanggal_lahir_cocok && $ktp_oke;
+    }
+    
 }

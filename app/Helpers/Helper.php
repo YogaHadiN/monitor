@@ -41,16 +41,15 @@ if (!function_exists('validateName')) {
 if (!function_exists('pesanErrorValidateNomorAsuransiBpjs')) {
      function pesanErrorValidateNomorAsuransiBpjs($value) {
          $pesan = '';
+
          if (!is_numeric($value)) {
-             $pesan .= '_Nomor BPJS harus semuanya angka_';
+             return '_Nomor BPJS harus semuanya angka_';
          }
-         if (!is_numeric($value) && !( strlen($value) == 13 ) ) {
-             $pesan .= PHP_EOL;
-         }
+
          if (!(strlen($value) == 13)) {
-             $pesan .= '_Nomor BPJS harus terdiri dari 13 angka_';
+             return '_Nomor BPJS harus terdiri dari 13 angka_';
          }
-         return $pesan;
+
     }
 }
 
@@ -80,6 +79,18 @@ if (!function_exists('getFirstWord')) {
      function getFirstWord($text) {
         $arr = explode(' ',trim($text));
         return $arr[0]; // will print Test
+    }
+}
+
+
+if (!function_exists('hitungUsia')) {
+     function hitungUsia($birthDate) {
+        if(empty($birthDate) || $birthDate == '0000-00-00'){
+            return ' -- ';
+        } else {
+            $today = date('Y-m-d');
+            return date_diff(date_create($birthDate), date_create( $today ))->y;
+        }
     }
 }
 
