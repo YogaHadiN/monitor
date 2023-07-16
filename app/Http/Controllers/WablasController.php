@@ -2647,16 +2647,11 @@ class WablasController extends Controller
                 $reservasi_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
                 $reservasi_online->nama                              = $data[ (int)$this->message -1 ]->nama;
                 $reservasi_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
-                Log::info(2650);
-                $bpjs     = new BpjsApiController;
-                $response = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
-                Log::info(2653);
-                Log::info( $response );
-                Log::info(2655);
-                if ( !$this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ) {
-                    Log::info(2654);
-                    $reservasi_online->data_bpjs_cocok = 0;
-                }
+
+                $bpjs                              = new BpjsApiController;
+                $response                          = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
+
+                $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ;
 
                 if (
                      !is_null( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs ) &&
@@ -2700,15 +2695,15 @@ class WablasController extends Controller
                         !is_null( $pasien ) &&
                         is_null( $reservasi_online->pasien )
                     ) {
-                        $bpjs                = new BpjsApiController;
-                        $response            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
-                        if ( $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien ) ) {
-                            $reservasi_online->data_bpjs_cocok           = 0;
-                        }
-                        $reservasi_online->pasien_id           = $pasien->id;
-                        $reservasi_online->nama                = $pasien->nama;
-                        $reservasi_online->alamat              = $pasien->alamat;
-                        $reservasi_online->tanggal_lahir       = $pasien->tanggal_lahir;
+                        $bpjs                              = new BpjsApiController;
+                        $response                          = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
+
+                        $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
+                        $reservasi_online->pasien_id       = $pasien->id;
+                        $reservasi_online->nama            = $pasien->nama;
+                        $reservasi_online->alamat          = $pasien->alamat;
+                        $reservasi_online->tanggal_lahir   = $pasien->tanggal_lahir;
+
                     } else if ( !is_null( $reservasi_online->pasien ) ) {
                         $reservasi_online->pasien->nomor_asuransi_bpjs = $this->message;
                         $reservasi_online->pasien->save();
@@ -3785,17 +3780,25 @@ class WablasController extends Controller
         return $this->tanyaSyaratdanKetentuan();
     }
     public function nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien){
-        if (is_null($response)) {
-            return false;
+        $code     = $response['code'];
+        $response = $response['response'];
+        $result   = 0;
+        if (
+            $code >= 200 &&
+            $code <= 299 &&
+            $code !== 204
+        ) {
+            $tanggal_lahir_cocok = $pasien->tanggal_lahir == $response['tglLahir'];
+            $ktp_oke = true;
+            if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
+                $ktp_oke = 
+                    ( !empty( $pasien->nomor_ktp ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
+                    $pasien->nomor_ktp == $response['noKTP']; // nomor ktp di sistem dan di pcare sama
+            }
+            if( $tanggal_lahir_cocok && $ktp_oke ){
+                $result = 1;
+            } 
         }
-        $tanggal_lahir_cocok = $pasien->tanggal_lahir == $response['tglLahir'];
-        $ktp_oke = false;
-        if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
-            $ktp_oke = 
-                ( !empty( $pasien->nomor_ktp ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
-                $pasien->nomor_ktp == $response['noKTP']; // nomor ktp di sistem dan di pcare sama
-        }
-        return $tanggal_lahir_cocok && $ktp_oke;
+        return $result;
     }
-    
 }
