@@ -2,6 +2,7 @@
 namespace App\Http\Controllers; 
 use Illuminate\Http\Request; 
 use App\Models\AntrianPoli;
+use App\Models\PesanMasuk;
 use App\Models\Complain;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
@@ -129,19 +130,22 @@ class WablasController extends Controller
 	
 	public function webhook(){
         header('Content-Type: application/json');
-        Log::info( $this->message );
-
-        if ( $this->message == 'eureka' ) {
-            return response()->json([
-                'status' => true,
-                'data' => [
-                    [
-                        "category" => "image",
-                        "caption" => "caption here",
-                        "urlFile" => "https://jatielok.s3.ap-southeast-1.amazonaws.com/image/online_reservation/qr_code/A171.png",
-                    ],
-                ],
-            ], 200)->header('Content-Type', 'application/json');
+        if ( $this->message == 'daftar' ) {
+            echo $this->registrasiAntrianOnline();
+            return false;
+        } else if (
+            $this->message !== '1' &&
+            $this->message !== '2' &&
+            $this->message !== '3' &&
+            $this->message !== '4' &&
+            $this->message !== '5' &&
+            $this->message !== 'ya' &&
+            $this->message !== 'batalkan'
+        ) {
+            PesanMasuk::create([
+                'message' => $this->message,
+                'no_telp' => $this->no_telp
+            ]);
         }
 
         $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
@@ -2109,21 +2113,7 @@ class WablasController extends Controller
             ]);
             echo $this->pertanyaanTipeKonsultasi();
         } else if ( $this->message == 2 ) {
-
-            $whatsapp_bot = WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 6 //registrasi online
-            ]);
-
-            $reservasi_online = ReservasiOnline::create([
-                'no_telp'         => $this->no_telp,
-                'whatsapp_bot_id' => $whatsapp_bot->id
-            ]);
-
-            $message = $this->tanyaSyaratdanKetentuan();
-
-            echo $message;
-
+            echo $this->registrasiAntrianOnline();
         } else if ( $this->message == 4 ) {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
@@ -3753,5 +3743,18 @@ class WablasController extends Controller
                                 ->whereRaw("created_at between '{$from}' and '{$to}'")
                                 ->where('jenis_antrian_id', $jenis_antrian_id)
                                 ->count();
+    }
+    public function registrasiAntrianOnline(){
+        $whatsapp_bot = WhatsappBot::create([
+            'no_telp' => $this->no_telp,
+            'whatsapp_bot_service_id' => 6 //registrasi online
+        ]);
+
+        $reservasi_online = ReservasiOnline::create([
+            'no_telp'         => $this->no_telp,
+            'whatsapp_bot_id' => $whatsapp_bot->id
+        ]);
+
+        return $this->tanyaSyaratdanKetentuan();
     }
 }
