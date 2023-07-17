@@ -2687,31 +2687,44 @@ class WablasController extends Controller
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
             if (empty(  pesanErrorValidateNomorAsuransiBpjs( $this->message )  )) {
-                $bpjs = new BpjsApiController;
+                $bpjs     = new BpjsApiController;
                 $response = $bpjs->pencarianNoKartuValid( $this->message, true );
-                if ( !is_null( $response ) ) {
-                    $reservasi_online->nomor_asuransi_bpjs  = $this->message;
-                    $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
+                $code     = $response['code'];
+                $response = $response['response'];
+                if (
+                    $code == 204 // jika tidak ditemukan
+                ) {
+                    $input_tidak_tepat = true;
+                    $this->pesan_error = 'Nomor BPJS tidak ditemukan di sistem BPJS';
+                } else if (
+                    $code >=200 &&
+                    $code <=299 // jika oke
+                ) {
+                    $reservasi_online->nomor_asuransi_bpjs = $this->message;
+                    $pasien                                = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
+                    $reservasi_online->data_bpjs_cocok     = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
                     if ( 
-                        !is_null( $pasien ) &&
-                        is_null( $reservasi_online->pasien )
+                        !is_null( $pasien ) && // jika pasien dengan nomor asuransi bpjs ditemukan
+                        is_null( $reservasi_online->pasien ) // dan pasien tidak dalam pendaftaran previously registered
                     ) {
-                        $bpjs                              = new BpjsApiController;
-                        $response                          = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
-
-                        $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
+                        // update sesuai dengan pasien yang ditemukan
                         $reservasi_online->pasien_id       = $pasien->id;
                         $reservasi_online->nama            = $pasien->nama;
                         $reservasi_online->alamat          = $pasien->alamat;
                         $reservasi_online->tanggal_lahir   = $pasien->tanggal_lahir;
-
-                    } else if ( !is_null( $reservasi_online->pasien ) ) {
+                    } else if (
+                         !is_null( $reservasi_online->pasien ) && // jika previously registered
+                         $reservasi_online->data_bpjs_cocok  // dan data bpjs cocok
+                    ) {
+                        // update nomor asuransi bpjs dengan yang baru
                         $reservasi_online->pasien->nomor_asuransi_bpjs = $this->message;
                         $reservasi_online->pasien->save();
+                    } else if (
+                        is_null( $pasien )  // jika pasien yang memiliki tidak ditemukan di atika namun ditemukan di pcare
+                    ) {
+                        $reservasi_online->nama            = $response['nama']
+                        $reservasi_online->tanggal_lahir   = $response['tglLahir'];
                     }
-                } else {
-                    $input_tidak_tepat = true;
-                    $this->pesan_error = 'Nomor BPJS tidak ditemukan di sistem BPJS';
                 }
             } else {
                 $input_tidak_tepat = true;
@@ -2823,6 +2836,8 @@ class WablasController extends Controller
                     $antrian->reservasi_online         = 1;
                     $antrian->sudah_hadir_di_klinik    = 0;
                     $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
+                    $antrian->save();
+                    $antrian->antriable_id             = $antrian->id;
                     $antrian->save();
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
