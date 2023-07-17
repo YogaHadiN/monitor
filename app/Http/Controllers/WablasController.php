@@ -3816,6 +3816,7 @@ class WablasController extends Controller
         $code     = $response['code'];
         $response = $response['response'];
         $result   = 0;
+        Log::info(3819);
         if (
             $code >= 200 &&
             $code <= 299 &&
@@ -3838,6 +3839,7 @@ class WablasController extends Controller
             Log::info($tanggal_lahir_cocok);
             Log::info($ktp_oke);
         }
+        Log::info(3842);
         return $result;
     }
 }
