@@ -3825,16 +3825,19 @@ class WablasController extends Controller
             $code !== 204
         ) {
             $tanggal_lahir_cocok = $pasien->tanggal_lahir == Carbon::createFromFormat('d-m-Y', $response['tglLahir'])->format("Y-m-d");
-            Log::info('$pasien->tanggal_lahir : ' . $pasien->tanggal_lahir );
-            Log::info('Carbon::createFromFormat("d-m-Y", $response["tglLahir"])->format("Y-m-d") : ' . Carbon::createFromFormat("d-m-Y", $response["tglLahir"])->format("Y-m-d")  );
-            $ktp_oke = 1;
-            if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
-                Log::info(3830);
-                Log::info('$pasien->nomor_ktp = ' .$pasien->nomor_ktp );
-                Log::info('$response["noKTP"] = ' .$response["noKTP"] );
+            $ktp_oke = true;
+            if (
+                 hitungUsia( $pasien->tanggal_lahir ) > 16 && //jika usia 17 tahun keatas
+                ( !empty( trim(  $pasien->nomor_ktp  ) ) && !is_null( $pasien->nomor_ktp ) ) // data nomor ktp terekam
+            ) {
                 $ktp_oke = 
-                    ( !empty( $pasien->nomor_ktp ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
+                    ( !empty( trim(  $pasien->nomor_ktp  ) ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
                     $pasien->nomor_ktp == $response['noKTP']; // nomor ktp di sistem dan di pcare sama
+            } else if (
+                 hitungUsia( $pasien->tanggal_lahir ) > 16 && //jika usia 17 tahun keatas
+                ( empty( trim(  $pasien->nomor_ktp  ) ) || is_null( $pasien->nomor_ktp ) ) // data nomor ktp kosong
+            ) {
+                $ktp_oke = false;
             }
             if( $tanggal_lahir_cocok && $ktp_oke ){
                 $result = 1;
