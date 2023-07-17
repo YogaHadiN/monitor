@@ -3024,6 +3024,7 @@ class WablasController extends Controller
         }
 
         $data = $this->queryPreviouslySavedPatientRegistry();
+
         if (count($data) < 1) {
             $model->register_previously_saved_patient  = 0;
         }
@@ -3820,9 +3821,10 @@ class WablasController extends Controller
             $code <= 299 &&
             $code !== 204
         ) {
+            Log::info(3824);
             Log::info('response');
             Log::info($response);
-            $tanggal_lahir_cocok = $pasien->tanggal_lahir == $response['tglLahir'];
+            $tanggal_lahir_cocok = $pasien->tanggal_lahir == Carbon::createFromFormat('d-m-Y', $response['tglLahir'])->format("Y-m-d");
             $ktp_oke = true;
             if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
                 $ktp_oke = 
@@ -3832,6 +3834,9 @@ class WablasController extends Controller
             if( $tanggal_lahir_cocok && $ktp_oke ){
                 $result = 1;
             } 
+            Log::info(3837);
+            Log::info($tanggal_lahir_cocok);
+            Log::info($ktp_oke);
         }
         return $result;
     }
