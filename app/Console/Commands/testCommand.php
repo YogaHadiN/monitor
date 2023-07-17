@@ -45,7 +45,7 @@ class testCommand extends Command
     public function handle()
     {
         $bpjs = new BpjsApiController;
-        dd( $bpjs->pencarianNoKartuValid( '0001724697472', true ) );
+        dd( $bpjs->pencarianNoKartuValid( '0001724697472', true )['response']['aktif'] );
     }
     public function refreshAntrianOnline(){
         WhatsappBot::where('no_telp', '6281381912803')->delete();
