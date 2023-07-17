@@ -3819,18 +3819,17 @@ class WablasController extends Controller
         $code     = $response['code'];
         $response = $response['response'];
         $result   = 0;
-        Log::info(3819);
         if (
             $code >= 200 &&
             $code <= 299 &&
             $code !== 204
         ) {
-            Log::info(3824);
-            Log::info('response');
-            Log::info($response);
             $tanggal_lahir_cocok = $pasien->tanggal_lahir == Carbon::createFromFormat('d-m-Y', $response['tglLahir'])->format("Y-m-d");
-            $ktp_oke = true;
+            $ktp_oke = 1;
             if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
+                Log::info(3830);
+                Log::info('$pasien->nomor_ktp = ' .$pasien->nomor_ktp );
+                Log::info('$response["noKTP"] = ' .$response["noKTP"] );
                 $ktp_oke = 
                     ( !empty( $pasien->nomor_ktp ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
                     $pasien->nomor_ktp == $response['noKTP']; // nomor ktp di sistem dan di pcare sama
@@ -3838,12 +3837,7 @@ class WablasController extends Controller
             if( $tanggal_lahir_cocok && $ktp_oke ){
                 $result = 1;
             } 
-            Log::info(3837);
-            Log::info($tanggal_lahir_cocok);
-            Log::info($ktp_oke);
         }
-        Log::info(3842);
-        Log::info($result);
         return $result;
     }
 }
