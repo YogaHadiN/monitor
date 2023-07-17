@@ -3816,6 +3816,8 @@ class WablasController extends Controller
             $code <= 299 &&
             $code !== 204
         ) {
+            Log::info('response');
+            Log::info($response);
             $tanggal_lahir_cocok = $pasien->tanggal_lahir == $response['tglLahir'];
             $ktp_oke = true;
             if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
