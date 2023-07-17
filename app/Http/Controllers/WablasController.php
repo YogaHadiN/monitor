@@ -2676,7 +2676,7 @@ class WablasController extends Controller
                          !is_null( $pasien->nomor_asuransi_bpjs ) &&
                          !empty( $pasien->nomor_asuransi_bpjs )
                     ) {
-                        $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs
+                        $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                     }
                 }
             } else {
