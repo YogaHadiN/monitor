@@ -3825,6 +3825,8 @@ class WablasController extends Controller
             $code !== 204
         ) {
             $tanggal_lahir_cocok = $pasien->tanggal_lahir == Carbon::createFromFormat('d-m-Y', $response['tglLahir'])->format("Y-m-d");
+            Log::info('$pasien->tanggal_lahir : ' . $pasien->tanggal_lahir );
+            Log::info('Carbon::createFromFormat("d-m-Y", $response["tglLahir"])->format("Y-m-d") : ' . Carbon::createFromFormat("d-m-Y", $response["tglLahir"])->format("Y-m-d")  );
             $ktp_oke = 1;
             if ( hitungUsia( $pasien->tanggal_lahir ) > 16 ) {
                 Log::info(3830);
