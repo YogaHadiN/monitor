@@ -3916,6 +3916,7 @@ class WablasController extends Controller
                 } else {
                     echo "Data tidak ditemukan";
                 }
+                WhatsappBot::where('no_telp', $this->no_telp)->delete();
             }
         } else {
             echo $this->pesanErrorBpjsInformationInquiry();
