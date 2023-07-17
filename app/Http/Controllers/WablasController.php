@@ -3025,7 +3025,7 @@ class WablasController extends Controller
 
         $data = $this->queryPreviouslySavedPatientRegistry();
         if (count($data) < 1) {
-            $this->whatsapp_registration->antrian->register_previously_saved_patient = 0;
+            $model->register_previously_saved_patient  = 0;
         }
 
         $model->save();
