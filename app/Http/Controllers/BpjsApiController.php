@@ -698,7 +698,7 @@ class BpjsApiController extends Controller
             ) {
                 return [
                     'code'     => $data['metaData']['code'],
-                    'response' => $data['response']
+                    'response' => json_decode( $this->decompress( $this->stringDecrypt(  $data['response']  ) ), true )
                 ];
             } else {
                 return [
