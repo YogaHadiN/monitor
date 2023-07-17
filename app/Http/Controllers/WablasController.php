@@ -3840,6 +3840,7 @@ class WablasController extends Controller
             Log::info($ktp_oke);
         }
         Log::info(3842);
+        Log::info($result);
         return $result;
     }
 }
