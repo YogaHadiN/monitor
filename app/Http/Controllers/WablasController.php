@@ -290,9 +290,9 @@ class WablasController extends Controller
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
-                $this->whatsapp_registration->antrian->pasien_id                          = $data[ (int)$this->message -1 ]->pasien_id;
-                $this->whatsapp_registration->antrian->nama                               = $data[ (int)$this->message -1 ]->nama;
-                $this->whatsapp_registration->antrian->tanggal_lahir                      = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                $this->whatsapp_registration->antrian->pasien_id                          = $pasien->pasien_id;
+                $this->whatsapp_registration->antrian->nama                               = $pasien->nama;
+                $this->whatsapp_registration->antrian->tanggal_lahir                      = $pasien->tanggal_lahir;
 
                 $pasien = $this->whatsapp_registration->antrian->pasien;
 
@@ -1390,11 +1390,11 @@ class WablasController extends Controller
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
-                $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
-                $this->whatsapp_bpjs_dentist_registrations->nama                              = $data[ (int)$this->message -1 ]->nama;
-                $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                $this->whatsapp_bpjs_dentist_registrations->pasien_id                         = $pasien->pasien_id;
+                $this->whatsapp_bpjs_dentist_registrations->nama                              = $pasien->nama;
+                $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir                     = $pasien->tanggal_lahir;
                 if ( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id == 2 ) {
-                    $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
+                    $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                 } else {
                     $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs = 0;
                 }
@@ -2642,34 +2642,39 @@ class WablasController extends Controller
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                $pasien = $data[ (int)$this->message -1 ];
+                $pasien = Pasien::find( $pasien->pasien_id );
+
                 $reservasi_online->register_previously_saved_patient = $this->message;
-                $reservasi_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
-                $reservasi_online->nama                              = $data[ (int)$this->message -1 ]->nama;
-                $reservasi_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
-                $bpjs                              = new BpjsApiController;
-                $response                          = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
-                $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ;
-                $code     = $response['code'];
-                $message = $response['response'];
+                $reservasi_online->pasien_id                         = $pasien->id;
+                $reservasi_online->nama                              = $pasien->nama;
+                $reservasi_online->alamat                            = $pasien->alamat;
+
+                $bpjs                                                = new BpjsApiController;
+                $response                                            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
+                $reservasi_online->data_bpjs_cocok                   = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien) ;
+                $code                                                = $response['code'];
+                $message                                             = $response['response'];
+
                 Log::info(2653);
                 Log::info($code);
                 Log::info($message);
 
                 if (
-                     !is_null( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs ) &&
-                     !empty( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs )
+                    $code == 204 // jika tidak ditemukan
                 ) {
-                    $reservasi_online->nomor_asuransi_bpjs               = $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs;
+                    $pasien->nomor_asuransi_bpjs = null;
+                    $pasien->save();
                 }
 
-                $reservasi_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
                 if (
-                     !is_null( $data[ (int)$this->message -1 ]->bpjs_image ) &&
-                     !empty( $data[ (int)$this->message -1 ]->bpjs_image ) &&
+                     !is_null( $pasien->bpjs_image ) &&
+                     !empty( $pasien->bpjs_image ) &&
                      $reservasi_online->registrasi_pembayaran_id == 2 
                 ) {
-                    $reservasi_online->kartu_asuransi_image = $data[ (int)$this->message -1 ]->bpjs_image;
+                    $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
                 }
+
             } else {
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->registering_confirmation = 0;
@@ -2687,10 +2692,10 @@ class WablasController extends Controller
                 $bpjs     = new BpjsApiController;
                 $response = $bpjs->pencarianNoKartuValid( $this->message, true );
                 $code     = $response['code'];
-                $response = $response['response'];
+                $message = $response['response'];
                 Log::info(2694);
                 Log::info($code);
-                Log::info($response);
+                Log::info($message);
                 if (
                     $code == 204 // jika tidak ditemukan
                 ) {
@@ -2722,8 +2727,8 @@ class WablasController extends Controller
                     } else if (
                         is_null( $pasien )  // jika pasien yang memiliki tidak ditemukan di atika namun ditemukan di pcare
                     ) {
-                        $reservasi_online->nama            = $response['nama'];
-                        $reservasi_online->tanggal_lahir   = $response['tglLahir'];
+                        $reservasi_online->nama            = $message['nama'];
+                        $reservasi_online->tanggal_lahir   = $message['tglLahir'];
                     }
                 }
             } else {
@@ -3194,10 +3199,10 @@ class WablasController extends Controller
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
-                $konsultasi_estetik_online->pasien_id                         = $data[ (int)$this->message -1 ]->pasien_id;
-                $konsultasi_estetik_online->nama                              = $data[ (int)$this->message -1 ]->nama;
-                $konsultasi_estetik_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
-                $konsultasi_estetik_online->tanggal_lahir                     = $data[ (int)$this->message -1 ]->tanggal_lahir;
+                $konsultasi_estetik_online->pasien_id                         = $pasien->pasien_id;
+                $konsultasi_estetik_online->nama                              = $pasien->nama;
+                $konsultasi_estetik_online->alamat                            = $pasien->alamat;
+                $konsultasi_estetik_online->tanggal_lahir                     = $pasien->tanggal_lahir;
                 $message                                                      = $this->tanyaLanjutkanAtauUlangi($konsultasi_estetik_online);
             } else {
                 $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
