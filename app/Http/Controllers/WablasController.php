@@ -2648,12 +2648,12 @@ class WablasController extends Controller
                 $reservasi_online->alamat                            = $data[ (int)$this->message -1 ]->alamat;
                 $bpjs                              = new BpjsApiController;
                 $response                          = $bpjs->pencarianNoKartuValid($data[ (int)$this->message -1 ]->nomor_asuransi_bpjs, true);
+                $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ;
                 $code     = $response['code'];
-                $response = $response['response'];
+                $message = $response['response'];
                 Log::info(2653);
                 Log::info($code);
-                Log::info($response);
-                $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $data[ (int)$this->message -1 ]) ;
+                Log::info($message);
 
                 if (
                      !is_null( $data[ (int)$this->message -1 ]->nomor_asuransi_bpjs ) &&
