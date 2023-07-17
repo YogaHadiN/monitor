@@ -2722,7 +2722,7 @@ class WablasController extends Controller
                     } else if (
                         is_null( $pasien )  // jika pasien yang memiliki tidak ditemukan di atika namun ditemukan di pcare
                     ) {
-                        $reservasi_online->nama            = $response['nama']
+                        $reservasi_online->nama            = $response['nama'];
                         $reservasi_online->tanggal_lahir   = $response['tglLahir'];
                     }
                 }
