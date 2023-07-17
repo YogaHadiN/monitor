@@ -3896,19 +3896,25 @@ class WablasController extends Controller
                 $code <= 299
             ) {
                 Log::info(3898);
-                $text = $this->message;
-                $text .= PHP_EOL;
-                if ( $message['aktif'] ) {
-                    Log::info(3902);
-                    $text .= 'Kartu dalam keadaan AKTIF dan dapat digunakan';
-                } else {
-                    Log::info(3905);
-                    $text .= 'Kartu TIDAK AKTIF karena :';
+                if ( !is_null( $message ) ) {
+                    $text = $this->message;
                     $text .= PHP_EOL;
-                    $text .= $message['ketAktif'];
+                    $text .= 'Nama : ' . $message['nama'];
+                    $text .= PHP_EOL;
+                    if ( $message['aktif'] ) {
+                        Log::info(3902);
+                        $text .= 'Kartu dalam keadaan AKTIF';
+                    } else {
+                        Log::info(3905);
+                        $text .= 'Kartu TIDAK AKTIF karena :';
+                        $text .= PHP_EOL;
+                        $text .= $message['ketAktif'];
+                    }
+                    $text .= 'Nama Provider : ' . $message['kdProviderPst']['nmProvider'];
+                    echo $text;
+                } else {
+                    echo "Data tidak ditemukan";
                 }
-                $text .= 'Nama Provider : ' . $message['kdProviderPst']['nmProvider'];
-                echo $text;
             }
         } else {
             echo $this->pesanErrorBpjsInformationInquiry();
