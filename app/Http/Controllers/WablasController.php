@@ -3899,7 +3899,7 @@ class WablasController extends Controller
                 if ( !is_null( $message ) ) {
                     $text = $this->message;
                     $text .= PHP_EOL;
-                    $text .= 'Nama : ' . $message['nama'];
+                    $text .= 'Nama Peserta : ' . $message['nama'];
                     $text .= PHP_EOL;
                     $text .= 'Nama Provider : ' . $message['kdProviderPst']['nmProvider'];
                     $text .= PHP_EOL;
