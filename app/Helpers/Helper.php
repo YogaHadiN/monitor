@@ -43,7 +43,7 @@ if (!function_exists('pesanErrorValidateNomorAsuransiBpjs')) {
          $pesan = '';
 
          if (!is_numeric($value)) {
-             return '_Nomor BPJS harus semuanya angka_';
+             return '_Nomor BPJS tidak boleh mengandung huruf, hanya angka_';
          }
 
          if (!(strlen($value) == 13)) {
