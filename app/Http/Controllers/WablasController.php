@@ -3901,6 +3901,8 @@ class WablasController extends Controller
                     $text .= PHP_EOL;
                     $text .= 'Nama : ' . $message['nama'];
                     $text .= PHP_EOL;
+                    $text .= 'Nama Provider : ' . $message['kdProviderPst']['nmProvider'];
+                    $text .= PHP_EOL;
                     if ( $message['aktif'] ) {
                         Log::info(3902);
                         $text .= 'Kartu dalam keadaan AKTIF';
@@ -3910,7 +3912,6 @@ class WablasController extends Controller
                         $text .= PHP_EOL;
                         $text .= $message['ketAktif'];
                     }
-                    $text .= 'Nama Provider : ' . $message['kdProviderPst']['nmProvider'];
                     echo $text;
                 } else {
                     echo "Data tidak ditemukan";
