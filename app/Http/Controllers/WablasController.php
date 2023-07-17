@@ -2597,7 +2597,7 @@ class WablasController extends Controller
                     $reservasi_online->save();
                 } else {
                     $jenis_antrian = JenisAntrian::find( $this->message );
-                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang langsung dan mengambil antrian secara langsung';
+                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -2691,6 +2691,9 @@ class WablasController extends Controller
                 $response = $bpjs->pencarianNoKartuValid( $this->message, true );
                 $code     = $response['code'];
                 $response = $response['response'];
+                Log::info(2694);
+                Log::info($code);
+                Log::info($response);
                 if (
                     $code == 204 // jika tidak ditemukan
                 ) {
