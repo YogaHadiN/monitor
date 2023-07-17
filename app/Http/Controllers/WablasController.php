@@ -291,8 +291,8 @@ class WablasController extends Controller
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
-            $pasien = Pasien::find( $data[ (int) $this->message -1 ] );
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                $pasien = Pasien::find( $data[ (int) $this->message -1 ] );
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
                 $this->whatsapp_registration->antrian->pasien_id                          = $pasien->pasien_id;
                 $this->whatsapp_registration->antrian->nama                               = $pasien->nama;
