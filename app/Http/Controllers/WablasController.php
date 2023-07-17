@@ -2693,7 +2693,8 @@ class WablasController extends Controller
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
-            if (empty(  pesanErrorValidateNomorAsuransiBpjs( $this->message )  )) {
+            $this->pesan_error =   pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
+            if (empty( $this->pesan_error )) {
                 $bpjs     = new BpjsApiController;
                 $response = $bpjs->pencarianNoKartuValid( $this->message, true );
                 $code     = $response['code'];
