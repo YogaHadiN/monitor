@@ -67,6 +67,7 @@ class WablasController extends Controller
 	public $whatsapp_recovery_index;
 	public $whatsapp_complaint;
 	public $tenant;
+	public $pesan_error;
 	public $failed_therapy;
 	public $whatsapp_bot;
 	public $no_telp;
