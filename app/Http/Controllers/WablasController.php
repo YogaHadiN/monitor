@@ -1697,11 +1697,13 @@ class WablasController extends Controller
      */
     private function tanyaTanggalLahirPasien($antrian = null)
     {
-        $message  = 'Bisa dibantu *Tanggal Lahir* pasien ';
+        $message  = 'Bisa dibantu *Tanggal Lahir* pasien';
         if (!is_null( $antrian )) {
             $message .= 'Untuk nomor antrian *' . $antrian->nomor_antrian . '* ?';
+        } else {
+            $message .='?';
         }
-        $message .= PHP_EOL . PHP_EOL . 'Contoh : 19-07-2003';
+        $message .=  PHP_EOL . 'Contoh : 19-07-2003';
         return $message;
     }
 
@@ -2649,6 +2651,7 @@ class WablasController extends Controller
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->pasien_id                         = $pasien->id;
                 $reservasi_online->nama                              = $pasien->nama;
+                $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
                 $reservasi_online->alamat                            = $pasien->alamat;
 
                 $bpjs                                                = new BpjsApiController;
