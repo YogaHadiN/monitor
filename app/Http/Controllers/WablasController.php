@@ -3878,7 +3878,7 @@ class WablasController extends Controller
     }
     public function prosesBpjsNumberInquiry(){
         $bpjs = new BpjsApiController;
-        $response = $bpjs->pencarianNoKartuValid( $this->message );
+        $response = $bpjs->pencarianNoKartuValid( $this->message, true );
         $code = $response['code'];
         $message = $response['message'];
         $this->pesan_error = pesanErrorValidateNomorAsuransiBpjs( $this->message );
