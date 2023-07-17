@@ -2660,21 +2660,25 @@ class WablasController extends Controller
                 Log::info($code);
                 Log::info($message);
 
-                if (
-                    $code == 204 // jika tidak ditemukan
-                ) {
+                if ( $code == 204 ) {// jika tidak ditemukan
                     $pasien->nomor_asuransi_bpjs = null;
                     $pasien->save();
-                }
-
-                if (
-                     !is_null( $pasien->bpjs_image ) &&
-                     !empty( $pasien->bpjs_image ) &&
-                     $reservasi_online->registrasi_pembayaran_id == 2 
+                } else if(
+                    $reservasi_online->registrasi_pembayaran_id == 2
                 ) {
-                    $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                    if (
+                         !is_null( $pasien->bpjs_image ) &&
+                         !empty( $pasien->bpjs_image )
+                    ) {
+                        $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                    }
+                    if (
+                         !is_null( $pasien->nomor_asuransi_bpjs ) &&
+                         !empty( $pasien->nomor_asuransi_bpjs )
+                    ) {
+                        $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs
+                    }
                 }
-
             } else {
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->registering_confirmation = 0;
