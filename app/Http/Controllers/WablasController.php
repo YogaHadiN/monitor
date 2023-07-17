@@ -3880,7 +3880,7 @@ class WablasController extends Controller
         $bpjs = new BpjsApiController;
         $response = $bpjs->pencarianNoKartuValid( $this->message, true );
         $code = $response['code'];
-        $message = $response['message'];
+        $message = $response['response'];
         $this->pesan_error = pesanErrorValidateNomorAsuransiBpjs( $this->message );
         if ( 
             is_null( $this->pesan_error ) ||
