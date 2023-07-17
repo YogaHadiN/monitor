@@ -226,6 +226,8 @@ class WablasController extends Controller
                 return $this->prosesKonsultasiEstetik(); // buat main menu
             } else if ( $this->batalkanAntrianExists() ) {
                 return $this->batalkanAntrian(); // buat main menu
+            } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
+                return $this->prosesBpjsNumberInquiry(); // buat main menu
             } else if ( $this->whatsappAntrianOnlineExists() ) {
                 return $this->prosesAntrianOnline(); // buat main menu
             } else if ( $this->whatsappGambarPeriksaExists() ) {
@@ -2115,6 +2117,8 @@ class WablasController extends Controller
             echo $this->pertanyaanTipeKonsultasi();
         } else if ( $this->message == 2 ) {
             echo $this->registrasiAntrianOnline();
+        } else if ( $this->message == 3 ) {
+            echo $this->registrasiInformasiNomorKartuBpjs();
         } else if ( $this->message == 4 ) {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
@@ -3664,6 +3668,9 @@ class WablasController extends Controller
     private function batalkanAntrianExists(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(10);
     }
+    private function bpjsNumberInfomationInquiryExists(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(11);
+    }
     /**
      * undocumented function
      *
@@ -3862,4 +3869,53 @@ class WablasController extends Controller
         }
         return $result;
     }
+    public function registrasiInformasiNomorKartuBpjs(){
+        WhatsappBot::create([
+            'no_telp' => $this->no_telp,
+            'whatsapp_bot_service_id' => 11
+        ]);
+        echo $this->tanyaNomorBpjsPasien();
+    }
+    public function prosesBpjsNumberInquiry(){
+        $bpjs = new BpjsApiController;
+        $response = $bpjs->pencarianNoKartuValid( $this->message );
+        $code = $response['code'];
+        $message = $response['message'];
+        $this->pesan_error = pesanErrorValidateNomorAsuransiBpjs( $this->message );
+        if ( 
+            is_null( $this->pesan_error ) ||
+            empty( trim(  $this->pesan_error  ) )
+        ) {
+            if ( 
+                $code == 204
+            ) {
+                $this->pesan_error =  'Nomor tersebut tidak ditemukan di sistem BPJS';
+                echo $this->pesanErrorBpjsInformationInquiry();
+            } else if (
+                $code >= 200 &&
+                $code <= 299
+            ) {
+                $message = $this->message;
+                $message .= PHP_EOL;
+                if ( $message['aktif'] ) {
+                    $message .= 'Kartu dalam keadaan AKTIF dan dapat digunakan';
+                } else {
+                    $message .= 'Kartu TIDAK AKTIF karena :';
+                    $message .= PHP_EOL;
+                    $message .= $message['ketAktif'];
+                }
+                $message .= 'Nama Provider : ' . $message['kdProviderPst']['nmProvider'];
+            }
+        } else {
+            echo $this->pesanErrorBpjsInformationInquiry();
+        }
+    }
+    public function pesanErrorBpjsInformationInquiry(){
+        $message = $this->tanyaNomorBpjsPasien();
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= $this->pesan_error;
+        return $message;
+    }
+    
 }
