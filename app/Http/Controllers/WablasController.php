@@ -136,6 +136,7 @@ class WablasController extends Controller
             echo $this->registrasiAntrianOnline();
             return false;
         } else if (
+            !is_null( $this->message ) &&
             $this->message            !== '1' &&
             $this->message            !== '2' &&
             $this->message            !== '3' &&
