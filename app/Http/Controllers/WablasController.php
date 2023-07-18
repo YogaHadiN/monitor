@@ -2706,11 +2706,7 @@ class WablasController extends Controller
                             $message['kdProviderPst']['kdProvider'] !== '0221B119'
                         ) {
                             $input_tidak_tepat = true;
-                            $this->pesan_error .= '_Kartu BPJS tersebut tidak dapat digunakan di Klinik Jati Elok_';
-                            $this->pesan_error .= PHP_EOL;
-                            $this->pesan_error .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
-                            $this->pesan_error .= PHP_EOL;
-                            $this->pesan_error .= '_Mohon maaf atas ketidaknyamanannya._';
+                            $this->pesan_error = $this->validasiProviderError( $pasien->nomor_asuransi_bpjs );
                         }
                     } else {
                         $reservasi_online->register_previously_saved_patient = $this->message;
@@ -2792,21 +2788,13 @@ class WablasController extends Controller
                         $message['kdProviderPst']['kdProvider'] !== '0221B119'
                     ) { // jika tidak aktif
                         $input_tidak_tepat = true;
-                        $this->pesan_error .= 'Kartu tidak dapat ditunakan di Klinik Jati Elok';
-                        $this->pesan_error .= PHP_EOL;
-                        $this->pesan_error .= 'Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung';
-                        $this->pesan_error .= PHP_EOL;
-                        $this->pesan_error .= 'Mohon maaf atas ketidaknyamanannya.';
+                        $this->pesan_error = $this->validasiProviderError( $this->message );
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
-                    ) { // jika tidak aktif
+                    ) { // jika error
                         $input_tidak_tepat = true;
-                        $this->pesan_error .= 'Data kartu tidak sesuai dengan sistem';
-                        $this->pesan_error .= PHP_EOL;
-                        $this->pesan_error .= 'Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung';
-                        $this->pesan_error .= PHP_EOL;
-                        $this->pesan_error .= 'Mohon maaf atas ketidaknyamanannya.';
+                        $this->pesan_error = $this->validasiProviderError( $this->message );
                     }
                 }
             } else {
@@ -3979,5 +3967,14 @@ class WablasController extends Controller
         $message .= $this->pesan_error;
         return $message;
     }
+    public function validasiProviderError($nomor_asuransi_bpjs){
+        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
+        $text .= PHP_EOL;
+        $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+        $text .= PHP_EOL;
+        $text .= '_Mohon maaf atas ketidaknyamanannya._';
+        return $text;
+    }
+    
     
 }
