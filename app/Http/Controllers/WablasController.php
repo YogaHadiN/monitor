@@ -2656,7 +2656,6 @@ class WablasController extends Controller
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 $pasien = $data[ (int)$this->message -1 ];
                 $pasien = Pasien::find( $pasien->pasien_id );
-                $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->pasien_id                         = $pasien->id;
                 $reservasi_online->nama                              = $pasien->nama;
                 $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
@@ -2669,6 +2668,7 @@ class WablasController extends Controller
                     $message                                             = $response['response'];
 
                     if ( $code == 204 ) {// jika tidak ditemukan
+                        $reservasi_online->register_previously_saved_patient = $this->message;
                         $pasien->nomor_asuransi_bpjs = null;
                         $pasien->save();
                     } else if (
@@ -2680,6 +2680,7 @@ class WablasController extends Controller
                             $message['aktif'] &&
                             $message['kdProviderPst']['kdProvider'] == '0221B119'
                         ) {
+                            $reservasi_online->register_previously_saved_patient = $this->message;
                             if (
                                  !is_null( $pasien->bpjs_image ) &&
                                  !empty( $pasien->bpjs_image )
@@ -2705,12 +2706,14 @@ class WablasController extends Controller
                             $message['kdProviderPst']['kdProvider'] !== '0221B119'
                         ) {
                             $input_tidak_tepat = true;
-                            $this->pesan_error .= 'Kartu tidak dapat ditunakan di Klinik Jati Elok';
+                            $this->pesan_error .= '_Kartu BPJS tersebut tidak dapat digunakan di Klinik Jati Elok_';
                             $this->pesan_error .= PHP_EOL;
-                            $this->pesan_error .= 'Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung';
+                            $this->pesan_error .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
                             $this->pesan_error .= PHP_EOL;
-                            $this->pesan_error .= 'Mohon maaf atas ketidaknyamanannya.';
+                            $this->pesan_error .= '_Mohon maaf atas ketidaknyamanannya._';
                         }
+                    } else {
+                        $reservasi_online->register_previously_saved_patient = $this->message;
                     }
                 }
             } else {
@@ -3068,7 +3071,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= '_Mohon ulangi_';
         } else {
-            $message .= '_'. $this->pesan_error .'_';
+            $message .= $this->pesan_error;
         }
 
         return $message;
