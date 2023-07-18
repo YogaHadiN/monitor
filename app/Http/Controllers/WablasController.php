@@ -2794,7 +2794,6 @@ class WablasController extends Controller
                         $this->pesan_error .= 'Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung';
                         $this->pesan_error .= PHP_EOL;
                         $this->pesan_error .= 'Mohon maaf atas ketidaknyamanannya.';
-                    }
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
