@@ -292,6 +292,10 @@ class WablasController extends Controller
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                Log::info("================");
+                Log::info(295);
+                Log::info( $this->message );
+                Log::info("================");
                 $pasien = Pasien::find( $data[ (int) $this->message -1 ] );
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
                 $this->whatsapp_registration->antrian->pasien_id                          = $pasien->pasien_id;
@@ -2652,13 +2656,11 @@ class WablasController extends Controller
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
                 $pasien = $data[ (int)$this->message -1 ];
                 $pasien = Pasien::find( $pasien->pasien_id );
-
                 $reservasi_online->register_previously_saved_patient = $this->message;
                 $reservasi_online->pasien_id                         = $pasien->id;
                 $reservasi_online->nama                              = $pasien->nama;
                 $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
                 $reservasi_online->alamat                            = $pasien->alamat;
-
                 if ( $reservasi_online->registrasi_pembayaran_id ==2 ) { //bila BPJS
                     $bpjs                                                = new BpjsApiController;
                     $response                                            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
@@ -2669,29 +2671,46 @@ class WablasController extends Controller
                     if ( $code == 204 ) {// jika tidak ditemukan
                         $pasien->nomor_asuransi_bpjs = null;
                         $pasien->save();
-                    } 
-
-                    if ( 
-                        !is_null($message) &&
-                        $message['aktif']
-                    ) {
-                        if (
-                             !is_null( $pasien->bpjs_image ) &&
-                             !empty( $pasien->bpjs_image )
+                    } else if (
+                        $code >= 200 &&
+                        $code <= 299
+                    ){
+                        if ( 
+                            !is_null($message) &&
+                            $message['aktif'] &&
+                            $message['kdProviderPst']['kdProvider'] == '0221B119'
                         ) {
-                            $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
-                        }
-                        if (
-                             !is_null( $pasien->nomor_asuransi_bpjs ) &&
-                             !empty( $pasien->nomor_asuransi_bpjs )
+                            if (
+                                 !is_null( $pasien->bpjs_image ) &&
+                                 !empty( $pasien->bpjs_image )
+                            ) {
+                                $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                            }
+                            if (
+                                 !is_null( $pasien->nomor_asuransi_bpjs ) &&
+                                 !empty( $pasien->nomor_asuransi_bpjs )
+                            ) {
+                                $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
+                            }
+                        } else if(
+                            !is_null($message) &&
+                            !$message['aktif']
                         ) {
-                            $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
+                            $input_tidak_tepat = true;
+                            $this->pesan_error = 'Kartu tidak aktif karena :';
+                            $this->pesan_error .= PHP_EOL;
+                            $this->pesan_error .= $message['ketAktif'];
+                        } else if(
+                            !is_null($message) &&
+                            $message['kdProviderPst']['kdProvider'] !== '0221B119'
+                        ) {
+                            $input_tidak_tepat = true;
+                            $this->pesan_error .= 'Kartu tidak dapat ditunakan di Klinik Jati Elok';
+                            $this->pesan_error .= PHP_EOL;
+                            $this->pesan_error .= 'Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung';
+                            $this->pesan_error .= PHP_EOL;
+                            $this->pesan_error .= 'Mohon maaf atas ketidaknyamanannya.';
                         }
-                    } else {
-                        $input_tidak_tepat = true;
-                        $this->pesan_error = 'Kartu tidak aktif karena :';
-                        $this->pesan_error .= PHP_EOL;
-                        $this->pesan_error .= $message['ketAktif'];
                     }
                 }
             } else {
@@ -2723,13 +2742,18 @@ class WablasController extends Controller
                     $code <=299 // jika oke
                 ) {
                     // bagi lagi apakah pasien kartunya aktif atau tidak aktif
+
+                    $pasien                            = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
+                    if ( !is_null( $pasien ) ) {
+                        $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
+                    }
                     if (
                         !is_null( $message ) && 
-                        $message['aktif'] 
+                        $message['aktif'] &&
+                        $message['kdProviderPst']['kdProvider'] == '0221B119' &&
+                        $reservasi_online->data_bpjs_cocok
                     ) { // jika aktig
                         $reservasi_online->nomor_asuransi_bpjs = $this->message;
-                        $pasien                                = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
-                        $reservasi_online->data_bpjs_cocok     = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
                         if ( 
                             !is_null( $pasien ) && // jika pasien dengan nomor asuransi bpjs ditemukan
                             is_null( $reservasi_online->pasien ) // dan pasien tidak dalam pendaftaran previously registered
@@ -2752,11 +2776,35 @@ class WablasController extends Controller
                             $reservasi_online->nama            = $message['nama'];
                             $reservasi_online->tanggal_lahir   = $message['tglLahir'];
                         }
-                    } else { // jika tidak aktif
+                    } else if(
+                        !is_null( $message ) && 
+                        !$message['aktif']
+                    ) { // jika tidak aktif
                         $input_tidak_tepat = true;
                         $this->pesan_error = 'Kartu tidak aktif karena :';
                         $this->pesan_error .= PHP_EOL;
                         $this->pesan_error .= $message['ketAktif'];
+                    } else if(
+                        !is_null( $message ) && 
+                        $message['kdProviderPst']['kdProvider'] !== '0221B119'
+                    ) { // jika tidak aktif
+                        $input_tidak_tepat = true;
+                        $this->pesan_error .= 'Kartu tidak dapat ditunakan di Klinik Jati Elok';
+                        $this->pesan_error .= PHP_EOL;
+                        $this->pesan_error .= 'Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung';
+                        $this->pesan_error .= PHP_EOL;
+                        $this->pesan_error .= 'Mohon maaf atas ketidaknyamanannya.';
+                    }
+                    } else if(
+                        !is_null( $message ) && 
+                        !$reservasi_online->data_bpjs_cocok
+                    ) { // jika tidak aktif
+                        $input_tidak_tepat = true;
+                        $this->pesan_error .= 'Data kartu tidak sesuai dengan sistem';
+                        $this->pesan_error .= PHP_EOL;
+                        $this->pesan_error .= 'Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung';
+                        $this->pesan_error .= PHP_EOL;
+                        $this->pesan_error .= 'Mohon maaf atas ketidaknyamanannya.';
                     }
                 }
             } else {
@@ -3018,11 +3066,11 @@ class WablasController extends Controller
             empty( trim(  $this->pesan_error  ) )
         ) {
             $message .= '_Balasan yang kakak masukkan tidak dikenali_';
+            $message .= PHP_EOL;
+            $message .= '_Mohon ulangi_';
         } else {
             $message .= '_'. $this->pesan_error .'_';
         }
-        $message .= PHP_EOL;
-        $message .= '_Mohon ulangi_';
 
         return $message;
     }
