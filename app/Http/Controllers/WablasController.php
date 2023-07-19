@@ -2794,7 +2794,6 @@ class WablasController extends Controller
                         $message['kdProviderPst']['kdProvider'] !== '0221B119'
                     ) { // jika tidak aktif
                         $input_tidak_tepat = true;
-                        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
                         $this->pesan_error = $this->validasiBpjsProviderSalah( $nomor_asuransi_bpjs, $message );
                     } else if(
                         !is_null( $message ) && 
