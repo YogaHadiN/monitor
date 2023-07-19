@@ -2550,7 +2550,6 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
     }
     public function prosesAntrianOnline(){
-
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->first();
@@ -2948,7 +2947,7 @@ class WablasController extends Controller
                     ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     $whatsapp_bot_id = $reservasi_online->whatsapp_bot_id;
-                    ReservasiOnline::create([
+                    $reservasi_online = ReservasiOnline::create([
                         'no_telp'         => $this->no_telp,
                         'whatsapp_bot_id' => $whatsapp_bot_id,
                         'konfirmasi_sdk'  => 1,
