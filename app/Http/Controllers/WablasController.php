@@ -3980,6 +3980,7 @@ class WablasController extends Controller
         return $text;
     }
     public function validasiBpjsProviderSalah($nomor_asuransi_bpjs, $message){
+        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
         $text .= PHP_EOL;
         $text .= '_Karena saat ini nomor tersebut terdaftar di '.$message['kdProviderPst']['nmProvider'].'_';
         $text .= PHP_EOL;
