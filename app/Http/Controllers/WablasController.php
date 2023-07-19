@@ -2796,7 +2796,7 @@ class WablasController extends Controller
                         $input_tidak_tepat = true;
                         $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
                         $text .= PHP_EOL;
-                        $text .= '_Karena saat ini nomor tersebut terdaftar di '.$message['kdProviderPst']['nmProvider'].'_'
+                        $text .= '_Karena saat ini nomor tersebut terdaftar di '.$message['kdProviderPst']['nmProvider'].'_';
                         $text .= PHP_EOL;
                         $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
                         $text .= PHP_EOL;
@@ -2809,7 +2809,7 @@ class WablasController extends Controller
                         $input_tidak_tepat = true;
                         $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
                         $text .= PHP_EOL;
-                        $text .= '_Karena saat ini nomor tersebut terdaftar atas nama '.$message['nama'].'_'
+                        $text .= '_Karena saat ini nomor tersebut terdaftar atas nama '.$message['nama'].'_';
                         $text .= PHP_EOL;
                         $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
                         $text .= PHP_EOL;
