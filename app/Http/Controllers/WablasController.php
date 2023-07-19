@@ -2741,6 +2741,7 @@ class WablasController extends Controller
                 if (
                     $code == 204 // jika tidak ditemukan
                 ) {
+                    Log::info(2744);
                     $input_tidak_tepat = true;
                     $this->pesan_error = 'Nomor BPJS tidak ditemukan di sistem BPJS';
                 } else if (
@@ -2748,9 +2749,10 @@ class WablasController extends Controller
                     $code <=299 // jika oke
                 ) {
                     // bagi lagi apakah pasien kartunya aktif atau tidak aktif
-
+                    Log::info(2752);
                     $pasien                            = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
                     if ( !is_null( $pasien ) ) {
+                        Log::info(2755);
                         $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
                     }
                     if (
@@ -2759,11 +2761,13 @@ class WablasController extends Controller
                         $message['kdProviderPst']['kdProvider'] == '0221B119' &&
                         $reservasi_online->data_bpjs_cocok
                     ) { // jika aktig
+                        Log::info(2764);
                         $reservasi_online->nomor_asuransi_bpjs = $this->message;
                         if ( 
                             !is_null( $pasien ) && // jika pasien dengan nomor asuransi bpjs ditemukan
                             is_null( $reservasi_online->pasien ) // dan pasien tidak dalam pendaftaran previously registered
                         ) {
+                            Log::info(2770);
                             // update sesuai dengan pasien yang ditemukan
                             $reservasi_online->pasien_id       = $pasien->id;
                             $reservasi_online->nama            = $pasien->nama;
@@ -2773,11 +2777,13 @@ class WablasController extends Controller
                              !is_null( $reservasi_online->pasien ) && // jika previously registered
                              $reservasi_online->data_bpjs_cocok  // dan data bpjs cocok
                         ) {
+                            Log::info(2780);
                             // update nomor asuransi bpjs dengan yang baru
                             $reservasi_online->pasien->save();
                         } else if (
                             is_null( $pasien )  // jika pasien yang memiliki tidak ditemukan di atika namun ditemukan di pcare
                         ) {
+                            Log::info(2786);
                             $reservasi_online->nama            = $message['nama'];
                             $reservasi_online->tanggal_lahir   = $message['tglLahir'];
                         }
@@ -2785,6 +2791,7 @@ class WablasController extends Controller
                         !is_null( $message ) && 
                         !$message['aktif']
                     ) { // jika tidak aktif
+                        Log::info(2794);
                         $input_tidak_tepat = true;
                         $this->pesan_error = 'Kartu tidak aktif karena :';
                         $this->pesan_error .= PHP_EOL;
@@ -2793,17 +2800,20 @@ class WablasController extends Controller
                         !is_null( $message ) && 
                         $message['kdProviderPst']['kdProvider'] !== '0221B119'
                     ) { // jika tidak aktif
+                        Log::info(2803);
                         $input_tidak_tepat = true;
                         $this->pesan_error = $this->validasiBpjsProviderSalah( $this->message, $message );
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
                     ) { // jika error
+                        Log::info(2810);
                         $input_tidak_tepat = true;
                         $this->pesan_error = $this->validasiBpjsDataTidakCocok( $this->message, $message );
                     }
                 }
             } else {
+                Log::info(2816);
                 $input_tidak_tepat = true;
             }
             $reservasi_online->save();
