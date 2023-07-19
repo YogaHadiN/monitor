@@ -2957,12 +2957,14 @@ class WablasController extends Controller
             !is_null( $reservasi_online ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
+            Log::info(2960);
             $message = $this->tanyaSyaratdanKetentuan();
         } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             is_null( $reservasi_online->jenis_antrian_id )
         ) {
+            Log::info(2967);
             $message = $this->pertanyaanPoliYangDituju();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2970,6 +2972,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             is_null( $reservasi_online->registrasi_pembayaran_id )
         ) {
+            Log::info(2975);
             $message = $this->pertanyaanPembayaranPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2978,6 +2981,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
+            Log::info(2984);
             $message = $this->pesanUntukPilihPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2987,6 +2991,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
+            Log::info(2994);
             $message = $this->tanyaNomorBpjsPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -2997,6 +3002,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
             is_null( $reservasi_online->nama ) 
         ) {
+            Log::info(3005);
             $message = $this->tanyaNamaLengkapPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3008,6 +3014,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nama ) &&
             is_null( $reservasi_online->tanggal_lahir ) 
         ) {
+            Log::info(3017);
             $message = $this->tanyaTanggalLahirPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3020,6 +3027,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->tanggal_lahir ) &&
             is_null( $reservasi_online->alamat )
         ) {
+            Log::info(3030);
             $message = $this->tanyaAlamatLengkapPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3033,6 +3041,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->alamat ) &&
             is_null( $reservasi_online->kartu_asuransi_image )
         ) {
+            Log::info(3044);
             $message = $this->tanyaKartuAsuransiImage($reservasi_online);
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3046,6 +3055,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->alamat ) &&
             !is_null( $reservasi_online->kartu_asuransi_image )
         ) {
+            Log::info(3058);
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
         }
 
