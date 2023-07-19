@@ -2718,6 +2718,12 @@ class WablasController extends Controller
                         $reservasi_online->alamat                            = $pasien->alamat;
                         $reservasi_online->register_previously_saved_patient = $this->message;
                     }
+                } else {
+                    $reservasi_online->pasien_id                         = $pasien->id;
+                    $reservasi_online->nama                              = $pasien->nama;
+                    $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
+                    $reservasi_online->alamat                            = $pasien->alamat;
+                    $reservasi_online->register_previously_saved_patient = $this->message;
                 }
             } else {
                 $reservasi_online->register_previously_saved_patient = $this->message;
