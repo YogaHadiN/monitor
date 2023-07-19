@@ -297,9 +297,9 @@ class WablasController extends Controller
                 Log::info(295);
                 Log::info( $this->message );
                 Log::info("================");
-                $pasien = Pasien::find( $data[ (int) $this->message -1 ] );
+                $pasien = Pasien::find( $data[ (int) $this->message -1 ]->pasien_id );
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
-                $this->whatsapp_registration->antrian->pasien_id                          = $pasien->pasien_id;
+                $this->whatsapp_registration->antrian->pasien_id                          = $pasien->id;
                 $this->whatsapp_registration->antrian->nama                               = $pasien->nama;
                 $this->whatsapp_registration->antrian->tanggal_lahir                      = $pasien->tanggal_lahir;
 
