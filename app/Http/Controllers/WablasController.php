@@ -2785,7 +2785,7 @@ class WablasController extends Controller
                         ) {
                             Log::info(2786);
                             $reservasi_online->nama            = $message['nama'];
-                            $reservasi_online->tanggal_lahir   = $message['tglLahir'];
+                            $reservasi_online->tanggal_lahir   = Carbon::createFromFormat("d-m-Y", $message['tglLahir']->format("Y-m-d");
                         }
                     } else if(
                         !is_null( $message ) && 
