@@ -2794,13 +2794,13 @@ class WablasController extends Controller
                         $message['kdProviderPst']['kdProvider'] !== '0221B119'
                     ) { // jika tidak aktif
                         $input_tidak_tepat = true;
-                        $this->pesan_error = $this->validasiBpjsProviderSalah( $nomor_asuransi_bpjs, $message );
+                        $this->pesan_error = $this->validasiBpjsProviderSalah( $this->message, $message );
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
                     ) { // jika error
                         $input_tidak_tepat = true;
-                        $this->pesan_error = $this->validasiBpjsDataTidakCocok( $nomor_asuransi_bpjs, $message );
+                        $this->pesan_error = $this->validasiBpjsDataTidakCocok( $this->message, $message );
                     }
                 }
             } else {
