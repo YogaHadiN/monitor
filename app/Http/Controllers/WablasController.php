@@ -2709,7 +2709,7 @@ class WablasController extends Controller
                             $message['kdProviderPst']['kdProvider'] !== '0221B119'
                         ) {
                             $input_tidak_tepat = true;
-                            $this->pesan_error = $this->validasiProviderError( $pasien->nomor_asuransi_bpjs );
+                            $this->pesan_error = $this->validasiBpjsProviderSalah( $pasien->nomor_asuransi_bpjs, $message );
                         }
                     } else {
                         $reservasi_online->pasien_id                         = $pasien->id;
@@ -2795,26 +2795,13 @@ class WablasController extends Controller
                     ) { // jika tidak aktif
                         $input_tidak_tepat = true;
                         $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
-                        $text .= PHP_EOL;
-                        $text .= '_Karena saat ini nomor tersebut terdaftar di '.$message['kdProviderPst']['nmProvider'].'_';
-                        $text .= PHP_EOL;
-                        $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
-                        $text .= PHP_EOL;
-                        $text .= '_Mohon maaf atas ketidaknyamanannya._';
-                        $this->pesan_error = $text;
+                        $this->pesan_error = $this->validasiBpjsProviderSalah( $nomor_asuransi_bpjs, $message );
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
                     ) { // jika error
                         $input_tidak_tepat = true;
-                        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
-                        $text .= PHP_EOL;
-                        $text .= '_Karena saat ini nomor tersebut terdaftar atas nama '.$message['nama'].'_';
-                        $text .= PHP_EOL;
-                        $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
-                        $text .= PHP_EOL;
-                        $text .= '_Mohon maaf atas ketidaknyamanannya._';
-                        $this->pesan_error = $text;
+                        $this->pesan_error = $this->validasiBpjsDataTidakCocok( $nomor_asuransi_bpjs, $message );
                     }
                 }
             } else {
@@ -3953,7 +3940,6 @@ class WablasController extends Controller
                 $code >= 200 &&
                 $code <= 299
             ) {
-                Log::info(3898);
                 if ( !is_null( $message ) ) {
                     $text = $this->message;
                     $text .= PHP_EOL;
@@ -3962,10 +3948,8 @@ class WablasController extends Controller
                     $text .= 'Nama Provider : ' . $message['kdProviderPst']['nmProvider'];
                     $text .= PHP_EOL;
                     if ( $message['aktif'] ) {
-                        Log::info(3902);
                         $text .= 'Kartu dalam keadaan AKTIF';
                     } else {
-                        Log::info(3905);
                         $text .= 'Kartu TIDAK AKTIF karena :';
                         $text .= PHP_EOL;
                         $text .= $message['ketAktif'];
@@ -3995,6 +3979,23 @@ class WablasController extends Controller
         $text .= '_Mohon maaf atas ketidaknyamanannya._';
         return $text;
     }
-    
-    
+    public function validasiBpjsProviderSalah($nomor_asuransi_bpjs, $message){
+        $text .= PHP_EOL;
+        $text .= '_Karena saat ini nomor tersebut terdaftar di '.$message['kdProviderPst']['nmProvider'].'_';
+        $text .= PHP_EOL;
+        $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+        $text .= PHP_EOL;
+        $text .= '_Mohon maaf atas ketidaknyamanannya._';
+        return $text;
+    }
+    public function validasiBpjsDataTidakCocok($nomor_asuransi_bpjs, $message){
+        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
+        $text .= PHP_EOL;
+        $text .= '_Karena saat ini nomor tersebut terdaftar atas nama '.$message['nama'].'_';
+        $text .= PHP_EOL;
+        $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+        $text .= PHP_EOL;
+        $text .= '_Mohon maaf atas ketidaknyamanannya._';
+        return $text;
+    }
 }
