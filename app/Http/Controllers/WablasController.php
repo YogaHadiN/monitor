@@ -2774,7 +2774,6 @@ class WablasController extends Controller
                              $reservasi_online->data_bpjs_cocok  // dan data bpjs cocok
                         ) {
                             // update nomor asuransi bpjs dengan yang baru
-                            $reservasi_online->pasien->nomor_asuransi_bpjs = $this->message;
                             $reservasi_online->pasien->save();
                         } else if (
                             is_null( $pasien )  // jika pasien yang memiliki tidak ditemukan di atika namun ditemukan di pcare
@@ -2795,13 +2794,27 @@ class WablasController extends Controller
                         $message['kdProviderPst']['kdProvider'] !== '0221B119'
                     ) { // jika tidak aktif
                         $input_tidak_tepat = true;
-                        $this->pesan_error = $this->validasiProviderError( $this->message );
+                        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
+                        $text .= PHP_EOL;
+                        $text .= '_Karena saat ini nomor tersebut terdaftar di '.$message['kdProviderPst']['nmProvider'].'_'
+                        $text .= PHP_EOL;
+                        $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+                        $text .= PHP_EOL;
+                        $text .= '_Mohon maaf atas ketidaknyamanannya._';
+                        $this->pesan_error = $text;
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
                     ) { // jika error
                         $input_tidak_tepat = true;
-                        $this->pesan_error = $this->validasiProviderError( $this->message );
+                        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
+                        $text .= PHP_EOL;
+                        $text .= '_Karena saat ini nomor tersebut terdaftar atas nama '.$message['nama'].'_'
+                        $text .= PHP_EOL;
+                        $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+                        $text .= PHP_EOL;
+                        $text .= '_Mohon maaf atas ketidaknyamanannya._';
+                        $this->pesan_error = $text;
                     }
                 }
             } else {
