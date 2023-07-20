@@ -2676,11 +2676,13 @@ class WablasController extends Controller
                             $code >= 200 &&
                             $code <= 299
                         ){
+                            Log::info(2679);
                             if ( 
                                 !is_null($message) &&
                                 $message['aktif'] &&
                                 $message['kdProviderPst']['kdProvider'] == '0221B119'
                             ) {
+                                Log::info(2685);
                                 $reservasi_online->pasien_id                         = $pasien->id;
                                 $reservasi_online->nama                              = $pasien->nama;
                                 $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
@@ -2690,18 +2692,21 @@ class WablasController extends Controller
                                      !is_null( $pasien->bpjs_image ) &&
                                      !empty( $pasien->bpjs_image )
                                 ) {
+                                    Log::info(2695);
                                     $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
                                 }
                                 if (
                                      !is_null( $pasien->nomor_asuransi_bpjs ) &&
                                      !empty( $pasien->nomor_asuransi_bpjs )
                                 ) {
+                                    Log::info(2702);
                                     $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                                 }
                             } else if(
                                 !is_null($message) &&
                                 !$message['aktif']
                             ) {
+                                Log::info(2709);
                                 $input_tidak_tepat = true;
                                 $this->pesan_error = 'Kartu tidak aktif karena :';
                                 $this->pesan_error .= PHP_EOL;
@@ -2710,10 +2715,12 @@ class WablasController extends Controller
                                 !is_null($message) &&
                                 $message['kdProviderPst']['kdProvider'] !== '0221B119'
                             ) {
+                                Log::info(2718);
                                 $input_tidak_tepat = true;
                                 $this->pesan_error = $this->validasiBpjsProviderSalah( $pasien->nomor_asuransi_bpjs, $message );
                             }
                         } else {
+                            Log::info(2723);
                             $reservasi_online->pasien_id                         = $pasien->id;
                             $reservasi_online->nama                              = $pasien->nama;
                             $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
