@@ -4003,8 +4003,8 @@ class WablasController extends Controller
                 }
                 WhatsappBot::where('no_telp', $this->no_telp)->delete();
             } else {
-                $this->pesan_error = 'Server BPJS saat ini sedang gangguan. Silahkan coba beberapa saat lagi.';
-                echo $this->pesanErrorBpjsInformationInquiry();
+                echo 'Server BPJS saat ini sedang gangguan. Silahkan coba beberapa saat lagi.';
+                WhatsappBot::where('no_telp', $this->no_telp)->delete();
             }
         } else {
             echo $this->pesanErrorBpjsInformationInquiry();
