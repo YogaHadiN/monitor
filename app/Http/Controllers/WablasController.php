@@ -3938,7 +3938,8 @@ class WablasController extends Controller
             $ktp_oke = true;
             if (
                  hitungUsia( $pasien->tanggal_lahir ) > 16 && //jika usia 17 tahun keatas
-                ( !empty( trim(  $pasien->nomor_ktp  ) ) && !is_null( $pasien->nomor_ktp ) ) // data nomor ktp terekam
+                ( !empty( trim(  $pasien->nomor_ktp  ) ) && !is_null( $pasien->nomor_ktp ) ) && // data nomor ktp terekam
+                ( !empty( trim($response['noKTP']) ) && !is_null($response['noKTP']) ) // data nomor ktp ada di pcare
             ) {
                 $ktp_oke = 
                     ( !empty( trim(  $pasien->nomor_ktp  ) ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
