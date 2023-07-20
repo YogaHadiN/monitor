@@ -4015,29 +4015,37 @@ class WablasController extends Controller
         return $message;
     }
     public function validasiProviderError($nomor_asuransi_bpjs){
-        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
+        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan_';
+        $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+        $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= '_Mohon maaf atas ketidaknyamanannya._';
         return $text;
     }
     public function validasiBpjsProviderSalah($nomor_asuransi_bpjs, $message){
-        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
+        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan_';
+        $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= '_Karena saat ini nomor tersebut terdaftar di '.trim( $message['kdProviderPst']['nmProvider'] ).'_';
         $text .= PHP_EOL;
+        $text .= PHP_EOL;
         $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+        $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= '_Mohon maaf atas ketidaknyamanannya._';
         return $text;
     }
     public function validasiBpjsDataTidakCocok($nomor_asuransi_bpjs, $message){
-        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan di Klinik Jati Elok_';
+        $text = '_Kartu BPJS dengan nomor ' . $nomor_asuransi_bpjs. ' tidak dapat digunakan_';
+        $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= '_Karena saat ini nomor tersebut terdaftar atas nama '.trim( $message['nama'] ).'_';
         $text .= PHP_EOL;
+        $text .= PHP_EOL;
         $text .= '_Jika menurut Anda ini adalah kesalahan silahkan mengambil antrian secara langsung_';
+        $text .= PHP_EOL;
         $text .= PHP_EOL;
         $text .= '_Mohon maaf atas ketidaknyamanannya._';
         return $text;
