@@ -2792,10 +2792,11 @@ class WablasController extends Controller
                         ) {
                             Log::info(2770);
                             // update sesuai dengan pasien yang ditemukan
-                            $reservasi_online->pasien_id       = $pasien->id;
-                            $reservasi_online->nama            = $pasien->nama;
-                            $reservasi_online->alamat          = $pasien->alamat;
-                            $reservasi_online->tanggal_lahir   = $pasien->tanggal_lahir;
+                            $reservasi_online->pasien_id            = $pasien->id;
+                            $reservasi_online->nama                 = $pasien->nama;
+                            $reservasi_online->alamat               = $pasien->alamat;
+                            $reservasi_online->tanggal_lahir        = $pasien->tanggal_lahir;
+                            $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
                         } else if (
                              !is_null( $reservasi_online->pasien ) && // jika previously registered
                              $reservasi_online->data_bpjs_cocok  // dan data bpjs cocok
