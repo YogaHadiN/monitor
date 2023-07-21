@@ -3247,7 +3247,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= "Pengambilan antrian dimulai pukul ";
         $message .= $jadwalGigi['jam_mulai'] . ' s/d ' . $jadwalGigi['jam_akhir'];
-        $message .=" dan ketika sudah ada antrian pertama"
+        $message .=" dan ketika sudah ada antrian pertama";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
