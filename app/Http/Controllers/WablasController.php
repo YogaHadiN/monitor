@@ -2,6 +2,7 @@
 namespace App\Http\Controllers; 
 use Illuminate\Http\Request; 
 use App\Models\AntrianPoli;
+use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
 use App\Models\Complain;
 use App\Models\DentistReservation;
