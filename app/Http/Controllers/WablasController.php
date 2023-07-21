@@ -2589,14 +2589,38 @@ class WablasController extends Controller
                 $this->message == '2' || 
                 $this->message == '3'
             ) {
+                $jenis_antrian = JenisAntrian::find( $this->message );
+                // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
+                // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
+                $jadwalGigi = $this->jamBukaDokterGigiHariIni();
                 if (
                      $this->message == '2' && //antrian poli gigi
+                     !$jadwalGigi  //tidak ada jadwal gigi hari ini
+                ) {
+                    $message = 'Hari ini pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+                } else if (
+                     $this->message == '2' && //antrian poli gigi
                      (
-                         date('w') == 6 || // hari sabtu atau
-                         date('w') == 0 // hari minggu
+                         strtotime('now') < strtotime($jadwalGigi['jam_mulai']) ||
+                         strtotime('now') > strtotime($jadwalGigi['jam_akhir'])
                      )
                 ) {
-                    $message = 'Haru sabtu dan hari minggu pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
+                    $jam_mulai = $jadwalGigi['jam_mulai'];
+                    $jam_akhir = $jadwalGigi['jam_akhir'];
+                    $message = "Pelayanan Poli Gigi hari ini jam {$jam_mulai} s/d {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+                // jika tidak ada antrian di dalam poli batalkan reservasi
+                } else if (  !$this->sudahAdaAntrianUntukJenisAntrian( $this->message )  ) { 
+                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -2606,13 +2630,6 @@ class WablasController extends Controller
                     $reservasi_online->jenis_antrian_id = $this->message;
                     $reservasi_online->save();
                 } else {
-                    $jenis_antrian = JenisAntrian::find( $this->message );
-                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    echo $message;
-                    return false;
                 }
             } else {
                 $input_tidak_tepat = true;
@@ -3219,6 +3236,7 @@ class WablasController extends Controller
     }
 
     public function pertanyaanPoliYangDituju(){
+        $jadwalGigi = $this->jamBukaDokterGigiHariIni();
         $message = 'Bisa dibantu poli yang dituju?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
@@ -3227,10 +3245,26 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian['dokter_gigi']. ' antrian)';
         $message .= PHP_EOL;
+        $message .= "Pengambilan antrian dimulai pukul ";
+        $message .= $jadwalGigi['jam_mulai'] . ' s/d ' . $jadwalGigi['jam_akhir'];
+        $message .=" dan ketika sudah ada antrian pertama"
+        $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
         return $message;
     }
+    public function jamBukaDokterGigiHariIni(){
+        $dayNameNumber = date('w');
+        $jadwal = JadwalKonsultasi::where('hari_id', $dayNameNumber)
+            ->where('tipe_konsultasi_id', 2)
+            ->first();
+        if (is_null($jadwal)) {
+            return false;
+        } else {
+            return  compact('jam_mulai', 'jam_akhir');
+        }
+    }
+    
 
 	public function antrianPost($id){
 		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', date('Y-m-d') . '%')
@@ -4003,7 +4037,7 @@ class WablasController extends Controller
                 }
                 WhatsappBot::where('no_telp', $this->no_telp)->delete();
             } else {
-                echo 'Server BPJS saat ini sedang gangguan. Silahkan coba beberapa saat lagi.';
+                echo '_Server BPJS saat ini sedang gangguan. Silahkan coba beberapa saat lagi_';
                 WhatsappBot::where('no_telp', $this->no_telp)->delete();
             }
         } else {
