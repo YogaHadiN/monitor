@@ -3262,6 +3262,7 @@ class WablasController extends Controller
     }
     public function jamBukaDokterGigiHariIni(){
         $dayNameNumber = date('w');
+        $dayNameNumber = 1;
         $jadwal = JadwalKonsultasi::where('hari_id', $dayNameNumber)
             ->where('tipe_konsultasi_id', 2)
             ->first();
