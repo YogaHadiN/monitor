@@ -2613,7 +2613,7 @@ class WablasController extends Controller
                 ) {
                     $jam_mulai = $jadwalGigi['jam_mulai'];
                     $jam_akhir = $jadwalGigi['jam_akhir'];
-                    $message = "Pelayanan Poli Gigi hari ini jam {$jam_mulai} s/d {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
+                    $message = "Pengambilan Antrian Poli Gigi hari ini dimulai jam {$jam_mulai} s/d {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
