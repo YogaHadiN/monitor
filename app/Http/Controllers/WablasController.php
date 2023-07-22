@@ -2621,7 +2621,7 @@ class WablasController extends Controller
                      strtotime('now') > strtotime($jadwalGigi['jam_akhir'])
                 ) {
                     $jam_akhir = $jadwalGigi['jam_akhir'];
-                    $message = "Pengambilan Antrian Poli Gigi terakhir {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
+                    $message = "Pengambilan Antrian Poli Gigi berakhir jam {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -3259,7 +3259,6 @@ class WablasController extends Controller
     }
     public function jamBukaDokterGigiHariIni(){
         $dayNameNumber = date('w');
-        $dayNameNumber = 2;
         $jadwal = JadwalKonsultasi::where('hari_id', $dayNameNumber)
             ->where('tipe_konsultasi_id', 2)
             ->first();
