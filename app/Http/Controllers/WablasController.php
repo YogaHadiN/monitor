@@ -3237,7 +3237,6 @@ class WablasController extends Controller
     }
 
     public function pertanyaanPoliYangDituju(){
-        $jadwalGigi = $this->jamBukaDokterGigiHariIni();
         $message = 'Bisa dibantu poli yang dituju?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
@@ -3245,17 +3244,6 @@ class WablasController extends Controller
         $message .= '1. Dokter Umum (ada ' . $jumlah_antrian['dokter_umum']. ' antrian)';
         $message .= PHP_EOL;
         $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian['dokter_gigi']. ' antrian)';
-        $message .= PHP_EOL;
-        if ( $jadwalGigi ) {
-            $message .= "_Khusus poli gigi :_ ";
-            $message .= "_Pengambilan antrian dimulai pukul_ ";
-            $message .= PHP_EOL;
-            $message .= '_'.$jadwalGigi['jam_mulai'] . ' s/d ' . $jadwalGigi['jam_akhir'].'_';
-            $message .= PHP_EOL;
-            $message .="_dan ketika sudah ada antrian pertama_";
-        } else {
-            $message .= "_Hari ini tidak ada pelayanan poli gigi_";
-        }
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
