@@ -3259,11 +3259,11 @@ class WablasController extends Controller
         $jadwal = JadwalKonsultasi::where('hari_id', $dayNameNumber)
             ->where('tipe_konsultasi_id', 2)
             ->first();
-        $jam_mulai = $jadwal->jam_mulai;
-        $jam_akhir = $jadwal->jam_akhir;
         if (is_null($jadwal)) {
             return false;
         } else {
+            $jam_mulai = $jadwal->jam_mulai;
+            $jam_akhir = $jadwal->jam_akhir;
             return  compact('jam_mulai', 'jam_akhir');
         }
     }
