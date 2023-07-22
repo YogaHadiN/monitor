@@ -2606,14 +2606,22 @@ class WablasController extends Controller
                     return false;
                 } else if (
                      $this->message == '2' && //antrian poli gigi
-                     (
-                         strtotime('now') < strtotime($jadwalGigi['jam_mulai']) ||
-                         strtotime('now') > strtotime($jadwalGigi['jam_akhir'])
-                     )
+                     strtotime('now') < strtotime($jadwalGigi['jam_mulai'])
                 ) {
                     $jam_mulai = $jadwalGigi['jam_mulai'];
+                    $message = "Pengambilan Antrian Poli Gigi hari ini dimulai jam {$jam_mulai}. Mohon maaf atas ketidaknyamanannya.";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+                // jika tidak ada antrian di dalam poli batalkan reservasi
+                } else if (
+                     $this->message == '2' && //antrian poli gigi
+                     strtotime('now') > strtotime($jadwalGigi['jam_akhir'])
+                ) {
                     $jam_akhir = $jadwalGigi['jam_akhir'];
-                    $message = "Pengambilan Antrian Poli Gigi hari ini dimulai jam {$jam_mulai} s/d {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
+                    $message = "Pengambilan Antrian Poli Gigi terakhir {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
