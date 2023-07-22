@@ -9,7 +9,7 @@ class JadwalKonsultasi extends Model
 {
     use HasFactory;
     protected $casts = [
-        'jam_mulai' => 'time',
-        'jam_akhir' => 'time',
+        'jam_mulai' => 'datetime',
+        'jam_akhir' => 'datetime',
     ];
 }
