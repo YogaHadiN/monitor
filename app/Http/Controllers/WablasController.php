@@ -350,16 +350,14 @@ class WablasController extends Controller
                 Log::info(350);
                 $input_tidak_tepat = true;
                 $this->pesan_error = '```Nama tidak boleh mengandung angka```';
-                $this->pesan_error .= PHP_EOL;
-                $this->pesan_error .= '```Masukkan data pasien satu persatu```';
-                $this->pesan_error .= PHP_EOL;
-                $this->pesan_error .= '```Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
             } else if(
                 strstr( $this->message , PHP_EOL)
             ) { ///string mengndung line break, pasien mencoba mendaftarkan dua pasien sekaligus
                 Log::info(356);
                 $input_tidak_tepat = true;
-                $this->pesan_error = '```Masukkan data pasien satu persatu. Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
+                $this->pesan_error = '```Masukkan data pasien satu persatu```';
+                $this->pesan_error .= PHP_EOL;
+                $this->pesan_error .= '```Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
             } else {
                 Log::info(360);
                 $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
