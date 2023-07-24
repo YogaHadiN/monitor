@@ -293,7 +293,10 @@ class WablasController extends Controller
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
-            if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+            if (
+                is_numeric( $this->message ) &&
+                (int)$this->message <= $dataCount && (int)$this->message > 0  
+            ) {
                 Log::info("================");
                 Log::info(295);
                 Log::info( $this->message );
@@ -322,18 +325,31 @@ class WablasController extends Controller
                     /* $ap->input_bukan_peserta       = 0; */
                     /* $ap->processData(); */
                 }
+
+                $this->whatsapp_registration->antrian->save();
             } else {
-                $this->whatsapp_registration->antrian->register_previously_saved_patient = $this->message;
+                $this->input_tidak_tepat = true;
             }
-            $this->whatsapp_registration->antrian->save();
 
         } else if ( 
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
-            $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
-            $this->whatsapp_registration->antrian->save();
+            if (
+                preg_match('~[0-9]+~', $this->message)
+            ) { ///string mengndung angka
+                $this->input_tidak_tepat = true;
+                $this->pesan_error = '```Nama tidak boleh mengandung angka. Masukkan data pasien satu persatu. Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
+            } else if(
+                strstr( $this->message , PHP_EOL)
+            ) { ///string mengndung line break, pasien mencoba mendaftarkan dua pasien sekaligus
+                $this->input_tidak_tepat = true;
+                $this->pesan_error = '```Masukkan data pasien satu persatu. Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
+            } else {
+                $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
+                $this->whatsapp_registration->antrian->save();
+            }
         } else if ( 
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
@@ -360,7 +376,6 @@ class WablasController extends Controller
             } else {
                 $this->input_tidak_tepat = true;
             }
-
         } else if ( 
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
@@ -422,11 +437,21 @@ class WablasController extends Controller
 
 
                 if ( $input_tidak_tepat ) {
+                    if (Input::get('messageType') == 'text') {
+                        WhatsappInbox::create([
+                            'message' => 'ERROR :' .$this->message,
+                            'no_telp' => $this->no_telp
+                        ]);
+                    }
                     $response .=  PHP_EOL;
                     $response .=  PHP_EOL;
                     $response .=  $this->samaDengan();
                     $response .= PHP_EOL;
                     $response .= '```Input yang anda masukkan salah```';
+                    if (!is_null( $this->pesan_error )) {
+                        $response .= PHP_EOL;
+                        $response .= $this->pesan_error;
+                    }
                     $response .= PHP_EOL;
                     $response .= '```Mohon Diulangi```';
                     $response .= PHP_EOL;

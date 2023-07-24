@@ -3,10 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Antrian;
+use App\Models\WhatsappRegistration;
 use DateTimeInterface;
 
 class Antrian extends Model
 {
+    public static function boot(){
+        parent::boot();
+        self::created(function($antrian){
+            $existing_antrians = Antrian::where('antriable_type', 'App\Models\Antrian')
+                ->where('created_at', 'like' , date('Y-m-d') . '%' )
+                ->where('id', 'not like' , $antrian->id )
+                ->get();
+            $existing_antrian_ids = [];
+            foreach ($existing_antrians as $ant) {
+                $existing_antrian_ids[] = $ant->id;
+            }
+            $antrian->existing_antrian_ids = json_encode( $existing_antrian_ids );
+            $antrian->jam_pasien_mulai_mengantri = date('H:i:s') ;
+            $antrian->save();
+        });
+        self::deleted(function($model){
+            WhatsappRegistration::where('antrian_id', $model->id)->delete();
+        });
+    }
+    
     protected $guarded = [];
 	public function jenis_antrian(){
 		return $this->belongsTo('App\Models\JenisAntrian');
