@@ -347,14 +347,17 @@ class WablasController extends Controller
             if (
                 preg_match('~[0-9]+~', $this->message)
             ) { ///string mengndung angka
+                Log::info(350);
                 $this->input_tidak_tepat = true;
                 $this->pesan_error = '```Nama tidak boleh mengandung angka. Masukkan data pasien satu persatu. Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
             } else if(
                 strstr( $this->message , PHP_EOL)
             ) { ///string mengndung line break, pasien mencoba mendaftarkan dua pasien sekaligus
+                Log::info(356);
                 $this->input_tidak_tepat = true;
                 $this->pesan_error = '```Masukkan data pasien satu persatu. Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
             } else {
+                Log::info(360);
                 $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
                 $this->whatsapp_registration->antrian->save();
             }
