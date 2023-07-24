@@ -3377,7 +3377,7 @@ class WablasController extends Controller
         ) {
             $konsultasi_estetik_online->delete();
             $this->whatsapp_bot->delete();
-            echo 'Reservasi online dibatalkan';
+            echo 'Reservasi dibatalkan';
         } else if (
             !is_null( $konsultasi_estetik_online ) &&
             !$konsultasi_estetik_online->konfirmasi_sdk
