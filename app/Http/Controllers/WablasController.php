@@ -295,7 +295,8 @@ class WablasController extends Controller
             $dataCount = count($data);
             if (
                 is_numeric( $this->message ) &&
-                (int)$this->message <= $dataCount && (int)$this->message > 0  
+                (int)$this->message <= $dataCount && 
+                (int)$this->message > 0  
             ) {
                 Log::info("================");
                 Log::info(295);
@@ -327,10 +328,17 @@ class WablasController extends Controller
                 }
 
                 $this->whatsapp_registration->antrian->save();
+                
+            } else if (
+                is_numeric( $this->message ) &&
+                (int)$this->message > $dataCount && 
+                (int)$this->message > 0  
+            ){
+                $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
             } else {
                 $this->input_tidak_tepat = true;
             }
-
+            $this->whatsapp_registration->antrian->save();
         } else if ( 
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
@@ -434,14 +442,16 @@ class WablasController extends Controller
                     /* $response .=  PHP_EOL; */
                     /* $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal"; */
                 }
-
-
                 if ( $input_tidak_tepat ) {
                     if (Input::get('messageType') == 'text') {
                         WhatsappInbox::create([
                             'message' => 'ERROR :' .$this->message,
                             'no_telp' => $this->no_telp
                         ]);
+                        Log::info('===================');
+                        Log::info('ERRORR');
+                        Log::info( $this->message );
+                        Log::info('===================');
                     }
                     $response .=  PHP_EOL;
                     $response .=  PHP_EOL;
