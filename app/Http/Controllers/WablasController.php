@@ -1093,11 +1093,13 @@ class WablasController extends Controller
         $tanggal_berobat = $this->whatsapp_complaint->antrian->created_at->format('Y-m-d');
         $this->whatsapp_complaint->delete();
 
-        /* $complain = Complain::create([ */
-        /*     'tanggal'  => $tanggal_berobat, */
-        /*     'media'    => 'Whatsapp Bot', */
-        /*     'complain' => $this->message */
-        /* ]); */
+        $complain = Complain::create([
+            'tanggal'   => $tanggal_berobat,
+            'media'     => 'Whatsapp Bot',
+            'tenant_id' => 1,
+            'complain'  => $this->message
+        ]);
+
         Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', $tanggal_berobat . '%')
             ->update([
