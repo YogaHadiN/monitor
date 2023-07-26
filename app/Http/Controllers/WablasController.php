@@ -1105,7 +1105,7 @@ class WablasController extends Controller
             ->where('created_at', 'like', $tanggal_berobat . '%')
             ->update([
                 'complaint'   => $this->message,
-                /* 'complain_id' => $complain->id */
+                'complain_id' => $complain->id
             ]);
 
 
