@@ -1100,6 +1100,7 @@ class WablasController extends Controller
             'complain'  => $this->message
         ]);
 
+
         Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', $tanggal_berobat . '%')
             ->update([
