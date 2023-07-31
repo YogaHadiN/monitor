@@ -1761,7 +1761,6 @@ class WablasController extends Controller
     {
         $message =  'Bisa dibantu *Nomor Asuransi BPJS* pasien?';
         $message .= PHP_EOL;
-        $message .=   '_Nomor BPJS harus terdiri dari 13 angka_';
 
         return $message;
     }
@@ -3049,14 +3048,12 @@ class WablasController extends Controller
             !is_null( $reservasi_online ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
-            Log::info(2960);
             $message = $this->tanyaSyaratdanKetentuan();
         } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             is_null( $reservasi_online->jenis_antrian_id )
         ) {
-            Log::info(2967);
             $message = $this->pertanyaanPoliYangDituju();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3064,7 +3061,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             is_null( $reservasi_online->registrasi_pembayaran_id )
         ) {
-            Log::info(2975);
             $message = $this->pertanyaanPembayaranPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3073,7 +3069,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
-            Log::info(2984);
             $message = $this->pesanUntukPilihPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
