@@ -949,7 +949,10 @@ class WablasController extends Controller
         }
         $response .= PHP_EOL;
         $response .= $this->samaDengan();
-        $response .= $this->batalkan();
+        $response .= PHP_EOL;
+        $response .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
+        $response .= PHP_EOL;
+        $response .= 'Ketik *batalkan* untuk membatalkan';
         $response .= " reservasi";
         return $response;
     }
@@ -3884,12 +3887,16 @@ class WablasController extends Controller
         foreach ($nomor_antrians as $k => $nomor) {
             if ($k) {
                 $text .= ',' . $nomor;
+            } else if(
+                $k == count($nomor_antrians) -1
+            ) {
+                $text .= ' dan ' . $nomor;
             } else {
                 $text .= $nomor;
             }
         }
 
-        $message = 'Anda akan membatalkan antrian ' . $text;
+        $message = 'Anda akan membatalkan antrian <strong>' . $text . '</strong>';
         $message .= PHP_EOL;
         $message .= 'Apakah anda ingin yakin ingin membatalkan antrian tersebut?';
         $message .= PHP_EOL;
