@@ -1351,10 +1351,10 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '1. Jadwal Pelayanan';
-        /* $message .= PHP_EOL; */
-        /* $message .= '2. Daftar Konsultasi'; */
-        /* $message .= PHP_EOL; */
-        /* $message .= '3. Cek status kepesertaan BPJS'; */
+        $message .= PHP_EOL;
+        $message .= '2. Reservasi Melalui Whatsapp';
+        $message .= PHP_EOL;
+        $message .= '3. Cek status kepesertaan BPJS';
         /* $message .= PHP_EOL; */
         /* $message .= '4. Konsultasi Estetika'; */
         /* $message .= PHP_EOL; */
@@ -3859,6 +3859,7 @@ class WablasController extends Controller
         } else {
             $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
             $message .= $this->samaDengan();
+            $message .= PHP_EOL;
             $message .= "_Balasan yang anda masukkan tidak dikenali. Mohon diulangi_";
             echo $message;
 
@@ -3896,7 +3897,7 @@ class WablasController extends Controller
             }
         }
 
-        $message = 'Anda akan membatalkan antrian <strong>' . $text . '</strong>';
+        $message = 'Anda akan membatalkan antrian *' . $text . '*';
         $message .= PHP_EOL;
         $message .= 'Apakah anda ingin yakin ingin membatalkan antrian tersebut?';
         $message .= PHP_EOL;
