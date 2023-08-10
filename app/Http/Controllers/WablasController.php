@@ -1361,9 +1361,9 @@ class WablasController extends Controller
         /* $message .= '5. Saya ingin berbicara dengan admin'; */
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Balas dengan *1* sesuai dengan informasi di atas';
+        /* $message .= 'Balas dengan *1* sesuai dengan informasi di atas'; */
         /* $message .= 'Balas dengan *1 atau 2* sesuai dengan informasi di atas'; */
-        /* $message .= 'Balas dengan *1, 2 atau 3* sesuai dengan informasi di atas'; */
+        $message .= 'Balas dengan *1, 2 atau 3* sesuai dengan informasi di atas';
         return $message;
     }
     /**
