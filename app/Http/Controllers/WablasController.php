@@ -139,7 +139,6 @@ class WablasController extends Controller
         ];
 
         $response = json_encode(['data' => $payload]);
-        return $response;
 
         return response()->json([
             'status' => true,
