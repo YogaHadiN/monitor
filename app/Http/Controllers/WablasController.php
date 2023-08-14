@@ -3120,9 +3120,19 @@ class WablasController extends Controller
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
                     $urlFile =  \Storage::disk('public')->url($antrian->qr_code_path_s3) ;
-                    echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
-                    $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
-                    return false;
+
+                    $payload[] = [
+                        'category' => 'image',
+                        'caption' => $response,
+                        'urlFile' => \Storage::disk('public')->url( $antrian->qr_code_path_s3)
+                    ];
+
+                    $response = json_encode(['data' => $payload]);
+
+                    return response()->json([
+                        'status' => true,
+                        'data'   => $payload
+                    ])->header('Content-Type', 'application/json');
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
