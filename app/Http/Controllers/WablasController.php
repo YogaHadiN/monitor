@@ -135,16 +135,16 @@ class WablasController extends Controller
         $payload[] = [
             'category' => 'image',
             'caption' => 'caption image',
-            'urlFile' => \Storage::disk('public')->url('filename.png')
+            'urlFile' => secure_url('storage/filename.png')
         ];
 
         $response = json_encode(['data' => $payload]);
-        echo $response;
+        return $response;
 
-        /* return response()->json([ */
-        /*     'status' => true, */
-        /*     'data'   => $payload */
-        /* ])->header('Content-Type', 'application/json'); */
+        return response()->json([
+            'status' => true,
+            'data'   => $payload
+        ])->header('Content-Type', 'application/json');
     }
     
 	
