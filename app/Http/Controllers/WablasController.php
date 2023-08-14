@@ -3123,7 +3123,7 @@ class WablasController extends Controller
 
                     Log::info(3124);
                     Log::info($response);
-                    Log::info($urlFile);
+                    Log::info( url( 'storage/' . $antrian->qr_code_path_s3);
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
