@@ -3122,6 +3122,8 @@ class WablasController extends Controller
                     $urlFile =  Storage::disk('public')->url($antrian->qr_code_path_s3) ;
 
                     Log::info(3124);
+                    Log::info($response);
+                    Log::info($urlFile);
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
