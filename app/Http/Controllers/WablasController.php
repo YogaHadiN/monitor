@@ -116,7 +116,7 @@ class WablasController extends Controller
         $payload[] = [
             'category' => 'image',
             'caption' => 'Yog keren',
-            'urlFile' => secure_url('storage/filename.png')
+            'urlFile' => secure_url('storage/image/online_reservation/qr_code/A163487.png')
         ];
 
         return response()->json([
@@ -3097,26 +3097,15 @@ class WablasController extends Controller
                     $antrian->antriable_id             = $antrian->id;
                     $antrian->save();
 
+                    Log::info(2858);
+                    Log::info('data_bpjs_cocok =' . $antrian->data_bpjs_cocok);
+
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    /* $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ; */
-                    /* echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda'; */
-                    /* $this->sendWhatsappImage( $this->no_telp, $urlFile, $response ); */
-                    /* return false; */
-
-                    header("Content-Type: application/json");
-
-                    $payload[] = [
-                        'category' => 'image',
-                        'caption' => $response,
-                        'urlFile' => secure_url('storage/' . $antrian->qr_code_path_s3)
-                    ];
-
-                    Log::info( $payload );
-                    return response()->json([
-                        'status' => true,
-                        'data'   => $payload
-                    ])->header('Content-Type', 'application/json');
+                    $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
+                    echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
+                    $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
+                    return false;
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -3892,7 +3881,7 @@ class WablasController extends Controller
         /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
 
-        \Storage::disk('public')->put($destination_path. $filename,  $result->getString() );
+        \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
 
         return $destination_path.$filename;
 
