@@ -110,6 +110,20 @@ class WablasController extends Controller
 		}
 	}
     public function webhook2(){
+
+        $text = 'Yoga Hadi Nugroho';
+        $result = Builder::create()
+            ->writer(new PngWriter())
+            ->data($text)
+            ->encoding(new Encoding('UTF-8'))
+            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+            ->size(300)
+            ->margin(10)
+            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
+            ->validateResult(false)
+            ->build();
+
+        Storage::disk('public')->put('filename.png', $result->getString());
         /**
          * for auto reply or bot with multiple message. currently only supports text and images
          */
@@ -119,7 +133,7 @@ class WablasController extends Controller
         $payload[] = [
             'category' => 'image',
             'caption' => 'caption image',
-            'urlFile' => \Storage::disk('s3')->url('image/online_reservation/qr_code/A167.png')
+            'urlFile' => \Storage::disk('public')->url('image/online_reservation/qr_code/A167.png')
         ];
 
         $response = json_encode(['data' => $payload]);
@@ -3102,12 +3116,9 @@ class WablasController extends Controller
                     $antrian->antriable_id             = $antrian->id;
                     $antrian->save();
 
-                    Log::info(2858);
-                    Log::info('data_bpjs_cocok =' . $antrian->data_bpjs_cocok);
-
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
+                    $urlFile =  \Storage::disk('public')->url($antrian->qr_code_path_s3) ;
                     echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
                     $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
                     return false;
@@ -3886,7 +3897,8 @@ class WablasController extends Controller
         /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
 
-        \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
+
+        \Storage::disk('public')->put($destination_path. $filename, $result->getString());
 
         return $destination_path.$filename;
 
