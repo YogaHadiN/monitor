@@ -19,10 +19,10 @@ use App\Models\WhatsappBot;
 use App\Models\Asuransi;
 use App\Models\Poli;
 use Storage;
+use Endroid\QrCode\Encoding\Encoding;
 use App\Models\AntrianPeriksa;
 
 use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
 use Endroid\QrCode\Label\Font\NotoSans;
