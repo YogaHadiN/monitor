@@ -2089,7 +2089,6 @@ class WablasController extends Controller
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->latest()->first();
 
-            $antrian = Antrian::orderBy('updated_at')
             $message  = 'Nomor Antrian ';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
