@@ -945,6 +945,8 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= $this->samaDengan();
         $response .= PHP_EOL;
+        $response .= 'Balas *cek antrian* untuk melihat antrian terakhir';
+        $response .= PHP_EOL;
         $response .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
         $response .= PHP_EOL;
         $response .= 'Ketik *batalkan* untuk membatalkan';
