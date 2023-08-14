@@ -113,7 +113,6 @@ class WablasController extends Controller
     public function webhook2(){
         header("Content-Type: application/json");
 
-        // reply with image message
         $payload[] = [
             'category' => 'image',
             'caption' => 'Yog keren',
@@ -3103,10 +3102,23 @@ class WablasController extends Controller
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
-                    echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
-                    $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
-                    return false;
+                    /* $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ; */
+                    /* echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda'; */
+                    /* $this->sendWhatsappImage( $this->no_telp, $urlFile, $response ); */
+                    /* return false; */
+
+                    header("Content-Type: application/json");
+
+                    $payload[] = [
+                        'category' => 'image',
+                        'caption' => $response,
+                        'urlFile' => secure_url('storage/' . $antrian->qr_code_path_s3)
+                    ];
+
+                    return response()->json([
+                        'status' => true,
+                        'data'   => $payload
+                    ])->header('Content-Type', 'application/json');
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -3882,7 +3894,7 @@ class WablasController extends Controller
         /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
 
-        \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
+        \Storage::disk('public')->put($destination_path. $filename,  $result->getString() );
 
         return $destination_path.$filename;
 
