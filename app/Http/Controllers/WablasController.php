@@ -3119,11 +3119,8 @@ class WablasController extends Controller
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $urlFile =  Storage::disk('public')->url($antrian->qr_code_path_s3) ;
+                    $urlFile = secure_url( 'storage/' . $antrian->qr_code_path_s3) ;
 
-                    Log::info(3124);
-                    Log::info($response);
-                    Log::info( url( 'storage/' . $antrian->qr_code_path_s3));
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
