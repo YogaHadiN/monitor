@@ -2141,6 +2141,8 @@ class WablasController extends Controller
                 $message .= 'Balas *daftar* untuk mendaftarkan pasien berikutnya';
                 $message .= PHP_EOL;
                 $message .= 'Balas *batalkan* untuk membatalkan antrian ini';
+                $message .= PHP_EOL;
+                $message .= 'Balas *cek antrian* untuk melihat antrian terakhir';
             }
         } else if (
              str_contains($this->message, 'aktivkan') ||
