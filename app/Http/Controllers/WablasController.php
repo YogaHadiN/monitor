@@ -2905,6 +2905,16 @@ class WablasController extends Controller
                         $input_tidak_tepat = true;
                         $this->pesan_error = $this->validasiBpjsDataTidakCocok( $this->message, $message );
                     }
+                } else {
+                    $pasien                            = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
+                    $reservasi_online->nomor_asuransi_bpjs            = $this->message;
+                    if ( !is_null( $pasien ) ) {
+                        $reservasi_online->pasien_id            = $pasien->id;
+                        $reservasi_online->nama                 = $pasien->nama;
+                        $reservasi_online->alamat               = $pasien->alamat;
+                        $reservasi_online->tanggal_lahir        = $pasien->tanggal_lahir;
+                        $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                    }
                 }
             } else {
                 Log::info(2816);
