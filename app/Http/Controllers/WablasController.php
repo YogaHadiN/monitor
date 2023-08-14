@@ -111,23 +111,7 @@ class WablasController extends Controller
 		}
 	}
     public function webhook2(){
-        /**
-         * for auto reply or bot with multiple message. currently only supports text and images
-         */
-
-        $text = 'Yoga Hadi Nugroho';
-        $result = Builder::create()
-            ->writer(new PngWriter())
-            ->data($text)
-            ->encoding(new Encoding('UTF-8'))
-            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->size(300)
-            ->margin(10)
-            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-            ->validateResult(false)
-            ->build();
-
-        Storage::disk('public')->put('filename.png', $result->getString());
+        header("Content-Type: application/json");
 
         $content = json_decode(file_get_contents('php://input'), true);
 
@@ -137,8 +121,6 @@ class WablasController extends Controller
             'caption' => 'caption image',
             'urlFile' => secure_url('storage/filename.png')
         ];
-
-        $response = json_encode(['data' => $payload]);
 
         return response()->json([
             'status' => true,
