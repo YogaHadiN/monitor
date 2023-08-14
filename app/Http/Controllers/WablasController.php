@@ -118,7 +118,7 @@ class WablasController extends Controller
         // reply with image message
         $payload[] = [
             'category' => 'image',
-            'caption' => 'caption image',
+            'caption' => 'Yog keren',
             'urlFile' => secure_url('storage/filename.png')
         ];
 
