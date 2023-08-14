@@ -3119,20 +3119,23 @@ class WablasController extends Controller
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $urlFile =  \Storage::disk('public')->url($antrian->qr_code_path_s3) ;
+                    $urlFile =  Storage::disk('public')->url($antrian->qr_code_path_s3) ;
 
+                    Log::info(3124);
                     $payload[] = [
                         'category' => 'image',
                         'caption' => $response,
-                        'urlFile' => \Storage::disk('public')->url( $antrian->qr_code_path_s3)
+                        'urlFile' => $urlFile
                     ];
 
+                    Log::info(3131);
                     $response = json_encode(['data' => $payload]);
-
+                    Log::info(3133);
                     return response()->json([
                         'status' => true,
                         'data'   => $payload
                     ])->header('Content-Type', 'application/json');
+                    Log::info(3138);
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
