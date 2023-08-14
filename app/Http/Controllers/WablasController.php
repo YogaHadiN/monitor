@@ -3097,9 +3097,6 @@ class WablasController extends Controller
                     $antrian->antriable_id             = $antrian->id;
                     $antrian->save();
 
-                    Log::info(2858);
-                    Log::info('data_bpjs_cocok =' . $antrian->data_bpjs_cocok);
-
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
                     /* $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ; */
@@ -3115,6 +3112,7 @@ class WablasController extends Controller
                         'urlFile' => secure_url('storage/' . $antrian->qr_code_path_s3)
                     ];
 
+                    Log::info( $payload );
                     return response()->json([
                         'status' => true,
                         'data'   => $payload
