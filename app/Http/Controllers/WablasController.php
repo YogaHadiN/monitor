@@ -18,7 +18,6 @@ use App\Models\KonsultasiEstetikOnline;
 use App\Models\WhatsappBot;
 use App\Models\Asuransi;
 use App\Models\Poli;
-use Storage;
 use App\Models\AntrianPeriksa;
 
 use Endroid\QrCode\Builder\Builder;
@@ -111,6 +110,9 @@ class WablasController extends Controller
 		}
 	}
     public function webhook2(){
+        /**
+         * for auto reply or bot with multiple message. currently only supports text and images
+         */
 
         $text = 'Yoga Hadi Nugroho';
         $result = Builder::create()
@@ -125,19 +127,15 @@ class WablasController extends Controller
             ->build();
 
         Storage::disk('public')->put('filename.png', $result->getString());
-        /**
-         * for auto reply or bot with multiple message. currently only supports text and images
-         */
+
         $content = json_decode(file_get_contents('php://input'), true);
 
         // reply with image message
         $payload[] = [
             'category' => 'image',
             'caption' => 'caption image',
-            'urlFile' => \Storage::disk('public')->url('image/online_reservation/qr_code/A167.png')
+            'urlFile' => \Storage::disk('public')->url('filename.png')
         ];
-
-        $response = json_encode(['data' => $payload]);
 
         return response()->json([
             'status' => true,
@@ -3117,24 +3115,15 @@ class WablasController extends Controller
                     $antrian->antriable_id             = $antrian->id;
                     $antrian->save();
 
+                    Log::info(2858);
+                    Log::info('data_bpjs_cocok =' . $antrian->data_bpjs_cocok);
+
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
-                    $urlFile = secure_url( 'storage/' . $antrian->qr_code_path_s3) ;
-
-                    $payload[] = [
-                        'category' => 'image',
-                        'caption' => $response,
-                        'urlFile' => $urlFile
-                    ];
-
-                    Log::info(3131);
-                    $response = json_encode(['data' => $payload]);
-                    Log::info(3133);
-                    return response()->json([
-                        'status' => true,
-                        'data'   => $payload
-                    ])->header('Content-Type', 'application/json');
-                    Log::info(3138);
+                    $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
+                    echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
+                    $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
+                    return false;
                 }
                 if (
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -3910,8 +3899,7 @@ class WablasController extends Controller
         /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
 
-
-        \Storage::disk('public')->put($destination_path. $filename, $result->getString());
+        \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
 
         return $destination_path.$filename;
 
