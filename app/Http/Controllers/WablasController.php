@@ -113,8 +113,6 @@ class WablasController extends Controller
     public function webhook2(){
         header("Content-Type: application/json");
 
-        $content = json_decode(file_get_contents('php://input'), true);
-
         // reply with image message
         $payload[] = [
             'category' => 'image',
