@@ -980,6 +980,9 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "https://bit.ly/3DInVOr";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Simpan nomor ini di hape anda agar link di atas bisa aktif dan memudahkan anda mengklik";
         return $message;
     }
     
