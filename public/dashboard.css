@@ -1,0 +1,34 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-image: url("/images/background.jpeg"); /* Replace with the path to your background image */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: 'Balsamiq Sans', sans-serif;
+    font-size: x-large;
+    color: #000; /* Text color on the background image */
+}
+
+.content {
+    padding: 20px;
+}
+
+@media (max-width: 1366px) {
+    .container {
+        max-width: 1366px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+    }
+}
+
+.table td, .table th {
+    padding: 0; /* Remove padding from td elements */
+}
+
+.card-header {
+    background-color: #fff;
+}
