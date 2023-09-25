@@ -72,6 +72,4 @@ class ValidateController extends Controller
             'antigen'
         ));
     }
-    
-    
 }

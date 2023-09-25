@@ -1104,21 +1104,20 @@ class WablasController extends Controller
         ]);
 
 
-        Antrian::where('no_telp', $this->no_telp)
-            ->where('created_at', 'like', $tanggal_berobat . '%')
-            ->update([
-                'complaint'   => $this->message,
-                'complain_id' => $complain->id
-            ]);
-
+        $antrian = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->first();
+        $antrian->complaint = $this->message;
+        $antrian->complain_id = $complain->id;
+        $antrian->save();
 
         $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
+        if ( $antrian->satisfaction_index == 1 ) {
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
+        }
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
@@ -1184,9 +1183,15 @@ class WablasController extends Controller
                  $this->angkaPertama("2")  ||
                  $this->message == 'biasa'
             ) {
+                $complaint             = new WhatsappComplaint;
+                $complaint->no_telp    = $this->whatsapp_satisfaction_survey->antrian->no_telp;
+                $complaint->antrian_id = $this->whatsapp_satisfaction_survey->antrian->id;
+                $complaint->save();
+
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 $message .= PHP_EOL;
-                $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
+                $message .= "Jika kakak berkenan memberikan saran, kira-kira apa yang bisa kami perbaiki agar pelayanan kami bisa lebih baik?";
+
                 echo $message;
             }
             $this->whatsapp_satisfaction_survey->delete();
