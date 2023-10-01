@@ -4076,7 +4076,7 @@ class WablasController extends Controller
         WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
             ->where('no_telp', $this->no_telp)
             ->delete();
-        return 'Reservasi Online Dibatalkan';
+        return 'Reservasi Dibatalkan';
     }
 
     public function sudahAdaAntrianUntukJenisAntrian($jenis_antrian_id){
