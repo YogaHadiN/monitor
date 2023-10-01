@@ -1150,7 +1150,7 @@ class WablasController extends Controller
             $this->message == 'tidak puas'
         ) {
             $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
-            $no_telp = $this->whatsapp_satisfaction_survey->antrian->no_telp;
+            $no_telp = $this->no_telp;
 
             Antrian::where('no_telp', $no_telp)
                     ->where('created_at', 'like', $this->whatsapp_satisfaction_survey->created_at->format('Y-m-d') . '%')
@@ -2088,66 +2088,67 @@ class WablasController extends Controller
              str_contains($this->message, 'ck antri') ||
              str_contains($this->message, 'ck antran')
         ) {
-
             $antrian = Antrian::where('terakhir_dipanggil', 1)->first();
-            $ant = Antrian::where('no_telp', $this->no_telp)
-                ->where('created_at', 'like', date('Y-m-d') . '%')
-                ->latest()->first();
+            if (!is_null($antrian)) {
+                $ant = Antrian::where('no_telp', $this->no_telp)
+                    ->where('created_at', 'like', date('Y-m-d') . '%')
+                    ->latest()->first();
 
-            $message  = 'Nomor Antrian ';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '*' . $antrian->nomor_antrian . '*';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            if ( $ant->id == $antrian->id ) {
-                $message .= 'Dipanggil. Silahkan menuju ruang periksa';
-            } else {
-                $message .= 'Dipanggil ke ruang periksa.';
-                $message .= PHP_EOL;
-                $message .= 'Nomor antrian Anda adalah';
+                $message  = 'Nomor Antrian ';
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
-                $message .= '*'.$ant->nomor_antrian.'*';
+                $message .= '*' . $antrian->nomor_antrian . '*';
                 $message .= PHP_EOL;
-                if ( $antrian->jenis_antrian_id == 1 ) {
+                $message .= PHP_EOL;
+                if ( !is_null( $ant ) && $ant->id == $antrian->id ) {
+                    $message .= 'Dipanggil. Silahkan menuju ruang periksa';
+                } else {
+                    $message .= 'Dipanggil ke ruang periksa.';
                     $message .= PHP_EOL;
-                    $sisa_antrian =$ant->sisa_antrian;
-                    $message .= "masih ada *{$sisa_antrian} antrian* lagi";
+                    $message .= 'Nomor antrian Anda adalah';
                     $message .= PHP_EOL;
-                    $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian );
-                    $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
+                    $message .= PHP_EOL;
+                    $message .= '*'.$ant->nomor_antrian.'*';
+                    $message .= PHP_EOL;
+                    if ( $antrian->jenis_antrian_id == 1 ) {
+                        $message .= PHP_EOL;
+                        $sisa_antrian =$ant->sisa_antrian;
+                        $message .= "masih ada *{$sisa_antrian} antrian* lagi";
+                        $message .= PHP_EOL;
+                        $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian );
+                        $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
+                        if (
+                            $ant->reservasi_online && 
+                            $sisa_antrian < 11 &&
+                            $ant->sudah_hadir_di_klinik == 0
+                        ) {
+                            $message .= PHP_EOL;
+                            $message .= 'Mohon kehadirannya di klinik 30 menit sebelum perkiraan panggilan';
+                            $message .= PHP_EOL;
+                            $message .= PHP_EOL;
+                            $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
+                            $message .= PHP_EOL;
+                            $message .= 'Apabila antrian Anda terlewat, secara otomatis antrian akan terapus oleh sistem';
+                            $message .= PHP_EOL;
+
+                        } else if (
+                            $ant->reservasi_online && 
+                            $ant->sudah_hadir_di_klinik == 0
+                        ) {
+                            $message .= PHP_EOL;
+                            $message .= 'Balas *stop* untuk berhenti menerima notifikasi ini';
+                        }
+                    }
+
+                    $message .= PHP_EOL;
+                    $message .= '==================';
+                    $message .= PHP_EOL;
+                    $message .= 'Balas *daftar* untuk mendaftarkan pasien berikutnya';
+                    $message .= PHP_EOL;
+                    $message .= 'Balas *batalkan* untuk membatalkan antrian ini';
+                    $message .= PHP_EOL;
+                    $message .= 'Balas *cek antrian* untuk melihat antrian terakhir';
                 }
-                if (
-                    $ant->reservasi_online && 
-                    $sisa_antrian < 11 &&
-                    $ant->sudah_hadir_di_klinik == 0
-                ) {
-                    $message .= PHP_EOL;
-                    $message .= 'Mohon kehadirannya di klinik 30 menit sebelum perkiraan panggilan';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
-                    $message .= PHP_EOL;
-                    $message .= 'Apabila antrian Anda terlewat, secara otomatis antrian akan terapus oleh sistem';
-                    $message .= PHP_EOL;
-
-                } else if (
-                    $ant->reservasi_online && 
-                    $ant->sudah_hadir_di_klinik == 0
-                ) {
-                    $message .= PHP_EOL;
-                    $message .= 'Balas *stop* untuk berhenti menerima notifikasi ini';
-                }
-
-                $message .= PHP_EOL;
-                $message .= '==================';
-                $message .= PHP_EOL;
-                $message .= 'Balas *daftar* untuk mendaftarkan pasien berikutnya';
-                $message .= PHP_EOL;
-                $message .= 'Balas *batalkan* untuk membatalkan antrian ini';
-                $message .= PHP_EOL;
-                $message .= 'Balas *cek antrian* untuk melihat antrian terakhir';
             }
         } else if (
              str_contains($this->message, 'aktivkan') ||
@@ -4061,6 +4062,13 @@ class WablasController extends Controller
         $to = date('Y-m-d 23:59:59');
         Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
             ->where('no_telp', $this->no_telp)
+            ->whereRaw("
+                    ( 
+                        antriable_type = 'App\\\Models\\\Antrian' or
+                        antriable_type = 'App\\\Models\\\AntrianPoli' or
+                        antriable_type = 'App\\\Models\\\AntrianPeriksa'
+                    )
+                ")
             ->delete();
         ReservasiOnline::whereRaw("created_at between '{$from}' and '{$to}'")
             ->where('no_telp', $this->no_telp)
