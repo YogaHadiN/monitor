@@ -1,0 +1,25 @@
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en");
+.badge-primary {
+    background-color: #1ab394;
+    color: #ffffff;
+}
+.label-success,
+.badge-success {
+    background-color: #1c84c6;
+    color: #ffffff;
+}
+.label-warning,
+.badge-warning {
+    background-color: #f8ac59;
+    color: #ffffff;
+}
+.label-warning-light,
+.badge-warning-light {
+    background-color: #f8ac59;
+    color: #ffffff;
+}
+.label-danger,
+.badge-danger {
+    background-color: #ed5565;
+    color: #ffffff;
+}

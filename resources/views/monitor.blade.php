@@ -350,9 +350,6 @@
 
 
 <script>
-	var base = "{{ secure_url('/') }}";
-	var hitung = 0
-
 	setInterval(function(){
 		var d = new Date();
 		hitung += 1;
@@ -360,6 +357,9 @@
 		$('#jam').html(jam);
 		$('#hitung').html(hitung);
 	}, 1000);
+	var base = "{{ secure_url('/') }}";
+	var hitung = 0
+
 
 	var channel_name = 'my-channel';
 	var event_name   = 'form-submitted';

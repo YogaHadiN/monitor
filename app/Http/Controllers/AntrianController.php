@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\AntrianPeriksa;
+use App\Http\Controllers\QrCodeController;
 use App\Models\AntrianPoli;
+use App\Models\AntrianApotek;
+use App\Models\AntrianKasir;
+use App\Models\Ruangan;
 use App\Models\Antrian;
 use App\Models\JenisAntrian;
 use App\Models\WhatsappRegistration;
@@ -74,7 +78,6 @@ class AntrianController extends Controller
 			$antrian_saat_ini   = array_search($px_per_tanggal->first()->antrian, $antrians);
 		}
 		
-		
 		$result = compact(
 			'antrians',
 			'antrian_saat_ini'
@@ -89,6 +92,16 @@ class AntrianController extends Controller
 			'antrian'
 		));
 	}
+
+    public function monitor_baru(){
+		$url = 'https://api.whatsapp.com/send?phone=6281381912803&text=Halo.%20Saya%20mau%20komplain';
+        $qr = new QrCodeController;
+        $base64 = $qr->inPdf($url);
+		return view('monitor_baru', compact(
+			'base64'
+		));
+    }
+
 	public function convertSoundToArray(){
 		$nomor_antrian = Input::get('nomor_antrian');
 		$ruangan       = Input::get('ruangan');
@@ -191,159 +204,94 @@ class AntrianController extends Controller
 	}
 	public function updateJumlahAntrian( $panggil_pasien = true ){
         $ruangan = Input::get('ruangan');
-		$today = date('Y-m-d');
-		$antrians       = Antrian::with(
-									'jenis_antrian.poli_antrian', 
-									'antriable', 
-									'jenis_antrian.antrian_terakhir'
-								)
-								->whereRaw('created_at between "' . $today . ' 00:00:00" and "' .$today. ' 23:59:59"')
-								->where('antriable_type', 'not like', 'App\Models\Periksa')
-								->orderBy('id')
-								->get();
-		$jenis_antrian  = JenisAntrian::with( 'antrian_terakhir.jenis_antrian', 'antrian_terakhir.antriable')->orderBy('updated_at', 'desc')->get();
 
-		$jenis_antrians = JenisAntrian::all();
-		$reversed_antrians                                    = $antrians->reverse();
+        $ruangans = Ruangan::with('antrian.jenis_antrian')
+                            ->whereNotNull('file_panggilan')->get();
+        $antrian_terakhir = [];
+        foreach ($ruangans as $ruang) {
+            $antrian_terakhir[$ruang->id] = is_null( $ruang->antrian )? '-' :$ruang->antrian->nomor_antrian;
+        }
+        if ( !empty( $ruangan ) ) {
+            $today = date('Y-m-d');
+            $antrians       = Antrian::with(
+                                        'jenis_antrian.poli_antrian', 
+                                        'antriable', 
+                                        'jenis_antrian.antrian_terakhir'
+                                    )
+                                    ->whereDate('created_at',$today)
+                                    ->where('antriable_type', 'not like', 'App\Models\Periksa')
+                                    ->where('tenant_id',1)
+                                    ->orderBy('id')
+                                    ->get();
 
-        $antrian_dipanggil = $antrians->sortByDesc('updated_at')->first();
-		if ( $panggil_pasien && !is_null( $antrian_dipanggil ) ) {
-			$data['panggilan']['nomor_antrian'] = $antrian_dipanggil->nomor_antrian;
-			if (
-				$antrian_dipanggil->antriable_type == 'App\Models\Antrian'
-			) {
-				$data['panggilan']['poli'] = 'Pendaftaran';
-			} else if (
-				$antrian_dipanggil->antriable_type == 'App\Models\AntrianApotek' || 
-				$antrian_dipanggil->antriable_type == 'App\Models\AntrianKasir'
-			) {
-				$data['panggilan']['poli']                          = 'Antrian Kasir';
-			} else if (
-				$antrian_dipanggil->antriable_type == 'App\Models\AntrianFarmasi'
-			){
-				$data['panggilan']['poli'] = 'Antrian Farmasi';
-			} else {
-				$data['panggilan']['poli'] = ucwords($antrian_dipanggil->jenis_antrian->jenis_antrian);
-			}
-		}
-
-		$data['data'][1]['nomor_antrian_terakhir'] = '-';
-		$data['data'][2]['nomor_antrian_terakhir'] = '-';
-		$data['data'][3]['nomor_antrian_terakhir'] = '-';
-		$data['data'][4]['nomor_antrian_terakhir'] = '-';
-		$data['data'][7]['nomor_antrian_terakhir'] = '-';
-
-		foreach ($antrians as $antrian) {
-			if (
-				$antrian->antriable_type !== 'App\Models\Antrian' &&
-				$antrian->antriable_type !== 'App\Models\AntrianApotek' &&
-				$antrian->antriable_type !== 'App\Models\AntrianKasir' &&
-				$antrian->antriable_type !== 'App\Models\AntrianFarmasi'
-			) {
-				if (
-					isset($antrian->jenis_antrian->antrian_terakhir)
-				) {
-					$data['data'][ $antrian->jenis_antrian_id ]['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-				} else {
-					$data['data'][ $antrian->jenis_antrian_id ]['nomor_antrian_terakhir'] = '-';
-				}
-			}
-		}
+            $antrian_dipanggil                      = $antrians->sortByDesc('updated_at')->first();
+            $ruangan                                = Ruangan::where('file_panggilan', $ruangan )->first();
+            $ruangan->antrian_id = $antrian_dipanggil->id;
+            $ruangan->save();
+            
+            $antrian_terakhir[$ruangan->id] = is_null( $ruangan->antrian )? '-' :$ruangan->antrian->nomor_antrian;
+        }
 
 
-        /* dd('=================',$data['data']['pendaftaran']['nomor_antrian_terakhir'], $data['data']['timbang_tensi']['nomor_antrian_terakhir']) ; */
+        $ruangan = isset( $antrian_dipanggil )? $antrian_dipanggil->ruangan?->nama : null;
 
-		foreach ($jenis_antrian as $ja) {
-			if (!isset($data['data'][$ja->id]) && $ja->id <5) {
-				$data['data'][$ja->id]['nomor_antrian_terakhir'] = '-';
-				$data['data'][$ja->id]['jumlah']                 = 0;
-			}
-		}
-		$bisa                 = [];
-		$tidak_bisa           = [];
-		foreach ($jenis_antrians as $j) {
-			if ( isset( $j->antrian_terakhir_id ) ) {
-				$data['jenis_antrian_ids'][] = 
-					[
-						'id'             => $j->id
-					];
-			}
-		}
-
-		$data['antrian_by_type']['pendaftaran']   = [];
-		$data['antrian_by_type']['timbang_tensi']   = [];
-		$data['antrian_by_type']['antrian_periksa'] = [];
-
-		$antrian_dipanggils = [];
-
-		foreach ($data['data'] as $x) {
-			$antrian_dipanggils[] = $x['nomor_antrian_terakhir'];
-		}
+        $antrian_dipanggil = [
+            'nomor_antrian' => isset( $antrian_dipanggil )? $antrian_dipanggil->nomor_antrian : null,
+            'ruangan' => $ruangan,
+        ];
 
 
-		foreach ($antrians as $ant) {
-			if (!in_array( $ant->nomor_antrian, $antrian_dipanggils)) {
-				if (
-					$ant->antriable_type == 'App\Models\AntrianPeriksa'
-				) {
-					$data['antrian_by_type']['antrian_periksa'][$ant->jenis_antrian_id][] = [
-						'nomor_antrian'  => $ant->nomor_antrian,
-						'antriable_type' => $ant->antriable_type
-					];
-				} else if (
-					$ant->antriable_type == 'App\Models\Antrian'
-				) {
-					$data['antrian_by_type']['pendaftaran'][] = [
-						'nomor_antrian'   => $ant->nomor_antrian,
-						'antriable_type'  => $ant->antriable_type,
-						'selesai_periksa' => $ant->created_at
-					];
-				} else if (
-					$ant->antriable_type == 'App\Models\AntrianPoli'
-				) {
-					$data['antrian_by_type']['timbang_tensi'][] = [
-						'nomor_antrian'   => $ant->nomor_antrian,
-						'antriable_type'  => $ant->antriable_type,
-						'selesai_periksa' => $ant->antriable->created_at
-					];
-				} else {
-					if (!isset($data['antrian_by_type'][$ant->antriable_type])) {
-						$data['antrian_by_type'][$ant->antriable_type] = [];
-					}
-					$data['antrian_by_type'][$ant->antriable_type][] = [
-						'nomor_antrian'  => $ant->nomor_antrian,
-						'antriable_type' => $ant->antriable_type
-					];
-				}
-		    }
-		}
+        $antrian_apoteks = AntrianApotek::with('periksa.terapii')
+                                        ->where('tenant_id',1)
+                                        ->get();
+        $antrian_kasirs = AntrianKasir::with('periksa.terapii')
+                                        ->where('tenant_id',1)
+                                        ->get();
+        $antrian_obat_jadi = [];
+        $antrian_obat_racikan = [];
+        foreach ($antrian_apoteks as $a) {
+            if ($a->periksa->terapii->count()) {
+                if ($a->obat_racikan) {
+                    $antrian_obat_racikan[] = [
+                        'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
+                        'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
+                        'status'        => 'Menunggu'
+                    ];
+                } else {
+                    $antrian_obat_jadi[] = [
+                        'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : "-",
+                        'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
+                        'status'        => 'Menunggu'
+                    ];
+                }
+            }
+        }
 
-		$data['data']['timbang_tensi']['nomor_antrian_terakhir'] = '-';
-		$data['data']['pendaftaran']['nomor_antrian_terakhir'] = '-';
-
-		foreach ($antrians as $antrian) {
-			if (
-				$antrian->antriable_type == 'App\Models\Antrian' &&
-                isset($antrian->jenis_antrian->antrian_terakhir)
-			) {
-                $data['data']['pendaftaran']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-			} else if (
-				$antrian->antriable_type == 'App\Models\AntrianPoli' &&
-                isset($antrian->jenis_antrian->antrian_terakhir)
-			){
-                $data['data']['timbang_tensi']['nomor_antrian_terakhir'] = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-			}
-		}
-
-		$columns = array_column($data['antrian_by_type']['pendaftaran'], 'selesai_periksa');
-		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['pendaftaran']);
-
-		$columns = array_column($data['antrian_by_type']['timbang_tensi'], 'selesai_periksa');
-		array_multisort($columns, SORT_ASC, $data['antrian_by_type']['timbang_tensi']);
-
-		return $data;
-	}
-    public function register(){
+        foreach ($antrian_kasirs as $a) {
+            if ($a->periksa->terapii->count()) {
+                if (is_null( $a->periksa->jam_penyerahan_obat )) {
+                    if ($a->obat_racikan) {
+                        $antrian_obat_racikan[] = [
+                            'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
+                            'nama' => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
+                            'status' => is_null( $a->periksa->jam_selesai_obat ) ? 'Proses' : 'Selesai'
+                        ];
+                    } else {
+                        $antrian_obat_jadi[] = [
+                            'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
+                            'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
+                            'status'        => is_null( $a->periksa->jam_selesai_obat ) ? 'Proses' : 'Selesai'
+                        ];
+                    }
+                }
+            }
+        }
+        $result = [
+            "antrian_dipanggil"     => $antrian_dipanggil,
+            "antrian_terakhir"      => $antrian_terakhir,
+            "antrian_obat_jadi"    => $antrian_obat_jadi ,
+            "antrian_obat_racikan" => $antrian_obat_racikan
+        ];
+        return $result;
     }
-    
 }

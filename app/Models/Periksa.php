@@ -19,5 +19,8 @@ class Periksa extends Model
     public function staf(){
         return $this->belongsTo(Staf::class);
     }
+    public function terapii(){
+        return $this->hasMany('App\Models\Terapi');
+    }
 }
 

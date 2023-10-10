@@ -15,4 +15,16 @@ class AntrianApotek extends Model
     public function antars(){
         return $this->morphMany('App\Models\PengantarPasien', 'antarable');
     }
+    public function getResepRacikanAttribute(){
+        foreach ($this->periksa->terapii as $terapi) {
+            if (
+                $terapi->signa == 'Add' ||
+                $terapi->signa == 'Puyer' 
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
 }
