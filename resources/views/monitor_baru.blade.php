@@ -37,8 +37,8 @@
         top: -10px;
     }
     .keterangan_wa{
-        padding: auto 0;
-        font-size: 25px;
+        padding: 17px 0 !important;
+        font-size: 21px;
         font-weight: 900;
     }
     .align-top{
@@ -170,7 +170,7 @@
 	}
 	.wa_no{
 		font-weight: 900;
-		font-size: 80px;
+		font-size: 69px;
 		background-color: #fff;
         padding-top: -40px;
 	}
@@ -211,6 +211,7 @@
 		border-radius: 15px !important;
 		margin :  0px 0px 0px 0px;
         padding : 10px 30px;
+        height : 120px;
     }
     .container_antrian{
 		background-color: #ffffff;
