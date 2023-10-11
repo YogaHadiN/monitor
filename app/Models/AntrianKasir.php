@@ -15,4 +15,15 @@ class AntrianKasir extends Model
     public function antars(){
         return $this->morphMany('App\Models\PengantarPasien', 'antarable');
     }
+    public function getResepRacikanAttribute(){
+        foreach ($this->periksa->terapii as $terapi) {
+            if (
+                $terapi->signa == 'add' ||
+                $terapi->signa == 'puyer' 
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
