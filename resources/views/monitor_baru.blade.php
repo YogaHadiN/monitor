@@ -15,6 +15,46 @@
 <link href="{!! asset('css/animate.css') !!}" rel="stylesheet">
 <link href="{!! asset('css/style.css') !!}" rel="stylesheet">
 <style type="text/css" media="all">
+.text-right {
+    text-align: right !important;
+}
+.keterangan_waktu_tunggu {
+    font-size: 29px;
+}
+.waktu_tunggu {
+    font-size: 35px;
+    font-weight: 900;
+}
+.carousel.carousel-fade .item {
+    -webkit-transition: opacity 0.5s ease-in-out;
+    -moz-transition: opacity 0.5s ease-in-out;
+    -ms-transition: opacity 0.5s ease-in-out;
+    -o-transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out;
+    opacity:0;
+}
+
+.carousel.carousel-fade .active.item {
+    opacity:1;
+}
+
+.carousel.carousel-fade .active.left,
+.carousel.carousel-fade .active.right {
+    left: 0;
+    z-index: 2;
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+
+.carousel.carousel-fade .next,
+.carousel.carousel-fade .prev {
+    left: 0;
+    z-index: 1;
+}
+
+.carousel.carousel-fade .carousel-control {
+    z-index: 3;
+}
     .yellow {
         background-color: #FFBB5C !important;
         color: #fff;
@@ -37,8 +77,8 @@
         top: -10px;
     }
     .keterangan_wa{
-        padding: 17px 0 !important;
-        font-size: 21px;
+        padding: 4px 0 !important;
+        font-size: 31px;
         font-weight: 900;
     }
     .align-top{
@@ -108,7 +148,6 @@
 	* {
 		box-sizing: border-box;
 		text-align: center;
-		background-color: #3AA6B9;
 	}
     .row {
 		background-color: #3AA6B9;
@@ -230,7 +269,7 @@
         color: #ffffff;
         font-weight: 900;
         font-size: 20px;
-        background-color:  alt="Clinic Icon";
+		background-color: #3AA6B9;
     }
     .m-l-6{
         margin-left: 60px;
@@ -310,7 +349,6 @@
       <div class="row header">
           <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
               <img src="{{ secure_url('images/logo.png') }}" onclick="pglPasien([]); return false" class="logo">
-                {{-- <button type="button" class="btn btn-primary" onclick='pglPasien([]); return false'> Play Bel</button> --}}
           </div>
         <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 waktu">
             <span id="hari">
@@ -489,16 +527,45 @@
           </div>
       </div>
     <div class="row container_wa align-top text-left">
-        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 keterangan_wa text-center">
-            Keluhan Atas Pelayanan Mohon Kirim Whatsapp Ke 
-        </div>
-        <div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
-            <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
-            <span class="wa_no">
-                081381912803
-                <img id="qr" height="100px" class="text-right" src="{{ $base64 }}" />
-            </span>
-        </div>
+        <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                  <div class="ibox-tools">
+                  </div>
+                </div>
+                <div class="ibox-content">
+                  <div class="carousel slide carousel-fade" id="carousel1" data-interval="3000">
+                    <div class="carousel-inner">
+                      <div class="item active">
+                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-center">
+                                Keluhan Atas Pelayanan Mohon Kirim Whatsapp Ke 
+                            </div>
+                            <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
+                                <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
+                                <span class="wa_no">
+                                    081381912803
+                                    <img id="qr" height="100px" class="text-right" src="{{ $base64 }}" />
+                                </span>
+                            </div>
+                      </div>
+                      <div class="item">
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Waktu Tunggu Obat Jadi <br>
+                            <span class="waktu_tunggu">15 - 30 Menit</span>
+                            
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Waktu Tunggu Obat Racikan</br>
+                            <span class="waktu_tunggu">30 - 45 Menit</span>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Kesabaran Anda<br> 
+                            <span class="waktu_tunggu">Ketelitian Kami</span>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
     </div>
 </div>
 <p id="hitung">
@@ -675,6 +742,10 @@
 <script src="{!! secure_url("js/moment.locale.js") !!}"></script>
 
 <script>
+    $('#carousel1').carousel({
+      interval: 7000,
+      cycle: true
+    }); 
     moment.locale('id')
     window.setInterval(function () {
         $('#hari').html(moment().format('dddd, DD MMMM YYYY'))
@@ -707,6 +778,7 @@
 	}
 </script>
 
-<script src="{!! secure_url("js/antrian.js") !!}"></script>
+<script src="{!! url("js/antrian.js") !!}"></script>
+<script src="{!! url("js/inspinia.js") !!}"></script>
 </body>
 </html>
