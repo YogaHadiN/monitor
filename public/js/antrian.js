@@ -14,7 +14,7 @@ channel.bind(event_name, function (data) {
             }
             var ruangan = data.ruangan;
             $.get(
-                base + "/antrianperiksa/monitor/getData/" + panggil_pasien,
+                base + "/antrianperiksa/monitor/getDataBaru/" + panggil_pasien,
                 {
                     ruangan: ruangan,
                 },

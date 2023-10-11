@@ -32,6 +32,8 @@ Route::get('antrianperiksa/fail', [AntrianController::class, 'fail']);
 Route::get('antrianperiksa/{id}', [AntrianController::class, 'antri']);
 Route::get('eksklusi/{id}', [PasienController::class, 'eksklusi']);
 Route::get('antrianperiksa/monitor/getData/{panggil_pasien}', [AntrianController::class, 'updateJumlahAntrian']);
+Route::get('antrianperiksa/monitor/getDataBaru/{panggil_pasien}', [AntrianController::class, 'updateJumlahAntrianBaru']);
+
 
 Route::get('project/antrian_farmasi', [\App\Http\Controllers\ProjectController::class, 'antrian_farmasi']);
 Route::get('project/antrian_dokter', [\App\Http\Controllers\ProjectController::class, 'antrian_dokter']);
