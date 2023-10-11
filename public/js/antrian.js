@@ -22,8 +22,8 @@ channel.bind(event_name, function (data) {
                     if (data.antrian_dipanggil.nomor_antrian !== null) {
                         var nomor_panggilan =
                             data.antrian_dipanggil.nomor_antrian;
-                        var ruangan = data.antrian_dipanggil.ruangan;
-                        $("#poli_panggilan").html(ruangan);
+                        var ruangan_panggilan = data.antrian_dipanggil.ruangan;
+                        $("#poli_panggilan").html(ruangan_panggilan);
                         $("#nomor_panggilan").html(nomor_panggilan);
                     }
 
@@ -70,6 +70,8 @@ channel.bind(event_name, function (data) {
                         ruangan !== "" &&
                         ruangan !== null
                     ) {
+                        console.log("ruangan");
+                        console.log(ruangan);
                         panggilPasien(ruangan);
                     }
                 }

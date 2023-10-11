@@ -308,7 +308,7 @@
   <div class="container">
       <div class="row header">
           <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
-              <img src="{{ url('images/logo.png') }}" onclick="pglPasien([]); return false" class="logo">
+              <img src="{{ secure_url('images/logo.png') }}" onclick="pglPasien([]); return false" class="logo">
                 {{-- <button type="button" class="btn btn-primary" onclick='pglPasien([]); return false'> Play Bel</button> --}}
           </div>
         <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 waktu">
@@ -492,7 +492,7 @@
             Keluhan Atas Pelayanan Mohon Kirim Whatsapp Ke 
         </div>
         <div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
-            <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
+            <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
             <span class="wa_no">
                 081381912803
                 <img id="qr" height="100px" class="text-right" src="{{ $base64 }}" />
@@ -504,163 +504,163 @@
 	
 </p>
 <audio id="myAudio">
-  <source src="{{ url('sound/bel.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/bel.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_nomorantrian">
-  <source src="{{ url('sound/nomorantrian.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/nomorantrian.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_1">
-  <source src="{{ url('sound/1.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/1.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_2">
-  <source src="{{ url('sound/2.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/2.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_3">
-  <source src="{{ url('sound/3.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/3.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_4">
-  <source src="{{ url('sound/4.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/4.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_5">
-  <source src="{{ url('sound/5.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/5.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_6">
-  <source src="{{ url('sound/6.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/6.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_7">
-  <source src="{{ url('sound/7.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/7.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_8">
-  <source src="{{ url('sound/8.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/8.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_9">
-  <source src="{{ url('sound/9.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/9.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_10">
-  <source src="{{ url('sound/10.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/10.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_11">
-  <source src="{{ url('sound/11.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/11.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_belas">
-  <source src="{{ url('sound/belas.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/belas.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_puluh">
-  <source src="{{ url('sound/puluh.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/puluh.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_100">
-  <source src="{{ url('sound/100.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/100.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_a">
-  <source src="{{ url('sound/a.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/a.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_b">
-  <source src="{{ url('sound/b.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/b.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_c">
-  <source src="{{ url('sound/c.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/c.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_d">
-  <source src="{{ url('sound/d.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/d.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_e">
-  <source src="{{ url('sound/e.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/e.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_f">
-  <source src="{{ url('sound/f.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/f.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_g">
-  <source src="{{ url('sound/g.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/g.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_h">
-  <source src="{{ url('sound/h.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/h.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_i">
-  <source src="{{ url('sound/i.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/i.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_j">
-  <source src="{{ url('sound/j.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/j.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_k">
-  <source src="{{ url('sound/k.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/k.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_farmasi">
-  <source src="{{ url('sound/farmasi.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/farmasi.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_kasir">
-  <source src="{{ url('sound/kasir.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/kasir.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_pendaftaran">
-  <source src="{{ url('sound/pendaftaran.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/pendaftaran.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_rapidtest">
-  <source src="{{ url('sound/rapidtest.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/rapidtest.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ratus">
-  <source src="{{ url('sound/ratus.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ratus.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksa">
-  <source src="{{ url('sound/ruangperiksa.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksa.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksasatu">
-  <source src="{{ url('sound/ruangperiksasatu.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksasatu.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksadua">
-  <source src="{{ url('sound/ruangperiksadua.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksadua.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksagigi">
-  <source src="{{ url('sound/ruangperiksagigi.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksagigi.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangpf">
-  <source src="{{ url('sound/ruangpf.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangpf.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_loketsatu">
-  <source src="{{ url('sound/loketsatu.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/loketsatu.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_loketdua">
-  <source src="{{ url('sound/loketdua.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/loketdua.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_silahkanmenuju">
-  <source src="{{ url('sound/silahkanmenuju.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/silahkanmenuju.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 </div>
@@ -671,7 +671,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 <script src="https://js.pusher.com/5.1/pusher.min.js"></script>
 <script src="{!! asset('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js') !!}"></script>
-<script src="{!! url("js/moment.locale.js") !!}"></script>
+<script src="{!! secure_url("js/moment.locale.js") !!}"></script>
 
 <script>
     moment.locale('id')
@@ -679,7 +679,7 @@
         $('#hari').html(moment().format('dddd, DD MMMM YYYY'))
         $('#jam').html(moment().format('HH:mm:ss'))
     }, 1000);
-	var base = "{{ url('/') }}";
+	var base = "{{ secure_url('/') }}";
 	var hitung = 0
 
 
@@ -706,6 +706,6 @@
 	}
 </script>
 
-<script src="{!! url("js/antrian.js") !!}"></script>
+<script src="{!! secure_url("js/antrian.js") !!}"></script>
 </body>
 </html>
