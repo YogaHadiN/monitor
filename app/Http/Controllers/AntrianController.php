@@ -409,13 +409,13 @@ class AntrianController extends Controller
                     $antrian_obat_racikan[] = [
                         'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
                         'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
-                        'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu';
+                        'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu'
                     ];
                 } else {
                     $antrian_obat_jadi[] = [
                         'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : "-",
                         'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
-                        'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu';
+                        'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu'
                     ];
                 }
             }
