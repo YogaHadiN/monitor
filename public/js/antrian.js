@@ -86,7 +86,10 @@ function prosesAntrianObat(data) {
         for (var i = 0; i < data.length; i++) {
             temp += "<tr>";
             temp += "<td>" + data[i].nomor_antrian + "</td>";
-            temp += "<td class='text-left'>" + data[i].nama + "</td>";
+            temp +=
+                "<td class='text-left'>" +
+                data[i].nama.substring(0, 21) +
+                "</td>";
             temp += "<td>";
             if (data[i].status == "Proses") {
                 temp += '<span class="badge badge-warning">Proses</span>';
