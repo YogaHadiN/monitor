@@ -1095,33 +1095,51 @@ class WablasController extends Controller
     {
         $tanggal_berobat = $this->whatsapp_complaint->antrian->created_at->format('Y-m-d');
         $this->whatsapp_complaint->delete();
+        if (!is_null( $this->message )) {
+            $complain = Complain::create([
+                'tanggal'   => $tanggal_berobat,
+                'media'     => 'Whatsapp Bot',
+                'tenant_id' => 1,
+                'complain'  => $this->message
+            ]);
 
-        $complain = Complain::create([
-            'tanggal'   => $tanggal_berobat,
-            'media'     => 'Whatsapp Bot',
-            'tenant_id' => 1,
-            'complain'  => $this->message
-        ]);
 
+            $antrian = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->first();
+            $antrian->complaint = $this->message;
+            $antrian->complain_id = $complain->id;
+            $antrian->save();
 
-        $antrian = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->first();
-        $antrian->complaint = $this->message;
-        $antrian->complain_id = $complain->id;
-        $antrian->save();
-
-        $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-        if ( $antrian->satisfaction_index == 1 ) {
+            $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+            if ( $antrian->satisfaction_index == 1 ) {
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
+            }
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
+            $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
+            echo $message;
+        } else {
+            Log::info("=====================================");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("=====================================");
+            Log::info( Input::get('message') );
+            Log::info("=====================================");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("ERROR");
+            Log::info("=====================================");
         }
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
-        echo $message;
+
     }
     /**
      * undocumented function
@@ -2184,7 +2202,9 @@ class WablasController extends Controller
                 $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
             }
         }
-        echo $message;
+        if (isset($message)) {
+            echo $message;
+        }
     }
     public function pasienTidakDalamAntrian(){
         return !Antrian::where('no_telp', $this->no_telp)
@@ -3488,6 +3508,7 @@ class WablasController extends Controller
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
+                $pasien = Pasien::find( $data[0]->pasien_id );
                 $konsultasi_estetik_online->register_previously_saved_patient = $this->message;
                 $konsultasi_estetik_online->pasien_id                         = $pasien->pasien_id;
                 $konsultasi_estetik_online->nama                              = $pasien->nama;
