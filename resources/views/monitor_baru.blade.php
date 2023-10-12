@@ -779,6 +779,6 @@
 </script>
 
 <script src="{!! url("js/antrian.js") !!}"></script>
-<script src="{!! url("js/inspinia.js") !!}"></script>
+{{-- <script src="{!! url("js/inspinia.js") !!}"></script> --}}
 </body>
 </html>
