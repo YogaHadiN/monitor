@@ -84,22 +84,24 @@ function prosesAntrianObat(data) {
     var temp = "";
     if (data.length) {
         for (var i = 0; i < data.length; i++) {
-            temp += "<tr>";
-            temp += "<td>" + data[i].nomor_antrian + "</td>";
-            temp +=
-                "<td class='text-left'>" +
-                data[i].nama.substring(0, 21) +
-                "</td>";
-            temp += "<td>";
-            if (data[i].status == "Proses") {
-                temp += '<span class="badge badge-warning">Proses</span>';
-            } else if (data[i].status == "Menunggu") {
-                temp += '<span class="badge badge-danger">Menunggu</span>';
-            } else if (data[i].status == "Selesai") {
-                temp += '<span class="badge badge-primary">Selesai</span>';
+            if (i < 8) {
+                temp += "<tr>";
+                temp += "<td>" + data[i].nomor_antrian + "</td>";
+                temp +=
+                    "<td class='text-left'>" +
+                    data[i].nama.substring(0, 21) +
+                    "</td>";
+                temp += "<td>";
+                if (data[i].status == "Proses") {
+                    temp += '<span class="badge badge-warning">Proses</span>';
+                } else if (data[i].status == "Menunggu") {
+                    temp += '<span class="badge badge-danger">Menunggu</span>';
+                } else if (data[i].status == "Selesai") {
+                    temp += '<span class="badge badge-primary">Selesai</span>';
+                }
+                temp += "</td>";
+                temp += "</tr>";
             }
-            temp += "</td>";
-            temp += "</tr>";
         }
     } else {
         temp += "<tr>";

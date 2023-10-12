@@ -60,7 +60,7 @@
         color: #fff;
     }
     .panel_antrian_terakhir{
-        height: 243px !important;
+        height: 205px !important;
     }
     .table-farmasi{
         font-size: 18px;
@@ -70,7 +70,7 @@
         width: 96%;
     }
     .container_antrian_farmasi{
-        height: 500px;
+        height: 459px;
     }
     #qr{
         position: relative;
