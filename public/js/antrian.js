@@ -84,7 +84,7 @@ function prosesAntrianObat(data) {
     var temp = "";
     if (data.length) {
         for (var i = 0; i < data.length; i++) {
-            if (i < 8) {
+            if (i < 7) {
                 temp += "<tr>";
                 temp += "<td>" + data[i].nomor_antrian + "</td>";
                 temp +=
