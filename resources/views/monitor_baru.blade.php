@@ -348,7 +348,7 @@
   <div class="container">
       <div class="row header">
           <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
-              <img src="{{ secure_url('images/logo.png') }}" onclick="pglPasien([]); return false" class="logo">
+              <img src="{{ url('images/logo.png') }}" onclick="pglPasien([]); return false" class="logo">
           </div>
         <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 waktu">
             <span id="hari">
@@ -540,7 +540,7 @@
                                 Keluhan Atas Pelayanan Mohon Kirim Whatsapp Ke 
                             </div>
                             <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
-                                <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
+                                <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                                 <span class="wa_no">
                                     081381912803
                                     <img id="qr" height="100px" class="text-right" src="{{ $base64 }}" />
