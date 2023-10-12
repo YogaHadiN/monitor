@@ -87,8 +87,21 @@
     .wa_position {
         position: relative;
         top: -28px;
-        
-
+    }
+    .table>thead>tr>th {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+    }
+    .table>tbody>tr>td, 
+    .table>tbody>tr>th, 
+    .table>tfoot>tr>td, 
+    .table>tfoot>tr>th, 
+    .table>thead>tr>td, 
+    .table>thead>tr>th {
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
     }
     .no-padding-margin{
         padding: 0;
