@@ -399,14 +399,6 @@
                                         A32
                                   </td>
                               </tr>
-                            <tr>
-                                <td>
-                                    Ruang Periksa 3
-                                  </td>
-                                    <td id="antrian_ruang_periksa_3">
-                                        A32
-                                  </td>
-                              </tr>
                               <tr>
                                     <td>
                                     Ruang Periksa Gigi
