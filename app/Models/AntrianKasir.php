@@ -23,6 +23,7 @@ class AntrianKasir extends Model
                 $terapi->signa == 'Puyer' 
             ) {
                 $racikan = true;
+                break;
             }
         }
         return $racikan;

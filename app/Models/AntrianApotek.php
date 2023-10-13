@@ -25,6 +25,7 @@ class AntrianApotek extends Model
                 $terapi->signa == 'Puyer' 
             ) {
                 $racikan = true;
+                break;
             }
         }
         return $racikan;
