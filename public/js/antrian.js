@@ -5,7 +5,6 @@ channel.bind(event_name, function (data) {
         typeof data.panggil !== "undefined" &&
         typeof data.ruangan !== "undefined"
     ) {
-        //untuk antrian monitor
         if (!isNumber(data.panggil)) {
             if (data.panggil) {
                 var panggil_pasien = 1;
