@@ -1,5 +1,4 @@
-var interval = null;
-var times = null;
+var interval;
 channel.bind(event_name, function (data) {
     if (
         typeof data.panggil !== "undefined" &&
@@ -26,10 +25,9 @@ channel.bind(event_name, function (data) {
                         $("#nomor_panggilan").html(nomor_panggilan);
                     }
 
-                    if (panggil_pasien) {
+                    if (panggil_pasien && typeof interval != "number") {
                         var times = 0;
-                        clearInterval(interval);
-                        var interval = setInterval(function () {
+                        interval = setInterval(function () {
                             $("#dipanggil").toggleClass("yellow");
                             $("#nomor_panggilan").toggleClass("yellow");
                             $("#poli_panggilan").toggleClass("yellow");
