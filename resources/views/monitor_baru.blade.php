@@ -546,7 +546,7 @@
                   <div class="carousel slide carousel-fade" id="carousel1" data-interval="3000">
                     <div class="carousel-inner">
                       <div class="item active">
-                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-center">
+                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
                                 Keluhan Atas Pelayanan Mohon Kirim Whatsapp Ke 
                             </div>
                             <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
@@ -573,9 +573,8 @@
                         </div>
                     </div>
                       <div class="item">
-                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-left">
-                            Daftar Melalui Whatsapp <br>
-                            <span class="waktu_tunggu">Ketik "Daftar" Kirim ke</span>
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
+                            Daftar Melalui Whatsapp Ketik "Daftar" Kirim ke
                         </div>
                         <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 keterangan_waktu_tunggu text-right">
                             <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
