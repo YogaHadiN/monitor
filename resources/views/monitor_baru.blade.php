@@ -552,7 +552,7 @@
                                 </span>
                             </div>
                       </div>
-                      <div class="item">
+                    <div class="item">
                         <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
                             Waktu Tunggu Obat Jadi <br>
                             <span class="waktu_tunggu">15 - 30 Menit</span>
@@ -565,6 +565,21 @@
                         <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
                             Kesabaran Anda<br> 
                             <span class="waktu_tunggu">Ketelitian Kami</span>
+                        </div>
+                    </div>
+                      <div class="item">
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Daftar Lewat <br>
+                            <span class="waktu_tunggu">Whatsapp</span>
+                            
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Ketik</br>
+                            <span class="waktu_tunggu">Daftar</span>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Kirim ke<br> 
+                            <span class="waktu_tunggu">082113781271</span>
                         </div>
                     </div>
                 </div>
