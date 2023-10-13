@@ -25,7 +25,7 @@ channel.bind(event_name, function (data) {
                         $("#nomor_panggilan").html(nomor_panggilan);
                     }
 
-                    if (panggil_pasien && typeof interval != "number") {
+                    if (panggil_pasien && !interval) {
                         var times = 0;
                         interval = setInterval(function () {
                             $("#dipanggil").toggleClass("yellow");
