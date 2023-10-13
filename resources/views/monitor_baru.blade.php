@@ -773,7 +773,7 @@
         $('#hari').html(moment().format('dddd, DD MMMM YYYY'))
         $('#jam').html(moment().format('HH:mm:ss'))
     }, 1000);
-	var base = "{{ url('/') }}";
+	var base = "{{ secure_url('/') }}";
 	var hitung = 0
 
 
