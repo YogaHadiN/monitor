@@ -413,13 +413,15 @@ class AntrianController extends Controller
                         'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
                         'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
                         'antrian_id'    => $a->id ,
+                        'periksa_id'    => $a->periksa_id ,
                         'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu'
                     ];
                 } else {
                     $antrian_obat_jadi[] = [
                         'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : "-",
                         'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
-                        'antrian_id'          =>  $a->id ,
+                        'antrian_id'    => $a->id ,
+                        'periksa_id'    => $a->periksa_id ,
                         'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu'
                     ];
                 }
@@ -434,12 +436,14 @@ class AntrianController extends Controller
                             'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
                             'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
                             'antrian_id'    => $a->id ,
+                            'periksa_id'    => $a->periksa_id ,
                             'status'        => 'Selesai'
                         ];
                     } else {
                         $antrian_obat_jadi[] = [
                             'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
                             'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
+                            'periksa_id'    => $a->periksa_id ,
                             'antrian_id'    => $a->id ,
                             'status'        => 'Selesai'
                         ];
