@@ -35,7 +35,7 @@ channel.bind(event_name, function (data) {
                             $("#poli_panggilan").toggleClass("yellow");
                             $(".text-red").toggleClass("yellow");
                             times++;
-                            if (times > 14) {
+                            if (times > 21) {
                                 clearInterval(interval);
                                 $("#dipanggil").removeClass("yellow");
                                 $("#nomor_panggilan").removeClass("yellow");
