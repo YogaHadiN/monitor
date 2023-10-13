@@ -452,10 +452,10 @@ class AntrianController extends Controller
             }
         }
         usort($antrian_obat_jadi, function($a, $b) {
-            return $a['antrian_id'] <=> $b['antrian_id'];
+            return $a['periksa_id'] <=> $b['periksa_id'];
         });
         usort($antrian_obat_racikan, function($a, $b) {
-            return $a['antrian_id'] <=> $b['antrian_id'];
+            return $a['periksa_id'] <=> $b['periksa_id'];
         });
 
         $result = [
