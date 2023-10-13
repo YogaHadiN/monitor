@@ -39,6 +39,7 @@ channel.bind(event_name, function (data) {
                                 $("#nomor_panggilan").removeClass("yellow");
                                 $("#poli_panggilan").removeClass("yellow");
                                 $(".text-red").removeClass("yellow");
+                                interval = null;
                             }
                         }, 500);
                     }
