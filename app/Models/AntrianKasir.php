@@ -16,6 +16,7 @@ class AntrianKasir extends Model
         return $this->morphMany('App\Models\PengantarPasien', 'antarable');
     }
     public function getObatRacikanAttribute(){
+        $racikan = false;
         foreach ($this->periksa->terapii as $terapi) {
             if (
                 $terapi->signa == 'Add' ||
