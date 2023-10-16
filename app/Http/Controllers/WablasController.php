@@ -4267,7 +4267,7 @@ class WablasController extends Controller
 
         $complaint             = new WhatsappComplaint;
         $complaint->no_telp    = $no_telp;
-        $complaint->antrian_id = $antrian_id
+        $complaint->antrian_id = $antrian_id;
         $complaint->tenant_id = 1;
         $complaint->save();
 
