@@ -2270,8 +2270,15 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Sesaat lagi tim kami akan menghubungi Anda';
 
-            $messageToCs = "https://wa.me/" . $this->no_telp. "?text=Hallo%20Kak%20saya%20dari%20Klinik%20Jati%20Elok.%20Apakah%20ada%20yang%20bisa%20saya%20bantu%3F";
+            $messageToCs = 'Customer ingin chat dengan Admin'
+            $messageToCs .= PHP_EOL;
+            $messageToCs .= 'Klik Link dibawah ini untuk memulai';
+            $messageToCs .= PHP_EOL;
+            $messageToCs .= PHP_EOL;
+            $messageToCs .= "https://wa.me/" . $this->no_telp. "?text=Hallo%20Kak%20saya%20dari%20Klinik%20Jati%20Elok.%20Apakah%20ada%20yang%20bisa%20saya%20bantu%3F";
+
             $this->sendSingle('6282278065959', $messageToCs );
+
 
             echo $message;
         } else if ( $this->message == 4 ) {
