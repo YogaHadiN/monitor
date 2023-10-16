@@ -553,7 +553,7 @@
                                 <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                                 <span class="wa_no">
                                     082113781271
-                                    <img id="qr" height="100px" class="text-right" src="{{ $base64 }}" />
+                                    <img id="qr" height="90px" class="text-right" src="{{ $base64 }}" />
                                 </span>
                             </div>
                       </div>
