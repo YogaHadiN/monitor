@@ -131,6 +131,9 @@ class WablasController extends Controller
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
             return false;
+        } else if ( $this->message == 'komplain' ) {
+            echo $this->autoReplyComplainMessage();
+            return false;
         } else if (
             !is_null( $this->message ) &&
             $this->message            !== '1' &&
@@ -1201,7 +1204,6 @@ class WablasController extends Controller
                  $this->message == 'tidak puas'
             ){
                 echo $this->autoReplyComplainMessage(
-                    $this->whatsapp_satisfaction_survey->antrian->no_telp,
                     $this->whatsapp_satisfaction_survey->antrian->id
                 );
             } else if (
@@ -2278,7 +2280,7 @@ class WablasController extends Controller
         } else if ( $this->message == 3 ) {
             echo $this->registrasiInformasiNomorKartuBpjs();
         } else if ( $this->message == 4 ) {
-            echo $this->autoReplyComplainMessage( $this->no_telp );
+            echo $this->autoReplyComplainMessage();
         } else if ( $this->message == 5 ) {
 
             $message = 'Mohon ditunggu';
@@ -4285,8 +4287,8 @@ class WablasController extends Controller
         $text .= '_Mohon maaf atas ketidaknyamanannya._';
         return $text;
     }
-    public function autoReplyComplainMessage($no_telp, $antrian_id = null){
-
+    public function autoReplyComplainMessage($antrian_id = null){
+        $no_telp = $this->no_telp;
         $complaint             = new WhatsappComplaint;
         $complaint->no_telp    = $no_telp;
         $complaint->antrian_id = $antrian_id;
