@@ -1105,12 +1105,20 @@ class WablasController extends Controller
 
 
             $antrian = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->first();
-            $antrian->complaint = $this->message;
-            $antrian->complain_id = $complain->id;
-            $antrian->save();
+            if (!is_null( $antrian )) {
+                $antrian->complaint = $this->message;
+                $antrian->complain_id = $complain->id;
+                $antrian->save();
+            }
 
             $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-            if ( $antrian->satisfaction_index == 1 ) {
+            if (
+                is_null( $antrian ) ||
+                ( 
+                    !is_null( $antrian ) &&
+                    $antrian->satisfaction_index == 1 
+                )
+            ) {
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
                 $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
