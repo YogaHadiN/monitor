@@ -1093,7 +1093,7 @@ class WablasController extends Controller
      */
     private function registerWhatsappComplaint()
     {
-        $tanggal_berobat = $this->whatsapp_complaint->antrian->created_at->format('Y-m-d');
+        $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
         $this->whatsapp_complaint->delete();
         if (!is_null( $this->message )) {
             $complain = Complain::create([
