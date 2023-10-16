@@ -1128,6 +1128,15 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
             echo $message;
+
+
+            $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
+            $messageToBoss .=  PHP_EOL;
+            $messageToBoss .=  PHP_EOL;
+            $messageToBoss .=  $this->message;
+
+            $this->sendSingle('6281381912803', $messageToBoss);
+
         } else {
             Log::info("=====================================");
             Log::info("ERROR");
