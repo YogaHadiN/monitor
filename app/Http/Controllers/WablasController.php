@@ -1185,18 +1185,10 @@ class WablasController extends Controller
                  $this->angkaPertama("3")  ||
                  $this->message == 'tidak puas'
             ){
-
-                $complaint             = new WhatsappComplaint;
-                $complaint->no_telp    = $this->whatsapp_satisfaction_survey->antrian->no_telp;
-                $complaint->antrian_id = $this->whatsapp_satisfaction_survey->antrian->id;
-                $complaint->save();
-
-                WhatsappRegistration::where('no_telp', $this->whatsapp_satisfaction_survey->antrian->no_telp)->delete();
-
-                $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
-                $message .= PHP_EOL;
-                $message .= "Bisa diinfokan kendala yang kakak alami?";
-                echo $message;
+                echo $this->autoReplyComplainMessage(
+                    $this->whatsapp_satisfaction_survey->antrian->no_telp,
+                    $this->whatsapp_satisfaction_survey->antrian->id
+                );
             } else if (
                  $this->angkaPertama("2")  ||
                  $this->message == 'biasa'
@@ -1204,6 +1196,7 @@ class WablasController extends Controller
                 $complaint             = new WhatsappComplaint;
                 $complaint->no_telp    = $this->whatsapp_satisfaction_survey->antrian->no_telp;
                 $complaint->antrian_id = $this->whatsapp_satisfaction_survey->antrian->id;
+                $complaint->tenant_id = $this->whatsapp_satisfaction_survey->antrian->tenant_id;
                 $complaint->save();
 
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
@@ -1378,6 +1371,10 @@ class WablasController extends Controller
         $message .= '2. Reservasi Melalui Whatsapp';
         $message .= PHP_EOL;
         $message .= '3. Cek status kepesertaan BPJS';
+        $message .= PHP_EOL;
+        $message .= '4. Penanganan Keluhan';
+        $message .= PHP_EOL;
+        $message .= '5. Chat dengan Admin';
         /* $message .= PHP_EOL; */
         /* $message .= '4. Konsultasi Estetika'; */
         /* $message .= PHP_EOL; */
@@ -2265,6 +2262,18 @@ class WablasController extends Controller
             echo $this->registrasiAntrianOnline();
         } else if ( $this->message == 3 ) {
             echo $this->registrasiInformasiNomorKartuBpjs();
+        } else if ( $this->message == 4 ) {
+            echo $this->autoReplyComplainMessage( $this->no_telp );
+        } else if ( $this->message == 5 ) {
+
+            $message = 'Mohon ditunggu';
+            $message .= PHP_EOL;
+            $message .= 'Sesaat lagi tim kami akan menghubungi Anda';
+
+            $messageToCs = "https://wa.me/" . $this->no_telp. "?text=Hallo%20Kak%20saya%20dari%20Klinik%20Jati%20Elok.%20Apakah%20ada%20yang%20bisa%20saya%20bantu?";
+            $this->sendSingle('6282278065959', $messageToCs );
+
+            echo $message;
         } else if ( $this->message == 4 ) {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
@@ -4253,5 +4262,43 @@ class WablasController extends Controller
         $text .= PHP_EOL;
         $text .= '_Mohon maaf atas ketidaknyamanannya._';
         return $text;
+    }
+    public function autoReplyComplainMessage($no_telp, $antrian_id = null){
+
+        $complaint             = new WhatsappComplaint;
+        $complaint->no_telp    = $no_telp;
+        $complaint->antrian_id = $antrian_id
+        $complaint->tenant_id = 1;
+        $complaint->save();
+
+        WhatsappRegistration::where('no_telp', $this->whatsapp_satisfaction_survey->antrian->no_telp)->delete();
+
+        $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
+        $message .= PHP_EOL;
+        $message .= "Bisa diinfokan kendala yang kakak alami?";
+        return $message;
+    }
+
+    public function sendSingle($phone, $message){
+        $curl = curl_init();
+        $token = env('WABLAS_TOKEN');
+        $data = [
+        'phone' => $phone,
+        'message' => $message,
+        ];
+        curl_setopt($curl, CURLOPT_HTTPHEADER,
+            array(
+                "Authorization: $token",
+            )
+        );
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/send-message");
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        $result = curl_exec($curl);
+        curl_close($curl);
+        return $result;
     }
 }
