@@ -2278,7 +2278,7 @@ class WablasController extends Controller
             $messageToCs .= "https://wa.me/" . $this->no_telp. "?text=Hallo%20Kak%20saya%20dari%20Klinik%20Jati%20Elok.%20Apakah%20ada%20yang%20bisa%20saya%20bantu%3F";
 
             $this->sendSingle('6282278065959', $messageToCs );
-
+            WhatsappRegistration::where('no_telp', $this->no_telp)->delete()
 
             echo $message;
         } else if ( $this->message == 4 ) {
@@ -4278,7 +4278,7 @@ class WablasController extends Controller
         $complaint->tenant_id = 1;
         $complaint->save();
 
-        WhatsappRegistration::where('no_telp', $this->whatsapp_satisfaction_survey->antrian->no_telp)->delete();
+        WhatsappRegistration::where('no_telp', $no_telp)->delete();
 
         $message = "Mohon maaf atas ketidak nyamanan yang kakak alami.";
         $message .= PHP_EOL;
