@@ -83,7 +83,7 @@
     }
     .keterangan_wa{
         padding: 4px 0 !important;
-        font-size: 31px;
+        font-size: 28px;
         font-weight: 900;
     }
     .align-top{
