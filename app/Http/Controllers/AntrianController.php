@@ -94,7 +94,7 @@ class AntrianController extends Controller
 	}
 
     public function monitor_baru(){
-		$url = 'https://api.whatsapp.com/send?phone=6281381912803&text=Halo.%20Saya%20mau%20komplain';
+		$url = 'https://api.whatsapp.com/send?phone=6282113781271&text=komplain';
 		$url_daftar_online = 'https://api.whatsapp.com/send?phone=6282113781271&text=daftar';
         $qr = new QrCodeController;
         $base64 = $qr->inPdf($url);
