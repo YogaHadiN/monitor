@@ -547,12 +547,12 @@
                     <div class="carousel-inner">
                       <div class="item active">
                             <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
-                                Keluhan Atas Pelayanan Mohon Kirim Whatsapp Ke 
+                                Keluhan Atas Pelayanan Ketik "Komplain" Whatsapp Ke 
                             </div>
                             <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
                                 <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                                 <span class="wa_no">
-                                    081381912803
+                                    082113781271
                                     <img id="qr" height="100px" class="text-right" src="{{ $base64 }}" />
                                 </span>
                             </div>
