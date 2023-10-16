@@ -2270,7 +2270,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Sesaat lagi tim kami akan menghubungi Anda';
 
-            $messageToCs = 'Customer ingin chat dengan Admin'
+            $messageToCs = 'Customer ingin chat dengan Admin';
             $messageToCs .= PHP_EOL;
             $messageToCs .= 'Klik Link dibawah ini untuk memulai';
             $messageToCs .= PHP_EOL;
