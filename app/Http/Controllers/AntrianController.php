@@ -411,7 +411,7 @@ class AntrianController extends Controller
                 if ($a->obat_racikan) {
                     $antrian_obat_racikan[] = [
                         'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : '-',
-                        'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
+                        'nama'          => ucwords( strtolower( $a->periksa->pasien->nama ) ),
                         'antrian_id'    => $a->id ,
                         'periksa_id'    => $a->periksa_id ,
                         'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu'
@@ -419,7 +419,7 @@ class AntrianController extends Controller
                 } else {
                     $antrian_obat_jadi[] = [
                         'nomor_antrian' => !is_null( $a->antrian ) ? $a->antrian->nomor_antrian : "-",
-                        'nama'          => ucfirst( strtolower( $a->periksa->pasien->nama ) ),
+                        'nama'          => ucwords( strtolower( $a->periksa->pasien->nama ) ),
                         'antrian_id'    => $a->id ,
                         'periksa_id'    => $a->periksa_id ,
                         'status'        => !is_null( $a->periksa->jam_obat_mulai_diracik ) ?  'Proses' :  'Menunggu'
