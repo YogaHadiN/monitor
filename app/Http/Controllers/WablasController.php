@@ -1389,7 +1389,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= '3. Cek status kepesertaan BPJS';
         $message .= PHP_EOL;
-        $message .= '4. Penanganan Keluhan';
+        $message .= '4. Keluhan atas pelayanan';
         $message .= PHP_EOL;
         $message .= '5. Chat dengan Admin';
         /* $message .= PHP_EOL; */
