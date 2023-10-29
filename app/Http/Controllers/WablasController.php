@@ -2,6 +2,7 @@
 namespace App\Http\Controllers; 
 use Illuminate\Http\Request; 
 use App\Models\AntrianPoli;
+use App\Models\Message;
 use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
 use App\Models\Complain;
@@ -234,6 +235,8 @@ class WablasController extends Controller
                 return $this->prosesGambarPeriksa(); // buat main menu
             } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
+            } else if( $this->noTelpDalamChatWithAdmin() ) {
+                return $this->createWhatsappChat(); // buat main menu
             } else if( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
@@ -1106,7 +1109,6 @@ class WablasController extends Controller
                 'complain'  => $this->message
             ]);
 
-
             $antrian = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->first();
             if (!is_null( $antrian )) {
                 $antrian->complaint = $this->message;
@@ -1390,8 +1392,8 @@ class WablasController extends Controller
         $message .= '3. Cek status kepesertaan BPJS';
         $message .= PHP_EOL;
         $message .= '4. Keluhan atas pelayanan';
-        $message .= PHP_EOL;
-        $message .= '5. Chat dengan Admin';
+        /* $message .= PHP_EOL; */
+        /* $message .= '5. Chat dengan Admin'; */
         /* $message .= PHP_EOL; */
         /* $message .= '4. Konsultasi Estetika'; */
         /* $message .= PHP_EOL; */
@@ -1400,7 +1402,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         /* $message .= 'Balas dengan *1* sesuai dengan informasi di atas'; */
         /* $message .= 'Balas dengan *1 atau 2* sesuai dengan informasi di atas'; */
-        $message .= 'Balas dengan *1, 2 atau 3* sesuai dengan informasi di atas';
+        $message .= 'Balas dengan *1, 2, 3, atau 4* sesuai dengan informasi di atas';
         return $message;
     }
     /**
@@ -2283,18 +2285,20 @@ class WablasController extends Controller
             echo $this->autoReplyComplainMessage();
         } else if ( $this->message == 5 ) {
 
-            $message = 'Mohon ditunggu';
+            $message = 'Halo kak.';
             $message .= PHP_EOL;
-            $message .= 'Sesaat lagi tim kami akan menghubungi Anda';
+            $message .= 'Ada yang bisa kami bantu?';
+            $message .= PHP_EOL;
+            $message .= 'Silahkan sampaikan disini';
+            $message .= PHP_EOL;
+            $message .= 'ketik *akhiri* untuk mengakhiri chat';
+            $message .= PHP_EOL;
+            $message .= 'fitur ini akan non aktif setelah 2 jam tidak aktif';
 
-            $messageToCs = 'Customer ingin chat dengan Admin';
-            $messageToCs .= PHP_EOL;
-            $messageToCs .= 'Klik Link dibawah ini untuk memulai';
-            $messageToCs .= PHP_EOL;
-            $messageToCs .= PHP_EOL;
-            $messageToCs .= "https://wa.me/" . $this->no_telp. "?text=Hallo%20Kak%20saya%20dari%20Klinik%20Jati%20Elok.%20Apakah%20ada%20yang%20bisa%20saya%20bantu%3F";
-
-            $this->sendSingle('6282278065959', $messageToCs );
+            WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 10 // chat dengan admin
+            ]);
 
             WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
             WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
@@ -4326,5 +4330,18 @@ class WablasController extends Controller
         $result = curl_exec($curl);
         curl_close($curl);
         return $result;
+    }
+
+    public function noTelpDalamChatWithAdmin(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(10);
+    }
+    public function createWhatsappChat(){
+        Message::create([
+            'no_telp'   => $this->no_telp,
+            'message'   => $this->message,
+            'tanggal'   => date("Y-m-d H:i:s"),
+            'sending'   => 0,
+            'untouched' => 1
+        ]);
     }
 }
