@@ -229,6 +229,7 @@ class WablasController extends Controller
             } else if ( $this->whatsappKonsultasiEstetikExists() ) {
                 return $this->prosesKonsultasiEstetik(); // buat main menu
             } else if ( $this->batalkanAntrianExists() ) {
+                Log::info(232);
                 return $this->batalkanAntrian(); // buat main menu
             } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
                 return $this->prosesBpjsNumberInquiry(); // buat main menu
@@ -239,6 +240,7 @@ class WablasController extends Controller
             } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if( $this->noTelpDalamChatWithAdmin() ) {
+                Log::info(242);
                 return $this->createWhatsappChat(); // buat main menu
             } else if( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
