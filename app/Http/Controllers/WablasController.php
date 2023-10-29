@@ -132,6 +132,9 @@ class WablasController extends Controller
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
             return false;
+        } else if ( $this->message == 'akhiri' ) {
+            echo $this->akhiriChatWithAdmin();
+            return false;
         } else if ( $this->message == 'komplain' ) {
             echo $this->autoReplyComplainMessage();
             return false;
@@ -2291,9 +2294,8 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Silahkan sampaikan disini';
             $message .= PHP_EOL;
-            $message .= 'ketik *akhiri* untuk mengakhiri chat';
             $message .= PHP_EOL;
-            $message .= 'fitur ini akan non aktif setelah 2 jam tidak aktif';
+            $message .= 'ketik *akhiri* untuk mengakhiri chat';
 
             WhatsappBot::create([
                 'no_telp' => $this->no_telp,
@@ -4344,4 +4346,9 @@ class WablasController extends Controller
             'untouched' => 1
         ]);
     }
+    public function akhiriChatWithAdmin(){
+        WhatsappBot::where('no_telp', $this->no_telp )->delete();
+        return 'Fitur chat dihentikan. Silahkan ulangi apabila ada yang ingin disampaikan';
+    }
+    
 }
