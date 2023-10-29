@@ -2301,7 +2301,7 @@ class WablasController extends Controller
 
             WhatsappBot::create([
                 'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 10 // chat dengan admin
+                'whatsapp_bot_service_id' => 12 // chat dengan admin
             ]);
 
             WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
@@ -4337,7 +4337,7 @@ class WablasController extends Controller
     }
 
     public function noTelpDalamChatWithAdmin(){
-        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(10);
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(12);
     }
     public function createWhatsappChat(){
         Message::create([
