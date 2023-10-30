@@ -129,6 +129,7 @@ class WablasController extends Controller
 	
 	public function webhook(){
         header('Content-Type: application/json');
+        Log::info( $this->message );
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
             return false;
@@ -4345,6 +4346,7 @@ class WablasController extends Controller
             'message'   => $this->message,
             'tanggal'   => date("Y-m-d H:i:s"),
             'sending'   => 0,
+            'tenant_id' => 1,
             'untouched' => 1
         ]);
     }

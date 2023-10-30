@@ -93,4 +93,8 @@ if (!function_exists('hitungUsia')) {
         }
     }
 }
-
+if (!function_exists('updateChat')) {
+    function updateChat() {
+		event(new \App\Events\ChatUpdated('yoyoyo'));
+    }
+}
