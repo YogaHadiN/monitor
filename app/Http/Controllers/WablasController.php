@@ -1422,9 +1422,9 @@ class WablasController extends Controller
         /* $message .= PHP_EOL; */
         /* $message .= '5. Chat dengan Admin'; */
         /* $message .= PHP_EOL; */
-        /* $message .= '4. Konsultasi Estetika'; */
-        /* $message .= PHP_EOL; */
         /* $message .= '5. Saya ingin berbicara dengan admin'; */
+        /* $message .= PHP_EOL; */
+        /* $message .= '6. Konsultasi Estetika'; */
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         /* $message .= 'Balas dengan *1* sesuai dengan informasi di atas'; */

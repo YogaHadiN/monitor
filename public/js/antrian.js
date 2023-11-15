@@ -50,7 +50,6 @@ channel.bind(event_name, function (data) {
                             }
                         }, 500);
                     }
-
                     var temp = "";
                     $("#antrian_ruang_periksa_1").html(
                         data.antrian_terakhir[3]
@@ -80,6 +79,7 @@ channel.bind(event_name, function (data) {
                         console.log(ruangan);
                         panggilPasien(ruangan);
                     }
+                    // updateNotifikasiDarurat(data);
                 }
             );
         }
