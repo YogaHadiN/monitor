@@ -575,8 +575,10 @@
     <div class="row container_wa align-top text-left">
         @if ( \App\Models\Tenant::find(1)->menangani_gawat_darurat )
             <div id="activate_if_danger" class="animate-flicker {{  \App\Models\Tenant::find(1)->menangani_gawat_darurat ? '' : 'hide' }}">
-                Saat ini dokter sedang menangani Kegawatan di UGD. <br>
-                Terima kasih atas kesabaran Anda menunggu.
+                <div id="text_notifikasi" style="display: none;">
+                    Saat ini dokter sedang melakukan tindakan di UGD <br>
+                    Terima kasih atas kesabaran Anda menunggu
+                </div>
             </div>
         @else
             <div id="activate_if_not_danger" class="ibox float-e-margins {{  \App\Models\Tenant::find(1)->menangani_gawat_darurat ? 'hide' : '' }}">
@@ -636,6 +638,10 @@
 <p id="hitung">
 	
 </p>
+<audio id="ding">
+  <source src="{{ url('sound/bell-ding.mp3') }}" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
 <audio id="myAudio">
   <source src="{{ url('sound/bel.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
@@ -796,6 +802,10 @@
   <source src="{{ url('sound/silahkanmenuju.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
+<audio id="audio_menunggu">
+  <source src="{{ url('sound/menunggu.mp3') }}" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
 </div>
 
 
@@ -846,6 +856,8 @@
 		@endif
 		return channel_name;
 	}
+
+    var menangani_gawat_darurat = {{ $menangani_gawat_darurat }};
 </script>
 
 <script src="{!! url("js/antrian.js") !!}"></script>

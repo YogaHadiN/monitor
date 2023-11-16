@@ -1,4 +1,28 @@
 var interval;
+$("#text_notifikasi").fadeOut();
+fadeContent();
+function fadeContent() {
+    $("#text_notifikasi")
+        .fadeIn(1000)
+        .delay(500)
+        .fadeOut(1000, function () {
+            $(this).appendTo($(this).parent());
+            fadeContent();
+        });
+}
+
+if (menangani_gawat_darurat) {
+    var timer = 0;
+    timer = setInterval(function () {
+        var menunggu = document.getElementById("audio_menunggu");
+        var ding = document.getElementById("ding");
+        ding.onended = function () {
+            menunggu.play();
+        };
+        ding.play();
+        console.log("mainkan");
+    }, 10000);
+}
 channel.bind(event_name, function (data) {
     if (
         typeof data.panggil !== "undefined" &&
