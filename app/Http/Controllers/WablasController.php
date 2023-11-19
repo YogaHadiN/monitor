@@ -1161,7 +1161,7 @@ class WablasController extends Controller
             $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
             echo $message;
 
-
+            /* https://wa.me/6181381912803?text=hallo%20nama%20saya%20Yoga%20Hadi%20Nugroho */
             $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
             $messageToBoss .=  PHP_EOL;
             $messageToBoss .=  PHP_EOL;
@@ -1416,7 +1416,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= '2. Reservasi Melalui Whatsapp';
         $message .= PHP_EOL;
-        $message .= '3. Cek status kepesertaan BPJS';
+        $message .= '3. Cara pindah FASKES';
         $message .= PHP_EOL;
         $message .= '4. Keluhan atas pelayanan';
         /* $message .= PHP_EOL; */

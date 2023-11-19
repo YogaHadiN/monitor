@@ -573,66 +573,63 @@
           </div>
       </div>
     <div class="row container_wa align-top text-left">
-        @if ( \App\Models\Tenant::find(1)->menangani_gawat_darurat )
             <div id="activate_if_danger" class="animate-flicker {{  \App\Models\Tenant::find(1)->menangani_gawat_darurat ? '' : 'hide' }}">
                 <div id="text_notifikasi" style="display: none;">
                     Saat ini dokter sedang melakukan tindakan di UGD <br>
                     Terima kasih atas kesabaran Anda menunggu
                 </div>
             </div>
-        @else
-            <div id="activate_if_not_danger" class="ibox float-e-margins {{  \App\Models\Tenant::find(1)->menangani_gawat_darurat ? 'hide' : '' }}">
-                    <div class="ibox-title">
-                      <div class="ibox-tools">
-                      </div>
-                    </div>
-                    <div class="ibox-content">
-                      <div class="carousel slide carousel-fade" id="carousel1" data-interval="3000">
-                        <div class="carousel-inner">
-                          <div class="item active">
-                                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
-                                    Keluhan Atas Pelayanan Ketik "Komplain" Whatsapp Ke 
-                                </div>
-                                <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
-                                    <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
-                                    <span class="wa_no">
-                                        082113781271
-                                        <img id="qr" height="90px" class="text-right" src="{{ $base64 }}" />
-                                    </span>
-                                </div>
-                          </div>
-                        <div class="item">
-                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
-                                Waktu Tunggu Obat Jadi <br>
-                                <span class="waktu_tunggu">15 - 30 Menit</span>
-                                
-                            </div>
-                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
-                                Waktu Tunggu Obat Racikan</br>
-                                <span class="waktu_tunggu">30 - 45 Menit</span>
-                            </div>
-                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
-                                Kesabaran Anda<br> 
-                                <span class="waktu_tunggu">Ketelitian Kami</span>
-                            </div>
-                        </div>
-                          <div class="item">
+        <div id="activate_if_not_danger" class="ibox float-e-margins {{  \App\Models\Tenant::find(1)->menangani_gawat_darurat ? 'hide' : '' }}">
+                <div class="ibox-title">
+                  <div class="ibox-tools">
+                  </div>
+                </div>
+                <div class="ibox-content">
+                  <div class="carousel slide carousel-fade" id="carousel1" data-interval="3000">
+                    <div class="carousel-inner">
+                      <div class="item active">
                             <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
-                                Daftar Melalui Whatsapp Ketik "Daftar" Kirim ke
+                                Keluhan Atas Pelayanan Ketik "Komplain" Whatsapp Ke 
                             </div>
-                            <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 keterangan_waktu_tunggu text-right">
+                            <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
                                 <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                                 <span class="wa_no">
                                     082113781271
-                                    <img id="qr" height="100px" class="text-right" src="{{ $base64_daftar_online }}" />
+                                    <img id="qr" height="90px" class="text-right" src="{{ $base64 }}" />
                                 </span>
                             </div>
+                      </div>
+                    <div class="item">
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Waktu Tunggu Obat Jadi <br>
+                            <span class="waktu_tunggu">15 - 30 Menit</span>
+                            
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Waktu Tunggu Obat Racikan</br>
+                            <span class="waktu_tunggu">30 - 45 Menit</span>
+                        </div>
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
+                            Kesabaran Anda<br> 
+                            <span class="waktu_tunggu">Ketelitian Kami</span>
                         </div>
                     </div>
-                  </div>
+                      <div class="item">
+                        <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
+                            Daftar Melalui Whatsapp Ketik "Daftar" Kirim ke
+                        </div>
+                        <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 keterangan_waktu_tunggu text-right">
+                            <img src="{{ url('images/wa.png') }}" width="10%" class="bw wa_position"/>
+                            <span class="wa_no">
+                                082113781271
+                                <img id="qr" height="100px" class="text-right" src="{{ $base64_daftar_online }}" />
+                            </span>
+                        </div>
+                    </div>
                 </div>
               </div>
-        @endif
+            </div>
+          </div>
     </div>
 </div>
 <p id="hitung">

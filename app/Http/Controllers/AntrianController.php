@@ -463,10 +463,11 @@ class AntrianController extends Controller
         });
 
         $result = [
-            "antrian_dipanggil"    => $antrian_dipanggil,
-            "antrian_terakhir"     => $antrian_terakhir,
-            "antrian_obat_jadi"    => $antrian_obat_jadi ,
-            "antrian_obat_racikan" => $antrian_obat_racikan
+            "antrian_dipanggil"       => $antrian_dipanggil,
+            "antrian_terakhir"        => $antrian_terakhir,
+            "antrian_obat_jadi"       => $antrian_obat_jadi ,
+            "antrian_obat_racikan"    => $antrian_obat_racikan,
+            "menangani_gawat_darurat" => Tenant::find(1)->menangani_gawat_darurat
         ];
 
         return $result;

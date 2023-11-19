@@ -11,17 +11,11 @@ function fadeContent() {
         });
 }
 
+var timer = 0;
 if (menangani_gawat_darurat) {
-    var timer = 0;
-    timer = setInterval(function () {
-        var menunggu = document.getElementById("audio_menunggu");
-        var ding = document.getElementById("ding");
-        ding.onended = function () {
-            menunggu.play();
-        };
-        ding.play();
-        console.log("mainkan");
-    }, 10000);
+    startEmergencyNotification();
+} else {
+    clearInterval(timer);
 }
 channel.bind(event_name, function (data) {
     if (
@@ -103,7 +97,7 @@ channel.bind(event_name, function (data) {
                         console.log(ruangan);
                         panggilPasien(ruangan);
                     }
-                    // updateNotifikasiDarurat(data);
+                    updateNotifikasiDarurat(data);
                 }
             );
         }
@@ -298,4 +292,35 @@ function blinking() {
     $("#nomor_panggilan").toggleClass("yellow");
     $("#poli_panggilan").toggleClass("yellow");
     $(".text-red").toggleClass("yellow");
+}
+function updateNotifikasiDarurat(data) {
+    menangani_gawat_darurat = data.menangani_gawat_darurat;
+    if (!menangani_gawat_darurat) {
+        clearInterval(timer);
+        if ($("#activate_if_not_danger").hasClass("hide")) {
+            $("#activate_if_not_danger").removeClass("hide");
+        }
+        if (!$("#activate_if_danger").hasClass("hide")) {
+            $("#activate_if_danger").addClass("hide");
+        }
+    } else {
+        startEmergencyNotification();
+        if (!$("#activate_if_not_danger").hasClass("hide")) {
+            $("#activate_if_not_danger").addClass("hide");
+        }
+        if ($("#activate_if_danger").hasClass("hide")) {
+            $("#activate_if_danger").removeClass("hide");
+        }
+    }
+}
+function startEmergencyNotification() {
+    timer = setInterval(function () {
+        var menunggu = document.getElementById("audio_menunggu");
+        var ding = document.getElementById("ding");
+        ding.onended = function () {
+            menunggu.play();
+        };
+        ding.play();
+        console.log("mainkan");
+    }, 200000);
 }
