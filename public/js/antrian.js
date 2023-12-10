@@ -1,4 +1,5 @@
 var interval;
+console.log(new Date().toLocaleString());
 $("#text_notifikasi").fadeOut();
 fadeContent();
 function fadeContent() {
@@ -97,7 +98,12 @@ channel.bind(event_name, function (data) {
                         console.log(ruangan);
                         panggilPasien(ruangan);
                     }
-                    updateNotifikasiDarurat(data);
+                    if (
+                        status_gawat_darurat_saat_ini !==
+                        data.menangani_gawat_darurat
+                    ) {
+                        updateNotifikasiDarurat(data);
+                    }
                 }
             );
         }
@@ -321,6 +327,13 @@ function startEmergencyNotification() {
             menunggu.play();
         };
         ding.play();
-        console.log("mainkan");
-    }, 200000);
+        var pesan = "mainkan ";
+        pesan += new Date().toLocaleString();
+        console.log(pesan);
+        console.log("menangani_gawat_darurat = " + menangani_gawat_darurat);
+        console.log(
+            "status_gawat_darurat_saat_ini = " + status_gawat_darurat_saat_ini
+        );
+    }, 30000);
+    status_gawat_darurat_saat_ini = menangani_gawat_darurat;
 }

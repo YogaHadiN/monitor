@@ -855,6 +855,7 @@
 	}
 
     var menangani_gawat_darurat = {{ $menangani_gawat_darurat }};
+    var status_gawat_darurat_saat_ini;
 </script>
 
 <script src="{!! url("js/antrian.js") !!}"></script>
