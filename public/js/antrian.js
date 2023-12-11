@@ -98,6 +98,16 @@ channel.bind(event_name, function (data) {
                         console.log(ruangan);
                         panggilPasien(ruangan);
                     }
+
+                    console.log(
+                        "status_gawat_darurat_saat_ini = " +
+                            status_gawat_darurat_saat_ini
+                    );
+                    console.log(
+                        "data.menangani_gawat_darurat = " +
+                            data.menangani_gawat_darurat
+                    );
+
                     if (
                         status_gawat_darurat_saat_ini !==
                         data.menangani_gawat_darurat
@@ -300,6 +310,7 @@ function blinking() {
     $(".text-red").toggleClass("yellow");
 }
 function updateNotifikasiDarurat(data) {
+    console.log(303);
     menangani_gawat_darurat = data.menangani_gawat_darurat;
     if (!menangani_gawat_darurat) {
         clearInterval(timer);
@@ -309,6 +320,7 @@ function updateNotifikasiDarurat(data) {
         if (!$("#activate_if_danger").hasClass("hide")) {
             $("#activate_if_danger").addClass("hide");
         }
+        status_gawat_darurat_saat_ini = menangani_gawat_darurat;
     } else {
         startEmergencyNotification();
         if (!$("#activate_if_not_danger").hasClass("hide")) {
@@ -329,11 +341,6 @@ function startEmergencyNotification() {
         ding.play();
         var pesan = "mainkan ";
         pesan += new Date().toLocaleString();
-        console.log(pesan);
-        console.log("menangani_gawat_darurat = " + menangani_gawat_darurat);
-        console.log(
-            "status_gawat_darurat_saat_ini = " + status_gawat_darurat_saat_ini
-        );
     }, 30000);
     status_gawat_darurat_saat_ini = menangani_gawat_darurat;
 }
