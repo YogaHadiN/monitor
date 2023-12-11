@@ -94,8 +94,6 @@ channel.bind(event_name, function (data) {
                         ruangan !== "" &&
                         ruangan !== null
                     ) {
-                        console.log("ruangan");
-                        console.log(ruangan);
                         panggilPasien(ruangan);
                     }
 
@@ -310,7 +308,6 @@ function blinking() {
     $(".text-red").toggleClass("yellow");
 }
 function updateNotifikasiDarurat(data) {
-    console.log(303);
     menangani_gawat_darurat = data.menangani_gawat_darurat;
     if (!menangani_gawat_darurat) {
         clearInterval(timer);
@@ -331,6 +328,7 @@ function updateNotifikasiDarurat(data) {
         }
     }
 }
+
 function startEmergencyNotification() {
     timer = setInterval(function () {
         var menunggu = document.getElementById("audio_menunggu");
@@ -341,6 +339,6 @@ function startEmergencyNotification() {
         ding.play();
         var pesan = "mainkan ";
         pesan += new Date().toLocaleString();
-    }, 30000);
+    }, 120000);
     status_gawat_darurat_saat_ini = menangani_gawat_darurat;
 }
