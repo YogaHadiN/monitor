@@ -339,6 +339,6 @@ function startEmergencyNotification() {
         ding.play();
         var pesan = "mainkan ";
         pesan += new Date().toLocaleString();
-    }, 120000);
+    }, 300000);
     status_gawat_darurat_saat_ini = menangani_gawat_darurat;
 }

@@ -2312,7 +2312,14 @@ class WablasController extends Controller
             echo $this->autoReplyComplainMessage();
         } else if ( $this->message == 5 ) {
 
-            $message = 'Halo kak.';
+            $message = 'Halo.';
+            $message .= PHP_EOL;
+            $message .= 'Kakak akan terhubung dengan tim cs kami.';
+            $message .= PHP_EOL;
+            $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
+            $message .= PHP_EOL;
+            $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
+            $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Ada yang bisa kami bantu?';
 
@@ -2320,11 +2327,12 @@ class WablasController extends Controller
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 12 // chat dengan admin
             ]);
-
             WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
             WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
 
+            Log::info('message : ' . $message);
             echo $message;
+
         } else if ( $this->message == 4 ) {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
