@@ -80,11 +80,13 @@ class WablasController extends Controller
 
 	public function __construct()
 	{
+        return null;
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
 		 /* !is_null(Input::get('message')) */
 		) {
+            Log::info(88);
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
 
