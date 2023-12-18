@@ -80,7 +80,7 @@ class WablasController extends Controller
 
 	public function __construct()
 	{
-        return null;
+        echo '12';
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -130,8 +130,6 @@ class WablasController extends Controller
     
 	
 	public function webhook(){
-        echo '1';
-
         header('Content-Type: application/json');
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
