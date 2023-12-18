@@ -12,12 +12,12 @@ class FonnteController extends Controller
         Log::info( env('FONNTE_TOKEN') );
         Log::info('fonnte');
         Log::info('yogggaaaa');
-        $this->webhook();
+        /* $this->webhook(); */
     }
     public function postWebhook(){
         Log::info('fonnte');
         Log::info(13);
-        $this->webhook();
+        /* $this->webhook(); */
     }
     public function getChaning(){
         Log::info('fonnte');
@@ -46,7 +46,7 @@ class FonnteController extends Controller
         header('Content-Type: application/json; charset=utf-8');
         $json = file_get_contents('php://input');
         Log::info("json");
-        Log::info($json);
+        Log::info($json); // disini nilainya empty
         $data = json_decode($json, true);
         $device = $data['device'];
         $sender = $data['sender'];
