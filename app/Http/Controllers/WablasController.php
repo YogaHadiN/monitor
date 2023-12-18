@@ -2320,6 +2320,8 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
             $message .= PHP_EOL;
+            $message .= 'Ketik *akhiri* untuk mengakhiri percakapan';
+            $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Ada yang bisa kami bantu?';
 
