@@ -80,7 +80,6 @@ class WablasController extends Controller
 
 	public function __construct()
 	{
-        echo '12';
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -4373,7 +4372,6 @@ class WablasController extends Controller
             'tenant_id' => 1,
             'untouched' => 1
         ]);
-        echo ' oye';
     }
     public function akhiriChatWithAdmin(){
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
