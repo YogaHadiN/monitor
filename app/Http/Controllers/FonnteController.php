@@ -9,6 +9,7 @@ class FonnteController extends Controller
 {
     public function getWebhook(){
         Log::info('fonnte');
+        Log::info('yogggaaaa');
         $this->webhook();
     }
     public function postWebhook(){
