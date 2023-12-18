@@ -129,7 +129,6 @@ class WablasController extends Controller
 	
 	public function webhook(){
         header('Content-Type: application/json');
-        Log::info( $this->message );
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
             return false;
@@ -191,6 +190,7 @@ class WablasController extends Controller
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->first();
+
         $this->tenant = Tenant::find(1);
 
         if (
@@ -326,10 +326,6 @@ class WablasController extends Controller
                 (int)$this->message <= $dataCount && 
                 (int)$this->message > 0  
             ) {
-                Log::info("================");
-                Log::info(295);
-                Log::info( $this->message );
-                Log::info("================");
                 $pasien = Pasien::find( $data[ (int) $this->message -1 ]->pasien_id );
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
                 $this->whatsapp_registration->antrian->pasien_id                          = $pasien->id;
@@ -4375,6 +4371,7 @@ class WablasController extends Controller
             'tenant_id' => 1,
             'untouched' => 1
         ]);
+        echo ' oye';
     }
     public function akhiriChatWithAdmin(){
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
