@@ -9,6 +9,7 @@ use Input;
 class FonnteController extends Controller
 {
     public function getWebhook(){
+        Log::info( env('FONNTE_TOKEN') );
         Log::info('fonnte');
         Log::info('yogggaaaa');
         $this->webhook();
@@ -46,7 +47,6 @@ class FonnteController extends Controller
         Log::info( Input::all() );
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
-        Log::info($data);
         $device = $data['device'];
         $sender = $data['sender'];
         $message = $data['message'];
