@@ -44,8 +44,9 @@ class FonnteController extends Controller
     private function webhook()
     {
         header('Content-Type: application/json; charset=utf-8');
-        Log::info( Input::all() );
         $json = file_get_contents('php://input');
+        Log::info("json");
+        Log::info($json);
         $data = json_decode($json, true);
         $device = $data['device'];
         $sender = $data['sender'];
