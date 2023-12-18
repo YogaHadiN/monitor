@@ -262,7 +262,7 @@ class WablasController extends Controller
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if( $this->noTelpDalamChatWithAdmin() ) {
                 Log::info(264);
-                return $this->createWhatsappChat(); // buat main menu
+                $this->createWhatsappChat(); // buat main menu
             } else if( $this->pasienTidakDalamAntrian() ) {
                 Log::info(267);
                 return $this->createWhatsappMainMenu(); // buat main menu
@@ -4367,7 +4367,6 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(12);
     }
     public function createWhatsappChat(){
-        Log::info(4370);
         Message::create([
             'no_telp'   => $this->no_telp,
             'message'   => $this->message,
