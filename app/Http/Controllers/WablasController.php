@@ -4367,6 +4367,7 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(12);
     }
     public function createWhatsappChat(){
+        Log::info(4370);
         Message::create([
             'no_telp'   => $this->no_telp,
             'message'   => $this->message,
