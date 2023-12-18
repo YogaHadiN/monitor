@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Log;
+use Input;
 
 class FonnteController extends Controller
 {
@@ -42,7 +43,7 @@ class FonnteController extends Controller
     private function webhook()
     {
         header('Content-Type: application/json; charset=utf-8');
-
+        Log::info( Input::all() );
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         Log::info($data);
