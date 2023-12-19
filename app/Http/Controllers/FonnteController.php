@@ -45,8 +45,6 @@ class FonnteController extends Controller
     {
         header('Content-Type: application/json; charset=utf-8');
         $json = file_get_contents('php://input');
-        Log::info("json");
-        Log::info($json); // disini nilainya empty
         $data = json_decode($json, true);
         $device = $data['device'];
         $sender = $data['sender'];
@@ -101,7 +99,7 @@ class FonnteController extends Controller
         ];
         }
 
-        $this->sendFonnte($sender, $reply);
+        $this->sendFonnte($sender, $data);
     }
 
     private function sendFonnte($target, $data) {
