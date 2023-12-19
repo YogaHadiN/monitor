@@ -12,12 +12,12 @@ class FonnteController extends Controller
         Log::info( env('FONNTE_TOKEN') );
         Log::info('fonnte');
         Log::info('yogggaaaa');
-        /* $this->webhook(); */
+        $this->webhook();
     }
     public function postWebhook(){
         Log::info('fonnte');
         Log::info(13);
-        /* $this->webhook(); */
+        $this->webhook();
     }
     public function getChaning(){
         Log::info('fonnte');
