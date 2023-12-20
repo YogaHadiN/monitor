@@ -93,16 +93,15 @@ class FonnteController extends Controller
                 "url" => "https://filesamples.com/samples/document/docx/sample3.docx",
                 "filename" => "document",
             ];
-        /* } else { */
-        /*     $reply = [ */
-        /*         "message" => "Sorry, i don't understand. Please use one of the following keyword : */
-                    
-        /* Test */
-        /* Audio */
-        /* Video */
-        /* Image */
-        /* File", */
-        /* ]; */
+        } else {
+            $reply = [
+                "message" => "Sorry, i don't understand. Please use one of the following keyword :
+                    Test
+                    Audio
+                    Video
+                    Image
+                    File",
+                ];
         }
         $this->sendFonnte($sender, $reply);
     }
