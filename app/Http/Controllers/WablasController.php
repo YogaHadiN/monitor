@@ -4369,12 +4369,13 @@ class WablasController extends Controller
     }
     public function createWhatsappChat(){
         Message::create([
-            'no_telp'   => $this->no_telp,
-            'message'   => $this->message,
-            'tanggal'   => date("Y-m-d H:i:s"),
-            'sending'   => 0,
-            'tenant_id' => 1,
-            'untouched' => 1
+            'no_telp'       => $this->no_telp,
+            'message'       => $this->message,
+            'tanggal'       => date("Y-m-d H:i:s"),
+            'sending'       => 0,
+            'sudah_dibalas' => 0,
+            'tenant_id'     => 1,
+            'touched'       => 0
         ]);
 		event(new RefreshDiscussion( $this->no_telp ));
     }
