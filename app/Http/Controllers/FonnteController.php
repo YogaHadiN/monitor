@@ -11,28 +11,34 @@ class FonnteController extends Controller
     public function getWebhook(){
         Log::info( env('FONNTE_TOKEN') );
         Log::info('fonnte');
+        Log::info('getWebhook');
         Log::info('yogggaaaa');
         $this->webhook();
     }
     public function postWebhook(){
         Log::info('fonnte');
+        Log::info('postWebhook');
         Log::info(13);
         $this->webhook();
     }
     public function getChaning(){
         Log::info('fonnte');
+        Log::info('getChaining');
         Log::info(17);
     }
     public function postChaning(){
         Log::info('fonnte');
+        Log::info('postChaning');
         Log::info(20);
     }
     public function getStatus(){
         Log::info('fonnte');
+        Log::info('getStatus');
         Log::info(23);
     }
     public function postStatus(){
         Log::info('fonnte');
+        Log::info('postStatus');
         Log::info(26);
     }
 
@@ -44,20 +50,20 @@ class FonnteController extends Controller
     private function webhook()
     {
         header('Content-Type: application/json; charset=utf-8');
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-        $device = $data['device'];
-        $sender = $data['sender'];
-        $message = $data['message'];
-        $text= $data['text']; //button text
-        $member= $data['member']; //group member who send the message
-        $name = $data['name'];
-        $location = $data['location'];
+        $json      = file_get_contents('php://input');
+        $data      = json_decode($json, true);
+        $device    = $data['device'];
+        $sender    = $data['sender'];
+        $message   = $data['message'];
+        $text      = $data['text']; //button text
+        $member    = $data['member']; //group member who send the message
+        $name      = $data['name'];
+        $location  = $data['location'];
         //data below will only received by device with all feature package
         //start
-        $url =  $data['url'];
-        $filename =  $data['filename'];
-        $extension=  $data['extension'];
+        $url       = $data['url'];
+        $filename  = $data['filename'];
+        $extension = $data['extension'];
         //end
 
 
@@ -98,13 +104,11 @@ class FonnteController extends Controller
         File",
         ];
         }
-
-        $this->sendFonnte($sender, $data);
+        /* $this->sendFonnte($sender, $data); */
     }
 
     private function sendFonnte($target, $data) {
         $curl = curl_init();
-
         curl_setopt_array($curl, array(
           CURLOPT_URL => "https://api.fonnte.com/send",
           CURLOPT_RETURNTRANSFER => true,
@@ -126,7 +130,6 @@ class FonnteController extends Controller
         ));
 
         $response = curl_exec($curl);
-
         curl_close($curl);
 
         return $response;
