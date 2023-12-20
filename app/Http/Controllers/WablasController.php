@@ -4377,7 +4377,6 @@ class WablasController extends Controller
             'untouched' => 1
         ]);
 		event(new RefreshDiscussion( $this->no_telp ));
-);
     }
     public function akhiriChatWithAdmin(){
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
