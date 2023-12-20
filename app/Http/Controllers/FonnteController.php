@@ -103,9 +103,9 @@ class FonnteController extends Controller
             /*         Image */
             /*         File", */
             /*     ]; */
-            $reply = [
-                "message" => $message
-            ];
+            /* $reply = [ */
+            /*     "message" => $message */
+            /* ]; */
         }
         $this->sendFonnte($sender, $reply);
     }
