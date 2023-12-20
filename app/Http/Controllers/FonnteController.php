@@ -94,14 +94,18 @@ class FonnteController extends Controller
                 "filename" => "document",
             ];
         } else {
+
+            /* $reply = [ */
+            /*     "message" => "Sorry, i don't understand. Please use one of the following keyword : */
+            /*         Test */
+            /*         Audio */
+            /*         Video */
+            /*         Image */
+            /*         File", */
+            /*     ]; */
             $reply = [
-                "message" => "Sorry, i don't understand. Please use one of the following keyword :
-                    Test
-                    Audio
-                    Video
-                    Image
-                    File",
-                ];
+                "message" => $message
+            ];
         }
         $this->sendFonnte($sender, $reply);
     }
