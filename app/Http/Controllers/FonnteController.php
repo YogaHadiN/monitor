@@ -93,16 +93,16 @@ class FonnteController extends Controller
                 "url" => "https://filesamples.com/samples/document/docx/sample3.docx",
                 "filename" => "document",
             ];
-        } else {
-            $reply = [
-                "message" => "Sorry, i don't understand. Please use one of the following keyword :
+        /* } else { */
+        /*     $reply = [ */
+        /*         "message" => "Sorry, i don't understand. Please use one of the following keyword : */
                     
-        Test
-        Audio
-        Video
-        Image
-        File",
-        ];
+        /* Test */
+        /* Audio */
+        /* Video */
+        /* Image */
+        /* File", */
+        /* ]; */
         }
         $this->sendFonnte($sender, $reply);
     }
@@ -119,10 +119,10 @@ class FonnteController extends Controller
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => "POST",
           CURLOPT_POSTFIELDS => array(
-                'target' => $target,
-                'message' => $data['message'],
-                'url' => $data['url'],
-                'filename' => $data['filename'],
+                'target'   => $target,
+                'message'  => isset( $data['message'] ) ? $data['message'] ; null,
+                'url'      => isset( $data['url'] ) ? $data['url'] ; null,
+                'filename' => isset( $data['filename'] ) ? $data['filename'] ; null,
             ),
           CURLOPT_HTTPHEADER => array(
             "Authorization: " . env('FONNTE_TOKEN')
@@ -134,5 +134,4 @@ class FonnteController extends Controller
 
         return $response;
     }
-    
 }
