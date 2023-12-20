@@ -8,6 +8,7 @@ use App\Models\WhatsappInbox;
 use App\Models\Complain;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
+use App\Events\RefreshDiscussion;
 use App\Events\GambarSubmitted;
 use App\Models\ReservasiOnline;
 use App\Models\Antrian;
@@ -4375,7 +4376,7 @@ class WablasController extends Controller
             'tenant_id' => 1,
             'untouched' => 1
         ]);
-		event(new refreshDiscussion( $this->no_telp ));
+		event(new RefreshDiscussion( $this->no_telp ));
 );
     }
     public function akhiriChatWithAdmin(){
