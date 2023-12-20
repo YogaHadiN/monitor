@@ -120,9 +120,9 @@ class FonnteController extends Controller
           CURLOPT_CUSTOMREQUEST => "POST",
           CURLOPT_POSTFIELDS => array(
                 'target'   => $target,
-                'message'  => isset( $data['message'] ) ? $data['message'] ; null,
-                'url'      => isset( $data['url'] ) ? $data['url'] ; null,
-                'filename' => isset( $data['filename'] ) ? $data['filename'] ; null,
+                'message'  => isset( $data['message'] ) ? $data['message'] : null,
+                'url'      => isset( $data['url'] ) ? $data['url'] : null,
+                'filename' => isset( $data['filename'] ) ? $data['filename'] : null,
             ),
           CURLOPT_HTTPHEADER => array(
             "Authorization: " . env('FONNTE_TOKEN')
