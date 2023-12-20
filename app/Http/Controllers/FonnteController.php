@@ -104,7 +104,7 @@ class FonnteController extends Controller
         File",
         ];
         }
-        /* $this->sendFonnte($sender, $data); */
+        $this->sendFonnte($sender, $reply);
     }
 
     private function sendFonnte($target, $data) {
