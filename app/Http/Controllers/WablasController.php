@@ -4375,7 +4375,7 @@ class WablasController extends Controller
             'tenant_id' => 1,
             'untouched' => 1
         ]);
-		event(new refreshDiscussion( $this->no_telp );
+		event(new refreshDiscussion( $this->no_telp ));
 );
     }
     public function akhiriChatWithAdmin(){
