@@ -2615,6 +2615,9 @@ class WablasController extends Controller
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
+        if (!is_null( $this->whatsapp_bot )) {
+            $this->whatsapp_bot->touch();
+        }
         return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id;
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
@@ -4372,7 +4375,8 @@ class WablasController extends Controller
             'tenant_id' => 1,
             'untouched' => 1
         ]);
-        refreshDiscussion( $this->no_telp );
+		event(new refreshDiscussion( $this->no_telp );
+);
     }
     public function akhiriChatWithAdmin(){
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
