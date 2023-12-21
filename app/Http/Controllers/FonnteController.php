@@ -67,6 +67,9 @@ class FonnteController extends Controller
         //end
 
 
+        $reply = [
+            'message' => null
+        ];
         if ( $message == "test" ) {
             $reply = [
                 "message" => "working great!",
@@ -94,7 +97,6 @@ class FonnteController extends Controller
                 "filename" => "document",
             ];
         } else {
-
             /* $reply = [ */
             /*     "message" => "Sorry, i don't understand. Please use one of the following keyword : */
             /*         Test */
