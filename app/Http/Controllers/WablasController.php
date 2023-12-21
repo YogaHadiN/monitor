@@ -130,7 +130,7 @@ class WablasController extends Controller
     
 	
 	public function webhook(){
-        header("Content-Type: text/plain");
+        header('Content-Type: application/json');
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
             return false;
