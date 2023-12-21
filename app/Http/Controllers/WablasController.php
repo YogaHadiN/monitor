@@ -114,7 +114,7 @@ class WablasController extends Controller
 		}
 	}
     public function webhook2(){
-        header("Content-Type: application/json");
+        header("Content-Type: text/plain");
 
         $payload[] = [
             'category' => 'image',
