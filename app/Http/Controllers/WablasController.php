@@ -1417,8 +1417,8 @@ class WablasController extends Controller
         $message .= '3. Cara pindah FASKES';
         $message .= PHP_EOL;
         $message .= '4. Keluhan atas pelayanan';
-        /* $message .= PHP_EOL; */
-        /* $message .= '5. Chat dengan Admin'; */
+        $message .= PHP_EOL;
+        $message .= '5. Chat dengan Admin';
         /* $message .= PHP_EOL; */
         /* $message .= '5. Saya ingin berbicara dengan admin'; */
         /* $message .= PHP_EOL; */
@@ -4378,6 +4378,7 @@ class WablasController extends Controller
             'touched'       => 0
         ]);
 		event(new RefreshDiscussion( $this->no_telp ));
+		event(new RefreshChat());
     }
     public function akhiriChatWithAdmin(){
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
