@@ -87,7 +87,6 @@ class WablasController extends Controller
             !Input::get('isFromMe') 
 		 /* !is_null(Input::get('message')) */
 		) {
-            Log::info(88);
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
 
@@ -204,73 +203,50 @@ class WablasController extends Controller
             !Input::get('isFromMe') 
         ) {
             if ( !is_null( $this->whatsapp_registration ) ) {
-                Log::info(201);
                 return $this->proceedRegistering(); //register untuk pendaftaran pasien
             } else if (!is_null( $this->whatsapp_complaint )){
-                Log::info(204);
                 return $this->registerWhatsappComplaint(); //register untuk pendataan complain pasien
             } else if (!is_null( $this->failed_therapy  )) {
-                Log::info(207);
                 return $this->registerFailedTherapy(); //register untuk pendataan kegagalan terapi
             } else if (!is_null( $this->whatsapp_satisfaction_survey  )) {
-                Log::info(210);
                 return $this->registerWhatsappSatisfactionSurvey(); //register untuk survey kepuasan pasien
             } else if (!is_null( $this->whatsapp_recovery_index  )) {
-                Log::info(213);
                 return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
-                Log::info(216);
                 return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
             } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
-                Log::info(219);
                 return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
             } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
-                Log::info(222);
                 return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
             } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
-                Log::info(225);
                 return $this->prosesCekListBulanan(); // proses cek list bulanan
             } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
-                Log::info(228);
                 return $this->prosesCekListBulananInput(); // proses cek list bulanan
             } else if ( $this->cekListMingguanExists() ) { // Jika ada cek list bulanan
-                Log::info(231);
                 return $this->prosesCekListMingguan(); // proses cek list bulanan
             } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan
-                Log::info(234);
                 return $this->prosesCekListMingguanInput(); // proses cek list bulanan
             } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
-                Log::info(237);
                 return $this->prosesCekListHarian(); // proses cek list harian
             } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
-                Log::info(240);
                 return $this->prosesCekListHarianInput(); // proses cek list harian
             } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
-                Log::info(243);
                 return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
             } else if ( $this->whatsappKonsultasiEstetikExists() ) {
-                Log::info(245);
                 return $this->prosesKonsultasiEstetik(); // buat main menu
             } else if ( $this->batalkanAntrianExists() ) {
-                Log::info(249);
                 return $this->batalkanAntrian(); // buat main menu
             } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
-                Log::info(252);
                 return $this->prosesBpjsNumberInquiry(); // buat main menu
             } else if ( $this->whatsappAntrianOnlineExists() ) {
-                Log::info(255);
                 return $this->prosesAntrianOnline(); // buat main menu
             } else if ( $this->whatsappGambarPeriksaExists() ) {
-                Log::info(258);
                 return $this->prosesGambarPeriksa(); // buat main menu
             } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
-                Log::info(261);
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if( $this->noTelpDalamChatWithAdmin() ) {
-                Log::info(264);
                 $this->createWhatsappChat(); // buat main menu
             } else if( $this->pasienTidakDalamAntrian() ) {
-                Log::info(267);
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
         }   
