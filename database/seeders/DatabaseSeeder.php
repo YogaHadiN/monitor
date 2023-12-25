@@ -4,6 +4,15 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\WhatsappComplaint;
+use App\Models\WhatsappRecoveryIndex;
+use App\Models\WhatsappMainMenu;
+use App\Models\WhatsappBot;
+use App\Models\WhatsappSatisfactionSurvey;
+use App\Models\FailedTherapy;
+use App\Models\KuesionerMenungguObat;
+use App\Models\WhatsappBpjsDentistRegistration;
+use App\Models\WhatsappJadwalKonsultasiInquiry;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,14 +24,14 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $no_telp = '6283845655991';
-        \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappRecoveryIndex::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappMainMenu::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappBot::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappSatisfactionSurvey::where('no_telp', $no_telp)->delete();
-        \App\Models\FailedTherapy::where('no_telp', $no_telp)->delete();
-        \App\Models\KuesionerMenungguObat::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
+        WhatsappComplaint::where('no_telp', $no_telp)->delete();
+        WhatsappRecoveryIndex::where('no_telp', $no_telp)->delete();
+        WhatsappMainMenu::where('no_telp', $no_telp)->delete();
+        WhatsappBot::where('no_telp', $no_telp)->delete();
+        WhatsappSatisfactionSurvey::where('no_telp', $no_telp)->delete();
+        FailedTherapy::where('no_telp', $no_telp)->delete();
+        KuesionerMenungguObat::where('no_telp', $no_telp)->delete();
+        WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
+        WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
     }
 }
