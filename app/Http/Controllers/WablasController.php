@@ -137,7 +137,10 @@ class WablasController extends Controller
         } else if ( $this->message == 'batalkan' ) {
             echo $this->akhiriSemuaWhatsappBot();
             return false;
-        } else if ( $this->message == 'akhiri' ) {
+        } else if (
+             $this->message == 'akhiri' ||
+             $this->message == 'akhir'
+        ) {
             echo $this->akhiriChatWithAdmin();
             return false;
         } else if ( $this->message == 'komplain' ) {
