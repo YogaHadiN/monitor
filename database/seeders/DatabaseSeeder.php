@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $no_telp = '6283845655991'
+        $no_telp = '6283845655991';
         \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappRecoveryIndex::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappMainMenu::where('no_telp', $no_telp)->delete();
