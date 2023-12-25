@@ -9,6 +9,7 @@ use App\Models\Complain;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
 use App\Events\RefreshDiscussion;
+use App\Events\RefreshChat;
 use App\Events\GambarSubmitted;
 use App\Models\ReservasiOnline;
 use App\Models\Antrian;
