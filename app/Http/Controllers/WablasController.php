@@ -1113,6 +1113,7 @@ class WablasController extends Controller
             $complain = Complain::create([
                 'tanggal'   => $tanggal_berobat,
                 'media'     => 'Whatsapp Bot',
+                'no_telp'   => $this->no_telp,
                 'tenant_id' => 1,
                 'complain'  => $this->message
             ]);
