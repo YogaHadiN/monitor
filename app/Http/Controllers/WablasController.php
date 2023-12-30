@@ -4362,14 +4362,12 @@ class WablasController extends Controller
 		event(new RefreshChat());
     }
     public function akhiriChatWithAdmin(){
-        WhatsappBot::where('no_telp', $this->no_telp )->delete();
-        return 'Fitur chat dihentikan. Silahkan ulangi apabila ada yang ingin disampaikan';
+        resetWhatsappRegistration( $this->no_telp );
+        return 'Fitur dihentikan. Silahkan ulangi apabila ada yang ingin disampaikan';
     }
     public function akhiriSemuaWhatsappBot(){
         resetWhatsappRegistration( $this->no_telp );
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
         echo 'Semua fitur dibatalkan. Silahkan ulangi jika diperlukan';
     }
-    
-    
 }
