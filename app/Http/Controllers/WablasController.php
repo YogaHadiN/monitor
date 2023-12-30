@@ -134,9 +134,6 @@ class WablasController extends Controller
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
             return false;
-        } else if ( $this->message == 'batalkan' ) {
-            echo $this->akhiriSemuaWhatsappBot();
-            return false;
         } else if (
              $this->message == 'akhiri' ||
              $this->message == 'akhir'
