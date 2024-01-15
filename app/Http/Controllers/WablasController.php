@@ -1393,7 +1393,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= '1. Jadwal Pelayanan';
         $message .= PHP_EOL;
-        $message .= '2. Reservasi Melalui Whatsapp';
+        $message .= '2. Daftar lewat Whatsapp';
         $message .= PHP_EOL;
         $message .= '3. Cara pindah FASKES';
         $message .= PHP_EOL;
