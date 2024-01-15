@@ -15,7 +15,7 @@ class WablasEstetikController extends Controller
     public $message;
     public function __construct()
     {
-        $this->message = $this->clean(Input::get('message'));
+        $this->message = clean(Input::get('message'));
     }
     
     public function webhook(){
