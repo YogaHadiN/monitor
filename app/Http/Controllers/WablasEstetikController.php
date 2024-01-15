@@ -8,6 +8,15 @@ use App\Models\WablasController;
 
 class WablasEstetikController extends Controller
 {
+    /**
+     * @param 
+     */
+    public $message;
+    public function __construct()
+    {
+        $this->message = $this->clean(Input::get('message'));
+    }
+    
     public function webhook(){
         if ( $this->message == 'estet' ) {
             $wb = new WablasController;
