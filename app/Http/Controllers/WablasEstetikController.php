@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Log;
 use Input;
-use App\Models\WablasController;
+use App\Http\Controllers\WablasController;
 
 class WablasEstetikController extends Controller
 {
