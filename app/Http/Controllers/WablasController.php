@@ -1354,7 +1354,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= $this->messageWhatsappMainMenu();
 
-
         WhatsappMainMenu::create([
             'no_telp' => $this->no_telp
         ]);
@@ -2315,22 +2314,7 @@ class WablasController extends Controller
             echo $message;
 
         } else if ( $this->message == 4 ) {
-            $whatsapp_bot = WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 5
-            ]);
-
-            KonsultasiEstetikOnline::create([
-                'no_telp'         => $this->no_telp,
-                'whatsapp_bot_id' => $whatsapp_bot->id
-            ]);
-
-            $message = 'Kakak akan melakukan registrasi untuk konsultasi estetis secara online';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Ketik *ya* untuk melanjutkan ';
-            $message .= $this->batalkan();
-            echo $message;
+            echo $this->konsultasiEstetikOnlineStart();
         } else {
             $message = $this->messageWhatsappMainMenu();
             $message .= $this->pesanMintaKlienBalasUlang();
@@ -4370,4 +4354,23 @@ class WablasController extends Controller
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
         echo 'Semua fitur dibatalkan. Silahkan ulangi jika diperlukan';
     }
+    public function konsultasiEstetikOnlineStart(){
+        $whatsapp_bot = WhatsappBot::create([
+            'no_telp' => $this->no_telp,
+            'whatsapp_bot_service_id' => 5
+        ]);
+
+        KonsultasiEstetikOnline::create([
+            'no_telp'         => $this->no_telp,
+            'whatsapp_bot_id' => $whatsapp_bot->id
+        ]);
+
+        $message = 'Kakak akan melakukan registrasi untuk konsultasi estetis secara online';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Ketik *ya* untuk melanjutkan ';
+        $message .= $this->batalkan();
+        return $message;
+    }
+    
 }
