@@ -22,7 +22,6 @@ class WablasEstetikController extends Controller
     }
     
     public function webhook(){
-
         if ( $this->wb->message == 'estet' ) {
             echo $this->wb->konsultasiEstetikOnlineStart();
         } elseif ( $this->wb->whatsappKonsultasiEstetikExists() ) {

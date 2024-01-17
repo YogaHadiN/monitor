@@ -3958,6 +3958,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '*0221b119*';
+        return $message;
     }
 
     public function registrasiInformasiNomorKartuBpjs(){
