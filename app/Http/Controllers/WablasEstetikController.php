@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Log;
 use Input;
 use App\Http\Controllers\WablasController;
+use App\Models\WhatsappBot;
 
 class WablasEstetikController extends Controller
 {
@@ -46,12 +47,10 @@ class WablasEstetikController extends Controller
             'no_telp' => $this->no_telp,
             'whatsapp_bot_service_id' => 5
         ]);
-
         KonsultasiEstetikOnline::create([
             'no_telp'         => $this->no_telp,
             'whatsapp_bot_id' => $whatsapp_bot->id
         ]);
-
         $message = 'Kakak akan melakukan registrasi untuk konsultasi estetis secara online';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
