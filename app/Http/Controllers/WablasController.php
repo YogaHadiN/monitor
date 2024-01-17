@@ -3958,6 +3958,11 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '*0221b119*';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Gunakan informasi tersebut untuk pindah peserta';
+        $message .= PHP_EOL;
+        $message .= 'ke Klinik Jati Elok';
         return $message;
     }
 
