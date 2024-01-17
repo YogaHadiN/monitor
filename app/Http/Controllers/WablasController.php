@@ -2584,7 +2584,9 @@ class WablasController extends Controller
         if (!is_null( $this->whatsapp_bot )) {
             $this->whatsapp_bot->touch();
         }
-        return !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id;
+        $result = !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id;
+        Log::info([!is_null( $this->whatsapp_bot ) , $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id]);
+        return $result;
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
