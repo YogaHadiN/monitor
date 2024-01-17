@@ -14,10 +14,12 @@ class WablasEstetikController extends Controller
      * @param 
      */
     public $message;
+    public $wb;
     public function __construct()
     {
         $this->message = clean(Input::get('message'));
         $this->no_telp = clean(Input::get('no_telp'));
+        $this->wb = new WablasController;
     }
     
     public function webhook(){
@@ -55,7 +57,7 @@ class WablasEstetikController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Ketik *ya* untuk melanjutkan ';
-        $message .= $this->batalkan();
+        $message .= $this->wb->batalkan();
         return $message;
     }
     public function prosesKonsultasiEstetik(){
