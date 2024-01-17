@@ -7,6 +7,7 @@ use Log;
 use Input;
 use App\Http\Controllers\WablasController;
 use App\Models\WhatsappBot;
+use App\Models\KonsultasiEstetikOnline;
 
 class WablasEstetikController extends Controller
 {
