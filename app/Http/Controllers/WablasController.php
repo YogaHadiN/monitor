@@ -4380,7 +4380,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Ketik *ya* untuk melanjutkan ';
-        $message .= $this->wb->batalkan();
+        $message .= $this->batalkan();
         return $message;
     }
 }
