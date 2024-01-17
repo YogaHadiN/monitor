@@ -26,8 +26,11 @@ class WablasEstetikController extends Controller
     }
     
     public function webhook(){
+
         if ( $this->message == 'estet' ) {
             echo $this->konsultasiEstetikOnlineStart();
+        } elseif ( $this->wb->whatsappKonsultasiEstetikExists() ) {
+            echo $this->wb->prosesKonsultasiEstetik();
         } else {
             $message = 'Terima kasih telah menghubungi Klinik Jati Elok';
             $message .= PHP_EOL;
