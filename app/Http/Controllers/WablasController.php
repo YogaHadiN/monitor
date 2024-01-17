@@ -89,6 +89,9 @@ class WablasController extends Controller
 		) {
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
+            $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                 ->first();
 
 			// gigi buka
 			if ( 
@@ -191,16 +194,6 @@ class WablasController extends Controller
         $this->whatsapp_bpjs_dentist_registrations = WhatsappBpjsDentistRegistration::where('no_telp', $this->no_telp)
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
-
-        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                 ->first();
-        dd(
-            [
-                $this->no_telp ,
-                $this->whatsapp_bot
-            ]
-        );
 
         $this->tenant = Tenant::find(1);
 

@@ -16,18 +16,14 @@ class WablasEstetikController extends Controller
      */
     public $message;
     public $wb;
-    public $whatsapp_bot;
     public function __construct()
     {
-        $this->message = clean(Input::get('message'));
-        $this->no_telp = Input::get('phone');
         $this->wb = new WablasController;
-        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)->first();
     }
     
     public function webhook(){
 
-        if ( $this->message == 'estet' ) {
+        if ( $this->wb->message == 'estet' ) {
             echo $this->wb->konsultasiEstetikOnlineStart();
         } elseif ( $this->wb->whatsappKonsultasiEstetikExists() ) {
             echo $this->wb->prosesKonsultasiEstetik();
