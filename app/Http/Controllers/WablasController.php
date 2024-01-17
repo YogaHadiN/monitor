@@ -4099,17 +4099,19 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(12);
     }
     public function createWhatsappChat(){
-        Message::create([
-            'no_telp'       => $this->no_telp,
-            'message'       => $this->message,
-            'tanggal'       => date("Y-m-d H:i:s"),
-            'sending'       => 0,
-            'sudah_dibalas' => 0,
-            'tenant_id'     => 1,
-            'touched'       => 0
-        ]);
-		event(new RefreshDiscussion( $this->no_telp ));
-		event(new RefreshChat());
+        if ( !is_null( $this->message ) ) {
+            Message::create([
+                'no_telp'       => $this->no_telp,
+                'message'       => $this->message,
+                'tanggal'       => date("Y-m-d H:i:s"),
+                'sending'       => 0,
+                'sudah_dibalas' => 0,
+                'tenant_id'     => 1,
+                'touched'       => 0
+            ]);
+            event(new RefreshDiscussion( $this->no_telp ));
+            event(new RefreshChat());
+        }
     }
     public function akhiriChatWithAdmin(){
         resetWhatsappRegistration( $this->no_telp );
@@ -4120,5 +4122,4 @@ class WablasController extends Controller
         WhatsappBot::where('no_telp', $this->no_telp )->delete();
         echo 'Semua fitur dibatalkan. Silahkan ulangi jika diperlukan';
     }
-    
 }
