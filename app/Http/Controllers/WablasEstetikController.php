@@ -7,6 +7,7 @@ use Log;
 use Input;
 use App\Http\Controllers\WablasController;
 use App\Models\WhatsappBot;
+use App\Models\PreventLooping;
 use App\Models\KonsultasiEstetikOnline;
 
 class WablasEstetikController extends Controller
@@ -26,7 +27,11 @@ class WablasEstetikController extends Controller
             echo $this->wb->konsultasiEstetikOnlineStart();
         } elseif ( $this->wb->whatsappKonsultasiEstetikExists() ) {
             echo $this->wb->prosesKonsultasiEstetik();
-        } else {
+        } else if(
+            PreventLooping::where('created_at', '>=', date('Y-m-d'))
+                ->where('no_telp', $this->wb->no_telp)
+                ->exists()
+        ) {
             $message = 'Terima kasih telah menghubungi Klinik Jati Elok';
             $message .= PHP_EOL;
             $message .= 'Saat ini nomor Wa Customer Service kami telah berubah';
@@ -42,6 +47,10 @@ class WablasEstetikController extends Controller
             $message .= 'Dengan senang hati kami akan membantu kakak melalui nomor tersebut';
             $message .= PHP_EOL;
             $message .= 'Hormat kami, Tim Pelayanan CS Klinik Jati Elok';
+
+            PreventLooping::create([
+                'no_telp' => $this->wb->no_telp
+            ]);
             echo $message;
         }
     }

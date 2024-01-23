@@ -2310,7 +2310,6 @@ class WablasController extends Controller
             WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
             WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
 
-            Log::info('message : ' . $message);
             echo $message;
 
         } else if ( $this->message == 4 ) {
