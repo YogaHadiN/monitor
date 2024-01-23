@@ -28,7 +28,7 @@ class WablasEstetikController extends Controller
         } elseif ( $this->wb->whatsappKonsultasiEstetikExists() ) {
             echo $this->wb->prosesKonsultasiEstetik();
         } else if(
-            PreventLooping::where('created_at', '>=', date('Y-m-d'))
+            !PreventLooping::where('created_at', '>=', date('Y-m-d'))
                 ->where('no_telp', $this->wb->no_telp)
                 ->exists()
         ) {
