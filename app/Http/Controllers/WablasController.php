@@ -4424,9 +4424,7 @@ class WablasController extends Controller
             ->where('created_at', '>=', $tanggal_berobat)
             ->get();
 
-        $message = 'Mohon maaf atas ketidaknyamanannya';
-        $message .= PHP_EOL;
-        $message .= 'Menurut catatan dalam sistem kami. Waktu pelayanan adalah sebagai berikut:';
+        $message = 'Menurut catatan dalam sistem kami. Waktu pelayanan adalah sebagai berikut:';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
 
