@@ -111,3 +111,10 @@ if (!function_exists('clean')) {
 		return strtolower( trim($param) );
     }
 }
+if (!function_exists('diffInMinutes')) {
+    function diffInMinutes($from_time, $to_time){
+        $to_time = strtotime($to_time);
+        $from_time = strtotime($from_time);
+        return floor(abs($to_time - $from_time) / 60.2);
+    }
+}
