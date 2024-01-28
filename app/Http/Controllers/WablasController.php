@@ -4454,8 +4454,8 @@ class WablasController extends Controller
             $jam_penyerahan_obat = !is_null( $periksa->jam_penyerahan_obat ) ? $periksa->jam_penyerahan_obat : Carbon::now()->format('Y-m-d H:i:s');
             $jam_pasien_selesai_diperiksa = Carbon::parse($periksa->jam_pasien_selesai_diperiksa)->format('H:i');
             Log::info($jam_pasien_selesai_diperiksa);
-            $message .= $jam_pasien_selesai_diperiksa. ' - ' . $jam_penyerahan_obat ;
-            $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , Carbon::parse($jam_penyerahan_obat)->format('H:i')  ) .' menit )';
+            $message .= $jam_pasien_selesai_diperiksa. ' - ' . Carbon::parse($jam_penyerahan_obat)->format('H:i') ;
+            $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $jam_penyerahan_obat  ) .' menit )';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
         }
