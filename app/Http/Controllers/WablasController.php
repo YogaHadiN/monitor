@@ -2328,7 +2328,7 @@ class WablasController extends Controller
 
         } else if ( $this->message == 4 ) {
             echo $this->konsultasiEstetikOnlineStart();
-        } else if( $this->whatsapp_bot->prevent_repetition == 0 ) {
+        } else if( isset( $this->whatsapp_bot ) && $this->whatsapp_bot->prevent_repetition == 0 ) {
             $this->whatsapp_bot->prevent_repetition = 1;
             $this->whatsapp_bot->save();
             $message = $this->messageWhatsappMainMenu();
