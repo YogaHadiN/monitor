@@ -4444,10 +4444,12 @@ class WablasController extends Controller
             $message .= $periksa->pasien->nama;
             $message .= PHP_EOL;
             $message .= 'Waktu Tunggu Dokter : ';
+            $message .= PHP_EOL;
             $message .= Carbon::parse( $periksa->jam_pasien_mulai_mengantri )->format('H:i'). ' - ' . Carbon::parse($periksa->jam_pasien_dipanggil_ke_ruang_periksa)->format('H:i') ;
             $message .= '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )';
             $message .= PHP_EOL;
             $message .= 'Waktu Tunggu Obat : ' . 
+            $message .= PHP_EOL;
             $jam_penyerahan_obat = !is_null( $periksa->jam_penyerahan_obat ) ? Carbon::parse($periksa->jam_penyerahan_obat)->format('H:i') : date("H:i");
             $message .= Carbon::parse($periksa->jam_pasien_selesai_diperiksa)->format('H:i'). ' - ' . $jam_penyerahan_obat ;
             $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $periksa->jam_penyerahan_obat  ) .' menit )';
