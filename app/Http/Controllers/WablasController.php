@@ -4432,7 +4432,7 @@ class WablasController extends Controller
         Log::info( $this->no_telp );
         $antrians = Antrian::with('antriable')
             ->where('no_telp', $this->no_telp)
-            ->where('created_at', $tanggal_berobat)
+            ->where('created_at', '>=', $tanggal_berobat)
             ->get();
         Log::info('count');
         Log::info( $antrians->count() );
