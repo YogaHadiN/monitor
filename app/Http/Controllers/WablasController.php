@@ -4438,12 +4438,12 @@ class WablasController extends Controller
             $message .= $periksa->pasien->nama;
             $message .= PHP_EOL;
             $message .= 'Waktu Tunggu Dokter : ';
-            $message .= $periksa->jam_pasien_mulai_mengantri. ' - ' . $periksa->jam_pasien_dipanggil_ke_ruang_periksa 
+            $message .= $periksa->jam_pasien_mulai_mengantri. ' - ' . $periksa->jam_pasien_dipanggil_ke_ruang_periksa ;
             $message .= '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )';
             $message .= PHP_EOL;
             $message .= 'Waktu Tunggu Obat : ' . 
 
-            $message .= $periksa->jam_pasien_selesai_diperiksa. ' - ' . $periksa->jam_penyerahan_obat 
+            $message .= $periksa->jam_pasien_selesai_diperiksa. ' - ' . $periksa->jam_penyerahan_obat ;
             $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $periksa->jam_penyerahan_obat  ) .' menit )';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
