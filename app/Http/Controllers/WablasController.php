@@ -4418,6 +4418,12 @@ class WablasController extends Controller
             str_contains( $this->message, ' lama');
     }
     public function tanyaValidasiWaktuPelayanan(){
+        $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
+        $antrians = Antrian::with('antriable')
+            ->where('no_telp', $this->no_telp)
+            ->where('created_at', '>=', $tanggal_berobat)
+            ->get();
+
         $message = 'Mohon maaf atas ketidaknyamanannya';
         $message .= PHP_EOL;
         $message .= 'Untuk memperbaiki layanan kami. Kami perlu mengetahui ketepatan pencatatan waktu kami';
@@ -4426,12 +4432,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
 
-        $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
-
-        $antrians = Antrian::with('antriable')
-            ->where('no_telp', $this->no_telp)
-            ->where('created_at', '>=', $tanggal_berobat)
-            ->get();
         foreach ($antrians as $k => $antrian) {
             if ( $antrian->antriable_type == 'App\Models\Periksa' ) {
                 $pasien_id = $antrian->antriable->pasien_id;
@@ -4448,16 +4448,19 @@ class WablasController extends Controller
             $message .= $periksa->pasien->nama;
             $message .= PHP_EOL;
             $message .= 'Waktu Tunggu Dokter : ';
-            $message .= $periksa->jam_pasien_mulai_mengantri. ' - ' . $periksa->jam_pasien_dipanggil_ke_ruang_periksa ;
+            $message .= Carbon::parse( $periksa->jam_pasien_mulai_mengantri )->format('H:i'). ' - ' . Carbon::parse($periksa->jam_pasien_dipanggil_ke_ruang_periksa)->format('H:i') ;
             $message .= '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )';
             $message .= PHP_EOL;
-            $message .= 'Waktu Tunggu Obat : ' . 
+            if (!is_null( $periksa->jam_penyerahan_obat )) {
+                $message .= 'Waktu Tunggu Obat : ' . 
 
-            $message .= $periksa->jam_pasien_selesai_diperiksa. ' - ' . $periksa->jam_penyerahan_obat ;
-            $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $periksa->jam_penyerahan_obat  ) .' menit )';
+                $message .= Carbon::parse($periksa->jam_pasien_selesai_diperiksa)->format('H:i'). ' - ' . Carbon::parse($periksa->jam_penyerahan_obat)->format('H:i') ;
+                $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $periksa->jam_penyerahan_obat  ) .' menit )';
+            }
             $message .= PHP_EOL;
             $message .= PHP_EOL;
         }
+
         $message .= 'Apakah informasi tersebut benar?';
         return $message;
     }
