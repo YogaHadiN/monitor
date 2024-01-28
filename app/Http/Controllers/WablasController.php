@@ -4452,7 +4452,7 @@ class WablasController extends Controller
                 Log::info('None');
             }
             Log::info( $antrian->antriable );
-            $periksa = Periksa::where('pasien_id', $antrian->antriable->pasien_id)
+            $periksa = Periksa::where('pasien_id', $pasien_id)
                                 ->where('tanggal', $tanggal_berobat)
                                 ->first();
             $message .= $k + 1 . '. ';
