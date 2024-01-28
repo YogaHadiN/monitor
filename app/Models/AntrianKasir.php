@@ -15,6 +15,9 @@ class AntrianKasir extends Model
     public function antars(){
         return $this->morphMany('App\Models\PengantarPasien', 'antarable');
     }
+    public function pasien(){
+        return $this->belongsTo(Pasien::class);
+    }
     public function getObatRacikanAttribute(){
         $racikan = false;
         foreach ($this->periksa->terapii as $terapi) {

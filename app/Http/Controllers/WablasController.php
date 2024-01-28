@@ -24,7 +24,6 @@ use App\Models\Poli;
 use Storage;
 use Endroid\QrCode\Encoding\Encoding;
 use App\Models\AntrianPeriksa;
-
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
@@ -243,6 +242,8 @@ class WablasController extends Controller
                 return $this->prosesGambarPeriksa(); // buat main menu
             } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
+            } else if( $this->validasiWaktuPelayanan() ) {
+                return $this->simpanBalasanValidasiWaktuPelayanan();
             } else if( $this->noTelpDalamChatWithAdmin() ) {
                 $this->createWhatsappChat(); // buat main menu
             } else if( $this->pasienTidakDalamAntrian() ) {
@@ -1121,31 +1122,44 @@ class WablasController extends Controller
                 $antrian->save();
             }
 
-            $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-            if (
-                is_null( $antrian ) ||
-                ( 
-                    !is_null( $antrian ) &&
-                    $antrian->satisfaction_index == 1 
-                )
-            ) {
-                $message .= PHP_EOL;
-                $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
-            }
-            $message .= PHP_EOL;
-            $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
-            echo $message;
-
-            /* https://wa.me/6181381912803?text=hallo%20nama%20saya%20Yoga%20Hadi%20Nugroho */
             $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
             $messageToBoss .=  PHP_EOL;
             $messageToBoss .=  PHP_EOL;
             $messageToBoss .=  $this->message;
 
             $this->sendSingle('6281381912803', $messageToBoss);
+
+            if (
+                $this->lama() &&
+                !is_null( $antrian )
+            ) {
+                WhatsappBot::create([
+                    'no_telp' => $this->no_telp,
+                    'whatsapp_bot_service_id' => 14,
+                ]);
+                echo $this->tanyaValidasiWaktuPelayanan();
+            } else {
+                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
+                if (
+                    is_null( $antrian ) ||
+                    ( 
+                        !is_null( $antrian ) &&
+                        $antrian->satisfaction_index == 1 
+                    )
+                ) {
+                    $message .= PHP_EOL;
+                    $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
+                }
+                $message .= PHP_EOL;
+                $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
+                echo $message;
+            }
+
+
+            /* https://wa.me/6181381912803?text=hallo%20nama%20saya%20Yoga%20Hadi%20Nugroho */
 
         } else {
             Log::info("=====================================");
@@ -3249,7 +3263,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nama ) &&
             is_null( $reservasi_online->tanggal_lahir ) 
         ) {
-            Log::info(3017);
             $message = $this->tanyaTanggalLahirPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3578,6 +3591,14 @@ class WablasController extends Controller
         return $text;
     }
 
+    public function validasiWaktuPelayanan(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(14);
+    }
+    public function simpanBalasanValidasiWaktuPelayanan(){
+        $complain = Complain::find( $this->whatsapp_bot->complain_id );
+        $complain->complain = $complain->complain . '<br><br>' . $this->message;
+        $complain->save();
+    }
     public function whatsappGambarPeriksaExists(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(7);
     }
@@ -4390,4 +4411,42 @@ class WablasController extends Controller
         $message .= $this->batalkan();
         return $message;
     }
+
+    public function lama(){
+        return 
+            str_contains( $this->message, 'lama ') ||
+            str_contains( $this->message, ' lama');
+    }
+    public function tanyaValidasiWaktuPelayanan(){
+        $message = 'Mohon maaf atas ketidaknyamanannya';
+        $message .= PHP_EOL;
+        $message .= 'Untuk memperbaiki layanan kami. Kami perlu mengetahui ketepatan pencatatan waktu kami';
+        $message .= PHP_EOL;
+        $message .= 'Mohon bantuannya untuk memvalidasi ';
+
+        $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
+
+        $antrians = Antrian::with('antriable')
+                        where('no_telp', $this->no_telp)->
+                        where('created_at', $tanggal_berobat)->get();
+        foreach ($antrians as $k => $antrian) {
+            $periksa = Periksa::where('pasien_id', $antrian->antriable->pasien_id)
+                                ->where('tanggal', $tanggal_berobat)
+                                ->first();
+            $message .= $k + 1 . '. ';
+            $message .= $periksa->pasien->nama;
+            $message .= PHP_EOL;
+            $message .= 'Waktu Tunggu Dokter : ';
+            $message .= $periksa->jam_pasien_mulai_mengantri. ' - ' . $periksa->jam_pasien_dipanggil_ke_ruang_periksa 
+            $message .= '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )';
+            $message .= PHP_EOL;
+            $message .= 'Waktu Tunggu Obat : ' . 
+
+            $message .= $periksa->jam_pasien_selesai_diperiksa. ' - ' . $periksa->jam_penyerahan_obat 
+            $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $periksa->jam_penyerahan_obat  ) .' menit )';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+        }
+        $message .= 'Apakah informasi tersebut benar?';
+        return $message;
 }
