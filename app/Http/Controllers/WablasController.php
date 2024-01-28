@@ -4450,4 +4450,5 @@ class WablasController extends Controller
         }
         $message .= 'Apakah informasi tersebut benar?';
         return $message;
+    }
 }
