@@ -4423,35 +4423,24 @@ class WablasController extends Controller
         $message .= 'Untuk memperbaiki layanan kami. Kami perlu mengetahui ketepatan pencatatan waktu kami';
         $message .= PHP_EOL;
         $message .= 'Mohon bantuannya untuk memvalidasi ';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
 
         $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
 
-        Log::info('tanggal_berobat');
-        Log::info($tanggal_berobat);
-        Log::info('no_telp');
-        Log::info( $this->no_telp );
         $antrians = Antrian::with('antriable')
             ->where('no_telp', $this->no_telp)
             ->where('created_at', '>=', $tanggal_berobat)
             ->get();
-        Log::info('count');
-        Log::info( $antrians->count() );
         foreach ($antrians as $k => $antrian) {
             if ( $antrian->antriable_type == 'App\Models\Periksa' ) {
                 $pasien_id = $antrian->antriable->pasien_id;
-                Log::info('pasien_id_periksa');
-                Log::info($pasien_id);
             } else if (
                  $antrian->antriable_type == 'App\Models\AntrianApotek' ||
                  $antrian->antriable_type == 'App\Models\AntrianKasir'
             ) {
                 $pasien_id = $antrian->antriable->periksa->pasien_id;
-                Log::info('pasien_id');
-                Log::info($pasien_id);
-            } else {
-                Log::info('None');
             }
-            Log::info( $antrian->antriable );
             $periksa = Periksa::where('pasien_id', $pasien_id)
                                 ->where('tanggal', $tanggal_berobat)
                                 ->first();
