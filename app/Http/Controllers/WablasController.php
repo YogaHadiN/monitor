@@ -4426,10 +4426,16 @@ class WablasController extends Controller
 
         $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
 
+        Log::info('tanggal_berobat');
+        Log::info($tanggal_berobat);
+        Log::info('no_telp');
+        Log::info( $this->no_telp );
         $antrians = Antrian::with('antriable')
             ->where('no_telp', $this->no_telp)
             ->where('created_at', $tanggal_berobat)
             ->get();
+        Log::info('count');
+        Log::info( $antrians->count() );
         foreach ($antrians as $k => $antrian) {
             $periksa = Periksa::where('pasien_id', $antrian->antriable->pasien_id)
                                 ->where('tanggal', $tanggal_berobat)
