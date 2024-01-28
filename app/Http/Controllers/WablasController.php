@@ -4426,9 +4426,7 @@ class WablasController extends Controller
 
         $message = 'Mohon maaf atas ketidaknyamanannya';
         $message .= PHP_EOL;
-        $message .= 'Untuk memperbaiki layanan kami. Kami perlu mengetahui ketepatan pencatatan waktu kami';
-        $message .= PHP_EOL;
-        $message .= 'Mohon bantuannya untuk memvalidasi ';
+        $message .= 'Menurut catatan dalam sistem kami. Waktu pelayanan adalah sebagai berikut:';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
 
