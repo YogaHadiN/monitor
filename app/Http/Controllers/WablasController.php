@@ -4437,6 +4437,17 @@ class WablasController extends Controller
         Log::info('count');
         Log::info( $antrians->count() );
         foreach ($antrians as $k => $antrian) {
+            if ( $antrian->antriable_type == 'App\Models\Periksa' ) {
+                Log::info('Periksa');
+            } else if (
+                 $antrian->antriable_type == 'App\Models\AntrianApotek' ||
+                 $antrian->antriable_type == 'App\Models\AntrianKasir'
+            ) {
+                Log::info('Antrian');
+            } else {
+                Log::info('None');
+            }
+            Log::info( $antrian->antriable );
             $periksa = Periksa::where('pasien_id', $antrian->antriable->pasien_id)
                                 ->where('tanggal', $tanggal_berobat)
                                 ->first();
