@@ -3872,11 +3872,7 @@ class WablasController extends Controller
     private function tanyaSyaratdanKetentuan($jenis_antrian_id)
     {
         if ( $jenis_antrian_id == 1 ) {
-			$message = '*KLINIK JATI ELOK*' ;
-			$message .= PHP_EOL;
-			$message .= $this->samaDengan();
-			$message .= PHP_EOL;
-            $message .= 'Kakak akan melakukan registrasi Poli Umum secara online';
+            $message = 'Kakak akan melakukan registrasi Poli Umum secara online';
             $message .= PHP_EOL;
             $message .= 'Reservasi ini akan ';
             $message .= PHP_EOL;
@@ -3892,18 +3888,13 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Karena akan ada pemeriksaan fisik oleh perawat sebelum diperiksa oleh dokter';
             $message .= PHP_EOL;
-            $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
             return $message;
         } else if (
             $jenis_antrian_id == 2
         ) {
-			$message = '*KLINIK JATI ELOK*' ;
-			$message .= PHP_EOL;
-			$message .= $this->samaDengan();
-			$message .= PHP_EOL;
-            $message .= 'Kakak akan melakukan registrasi Poli Gigi secara online';
+            $message = 'Kakak akan melakukan registrasi Poli Gigi secara online';
             $message .= PHP_EOL;
             $message .= 'Reservasi ini akan ';
             $message .= PHP_EOL;
@@ -3919,7 +3910,6 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= "Jika antrian dibatalkan, silahkan mengulangi registrasi online atau mengambil antrian secara langsung di klinik";
             $message .= PHP_EOL;
-            $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
             return $message;
