@@ -2814,7 +2814,7 @@ class WablasController extends Controller
                     $jam_akhir_offline  = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
                     $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
-                    $message .= ". Silahkan ambil antrian secara langsung sampai jam {$jam_akhir_offline}";
+                    $message .= ". Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}";
                     $message .= ". Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
