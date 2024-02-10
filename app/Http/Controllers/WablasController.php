@@ -2735,6 +2735,7 @@ class WablasController extends Controller
         $message           = '';
         $input_tidak_tepat = false;
         $jadwalGigi = $this->jamBukaDokterGigiHariIni();
+        $this->jadwalGigi = $jadwalGigi;
 
         if ($jadwalGigi && !is_null( $jadwalGigi )) {
             Log::info($jadwalGigi);
