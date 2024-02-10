@@ -3985,7 +3985,7 @@ class WablasController extends Controller
             'whatsapp_bot_id' => $whatsapp_bot->id
         ]);
 
-        return $this->tanyaSyaratdanKetentuan();
+        return $this->pertanyaanPoliYangDituju();
     }
     public function nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien){
         $code     = $response['code'];
