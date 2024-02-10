@@ -2736,6 +2736,7 @@ class WablasController extends Controller
         $jadwalGigi = $this->jamBukaDokterGigiHariIni();
 
         if ($jadwalGigi && !is_null( $jadwalGigi )) {
+            Log::info($jadwalGigi);
             Log::info('Mulai Gigi : ' . $jadwalGigi['jam_mulai']);
             Log::info('Akhir Gigi : ' . $jadwalGigi['jam_akhir']);
             Log::info(strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
