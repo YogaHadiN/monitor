@@ -2738,7 +2738,7 @@ class WablasController extends Controller
         if ($jadwalGigi && !is_null( $jadwalGigi )) {
             Log::info('Mulai Gigi : ' . $jadwalGigi['jam_mulai']);
             Log::info('Akhir Gigi : ' . $jadwalGigi['jam_akhir']);
-            Log::info(strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']) ));
+            Log::info(strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
         }
 
         if( is_null( $reservasi_online ) ){
@@ -2792,7 +2792,7 @@ class WablasController extends Controller
                      strtotime('now') < strtotime($jadwalGigi['jam_mulai'])
                 ) {
                     $jam_mulai = $jadwalGigi['jam_mulai'];
-                    $jam_akhir_daftar_online = strtotime('-3 hours', $jadwalGigi['jam_akhir']);
+                    $jam_akhir_daftar_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
                     $message = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai}";
                     $message .= "sampai pukul {$jam_akhir_daftar_online}.";
@@ -2806,10 +2806,10 @@ class WablasController extends Controller
                 // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (
                      $this->message == '2' && //antrian poli gigi
-                     strtotime('now') > strtotime('-3 hours', $jadwalGigi['jam_akhir'])
+                     strtotime('now') > strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']))
                 ) {
-                    $jam_akhir_online = date('H:i', strtotime('-3 hours', $jadwalGigi['jam_akhir']));
-                    $jam_akhir_offline  = date('H:i', strtotime('-1 hours', $jadwalGigi['jam_akhir']));
+                    $jam_akhir_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
+                    $jam_akhir_offline  = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
                     $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
                     $message .= "Silahkan ambil antrian secara langsung sampai jam {$jam_akhir_offline}.";
@@ -2824,7 +2824,7 @@ class WablasController extends Controller
                 // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (
                      $this->message == '2' && //antrian poli gigi
-                     strtotime('now') > strtotime('-1 hours', $jadwalGigi['jam_akhir'])
+                     strtotime('now') > strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir']))
                 ) {
                     $message = "Pengambilan antrian Poli Gigi hari ini telah berakhir";
                     $message .= PHP_EOL;
