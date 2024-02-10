@@ -78,6 +78,7 @@ class WablasController extends Controller
 	public $message;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
+    public $jadwalGigi;
 
 	public function __construct()
 	{
@@ -2753,20 +2754,6 @@ class WablasController extends Controller
             return false;
         } else if (
             !is_null( $reservasi_online ) &&
-            !$reservasi_online->konfirmasi_sdk
-        ) {
-            if ( 
-                $this->message == 'ya' || 
-                $this->message == 'iya' || 
-                $this->message == 'iy' || 
-                $this->message == 'y'
-            ) {
-                $reservasi_online->konfirmasi_sdk = 1;
-                $reservasi_online->save();
-            }
-        } else if (
-            !is_null( $reservasi_online ) &&
-            $reservasi_online->konfirmasi_sdk &&
             is_null( $reservasi_online->jenis_antrian_id )
         ) {
             if ( 
@@ -2848,9 +2835,24 @@ class WablasController extends Controller
                     $reservasi_online->jenis_antrian_id = $this->message;
                     $reservasi_online->save();
                 } else {
+
                 }
             } else {
                 $input_tidak_tepat = true;
+            }
+        } else if (
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->jenis_antrian_id )
+            $reservasi_online->konfirmasi_sdk
+        ) {
+            if ( 
+                $this->message == 'ya' || 
+                $this->message == 'iya' || 
+                $this->message == 'iy' || 
+                $this->message == 'y'
+            ) {
+                $reservasi_online->konfirmasi_sdk = 1;
+                $reservasi_online->save();
             }
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3223,15 +3225,15 @@ class WablasController extends Controller
 
         if (
             !is_null( $reservasi_online ) &&
-            !$reservasi_online->konfirmasi_sdk
-        ) {
-            $message = $this->tanyaSyaratdanKetentuan();
-        } else if (
-            !is_null( $reservasi_online ) &&
-            $reservasi_online->konfirmasi_sdk &&
             is_null( $reservasi_online->jenis_antrian_id )
         ) {
             $message = $this->pertanyaanPoliYangDituju();
+        } else if (
+            !is_null( $reservasi_online ) &&
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !$reservasi_online->konfirmasi_sdk
+        ) {
+            $message = $this->tanyaSyaratdanKetentuan($reservasi_online->jenis_antrian_id);
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -3864,13 +3866,14 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tanyaSyaratdanKetentuan()
+    private function tanyaSyaratdanKetentuan($jenis_antrian_id)
     {
+        if ( $jenis_antrian_id == 1 ) {
 			$message = '*KLINIK JATI ELOK*' ;
 			$message .= PHP_EOL;
 			$message .= $this->samaDengan();
 			$message .= PHP_EOL;
-            $message .= 'Kakak akan melakukan registrasi secara online';
+            $message .= 'Kakak akan melakukan registrasi Poli Umum secara online';
             $message .= PHP_EOL;
             $message .= 'Reservasi ini akan ';
             $message .= PHP_EOL;
@@ -3891,6 +3894,35 @@ class WablasController extends Controller
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
             $message .= $this->batalkan();
             return $message;
+        } else if (
+            $jenis_antrian_id == 2
+        ) {
+			$message = '*KLINIK JATI ELOK*' ;
+			$message .= PHP_EOL;
+			$message .= $this->samaDengan();
+			$message .= PHP_EOL;
+            $message .= 'Kakak akan melakukan registrasi Poli Gigi secara online';
+            $message .= PHP_EOL;
+            $message .= 'Reservasi ini akan ';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= '*BATAL secara otomatis apabila*';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= '1. Antrian telah terlewat';
+            $message .= PHP_EOL;
+            $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
+            $message .= "2. Tiba di klinik lebih dari jam {$jam_tiba_paling_lambat}";
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Jika antrian dibatalkan, silahkan mengulangi registrasi online atau mengambil antrian secara langsung di klinik";
+            $message .= PHP_EOL;
+            $message .= $this->samaDengan();
+            $message .= PHP_EOL;
+            $message .= 'Jika setuju balas *ya* untuk melanjutkan';
+            $message .= $this->batalkan();
+            return $message;
+        }
     }
     public function konfirmasiPembatalan(){
         $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
