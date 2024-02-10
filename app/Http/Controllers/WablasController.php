@@ -3478,7 +3478,7 @@ class WablasController extends Controller
             return false;
         } else {
             $jam_mulai = $jadwal->jam_mulai->format("H:i");
-            $jam_akhir = $jadwal->jam_akhir->subHour()->format("H:i");
+            $jam_akhir = $jadwal->jam_akhir->format("H:i");
             return  compact('jam_mulai', 'jam_akhir');
         }
     }
