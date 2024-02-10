@@ -2738,6 +2738,7 @@ class WablasController extends Controller
         if ($jadwalGigi && !is_null( $jadwalGigi )) {
             Log::info('Mulai Gigi : ' . $jadwalGigi['jam_mulai']);
             Log::info('Akhir Gigi : ' . $jadwalGigi['jam_akhir']);
+            Log::info(strtotime('-3 hours', $jadwalGigi['jam_akhir']));
         }
 
         if( is_null( $reservasi_online ) ){
@@ -3321,7 +3322,6 @@ class WablasController extends Controller
         }
 
         if (!empty(trim($message))) {
-            Log::info(2941);
             $message .= PHP_EOL;
             $message .= $this->samaDengan();
             $message .= $this->batalkan();
@@ -3330,7 +3330,6 @@ class WablasController extends Controller
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
-            Log::info(2950);
             echo $message;
         } else {
         }
