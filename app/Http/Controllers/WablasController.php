@@ -2735,8 +2735,10 @@ class WablasController extends Controller
         $input_tidak_tepat = false;
         $jadwalGigi = $this->jamBukaDokterGigiHariIni();
 
-        Log::info('Mulai Gigi : ' . $jadwalGigi['jam_mulai']);
-        Log::info('Akhir Gigi : ' . $jadwalGigi['jam_akhir']);
+        if (!is_null( $jadwalGigi )) {
+            Log::info('Mulai Gigi : ' . $jadwalGigi['jam_mulai']);
+            Log::info('Akhir Gigi : ' . $jadwalGigi['jam_akhir']);
+        }
 
         if( is_null( $reservasi_online ) ){
             $this->whatsapp_bot->delete();
