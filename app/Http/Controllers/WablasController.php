@@ -3893,7 +3893,6 @@ class WablasController extends Controller
             $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
-            $message .= $this->batalkan();
             return $message;
         } else if (
             $jenis_antrian_id == 2
@@ -3921,7 +3920,6 @@ class WablasController extends Controller
             $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
-            $message .= $this->batalkan();
             return $message;
         }
     }
