@@ -3854,6 +3854,8 @@ class WablasController extends Controller
     public function batalkan(){
         $message = PHP_EOL;
         $message .= 'Ketik *batalkan* untuk membatalkan';
+        $message .= PHP_EOL;
+        $message .= 'Ketik *chat admin* untuk mandapatkan bantuan dari admin';
         return $message;
     }
     private function waktuTunggu($sisa_antrian)
