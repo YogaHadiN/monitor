@@ -2738,7 +2738,7 @@ class WablasController extends Controller
         if ($jadwalGigi && !is_null( $jadwalGigi )) {
             Log::info('Mulai Gigi : ' . $jadwalGigi['jam_mulai']);
             Log::info('Akhir Gigi : ' . $jadwalGigi['jam_akhir']);
-            Log::info(strtotime('-3 hours', $jadwalGigi['jam_akhir']));
+            Log::info(strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']) ));
         }
 
         if( is_null( $reservasi_online ) ){
