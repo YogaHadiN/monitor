@@ -3329,8 +3329,6 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= $this->samaDengan();
             $message .= $this->batalkan();
-            $message .= " reservasi";
-            $message .= PHP_EOL;
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
