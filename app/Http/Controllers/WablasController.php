@@ -3886,8 +3886,6 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum antrian anda dipanggil';
             $message .= PHP_EOL;
-            $message .= 'Karena akan ada pemeriksaan fisik oleh perawat sebelum diperiksa oleh dokter';
-            $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
             return $message;
@@ -3906,9 +3904,6 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
             $message .= "2. Tiba di klinik lebih dari jam {$jam_tiba_paling_lambat}";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "Jika antrian dibatalkan, silahkan mengulangi registrasi online atau mengambil antrian secara langsung di klinik";
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
