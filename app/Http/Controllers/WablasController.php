@@ -2792,9 +2792,9 @@ class WablasController extends Controller
                     $jam_akhir_daftar_online = strtotime('-3 hours', $jadwalGigi['jam_akhir']);
 
                     $message = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai}";
-                    $message = "sampai pukul {$jam_akhir_daftar_online}.";
+                    $message .= "sampai pukul {$jam_akhir_daftar_online}.";
                     $message .= PHP_EOL;
-                    $message = "Mohon maaf atas ketidaknyamanannya.";
+                    $message .= "Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -2805,14 +2805,27 @@ class WablasController extends Controller
                      $this->message == '2' && //antrian poli gigi
                      strtotime('now') > strtotime('-3 hours', $jadwalGigi['jam_akhir'])
                 ) {
-                    $jam_akhir = date('H:i', strtotime('-3 hours', $jadwalGigi['jam_akhir']));
-                    $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir}";
-
+                    $jam_akhir_online = date('H:i', strtotime('-3 hours', $jadwalGigi['jam_akhir']));
                     $jam_akhir_offline  = date('H:i', strtotime('-1 hours', $jadwalGigi['jam_akhir']))
 
-                    $message = "Silahkan ambil antrian secara langsung sampai jam {$jam_akhir_offline}.";
+                    $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
+                    $message .= "Silahkan ambil antrian secara langsung sampai jam {$jam_akhir_offline}.";
                     $message .= PHP_EOL;
-                    $message = ". Mohon maaf atas ketidaknyamanannya.";
+                    $message .= ". Mohon maaf atas ketidaknyamanannya.";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+
+                // jika tidak ada antrian di dalam poli batalkan reservasi
+                } else if (
+                     $this->message == '2' && //antrian poli gigi
+                     strtotime('now') > strtotime('-1 hours', $jadwalGigi['jam_akhir'])
+                ) {
+                    $message = "Pengambilan antrian Poli Gigi hari ini telah berakhir";
+                    $message .= PHP_EOL;
+                    $message .= ". Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
