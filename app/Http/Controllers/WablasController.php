@@ -2809,11 +2809,11 @@ class WablasController extends Controller
                      strtotime('now') > strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']))
                 ) {
                     $jam_akhir_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
+                    Log::info($jadwalGigi['jam_akhir']);
                     $jam_akhir_offline  = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
                     $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
-                    $message .= "Silahkan ambil antrian secara langsung sampai jam {$jam_akhir_offline}.";
-                    $message .= PHP_EOL;
+                    $message .= ". Silahkan ambil antrian secara langsung sampai jam {$jam_akhir_offline}";
                     $message .= ". Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
