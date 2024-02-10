@@ -2842,7 +2842,7 @@ class WablasController extends Controller
             }
         } else if (
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->jenis_antrian_id )
+            !is_null( $reservasi_online->jenis_antrian_id ) &&
             $reservasi_online->konfirmasi_sdk
         ) {
             if ( 
