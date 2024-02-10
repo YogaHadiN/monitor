@@ -2844,7 +2844,7 @@ class WablasController extends Controller
         } else if (
             !is_null( $reservasi_online ) &&
             !is_null( $reservasi_online->jenis_antrian_id ) &&
-            $reservasi_online->konfirmasi_sdk
+            !$reservasi_online->konfirmasi_sdk
         ) {
             Log::info(2849);
             if ( 
