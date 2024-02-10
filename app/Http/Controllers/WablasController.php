@@ -1420,7 +1420,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         /* $message .= 'Balas dengan *1* sesuai dengan informasi di atas'; */
         /* $message .= 'Balas dengan *1 atau 2* sesuai dengan informasi di atas'; */
-        $message .= 'Balas dengan *1, 2, 3, atau 4* sesuai dengan informasi di atas';
+        $message .= 'Balas dengan *1, 2, 3, 4, atau 5* sesuai dengan informasi di atas';
         return $message;
     }
     /**
@@ -2124,6 +2124,10 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
         } else if (
+             str_contains($this->message, 'chat admin')
+        ) {
+            $message = $this->chatAdmin();
+        } else if (
              str_contains($this->message, 'batalkan') ||
              str_contains($this->message, 'btlkan') ||
              str_contains($this->message, 'batalkn') ||
@@ -2303,30 +2307,8 @@ class WablasController extends Controller
         } else if ( $this->message == 4 ) {
             echo $this->autoReplyComplainMessage();
         } else if ( $this->message == 5 ) {
-
-            $message = 'Halo.';
-            $message .= PHP_EOL;
-            $message .= 'Kakak akan terhubung dengan tim cs kami.';
-            $message .= PHP_EOL;
-            $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
-            $message .= PHP_EOL;
-            $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
-            $message .= PHP_EOL;
-            $message .= 'Ketik *akhiri* untuk mengakhiri percakapan';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Ada yang bisa kami bantu?';
-
-            WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 12 // chat dengan admin
-            ]);
-            WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
-            WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
-
-            echo $message;
-
-        } else if ( $this->message == 4 ) {
+            $this->chatAdmin();
+        } else if ( $this->message == 6 ) {
             echo $this->konsultasiEstetikOnlineStart();
         } else if( isset( $this->whatsapp_bot ) && $this->whatsapp_bot->prevent_repetition == 0 ) {
             $this->whatsapp_bot->prevent_repetition = 1;
@@ -2751,6 +2733,10 @@ class WablasController extends Controller
 
         $message           = '';
         $input_tidak_tepat = false;
+        $jadwalGigi = $this->jamBukaDokterGigiHariIni();
+
+        Log::info('Mulai Gigi : ' . $jadwalGigi['jam_mulai']);
+        Log::info('Akhir Gigi : ' . $jadwalGigi['jam_akhir']);
 
         if( is_null( $reservasi_online ) ){
             $this->whatsapp_bot->delete();
@@ -2803,7 +2789,12 @@ class WablasController extends Controller
                      strtotime('now') < strtotime($jadwalGigi['jam_mulai'])
                 ) {
                     $jam_mulai = $jadwalGigi['jam_mulai'];
-                    $message = "Pengambilan Antrian Poli Gigi hari ini dimulai jam {$jam_mulai}. Mohon maaf atas ketidaknyamanannya.";
+                    $jam_akhir_daftar_online = strtotime('-3 hours', $jadwalGigi['jam_akhir']);
+
+                    $message = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai}";
+                    $message = "sampai pukul {$jam_akhir_daftar_online}.";
+                    $message .= PHP_EOL;
+                    $message = "Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -2812,15 +2803,22 @@ class WablasController extends Controller
                 // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (
                      $this->message == '2' && //antrian poli gigi
-                     strtotime('now') > strtotime($jadwalGigi['jam_akhir'])
+                     strtotime('now') > strtotime('-3 hours', $jadwalGigi['jam_akhir'])
                 ) {
-                    $jam_akhir = $jadwalGigi['jam_akhir'];
-                    $message = "Pengambilan Antrian Poli Gigi berakhir jam {$jam_akhir}. Mohon maaf atas ketidaknyamanannya.";
+                    $jam_akhir = date('H:i', strtotime('-3 hours', $jadwalGigi['jam_akhir']));
+                    $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir}";
+
+                    $jam_akhir_offline  = date('H:i', strtotime('-1 hours', $jadwalGigi['jam_akhir']))
+
+                    $message = "Silahkan ambil antrian secara langsung sampai jam {$jam_akhir_offline}.";
+                    $message .= PHP_EOL;
+                    $message = ". Mohon maaf atas ketidaknyamanannya.";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                     echo $message;
                     return false;
+
                 // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (  !$this->sudahAdaAntrianUntukJenisAntrian( $this->message )  ) { 
                     $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
@@ -4415,7 +4413,10 @@ class WablasController extends Controller
     public function lama(){
         return 
             str_contains( $this->message, 'lama ') ||
+            str_contains( $this->message, 'lambat ') ||
             str_contains( $this->message, 'lama') ||
+            str_contains( $this->message, 'lambat') ||
+            str_contains( $this->message, ' lambat') ||
             str_contains( $this->message, ' lama');
     }
     public function tanyaValidasiWaktuPelayanan(){
@@ -4463,5 +4464,28 @@ class WablasController extends Controller
 
         $message .= 'Apakah informasi tersebut benar?';
         return $message;
+    }
+    public function chatAdmin(){
+        $message = 'Halo.';
+        $message .= PHP_EOL;
+        $message .= 'Kakak akan terhubung dengan tim cs kami.';
+        $message .= PHP_EOL;
+        $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
+        $message .= PHP_EOL;
+        $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
+        $message .= PHP_EOL;
+        $message .= 'Ketik *akhiri* untuk mengakhiri percakapan';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Ada yang bisa kami bantu?';
+
+        WhatsappBot::create([
+            'no_telp' => $this->no_telp,
+            'whatsapp_bot_service_id' => 12 // chat dengan admin
+        ]);
+        WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
+        WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
+
+        echo $message;
     }
 }
