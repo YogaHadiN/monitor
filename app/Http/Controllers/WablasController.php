@@ -2722,11 +2722,11 @@ class WablasController extends Controller
     public function whatsappAntrianOnlineExists(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
     }
-    public function prosesAntrianOnline(){
-        echo "Antrian online saat ini sedang dalam proses pemeliharaan dan untuk sementara waktu tidak dapat digunakan. Kami mohon maaf atas ketidaknyamanannya.";
-    }
+    /* public function prosesAntrianOnline(){ */
+    /*     echo "Antrian online saat ini sedang dalam proses pemeliharaan dan untuk sementara waktu tidak dapat digunakan. Kami mohon maaf atas ketidaknyamanannya."; */
+    /* } */
     
-    public function prosesAntrianOnline1(){
+    public function prosesAntrianOnline(){
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->first();
