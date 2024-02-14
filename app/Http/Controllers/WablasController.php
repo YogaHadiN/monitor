@@ -1160,7 +1160,8 @@ class WablasController extends Controller
 
             if (
                 $this->lama() &&
-                !is_null( $antrian )
+                !is_null( $antrian ) &&
+                $antrian->antriable_type == 'App\Models\Periksa'
             ) {
                 WhatsappBot::create([
                     'no_telp' => $this->no_telp,
