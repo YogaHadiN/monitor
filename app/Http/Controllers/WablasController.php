@@ -248,6 +248,7 @@ class WablasController extends Controller
             } else if( $this->noTelpDalamChatWithAdmin() ) {
                 $this->createWhatsappChat(); // buat main menu
             } else if( $this->konfirmasiWaktuPelayanan() ) { //apa bila ada konfirmasi waktu pelayanan
+                Log::info(251);
                  $this->balasanKonfirmasiWaktuPelayanan(); // balasan konfirmasi waktu pelayanan
             } else if( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
