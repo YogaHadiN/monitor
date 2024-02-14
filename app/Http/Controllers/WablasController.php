@@ -277,7 +277,10 @@ class WablasController extends Controller
                 Log::info(274);
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
-        }   
+        } else {
+            Log::info(281);
+        }
+
 	}
     private function proceedRegistering()
     {
@@ -4598,6 +4601,7 @@ class WablasController extends Controller
                 $message .= 'Kami berharap dapat melayani dengan lebih baik lagi';
 
                 $this->whatsapp_bot->delete();
+                WhatsappBot::where('no_telp', $this->no_telp)->delete();
             } else {
                 $message = $this->pesanMintaKlienBalasUlang();
             }
