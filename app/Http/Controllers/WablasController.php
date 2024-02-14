@@ -4454,37 +4454,37 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
 
-        foreach ($antrians as $k => $antrian) {
-            if ( $antrian->antriable_type == 'App\Models\Periksa' ) {
-                $pasien_id = $antrian->antriable->pasien_id;
-            } else if (
-                 $antrian->antriable_type == 'App\Models\AntrianApotek' ||
-                 $antrian->antriable_type == 'App\Models\AntrianKasir'
-            ) {
-                $pasien_id = $antrian->antriable->periksa->pasien_id;
-            }
-            $periksa = Periksa::where('pasien_id', $pasien_id)
-                                ->where('tanggal', $tanggal_berobat)
-                                ->first();
-            $message .= $k + 1 . '. ';
-            $message .= $periksa->pasien->nama;
-            $message .= PHP_EOL;
-            $message .= 'Waktu Tunggu Dokter : ';
-            $message .= PHP_EOL;
-            $message .= Carbon::parse( $periksa->jam_pasien_mulai_mengantri )->format('H:i'). ' - ' . Carbon::parse($periksa->jam_pasien_dipanggil_ke_ruang_periksa)->format('H:i') ;
-            $message .= '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )';
+        /* foreach ($antrians as $k => $antrian) { */
+        /*     if ( $antrian->antriable_type == 'App\Models\Periksa' ) { */
+        /*         $pasien_id = $antrian->antriable->pasien_id; */
+        /*     } else if ( */
+        /*          $antrian->antriable_type == 'App\Models\AntrianApotek' || */
+        /*          $antrian->antriable_type == 'App\Models\AntrianKasir' */
+        /*     ) { */
+        /*         $pasien_id = $antrian->antriable->periksa->pasien_id; */
+        /*     } */
+        /*     $periksa = Periksa::where('pasien_id', $pasien_id) */
+        /*                         ->where('tanggal', $tanggal_berobat) */
+        /*                         ->first(); */
+        /*     $message .= $k + 1 . '. '; */
+        /*     $message .= $periksa->pasien->nama; */
+        /*     $message .= PHP_EOL; */
+        /*     $message .= 'Waktu Tunggu Dokter : '; */
+        /*     $message .= PHP_EOL; */
+        /*     $message .= Carbon::parse( $periksa->jam_pasien_mulai_mengantri )->format('H:i'). ' - ' . Carbon::parse($periksa->jam_pasien_dipanggil_ke_ruang_periksa)->format('H:i') ; */
+        /*     $message .= '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )'; */
 
-            $message .= PHP_EOL;
-            $message .= 'Waktu Tunggu Obat : ' . 
-            $message .= PHP_EOL;
-            $jam_penyerahan_obat = !is_null( $periksa->jam_penyerahan_obat ) ? $periksa->jam_penyerahan_obat : Carbon::now()->format('Y-m-d H:i:s');
-            $jam_pasien_selesai_diperiksa = Carbon::parse($periksa->jam_pasien_selesai_diperiksa)->format('H:i');
-            Log::info($jam_pasien_selesai_diperiksa);
-            $message .= $jam_pasien_selesai_diperiksa. ' - ' . Carbon::parse($jam_penyerahan_obat)->format('H:i') ;
-            $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $jam_penyerahan_obat  ) .' menit )';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-        }
+        /*     $message .= PHP_EOL; */
+        /*     $message .= 'Waktu Tunggu Obat : ' . */ 
+        /*     $message .= PHP_EOL; */
+        /*     $jam_penyerahan_obat = !is_null( $periksa->jam_penyerahan_obat ) ? $periksa->jam_penyerahan_obat : Carbon::now()->format('Y-m-d H:i:s'); */
+        /*     $jam_pasien_selesai_diperiksa = Carbon::parse($periksa->jam_pasien_selesai_diperiksa)->format('H:i'); */
+        /*     Log::info($jam_pasien_selesai_diperiksa); */
+        /*     $message .= $jam_pasien_selesai_diperiksa. ' - ' . Carbon::parse($jam_penyerahan_obat)->format('H:i') ; */
+        /*     $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $jam_penyerahan_obat  ) .' menit )'; */
+        /*     $message .= PHP_EOL; */
+        /*     $message .= PHP_EOL; */
+        /* } */
 
         $message .= 'Apakah informasi tersebut benar?';
         $message .= PHP_EOL;
