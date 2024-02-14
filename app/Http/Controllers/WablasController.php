@@ -4034,6 +4034,7 @@ class WablasController extends Controller
 
     public function informasiNomorFaskesKJE(){
         WhatsappBot::where('no_telp', $this->no_telp)->delete();
+        WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
         $message = 'Nomor Faskes Klinik Jati Elok';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
