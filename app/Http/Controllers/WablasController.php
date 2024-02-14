@@ -4466,22 +4466,28 @@ class WablasController extends Controller
             $periksa = Periksa::where('pasien_id', $pasien_id)
                                 ->where('tanggal', $tanggal_berobat)
                                 ->first();
+
+            $waktu_tunggu_dokter = Carbon::parse( $periksa->jam_pasien_mulai_mengantri )->format('H:i'). ' - ' . Carbon::parse($periksa->jam_pasien_dipanggil_ke_ruang_periksa)->format('H:i') . '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )';
+
+            $jam_penyerahan_obat = !is_null( $periksa->jam_penyerahan_obat ) ? $periksa->jam_penyerahan_obat : Carbon::now()->format('Y-m-d H:i:s');
+            $jam_pasien_selesai_diperiksa = Carbon::parse($periksa->jam_pasien_selesai_diperiksa)->format('H:i');
+
+            $waktu_tunggu_obat = $jam_pasien_selesai_diperiksa. ' - ' . Carbon::parse($jam_penyerahan_obat)->format('H:i') ;
+            $waktu_tunggu_obat .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $jam_penyerahan_obat  ) .' menit )';
+
+
             $message .= $k + 1 . '. ';
             $message .= $periksa->pasien->nama;
             $message .= PHP_EOL;
             $message .= 'Waktu Tunggu Dokter : ';
             $message .= PHP_EOL;
-            $message .= Carbon::parse( $periksa->jam_pasien_mulai_mengantri )->format('H:i'). ' - ' . Carbon::parse($periksa->jam_pasien_dipanggil_ke_ruang_periksa)->format('H:i') ;
-            $message .= '(' . diffInMinutes( $periksa->jam_pasien_mulai_mengantri , $periksa->jam_pasien_dipanggil_ke_ruang_periksa  ) .' menit )';
+            $message .= $waktu_tunggu_dokter;
 
             $message .= PHP_EOL;
             $message .= 'Waktu Tunggu Obat : ' . 
             $message .= PHP_EOL;
-            $jam_penyerahan_obat = !is_null( $periksa->jam_penyerahan_obat ) ? $periksa->jam_penyerahan_obat : Carbon::now()->format('Y-m-d H:i:s');
-            $jam_pasien_selesai_diperiksa = Carbon::parse($periksa->jam_pasien_selesai_diperiksa)->format('H:i');
-            Log::info($jam_pasien_selesai_diperiksa);
-            $message .= $jam_pasien_selesai_diperiksa. ' - ' . Carbon::parse($jam_penyerahan_obat)->format('H:i') ;
-            $message .= '(' . diffInMinutes( $periksa->jam_pasien_selesai_diperiksa , $jam_penyerahan_obat  ) .' menit )';
+            $message .= $waktu_tunggu_obat;
+
             $message .= PHP_EOL;
             $message .= PHP_EOL;
         }
