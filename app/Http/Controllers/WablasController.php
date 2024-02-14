@@ -4483,15 +4483,15 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= $waktu_tunggu_dokter;
 
-            /* $message .= PHP_EOL; */
-            /* $message .= 'Waktu Tunggu Obat : ' . */ 
-            /* $message .= PHP_EOL; */
-            /* $message .= $waktu_tunggu_obat; */
+            $message .= PHP_EOL;
+            $message .= 'Waktu Tunggu Obat : ' . 
+            $message .= PHP_EOL;
+            $message .= $waktu_tunggu_obat;
 
-            /* $message .= PHP_EOL; */
-            /* $message .= PHP_EOL; */
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
             Log::info(4493);
-            Log::info($message);
+            Log::info($waktu_tunggu_obat);
         }
 
         $message .= 'Apakah informasi tersebut benar?';
@@ -4503,8 +4503,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
-        Log::info('message');
-        Log::info($message);
         return $message;
     }
     public function chatAdmin(){
