@@ -4484,8 +4484,9 @@ class WablasController extends Controller
             $message .= $waktu_tunggu_dokter;
 
             $message .= PHP_EOL;
+            /* $message .= 'Waktu Tunggu Obat : ' . */ 
             /* $message .= PHP_EOL; */
-            /* $message .= $waktu_tunggu_obat; */
+            $message .= $waktu_tunggu_obat;
 
             $message .= PHP_EOL;
             $message .= PHP_EOL;
