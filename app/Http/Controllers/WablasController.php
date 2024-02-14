@@ -2280,7 +2280,7 @@ class WablasController extends Controller
             ->toSql() ;
 
         Log::info('antrian');
-        Log::info( $antrian->antriable_type );
+        Log::info( $antrian );
         return !Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->whereRaw("antriable_type not like 'App\\\Models\\\Periksa' ")
