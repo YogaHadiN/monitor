@@ -2276,7 +2276,7 @@ class WablasController extends Controller
     public function pasienTidakDalamAntrian(){
         $antrian =  Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
-            ->whereRaw("antriable_type not like 'App\\\Models\\\Periksa' ")
+            ->where("antriable_type", '!=', 'App\Models\Periksa')
             ->toSql() ;
 
         Log::info('antrian');
