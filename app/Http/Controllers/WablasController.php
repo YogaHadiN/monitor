@@ -4557,8 +4557,8 @@ class WablasController extends Controller
              is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
         ) {
             if (
-                 $this->messsage == '1' ||
-                 $this->messsage == '2' 
+                 $this->message == '1' ||
+                 $this->message == '2' 
             ) {
                 $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan = $this->message == '1' ? 1 : 0;
                 $antrian->save();
