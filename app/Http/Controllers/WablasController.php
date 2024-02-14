@@ -4490,6 +4490,8 @@ class WablasController extends Controller
 
             $message .= PHP_EOL;
             $message .= PHP_EOL;
+            Log::info(4493);
+            Log::info($message);
         }
 
         $message .= 'Apakah informasi tersebut benar?';
