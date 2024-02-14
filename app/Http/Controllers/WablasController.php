@@ -133,6 +133,9 @@ class WablasController extends Controller
     
 	
 	public function webhook(){
+        Log::info(136);
+        Log::info( $this->message );
+        Log::info( $this->no_telp );
         header('Content-Type: application/json');
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
