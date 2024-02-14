@@ -4531,8 +4531,8 @@ class WablasController extends Controller
             ->first();
         if ( is_null(  $antrian->konfirmasi_waktu_pelayanan  ) ) {
             if (
-                 $this->messsage == '1' ||
-                 $this->messsage == '2' 
+                 $this->message == '1' ||
+                 $this->message == '2' 
             ) {
                 $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
                 $antrian->save();
