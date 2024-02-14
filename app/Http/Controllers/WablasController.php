@@ -1120,12 +1120,15 @@ class WablasController extends Controller
                 $antrian->save();
             }
 
-            $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
-            $messageToBoss .=  PHP_EOL;
-            $messageToBoss .=  PHP_EOL;
-            $messageToBoss .=  $this->message;
-
-            $this->sendSingle('6281381912803', $messageToBoss);
+            if ( $this->no_telp !== '6281381912803' ) {
+                Log::info(1124);
+                Log::info( $this->no_telp );
+                $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
+                $messageToBoss .=  PHP_EOL;
+                $messageToBoss .=  PHP_EOL;
+                $messageToBoss .=  $this->message;
+                $this->sendSingle('6281381912803', $messageToBoss);
+            }
 
             if (
                 $this->lama() &&
@@ -4531,6 +4534,7 @@ class WablasController extends Controller
             ) {
                 $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
                 $antrian->save();
+
                 $message = "Apakah sudah diinfokan oleh petugas kami bahwa ";
                 $message .= PHP_EOL;
                 $message .= "Waktu tunggu pelayanan obat racikan antara 30 - 45 menit?";
@@ -4542,6 +4546,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
                 $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+
             } else {
                 $message = $this->pesanMintaKlienBalasUlang();
             }
@@ -4557,6 +4562,7 @@ class WablasController extends Controller
                 $antrian->save();
 
                 $message = 'Terima kasih atas informasi yang sudah kakak berikan';
+                $message .= PHP_EOL;
                 $message .= 'Informasi ini akan kami gunakan untuk memperbaiki pelayanan kami.';
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
