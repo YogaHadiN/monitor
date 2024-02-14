@@ -4455,8 +4455,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
 
         foreach ($antrians as $k => $antrian) {
-            Log::info(4458);
-            Log::info($antrians->count());
             if ( $antrian->antriable_type == 'App\Models\Periksa' ) {
                 $pasien_id = $antrian->antriable->pasien_id;
             } else if (
@@ -4497,6 +4495,8 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+        Log::info('message');
+        Log::info($message);
         return $message;
     }
     public function chatAdmin(){
