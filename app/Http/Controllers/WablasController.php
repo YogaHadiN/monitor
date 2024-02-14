@@ -4441,7 +4441,7 @@ class WablasController extends Controller
             str_contains( $this->message, ' lama');
     }
     public function tanyaValidasiWaktuPelayanan(){
-        $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
+        $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d 00:00:00') : date('Y-m-d 00:00:00');
         $antrians = Antrian::with('antriable')
             ->where('no_telp', $this->no_telp)
             ->where('created_at', '>=', $tanggal_berobat)
