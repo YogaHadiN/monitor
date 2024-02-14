@@ -247,6 +247,8 @@ class WablasController extends Controller
                 return $this->simpanBalasanValidasiWaktuPelayanan();
             } else if( $this->noTelpDalamChatWithAdmin() ) {
                 $this->createWhatsappChat(); // buat main menu
+            } else if( $this->konfirmasiWaktuPelayanan() ) { //apa bila ada konfirmasi waktu pelayanan
+                 $this->balasanKonfirmasiWaktuPelayanan(); // balasan konfirmasi waktu pelayanan
             } else if( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
@@ -4482,6 +4484,14 @@ class WablasController extends Controller
         }
 
         $message .= 'Apakah informasi tersebut benar?';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '1. Benar';
+        $message .= PHP_EOL;
+        $message .= '2. Salah';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
         return $message;
     }
     public function chatAdmin(){
@@ -4505,6 +4515,58 @@ class WablasController extends Controller
         WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
         WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
 
+        echo $message;
+    }
+    public function konfirmasiWaktuPelayanan(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(14); // konfirmasi waktu pelayanan
+    }
+    public function balasanKonfirmasiWaktuPelayanan(){
+        $antrian = Antrian::where('no_telp', $this->no_telp)
+            ->where('created_at', 'like', date('Y-m-d') . '%')
+            ->first();
+        if ( is_null(  $antrian->konfirmasi_waktu_pelayanan  ) ) {
+            if (
+                 $this->messsage == '1' ||
+                 $this->messsage == '2' 
+            ) {
+                $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
+                $antrian->save();
+                $message = "Apakah sudah diinfokan oleh petugas kami bahwa ";
+                $message .= PHP_EOL;
+                $message .= "Waktu tunggu pelayanan obat racikan antara 30 - 45 menit?";
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= '1. Sudah diinfokan';
+                $message .= PHP_EOL;
+                $message .= '2. Saya tidak diberitahu sebelumnya';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+            } else {
+                $message = $this->pesanMintaKlienBalasUlang();
+            }
+        } else if (
+             !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
+             is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
+        ) {
+            if (
+                 $this->messsage == '1' ||
+                 $this->messsage == '2' 
+            ) {
+                $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan = $this->message == '1' ? 1 : 0;
+                $antrian->save();
+
+                $message = 'Terima kasih atas informasi yang sudah kakak berikan';
+                $message .= 'Informasi ini akan kami gunakan untuk memperbaiki pelayanan kami.';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= 'Kami berharap dapat melayani dengan lebih baik lagi';
+
+                $this->whatsapp_bot->delete();
+            } else {
+                $message = $this->pesanMintaKlienBalasUlang();
+            }
+        }
         echo $message;
     }
 }
