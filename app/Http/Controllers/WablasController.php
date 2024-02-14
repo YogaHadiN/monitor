@@ -4569,6 +4569,7 @@ class WablasController extends Controller
         $antrian = Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->first();
+        $message = '';
         if ( is_null(  $antrian->konfirmasi_waktu_pelayanan  ) ) {
             if (
                  $this->message == '1' ||
@@ -4615,6 +4616,19 @@ class WablasController extends Controller
             } else {
                 $message = $this->pesanMintaKlienBalasUlang();
             }
+        } else if (
+             !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
+             !is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
+        ) {
+            $message = 'Terima kasih atas informasi yang sudah kakak berikan';
+            $message .= PHP_EOL;
+            $message .= 'Informasi ini akan kami gunakan untuk memperbaiki pelayanan kami.';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= 'Kami berharap dapat melayani dengan lebih baik lagi';
+
+            $this->whatsapp_bot->delete();
+            WhatsappBot::where('no_telp', $this->no_telp)->delete();
         }
         echo $message;
     }
