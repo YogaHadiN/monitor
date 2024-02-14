@@ -2277,15 +2277,15 @@ class WablasController extends Controller
         $antrian =  Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->whereRaw("antriable_type not like 'App\\\\\\\Models\\\\\\\Periksa' ") // yang ini gagal
-            ->toSql() ;
+            ->get() ;
 
         Log::info('antrian');
-        /* Log::info( $antrian->count() ); */
+        Log::info( $antrian->count() );
         Log::info( $antrian );
-        /* Log::info( $antrian->first()->antriable_type ); */
+        Log::info( $antrian->first()->antriable_type );
         return !Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
-            ->whereRaw("antriable_type not like 'App\\Models\\Periksa' ")
+            ->whereRaw("antriable_type not like 'App\\\\\\\Models\\\\\\\Periksa' ") // yang ini gagal
             ->exists() ;
         /* && $this->no_telp = '6281381912803'; */
     }
