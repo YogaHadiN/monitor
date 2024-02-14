@@ -244,12 +244,9 @@ class WablasController extends Controller
             } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
                 return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
             } else if( $this->validasiWaktuPelayanan() ) {
-                return $this->simpanBalasanValidasiWaktuPelayanan();
+                return $this->balasanKonfirmasiWaktuPelayanan();
             } else if( $this->noTelpDalamChatWithAdmin() ) {
                 $this->createWhatsappChat(); // buat main menu
-            } else if( $this->konfirmasiWaktuPelayanan() ) { //apa bila ada konfirmasi waktu pelayanan
-                Log::info(251);
-                 $this->balasanKonfirmasiWaktuPelayanan(); // balasan konfirmasi waktu pelayanan
             } else if( $this->pasienTidakDalamAntrian() ) {
                 return $this->createWhatsappMainMenu(); // buat main menu
             }
@@ -4527,9 +4524,6 @@ class WablasController extends Controller
         WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
 
         echo $message;
-    }
-    public function konfirmasiWaktuPelayanan(){
-        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(14); // konfirmasi waktu pelayanan
     }
     public function balasanKonfirmasiWaktuPelayanan(){
         $antrian = Antrian::where('no_telp', $this->no_telp)
