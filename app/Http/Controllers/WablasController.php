@@ -4521,16 +4521,17 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= $waktu_tunggu_dokter;
 
-            $message .= PHP_EOL;
-
-            $message .= 'Waktu Tunggu Obat : ';
-            $message .= PHP_EOL;
-            $message .= $waktu_tunggu_obat;
-
+            if (
+                $antrian->antriable->terapi !== '[]'
+            ) {
+                $message .= PHP_EOL;
+                $message .= 'Waktu Tunggu Obat : ';
+                $message .= PHP_EOL;
+                $message .= $waktu_tunggu_obat;
+            }
             $message .= PHP_EOL;
             $message .= PHP_EOL;
         }
-
         $message .= 'Apakah informasi tersebut benar?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
@@ -4562,7 +4563,6 @@ class WablasController extends Controller
         ]);
         WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
         WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
-
         echo $message;
     }
     public function balasanKonfirmasiWaktuPelayanan(){
@@ -4572,26 +4572,35 @@ class WablasController extends Controller
         $message = '';
         if ( is_null(  $antrian->konfirmasi_waktu_pelayanan  ) ) {
             if (
-                 $this->message == '1' ||
-                 $this->message == '2' 
+                $antrian->antriable->ada_resep &&
+                $antrian->antriable->terapi !== '[]'
             ) {
-                $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
-                $antrian->save();
+                if (
+                     $this->message == '1' ||
+                     $this->message == '2' 
+                ) {
+                    $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
+                    $antrian->save();
 
-                $message = "Apakah sudah diinfokan oleh petugas kami bahwa ";
-                $message .= PHP_EOL;
-                $message .= "Waktu tunggu pelayanan obat racikan antara 30 - 45 menit?";
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= '1. Sudah diinfokan';
-                $message .= PHP_EOL;
-                $message .= '2. Saya tidak diberitahu sebelumnya';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+                    $message = "Apakah sudah diinfokan oleh petugas kami bahwa ";
+                    $message .= PHP_EOL;
+                    $message .= "Waktu tunggu pelayanan obat racikan antara 30 - 45 menit?";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= '1. Sudah diinfokan';
+                    $message .= PHP_EOL;
+                    $message .= '2. Saya tidak diberitahu sebelumnya';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
 
+                } else {
+                    $message = $this->pesanMintaKlienBalasUlang();
+                }
             } else {
-                $message = $this->pesanMintaKlienBalasUlang();
+                $antrian->konfirmasi_waktu_pelayanan = 1;
+                $antrian->save();
+                $message = $this->endKonfirmasiWaktuPelanan();
             }
         } else if (
              !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
@@ -4604,15 +4613,7 @@ class WablasController extends Controller
                 $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan = $this->message == '1' ? 1 : 0;
                 $antrian->save();
 
-                $message = 'Terima kasih atas informasi yang sudah kakak berikan';
-                $message .= PHP_EOL;
-                $message .= 'Informasi ini akan kami gunakan untuk memperbaiki pelayanan kami.';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= 'Kami berharap dapat melayani dengan lebih baik lagi';
-
-                $this->whatsapp_bot->delete();
-                WhatsappBot::where('no_telp', $this->no_telp)->delete();
+                $message = $this->endKonfirmasiWaktuPelanan();
             } else {
                 $message = $this->pesanMintaKlienBalasUlang();
             }
@@ -4620,16 +4621,20 @@ class WablasController extends Controller
              !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
              !is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
         ) {
-            $message = 'Terima kasih atas informasi yang sudah kakak berikan';
-            $message .= PHP_EOL;
-            $message .= 'Informasi ini akan kami gunakan untuk memperbaiki pelayanan kami.';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Kami berharap dapat melayani dengan lebih baik lagi';
-
-            $this->whatsapp_bot->delete();
-            WhatsappBot::where('no_telp', $this->no_telp)->delete();
+            $message = $this->endKonfirmasiWaktuPelanan();
         }
         echo $message;
+    }
+    public function endKonfirmasiWaktuPelanan(){
+        $message = 'Terima kasih atas informasi yang sudah kakak berikan';
+        $message .= PHP_EOL;
+        $message .= 'Informasi ini akan kami gunakan untuk memperbaiki pelayanan kami.';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Kami berharap dapat melayani dengan lebih baik lagi';
+
+        $this->whatsapp_bot->delete();
+        WhatsappBot::where('no_telp', $this->no_telp)->delete();
+        return $message;
     }
 }

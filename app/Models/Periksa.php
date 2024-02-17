@@ -22,5 +22,18 @@ class Periksa extends Model
     public function terapii(){
         return $this->hasMany('App\Models\Terapi');
     }
+    public function getResepRacikanAttribute(){
+        $mengandung_racikan = false;
+        foreach (json_decode( $this->terapi, true ) as $terapi) {
+            if (
+                $terapi['signa'] == 'Add' ||
+                $terapi['signa'] == 'Puyer'
+            ) {
+                $mengandung_racikan = true;
+                break;
+            }
+        }
+        return $mengandung_racikan;
+    }
 }
 
