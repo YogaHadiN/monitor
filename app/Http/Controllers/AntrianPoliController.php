@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Asuransi;
 use App\Models\Pasien;
 use App\Models\Antrian;
+use App\Models\AntrianPoli;
 use Carbon\Carbon;
 use Input;
 
