@@ -51,7 +51,8 @@ use App\Models\FailedTherapy;
 use App\Models\Periksa;
 use App\Models\Pasien;
 use App\Models\User;
-use App\Http\Controllers\AntrianPolisController;
+use App\Http\Controllers\AntrianPoliController;
+
 use App\Http\Controllers\BpjsApiController;
 use Input;
 use Carbon\Carbon;
@@ -4642,7 +4643,7 @@ class WablasController extends Controller
                 )
             ) {
                 Log::info(4645);
-                $ap                             = new AntrianPolisController;
+                $ap                             = new AntrianPoliController;
                 $ap->input_pasien_id            = $antrian->pasien_id;
                 $ap->input_asuransi_id          = Asuransi::BiayaPribadi()->id;
                 $ap->input_poli_id              = Poli::konsultasiDokterUmum()->id;
