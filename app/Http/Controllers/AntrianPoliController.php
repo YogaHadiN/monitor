@@ -7,6 +7,7 @@ use App\Models\Asuransi;
 use App\Models\Pasien;
 use App\Models\Antrian;
 use Carbon\Carbon;
+use Input;
 
 class AntrianPoliController extends Controller
 {
