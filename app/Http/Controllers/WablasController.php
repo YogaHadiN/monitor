@@ -353,7 +353,7 @@ class WablasController extends Controller
                 } 
 
                 if ( 
-                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 1 // jika pembayaran Pribadi
+                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 1 || 
                     (
                         $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 && // jika bpjs
                         $this->whatsapp_registration->antrian->verifikasi_bpjs == 1 // dan sudah verifikasi BPJS
