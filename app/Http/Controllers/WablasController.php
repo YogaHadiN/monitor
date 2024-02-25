@@ -4651,7 +4651,7 @@ class WablasController extends Controller
                 $ap->jam_pasien_mulai_mengantri = $antrian->jam_pasien_mulai_mengantri;
                 $ap->input_tanggal              = $antrian->created_at->format('Y-m-d');
                 $ap->input_bukan_peserta        = 0;
-                $ap->tenant_id                  = 1;
+                $ap->input_tenant_id                  = 1;
                 $antrian_poli                   = $ap->inputDataAntrianPoli();
 
                 $antrian->antriable_type = 'App\\Models\\AntrianPoli';

@@ -13,6 +13,7 @@ use Input;
 class AntrianPoliController extends Controller
 {
 	public $input_pasien_id;
+	public $input_tenant_id;
 	public $input_antrian;
 	public $input_asuransi_id;
 	public $input_poli_id;
@@ -53,6 +54,7 @@ class AntrianPoliController extends Controller
 		}
         $ap->jam                              = !is_null( $this->input_antrian ) ? $this->input_antrian->created_at->format("Y-m-d H:i:s") : date("Y-m-d H:i:s");
 		$ap->tanggal                          = $this->input_tanggal;
+		$ap->tenant_id                        = $this->input_tenant_id;
 		$ap->save();
 
 		return $ap;
