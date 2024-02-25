@@ -80,8 +80,7 @@ class WablasController extends Controller
     public $whatsapp_bpjs_dentist_registrations;
     public $jadwalGigi;
 
-	public function __construct()
-	{
+	public function __construct(){
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -351,17 +350,28 @@ class WablasController extends Controller
                 ) {
                     $this->whatsapp_registration->antrian->kartu_asuransi_image = $pasien->bpjs_image;
                     $this->whatsapp_registration->antrian->nomor_bpjs           = $pasien->nomor_asuransi_bpjs;
-                } else if ( 
-                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 1
+                } 
+
+                if ( 
+                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 1 // jika pembayaran Pribadi
+                    (
+                        $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 && // jika bpjs
+                        $this->whatsapp_registration->antrian->verifikasi_bpjs == 1 // dan sudah verifikasi BPJS
+                    )
                 ) {
-                    /* $ap = new AntrianPolisController; */
-                    /* $ap->input_pasien_id           = $pasien->id; */
-                    /* $ap->input_asuransi_id         = Asuransi::BiayaPribadi()->id; */
-                    /* $ap->input_poli_id             = Poli::konsultasiDokterUmum()->id; */
-                    /* $ap->input_staf_id             = null; */
-                    /* $ap->input_tanggal             = $this->whatsapp_registration->antrian->created_at; */
-                    /* $ap->input_bukan_peserta       = 0; */
-                    /* $ap->processData(); */
+                    $ap                             = new AntrianPolisController;
+                    $ap->input_pasien_id            = $pasien->id;
+                    $ap->input_asuransi_id          = Asuransi::BiayaPribadi()->id;
+                    $ap->input_poli_id              = Poli::konsultasiDokterUmum()->id;
+                    $ap->input_staf_id              = null;
+                    $ap->jam_pasien_mulai_mengantri = $this->whatsapp_registration->antrian->jam_pasien_mulai_mengantri;
+                    $ap->input_tanggal              = $this->whatsapp_registration->antrian->created_at->format('Y-m-d');
+                    $ap->input_bukan_peserta        = 0;
+                    $ap->tenant_id                  = 1;
+                    $antrian_poli                   = $ap->inputDataAntrianPoli();
+
+                    $this->whatsapp_registration->antrian->antriable_type = 'App\\Models\\AntrianPoli';
+                    $this->whatsapp_registration->antrian->antriable_id   = $antrian_poli->id;
                 }
 
                 $this->whatsapp_registration->antrian->save();
@@ -4572,7 +4582,7 @@ class WablasController extends Controller
         $message = '';
         if ( is_null(  $antrian->konfirmasi_waktu_pelayanan  ) ) {
             if (
-                $antrian->antriable->ada_resep &&
+                $antrian->antriable->resep_racikan &&
                 $antrian->antriable->terapi !== '[]'
             ) {
                 if (
