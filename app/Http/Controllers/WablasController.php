@@ -4630,9 +4630,11 @@ class WablasController extends Controller
         return $message;
     }
     public function langsungKeAntrianPoliBilaMemungkinkan(){
+        Log::info(4633);
         if (
             $this->whatsapp_registration->antrian->pasien_id
         ) {
+            Log::info(4637);
             if ( 
                 $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 1 || 
                 (
@@ -4640,6 +4642,7 @@ class WablasController extends Controller
                     $this->whatsapp_registration->antrian->verifikasi_bpjs == 1 // dan sudah verifikasi BPJS
                 )
             ) {
+                Log::info(4645);
                 $ap                             = new AntrianPolisController;
                 $ap->input_pasien_id            = $this->whatsapp_registration->antrian->pasien_id;
                 $ap->input_asuransi_id          = Asuransi::BiayaPribadi()->id;
