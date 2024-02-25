@@ -3947,7 +3947,7 @@ class WablasController extends Controller
     {
         $from = date('Y-m-d 00:00:00');
         $to = date('Y-m-d 23:59:59');
-        Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
+        $antrians = Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
             ->where('no_telp', $this->no_telp)
             ->whereRaw("
                     ( 
@@ -3956,7 +3956,13 @@ class WablasController extends Controller
                         antriable_type = 'App\\\Models\\\AntrianPeriksa'
                     )
                 ")
-            ->delete();
+            ->get();
+
+        foreach ($antrians as $antrian) {
+            $antrian->antriable->delete();
+            $antrian->delete();
+        }
+
         ReservasiOnline::whereRaw("created_at between '{$from}' and '{$to}'")
             ->where('no_telp', $this->no_telp)
             ->delete();
@@ -4646,7 +4652,7 @@ class WablasController extends Controller
                 $ap                             = new AntrianPoliController;
                 $ap->input_pasien_id            = $antrian->pasien_id;
                 $ap->input_asuransi_id          = Asuransi::BiayaPribadi()->id;
-                $ap->input_poli_id              = Poli::konsultasiDokterUmum()->id;
+                $ap->input_poli_id              = null;
                 $ap->input_staf_id              = null;
                 $ap->jam_pasien_mulai_mengantri = $antrian->jam_pasien_mulai_mengantri;
                 $ap->input_tanggal              = $antrian->created_at->format('Y-m-d');
