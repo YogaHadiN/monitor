@@ -4656,6 +4656,7 @@ class WablasController extends Controller
 
                 $antrian->antriable_type = 'App\\Models\\AntrianPoli';
                 $antrian->antriable_id   = $antrian_poli->id;
+                $antrian->save();
             }
         }
     }
