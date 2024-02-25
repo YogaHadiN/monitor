@@ -436,7 +436,7 @@ class WablasController extends Controller
                     $whatsapp_registration_id = $this->whatsapp_registration->id;
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
 
-                    $this->langsungKeAntrianPoliBilaMemungkinkan();
+                    $this->langsungKeAntrianPoliBilaMemungkinkan( $this->whatsapp_registration->antrian );
                     //jika pasien_id tidak kosong, maka pasien langsung masuk saja ke antrianpoli
                     //==========================================================================
                 }
@@ -3224,8 +3224,7 @@ class WablasController extends Controller
                     $antrian->antriable_id             = $antrian->id;
                     $antrian->save();
 
-                    Log::info(2858);
-                    Log::info('data_bpjs_cocok =' . $antrian->data_bpjs_cocok);
+                    $this->langsungKeAntrianPoliBilaMemungkinkan($antrian);
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
@@ -4629,33 +4628,33 @@ class WablasController extends Controller
         WhatsappBot::where('no_telp', $this->no_telp)->delete();
         return $message;
     }
-    public function langsungKeAntrianPoliBilaMemungkinkan(){
+    public function langsungKeAntrianPoliBilaMemungkinkan($antrian){
         Log::info(4633);
         if (
-            $this->whatsapp_registration->antrian->pasien_id
+            $antrian->pasien_id
         ) {
             Log::info(4637);
             if ( 
-                $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 1 || 
+                $antrian->registrasi_pembayaran_id == 1 || 
                 (
-                    $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 && // jika bpjs
-                    $this->whatsapp_registration->antrian->verifikasi_bpjs == 1 // dan sudah verifikasi BPJS
+                    $antrian->registrasi_pembayaran_id == 2 && // jika bpjs
+                    $antrian->verifikasi_bpjs == 1 // dan sudah verifikasi BPJS
                 )
             ) {
                 Log::info(4645);
                 $ap                             = new AntrianPolisController;
-                $ap->input_pasien_id            = $this->whatsapp_registration->antrian->pasien_id;
+                $ap->input_pasien_id            = $antrian->pasien_id;
                 $ap->input_asuransi_id          = Asuransi::BiayaPribadi()->id;
                 $ap->input_poli_id              = Poli::konsultasiDokterUmum()->id;
                 $ap->input_staf_id              = null;
-                $ap->jam_pasien_mulai_mengantri = $this->whatsapp_registration->antrian->jam_pasien_mulai_mengantri;
-                $ap->input_tanggal              = $this->whatsapp_registration->antrian->created_at->format('Y-m-d');
+                $ap->jam_pasien_mulai_mengantri = $antrian->jam_pasien_mulai_mengantri;
+                $ap->input_tanggal              = $antrian->created_at->format('Y-m-d');
                 $ap->input_bukan_peserta        = 0;
                 $ap->tenant_id                  = 1;
                 $antrian_poli                   = $ap->inputDataAntrianPoli();
 
-                $this->whatsapp_registration->antrian->antriable_type = 'App\\Models\\AntrianPoli';
-                $this->whatsapp_registration->antrian->antriable_id   = $antrian_poli->id;
+                $antrian->antriable_type = 'App\\Models\\AntrianPoli';
+                $antrian->antriable_id   = $antrian_poli->id;
             }
         }
     }
