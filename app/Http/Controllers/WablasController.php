@@ -3860,7 +3860,10 @@ class WablasController extends Controller
             }
         }
 
-        $message = 'Anda akan membatalkan antrian *' . $text . '*';
+        $message = 'Anda akan membatalkan antrian ';
+        if (!empty( trim(  $text  ) )) {
+            $message .= '*' . $text . '*';
+        }
         $message .= PHP_EOL;
         $message .= 'Apakah anda ingin yakin ingin membatalkan antrian tersebut?';
         $message .= PHP_EOL;
