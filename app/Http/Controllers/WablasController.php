@@ -3870,11 +3870,12 @@ class WablasController extends Controller
             if ($k) {
                 $text .= ',' . $nomor;
             } else if(
+                count( $nomor_antrians ) == 1 ||
                 $k == count($nomor_antrians) -1
             ) {
-                $text .= ' dan ' . $nomor;
-            } else {
                 $text .= $nomor;
+            } else {
+                $text .= ' dan ' . $nomor;
             }
         }
 
