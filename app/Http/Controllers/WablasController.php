@@ -4481,6 +4481,7 @@ class WablasController extends Controller
             str_contains( $this->message, 'lama') ||
             str_contains( $this->message, 'lambat') ||
             str_contains( $this->message, ' lambat') ||
+            str_contains( $this->message, 'cepat') ||
             str_contains( $this->message, ' lama');
     }
     public function tanyaValidasiWaktuPelayanan(){
@@ -4571,61 +4572,63 @@ class WablasController extends Controller
         $antrian = Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->first();
-        $message = '';
-        if ( is_null(  $antrian->konfirmasi_waktu_pelayanan  ) ) {
-            if (
-                $antrian->antriable->resep_racikan &&
-                $antrian->antriable->terapi !== '[]'
+        if ( !is_null( $antrian ) ) {
+            $message = '';
+            if ( is_null(  $antrian->konfirmasi_waktu_pelayanan  ) ) {
+                if (
+                    $antrian->antriable->resep_racikan &&
+                    $antrian->antriable->terapi !== '[]'
+                ) {
+                    if (
+                         $this->message == '1' ||
+                         $this->message == '2' 
+                    ) {
+                        $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
+                        $antrian->save();
+
+                        $message = "Apakah sudah diinfokan oleh petugas kami bahwa ";
+                        $message .= PHP_EOL;
+                        $message .= "Waktu tunggu pelayanan obat racikan antara 30 - 45 menit?";
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= '1. Sudah diinfokan';
+                        $message .= PHP_EOL;
+                        $message .= '2. Saya tidak diberitahu sebelumnya';
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
+
+                    } else {
+                        $message = $this->pesanMintaKlienBalasUlang();
+                    }
+                } else {
+                    $antrian->konfirmasi_waktu_pelayanan = 1;
+                    $antrian->save();
+                    $message = $this->endKonfirmasiWaktuPelanan();
+                }
+            } else if (
+                 !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
+                 is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
             ) {
                 if (
                      $this->message == '1' ||
                      $this->message == '2' 
                 ) {
-                    $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
+                    $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan = $this->message == '1' ? 1 : 0;
                     $antrian->save();
 
-                    $message = "Apakah sudah diinfokan oleh petugas kami bahwa ";
-                    $message .= PHP_EOL;
-                    $message .= "Waktu tunggu pelayanan obat racikan antara 30 - 45 menit?";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= '1. Sudah diinfokan';
-                    $message .= PHP_EOL;
-                    $message .= '2. Saya tidak diberitahu sebelumnya';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= 'Balas dengan angka *1 atau 2* sesuai informasi di atas';
-
+                    $message = $this->endKonfirmasiWaktuPelanan();
                 } else {
                     $message = $this->pesanMintaKlienBalasUlang();
                 }
-            } else {
-                $antrian->konfirmasi_waktu_pelayanan = 1;
-                $antrian->save();
-                $message = $this->endKonfirmasiWaktuPelanan();
-            }
-        } else if (
-             !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
-             is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
-        ) {
-            if (
-                 $this->message == '1' ||
-                 $this->message == '2' 
+            } else if (
+                 !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
+                 !is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
             ) {
-                $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan = $this->message == '1' ? 1 : 0;
-                $antrian->save();
-
                 $message = $this->endKonfirmasiWaktuPelanan();
-            } else {
-                $message = $this->pesanMintaKlienBalasUlang();
             }
-        } else if (
-             !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
-             !is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
-        ) {
-            $message = $this->endKonfirmasiWaktuPelanan();
+            echo $message;
         }
-        echo $message;
     }
     public function endKonfirmasiWaktuPelanan(){
         $message = 'Terima kasih atas informasi yang sudah kakak berikan';
