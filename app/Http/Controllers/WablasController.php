@@ -2799,7 +2799,10 @@ class WablasController extends Controller
                         !$jadwalGigi &&  //tidak ada jadwal gigi hari ini
                         $tenant->dentist_available
                     ) ||
-                    !$tenant->dentist_available
+                    (
+                        $this->message == '2' && //antrian poli gigi
+                        !$tenant->dentist_available
+                    )
                 ) {
                     $message = 'Hari ini pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
                     $message .= PHP_EOL;
