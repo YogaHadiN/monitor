@@ -433,7 +433,6 @@ class WablasController extends Controller
                 ) {
                     $whatsapp_registration_id = $this->whatsapp_registration->id;
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
-
                     $this->langsungKeAntrianPoliBilaMemungkinkan( $this->whatsapp_registration->antrian );
                     //jika pasien_id tidak kosong, maka pasien langsung masuk saja ke antrianpoli
                     //==========================================================================
@@ -2792,10 +2791,15 @@ class WablasController extends Controller
                 $jenis_antrian = JenisAntrian::find( $this->message );
                 // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
                 // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
+                $tenant = Tenant::find(1);
                 $jadwalGigi = $this->jamBukaDokterGigiHariIni();
                 if (
-                     $this->message == '2' && //antrian poli gigi
-                     !$jadwalGigi  //tidak ada jadwal gigi hari ini
+                    (
+                        $this->message == '2' && //antrian poli gigi
+                        !$jadwalGigi &&  //tidak ada jadwal gigi hari ini
+                        $tenant->dentist_available
+                    ) ||
+                    !$tenant->dentist_available
                 ) {
                     $message = 'Hari ini pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
                     $message .= PHP_EOL;
@@ -2852,7 +2856,9 @@ class WablasController extends Controller
                     return false;
 
                 // jika tidak ada antrian di dalam poli batalkan reservasi
-                } else if (  !$this->sudahAdaAntrianUntukJenisAntrian( $this->message )  ) { 
+                } else if (
+                    !$this->sudahAdaAntrianUntukJenisAntrian( $this->message )
+                ) {
                     $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
@@ -4646,7 +4652,6 @@ class WablasController extends Controller
         if (
             $antrian->pasien_id
         ) {
-            Log::info(4637);
             if ( 
                 $antrian->registrasi_pembayaran_id == 1 || 
                 (
@@ -4654,7 +4659,6 @@ class WablasController extends Controller
                     $antrian->verifikasi_bpjs == 1 // dan sudah verifikasi BPJS
                 )
             ) {
-                Log::info(4645);
                 $ap                             = new AntrianPoliController;
                 $ap->input_pasien_id            = $antrian->pasien_id;
                 $ap->input_asuransi_id          = Asuransi::BiayaPribadi()->id;
