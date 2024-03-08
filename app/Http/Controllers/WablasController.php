@@ -91,7 +91,10 @@ class WablasController extends Controller
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
 
-            NoTelp::firstOrCreate(['no_telp' => $this->no_telp]);
+            NoTelp::firstOrCreate([
+                'no_telp' => $this->no_telp,
+                'tenant_id' => 1
+            ]);
 
             $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
