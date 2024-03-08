@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
 use App\Models\Complain;
+use App\Models\NoTelp;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
 use App\Events\RefreshDiscussion;
@@ -89,6 +90,9 @@ class WablasController extends Controller
 		) {
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
+
+            NoTelp::firstOrCreate(['no_telp' => $this->no_telp]);
+
             $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->first();
@@ -114,6 +118,9 @@ class WablasController extends Controller
 			if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
 				$this->estetika_buka = false;
 			}
+
+
+
 		}
 	}
     public function webhook2(){
@@ -433,7 +440,7 @@ class WablasController extends Controller
                 ) {
                     $whatsapp_registration_id = $this->whatsapp_registration->id;
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
-                    $this->langsungKeAntrianPoliBilaMemungkinkan( $this->whatsapp_registration->antrian );
+                    /* $this->langsungKeAntrianPoliBilaMemungkinkan( $this->whatsapp_registration->antrian ); */
                     //jika pasien_id tidak kosong, maka pasien langsung masuk saja ke antrianpoli
                     //==========================================================================
                 }
@@ -3235,7 +3242,7 @@ class WablasController extends Controller
                     $antrian->antriable_id             = $antrian->id;
                     $antrian->save();
 
-                    $this->langsungKeAntrianPoliBilaMemungkinkan($antrian);
+                    /* $this->langsungKeAntrianPoliBilaMemungkinkan($antrian); */
 
                     $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
 
