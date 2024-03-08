@@ -2448,10 +2448,9 @@ class WablasController extends Controller
         $message = 'Bisa dibantu infokan Jadwal Konsultasi yang ingin diketahui?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $jumlah_antrian = $this->jumlahAntrian();
-        $message .= '1. Dokter Umum (ada ' . $jumlah_antrian['dokter_umum']. ' antrian)';
+        $message .= '1. Dokter Umum ';
         $message .= PHP_EOL;
-        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian['dokter_gigi']. ' antrian)';
+        $message .= '2. Dokter Gigi ';
         $message .= PHP_EOL;
         $message .= '3. Bidan';
         $message .= PHP_EOL;
