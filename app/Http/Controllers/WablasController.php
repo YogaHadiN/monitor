@@ -4510,7 +4510,7 @@ class WablasController extends Controller
                     'jam_mulai_pemeriksaan_fisik'                       => null,
                     'jam_selesai_pemeriksaan_fisik'                     => null,
                     'kartu_asuransi_image'                              => null,
-                    'existing_antrian_ids'                              => [],
+                    'existing_antrian_ids'                              => '[]',
                     'complain_id'                                       => null,
                     'qr_code_path_s3'                                   => null,
                     'reservasi_online'                                  => 1,
