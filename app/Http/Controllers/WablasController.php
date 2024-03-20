@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request; 
 use App\Models\AntrianPoli;
 use App\Models\Message;
+use App\Models\KeluhanEstetik;
 use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
 use App\Models\Complain;
@@ -4340,7 +4341,7 @@ class WablasController extends Controller
                 if ( $this->message == '1' ) {
                     $konsultasi_estetik_online->registering_confirmation = $this->message;
                     $konsultasi_estetik_online->save();
-                    $message = $this->tanyaKeluhanUtama();
+                    $message = $this->tanyaKeluhanEstetikId();
                 } else if ( $this->message == '2' ){
                     $konsultasi_estetik_online = KonsultasiEstetikOnline::create([
                         'konfirmasi_sdk' => 1,
@@ -4348,6 +4349,26 @@ class WablasController extends Controller
                     ]);
                     $message = $this->tanyaNamaLengkapAtauPilihPasien( $konsultasi_estetik_online );
                 }
+            } else {
+                $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
+                $message .= $this->pesanMintaKlienBalasUlang();
+                $message = $this->tanyaKeluhanUtama();
+            }
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
+            is_null( $konsultasi_estetik_online->keluhan_estetik_id )
+        ) {
+            if (
+                !is_null( KeluhanEstetik::find( $this->message ))
+            ) {
+                $konsultasi_estetik_online->keluhan_estetik_id = $this->message;
+                $konsultasi_estetik_online->save();
             } else {
                 $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
                 $message .= $this->pesanMintaKlienBalasUlang();
@@ -4364,6 +4385,7 @@ class WablasController extends Controller
         ) {
             $konsultasi_estetik_online->keluhan_utama = $this->message;
             $konsultasi_estetik_online->save();
+
             $message = $this->tanyaPeriodeKeluhanUtama();
         } else if ( 
             !is_null( $konsultasi_estetik_online ) &&
@@ -4690,4 +4712,17 @@ class WablasController extends Controller
             }
         }
     }
+    public function tanyaKeluhanEstetikId(){
+        $message = "Bisa dibantu keluhan yang dialami?";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        foreach (KeluhanEstetik::all() as $k => $keluhan) {
+            $nomor = $k + 1;
+            $message .= $nomor . '. ' $keluhan->keluhan_estetik;
+            $message .= PHP_EOL;
+        }
+
+        return $message;
+    }
+    
 }
