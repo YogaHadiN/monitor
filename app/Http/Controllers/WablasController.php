@@ -4481,6 +4481,55 @@ class WablasController extends Controller
                 $message = $this->nextPicturePlease();
                 $message .= $this->syaratFoto();
             } else if ( $this->message == 'selesai' ) {
+                Antrian::create([
+                    'jenis_antrian_id'                                  => 4,
+                    'url'                                               => null,
+                    'nomor'                                             => Antrian::nomorAntrian(4),
+                    'antriable_id'                                      => null,
+                    'antriable_type'                                    => 'App\Models\Antrian',
+                    'dipanggil'                                         => 0,
+                    'no_telp'                                           => $this->no_telp,
+                    'nama'                                              => $konsultasi_estetik_online->nama,
+                    'tanggal_lahir'                                     => $konsultasi_estetik_online->tanggal_lahir,
+                    'tenant_id'                                         => 1,
+                    'kode_unik'                                         => Antrian::kodeUnik(),
+                    'registrasi_pembayaran_id'                          => 1,
+                    'nomor_bpjs'                                        => null,
+                    'satisfaction_index'                                => null,
+                    'complaint'                                         => null,
+                    'register_previously_saved_patient'                 => $konsultasi_estetik_online->register_previously_saved_patient,
+                    'pasien_id'                                         => $konsultasi_estetik_online->pasien_id,
+                    'recovery_index_id'                                 => null,
+                    'informasi_terapi_gagal'                            => null,
+                    'menunggu'                                          => 0,
+                    'notifikasi_panggilan_aktif'                        => 1,
+                    'alamat'                                            => $konsultasi_estetik_online->alamat,
+                    'notifikasi_resep_terkirim'                         => 0,
+                    'jam_panggil_pasien_di_pendaftaran'                 => null,
+                    'jam_selesai_didaftarkan_dan_status_didapatkan'     => null,
+                    'jam_mulai_pemeriksaan_fisik'                       => null,
+                    'jam_selesai_pemeriksaan_fisik'                     => null,
+                    'kartu_asuransi_image'                              => null,
+                    'existing_antrian_ids'                              => [],
+                    'complain_id'                                       => null,
+                    'qr_code_path_s3'                                   => null,
+                    'reservasi_online'                                  => 1,
+                    'sudah_hadir_di_klinik'                             => 0,
+                    'data_bpjs_cocok'                                   => 0,
+                    'jam_pasien_mulai_mengantri'                        => Carbon::now()->format('Y-m-d H:i:s'),
+                    'customer_satisfaction_survey_sent'                 => 0,
+                    'terakhir_dipanggil'                                => 0,
+                    'menunggu_darurat'                                  => 0,
+                    'dipanggil_pemeriksa'                               => 1,
+                    'daftarkan_sekarang'                                => 1,
+                    'jam_janji_datang'                                  => null,
+                    'konfirmasi_waktu_pelayanan'                        => null,
+                    'konfirmasi_informasi_waktu_pelayanan_obat_racikan' => null,
+                    'verifikasi_bpjs'                                   => null,
+                    'image_penolakan_pcare'                             => null,
+                    'complain_pelayanan_lama'                           => null,
+                    'minta_rujukan'                                     => 0
+                ]);
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
             } else  {
@@ -4509,8 +4558,12 @@ class WablasController extends Controller
             'no_telp'         => $this->no_telp,
             'whatsapp_bot_id' => $whatsapp_bot->id
         ]);
-        $message = 'Kakak akan melakukan registrasi untuk konsultasi estetis secara online';
+        $message = 'Kakak akan melakukan registrasi untuk konsultasi kulit dan kecantikan secara online';
         $message .= PHP_EOL;
+        $message .= 'Semua biaya yang akan dibebankan setelahnya hanya dapat menggunakan Biaya Pribadi dan tidak dapat menggunakan asuransi apapun';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Apabila setuju dengan ketentuan di atas,';
         $message .= PHP_EOL;
         $message .= 'Ketik *ya* untuk melanjutkan ';
         $message .= $this->batalkan();
@@ -4722,8 +4775,6 @@ class WablasController extends Controller
             $message .= $nomor . '. ' .$keluhan->keluhan_estetik;
             $message .= PHP_EOL;
         }
-
         return $message;
     }
-    
 }
