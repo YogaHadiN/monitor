@@ -4513,7 +4513,7 @@ class WablasController extends Controller
                     'existing_antrian_ids'                              => '[]',
                     'complain_id'                                       => null,
                     'qr_code_path_s3'                                   => null,
-                    'reservasi_online'                                  => 1,
+                    'reservasi_online'                                  => 0,
                     'sudah_hadir_di_klinik'                             => 0,
                     'data_bpjs_cocok'                                   => 0,
                     'jam_pasien_mulai_mengantri'                        => Carbon::now()->format('Y-m-d H:i:s'),
