@@ -4481,7 +4481,7 @@ class WablasController extends Controller
                 $message = $this->nextPicturePlease();
                 $message .= $this->syaratFoto();
             } else if ( $this->message == 'selesai' ) {
-                Antrian::create([
+                $antrian_template = [
                     'jenis_antrian_id'                                  => 4,
                     'url'                                               => null,
                     'nomor'                                             => Antrian::nomorAntrian(4),
@@ -4529,7 +4529,8 @@ class WablasController extends Controller
                     'image_penolakan_pcare'                             => null,
                     'complain_pelayanan_lama'                           => null,
                     'minta_rujukan'                                     => 0
-                ]);
+                ];
+                Antrian::create($antrian_template);
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
             } else  {
