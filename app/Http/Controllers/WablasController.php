@@ -4231,8 +4231,10 @@ class WablasController extends Controller
         echo 'Semua fitur dibatalkan. Silahkan ulangi jika diperlukan';
     }
     public function prosesKonsultasiEstetik(){
+        $now = Carbon::now();
         $konsultasi_estetik_online = KonsultasiEstetikOnline::where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
+             ->whereBetween('created_at',[$now->copy()->startOfDay(), $now->copy()->endOfDay()])
              ->first();
         $message = '';
         $input_tidak_tepat = false;
