@@ -3624,7 +3624,7 @@ class WablasController extends Controller
         return $message;
     }
     public function tanyaKeluhanUtama(){
-        return "Bisa dibantu sebutkan keluhan yang dialami?";
+        return "Bisa dibantu jelaskan keluhan yang dialami? (kirim dalam 1 pesan)";
     }
     public function tanyaNamaLengkapAtauPilihPasien($konsultasi_estetik_online){
         $data = $this->queryPreviouslySavedPatientRegistry();
