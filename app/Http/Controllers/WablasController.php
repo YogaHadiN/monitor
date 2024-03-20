@@ -4525,7 +4525,7 @@ class WablasController extends Controller
                     'jam_janji_datang'                                  => null,
                     'konfirmasi_waktu_pelayanan'                        => null,
                     'konfirmasi_informasi_waktu_pelayanan_obat_racikan' => null,
-                    'verifikasi_bpjs'                                   => null,
+                    'verifikasi_bpjs'                                   => 0,
                     'image_penolakan_pcare'                             => null,
                     'complain_pelayanan_lama'                           => null,
                     'minta_rujukan'                                     => 0
