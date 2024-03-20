@@ -4369,6 +4369,7 @@ class WablasController extends Controller
             ) {
                 $konsultasi_estetik_online->keluhan_estetik_id = $this->message;
                 $konsultasi_estetik_online->save();
+                $message = $this->tanyaKeluhanUtama();
             } else {
                 $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
                 $message .= $this->pesanMintaKlienBalasUlang();
