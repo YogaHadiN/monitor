@@ -4527,7 +4527,7 @@ class WablasController extends Controller
                     'konfirmasi_informasi_waktu_pelayanan_obat_racikan' => null,
                     'verifikasi_bpjs'                                   => 0,
                     'image_penolakan_pcare'                             => null,
-                    'complain_pelayanan_lama'                           => '',
+                    'complain_pelayanan_lama'                           => 0,
                     'minta_rujukan'                                     => 0
                 ];
                 Log::info('$antrian_template');
