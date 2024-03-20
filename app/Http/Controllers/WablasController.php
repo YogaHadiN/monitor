@@ -4718,7 +4718,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         foreach (KeluhanEstetik::all() as $k => $keluhan) {
             $nomor = $k + 1;
-            $message .= $nomor . '. ' $keluhan->keluhan_estetik;
+            $message .= $nomor . '. ' .$keluhan->keluhan_estetik;
             $message .= PHP_EOL;
         }
 
