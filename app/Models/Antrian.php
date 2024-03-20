@@ -28,7 +28,6 @@ class Antrian extends Model
             WhatsappRegistration::where('antrian_id', $model->id)->delete();
         });
     }
-    
     protected $guarded = [];
 	public function jenis_antrian(){
 		return $this->belongsTo('App\Models\JenisAntrian');

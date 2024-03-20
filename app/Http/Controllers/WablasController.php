@@ -4530,6 +4530,8 @@ class WablasController extends Controller
                     'complain_pelayanan_lama'                           => null,
                     'minta_rujukan'                                     => 0
                 ];
+                Log::info('$antrian_template');
+                Log::info($antrian_template);
                 Antrian::create($antrian_template);
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
