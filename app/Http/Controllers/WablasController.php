@@ -3627,6 +3627,7 @@ class WablasController extends Controller
     }
     public function tanyaNamaLengkapAtauPilihPasien($konsultasi_estetik_online){
         $data = $this->queryPreviouslySavedPatientRegistry();
+        Log::info($data);
         if (count($data)) {
             $message = $this->pesanUntukPilihPasien();
         } else {
