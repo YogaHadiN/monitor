@@ -4496,7 +4496,7 @@ class WablasController extends Controller
                     'registrasi_pembayaran_id'                          => 1,
                     'nomor_bpjs'                                        => null,
                     'satisfaction_index'                                => null,
-                    'complaint'                                         => null,
+                    'complaint'                                         => '',
                     'register_previously_saved_patient'                 => $konsultasi_estetik_online->register_previously_saved_patient,
                     'pasien_id'                                         => $konsultasi_estetik_online->pasien_id,
                     'recovery_index_id'                                 => null,
