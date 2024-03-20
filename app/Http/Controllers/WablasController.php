@@ -3632,7 +3632,6 @@ class WablasController extends Controller
             $message = $this->pesanUntukPilihPasien();
         } else {
             $konsultasi_estetik_online->register_previously_saved_patient = 0;
-            $konsultasi_estetik_online->registering_confirmation = 0;
             $konsultasi_estetik_online->save();
             $message = $this->tanyaNamaLengkapPasien();
         }
