@@ -4327,7 +4327,7 @@ class WablasController extends Controller
             ) {
                 $konsultasi_estetik_online->sex = 1;
                 $konsultasi_estetik_online->hamil = 0;
-                $message = $this->tanyaHamil();
+                $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
             } else if (
                 $this->message == 2
             ) {
