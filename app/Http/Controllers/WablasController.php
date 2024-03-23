@@ -4344,7 +4344,7 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->sex ) &&
-            is_null( $konsultasi_estetik_online->hamil ) &&
+            is_null( $konsultasi_estetik_online->hamil ) 
         ) {
             if (
                 $this->message == 1
