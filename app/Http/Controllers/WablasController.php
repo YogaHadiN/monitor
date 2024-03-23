@@ -4309,7 +4309,7 @@ class WablasController extends Controller
             if (!is_null( $tanggal )) {
                 $konsultasi_estetik_online->tanggal_lahir  = $tanggal;
                 $konsultasi_estetik_online->save();
-                $message = $this->tanyaAlamatLengkapPasien();
+                $message = $this->tanyaJenisKelamin();
             } else {
                 $message =  $this->tanyaTanggalLahirPasien();
                 $input_tidak_tepat = true;
@@ -4320,11 +4320,46 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
-            is_null( $konsultasi_estetik_online->alamat )
+            is_null( $konsultasi_estetik_online->sex )
         ) {
-            $konsultasi_estetik_online->alamat  = $this->message;
+            if (
+                $this->message == 1
+            ) {
+                $konsultasi_estetik_online->sex = 1;
+                $konsultasi_estetik_online->hamil = 0;
+                $message = $this->tanyaHamil();
+            } else if (
+                $this->message == 2
+            ) {
+                $konsultasi_estetik_online->sex = 0;
+                $message = $this->tanyaHamil();
+            } else {
+                $message = $this->tanyaJenisKelamin();
+            }
             $konsultasi_estetik_online->save();
-            $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            is_null( $konsultasi_estetik_online->hamil ) &&
+        ) {
+            if (
+                $this->message == 1
+            ) {
+                $konsultasi_estetik_online->hamil = 1;
+                $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
+            } else if (
+                $this->message == 2
+            ) {
+                $konsultasi_estetik_online->hamil = 0;
+                $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
+            } else {
+                $message = $this->tanyaHamil();
+            }
+            $konsultasi_estetik_online->save();
         } else if ( 
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
@@ -4332,6 +4367,8 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            !is_null( $konsultasi_estetik_online->hamil ) &&
             is_null( $konsultasi_estetik_online->registering_confirmation )
         ) {
             if (
@@ -4530,9 +4567,13 @@ class WablasController extends Controller
                     'complain_pelayanan_lama'                           => 0,
                     'minta_rujukan'                                     => 0
                 ];
-                Log::info('$antrian_template');
-                Log::info($antrian_template);
-                Antrian::create($antrian_template);
+                $antrian = Antrian::create($antrian_template);
+                $antrian->antriable_id = $antrian->id;
+                $antrian->save();
+
+                $konsultasi_estetik_online->antrian_id = $antrian->id;
+                $konsultasi_estetik_online->save();
+
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
             } else  {
@@ -4780,4 +4821,30 @@ class WablasController extends Controller
         }
         return $message;
     }
+
+    public function tanyaJenisKelamin(){
+         $message = 'Bisa dibantu *Jenis Kelamin* pasien?';
+         $message .= PHP_EOL;
+         $message .= PHP_EOL;
+         $message .= '1. Laki-laki';
+         $message .= PHP_EOL;
+         $message .= '2. Wanita';
+         $message .= PHP_EOL;
+         $message .= PHP_EOL;
+         $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
+         return $message;
+    }
+    public function tanyaHamil(){
+         $message = 'Apakah pasien dalam kondisi hamil?';
+         $message .= PHP_EOL;
+         $message .= PHP_EOL;
+         $message .= '1. Hamil';
+         $message .= PHP_EOL;
+         $message .= '2. Tidak hamil';
+         $message .= PHP_EOL;
+         $message .= PHP_EOL;
+         $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
+         return $message;
+    }
+    
 }
