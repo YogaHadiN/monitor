@@ -4327,7 +4327,7 @@ class WablasController extends Controller
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
             !is_null( $konsultasi_estetik_online->nama ) &&
-            !is_null( $konsultasi_estetik_online->tanggal_lahir ) 
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             is_null( $konsultasi_estetik_online->alamat ) &&
         ) {
             $konsultasi_estetik_online->alamat  = $this->message;
