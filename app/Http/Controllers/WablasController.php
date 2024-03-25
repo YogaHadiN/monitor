@@ -4602,6 +4602,7 @@ class WablasController extends Controller
             }
             Log::info(4603);
         }
+        Log::info(4605);
 
         if (!empty(trim($message))) {
             $message .= PHP_EOL;
@@ -4613,6 +4614,7 @@ class WablasController extends Controller
             echo $message;
         } else {
         }
+        Log::info(4617);
     }
 
     public function konsultasiEstetikOnlineStart(){
