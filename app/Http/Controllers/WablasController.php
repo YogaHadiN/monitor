@@ -4317,7 +4317,7 @@ class WablasController extends Controller
             if (!is_null( $tanggal )) {
                 $konsultasi_estetik_online->tanggal_lahir  = $tanggal;
                 $konsultasi_estetik_online->save();
-                $message = $this->tanyaJenisKelamin();
+                $message = $this->tanyaAlamatLengkapPasien();
             } else {
                 $message =  $this->tanyaTanggalLahirPasien();
                 $input_tidak_tepat = true;
@@ -4327,7 +4327,19 @@ class WablasController extends Controller
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
             !is_null( $konsultasi_estetik_online->nama ) &&
+            !is_null( $konsultasi_estetik_online->tanggal_lahir ) 
+            is_null( $konsultasi_estetik_online->alamat ) &&
+        ) {
+            $konsultasi_estetik_online->alamat  = $this->message;
+            $konsultasi_estetik_online->save();
+            $message = $this->tanyaJenisKelamin();
+        } else if ( 
+            !is_null( $konsultasi_estetik_online ) &&
+            $konsultasi_estetik_online->konfirmasi_sdk &&
+            !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
+            !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
             is_null( $konsultasi_estetik_online->sex )
         ) {
             Log::info(4329);
@@ -4352,6 +4364,7 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
+            !is_null( $konsultasi_estetik_online->alamat ) &&
             !is_null( $konsultasi_estetik_online->sex ) &&
             is_null( $konsultasi_estetik_online->hamil ) 
         ) {
@@ -4412,6 +4425,8 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            !is_null( $konsultasi_estetik_online->hamil ) &&
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             is_null( $konsultasi_estetik_online->keluhan_estetik_id )
         ) {
@@ -4433,6 +4448,8 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            !is_null( $konsultasi_estetik_online->hamil ) &&
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             is_null( $konsultasi_estetik_online->keluhan_utama )
         ) {
@@ -4448,6 +4465,8 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            !is_null( $konsultasi_estetik_online->hamil ) &&
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             !is_null( $konsultasi_estetik_online->keluhan_utama ) &&
             is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )
@@ -4475,6 +4494,8 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            !is_null( $konsultasi_estetik_online->hamil ) &&
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             !is_null( $konsultasi_estetik_online->keluhan_utama )&&
             !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )&&
@@ -4491,6 +4512,8 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            !is_null( $konsultasi_estetik_online->hamil ) &&
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             !is_null( $konsultasi_estetik_online->keluhan_utama )&&
             !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )&&
@@ -4522,6 +4545,8 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
+            !is_null( $konsultasi_estetik_online->sex ) &&
+            !is_null( $konsultasi_estetik_online->hamil ) &&
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             !is_null( $konsultasi_estetik_online->keluhan_utama )&&
             !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )&&
