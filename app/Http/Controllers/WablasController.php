@@ -4232,6 +4232,7 @@ class WablasController extends Controller
         echo 'Semua fitur dibatalkan. Silahkan ulangi jika diperlukan';
     }
     public function prosesKonsultasiEstetik(){
+        Log::info(4235);
         $now = Carbon::now();
         $konsultasi_estetik_online = KonsultasiEstetikOnline::where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
