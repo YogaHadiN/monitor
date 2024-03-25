@@ -4243,11 +4243,14 @@ class WablasController extends Controller
 
         if( is_null( $konsultasi_estetik_online ) ){
             $this->whatsapp_bot->delete();
+        } else {
+            Log::info('ada');
         }
         if (
             !is_null( $konsultasi_estetik_online ) &&
             $this->message == 'batalkan'
         ) {
+            Log::info(4253);
             $konsultasi_estetik_online->delete();
             $this->whatsapp_bot->delete();
             echo 'Reservasi dibatalkan';
@@ -4597,6 +4600,7 @@ class WablasController extends Controller
                 Log::info(4596);
                 echo "Balasan yang kakak buat bukan gambar. Mohon masukkan gambar";
             }
+            Log::info(4603);
         }
 
         if (!empty(trim($message))) {
