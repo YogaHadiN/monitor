@@ -4376,16 +4376,19 @@ class WablasController extends Controller
                 $this->message == '2'
             ) {
                 if ( $this->message == '1' ) {
+                    Log::info(4379);
                     $konsultasi_estetik_online->registering_confirmation = $this->message;
                     $konsultasi_estetik_online->save();
                     $message = $this->tanyaKeluhanEstetikId();
                 } else if ( $this->message == '2' ){
+                    Log::info(4384);
                     $konsultasi_estetik_online = KonsultasiEstetikOnline::create([
                         'konfirmasi_sdk' => 1,
                         'whatsapp_bot_id' => $this->whatsapp_bot->id
                     ]);
                     $message = $this->tanyaNamaLengkapAtauPilihPasien( $konsultasi_estetik_online );
                 }
+                Log::info(4391);
             } else {
                 $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
                 $message .= $this->pesanMintaKlienBalasUlang();
