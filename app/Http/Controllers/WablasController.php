@@ -3628,7 +3628,6 @@ class WablasController extends Controller
     }
     public function tanyaNamaLengkapAtauPilihPasien($konsultasi_estetik_online){
         $data = $this->queryPreviouslySavedPatientRegistry();
-        Log::info(count( $data ));
         if (count($data)) {
             $message = $this->pesanUntukPilihPasien();
         } else {
@@ -4232,7 +4231,6 @@ class WablasController extends Controller
         echo 'Semua fitur dibatalkan. Silahkan ulangi jika diperlukan';
     }
     public function prosesKonsultasiEstetik(){
-        Log::info(4235);
         $now = Carbon::now();
         $konsultasi_estetik_online = KonsultasiEstetikOnline::where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
@@ -4244,13 +4242,11 @@ class WablasController extends Controller
         if( is_null( $konsultasi_estetik_online ) ){
             $this->whatsapp_bot->delete();
         } else {
-            Log::info('ada');
         }
         if (
             !is_null( $konsultasi_estetik_online ) &&
             $this->message == 'batalkan'
         ) {
-            Log::info(4253);
             $konsultasi_estetik_online->delete();
             $this->whatsapp_bot->delete();
             echo 'Reservasi dibatalkan';
@@ -4258,7 +4254,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online ) &&
             !$konsultasi_estetik_online->konfirmasi_sdk
         ) {
-            Log::info(4257);
             if ( 
                 $this->message == 'ya' || 
                 $this->message == 'iy' || 
@@ -4274,7 +4269,6 @@ class WablasController extends Controller
             $konsultasi_estetik_online->konfirmasi_sdk &&
             is_null( $konsultasi_estetik_online->register_previously_saved_patient ) 
         ) {
-            Log::info(4273);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
@@ -4296,7 +4290,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
             is_null( $konsultasi_estetik_online->nama ) 
         ) {
-            Log::info(4295);
             if ( validateName( $this->message ) ) {
                 $konsultasi_estetik_online->nama  = ucwords(strtolower($this->message));;
                 $konsultasi_estetik_online->save();
@@ -4312,7 +4305,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->nama ) &&
             is_null( $konsultasi_estetik_online->tanggal_lahir ) 
         ) {
-            Log::info(4311);
             $tanggal = $this->convertToPropperDate();
             if (!is_null( $tanggal )) {
                 $konsultasi_estetik_online->tanggal_lahir  = $tanggal;
@@ -4342,7 +4334,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->alamat ) &&
             is_null( $konsultasi_estetik_online->sex )
         ) {
-            Log::info(4329);
             if (
                 $this->message == 1
             ) {
@@ -4368,7 +4359,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->sex ) &&
             is_null( $konsultasi_estetik_online->hamil ) 
         ) {
-            Log::info(4354);
             if (
                 $this->message == 1
             ) {
@@ -4394,25 +4384,21 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->hamil ) &&
             is_null( $konsultasi_estetik_online->registering_confirmation )
         ) {
-            Log::info(4380);
             if (
                 $this->message == '1' ||
                 $this->message == '2'
             ) {
                 if ( $this->message == '1' ) {
-                    Log::info(4379);
                     $konsultasi_estetik_online->registering_confirmation = $this->message;
                     $konsultasi_estetik_online->save();
                     $message = $this->tanyaKeluhanEstetikId();
                 } else if ( $this->message == '2' ){
-                    Log::info(4384);
                     $konsultasi_estetik_online = KonsultasiEstetikOnline::create([
                         'konfirmasi_sdk' => 1,
                         'whatsapp_bot_id' => $this->whatsapp_bot->id
                     ]);
                     $message = $this->tanyaNamaLengkapAtauPilihPasien( $konsultasi_estetik_online );
                 }
-                Log::info(4391);
             } else {
                 $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
                 $message .= $this->pesanMintaKlienBalasUlang();
@@ -4430,7 +4416,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             is_null( $konsultasi_estetik_online->keluhan_estetik_id )
         ) {
-            Log::info(4414);
             if (
                 !is_null( KeluhanEstetik::find( $this->message ))
             ) {
@@ -4453,7 +4438,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->registering_confirmation ) &&
             is_null( $konsultasi_estetik_online->keluhan_utama )
         ) {
-            Log::info(4435);
             $konsultasi_estetik_online->keluhan_utama = $this->message;
             $konsultasi_estetik_online->save();
 
@@ -4471,7 +4455,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->keluhan_utama ) &&
             is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )
         ) {
-            Log::info(4451);
             if (
                 $this->message == '1' || 
                 $this->message == '2' || 
@@ -4501,7 +4484,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )&&
             is_null( $konsultasi_estetik_online->pengobatan_sebelumnya )
         ) {
-            Log::info(4479);
             $konsultasi_estetik_online->pengobatan_sebelumnya = $this->message;
             $konsultasi_estetik_online->save();
             $message = $this->pertanyaanJenisKulit();
@@ -4520,7 +4502,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->pengobatan_sebelumnya )&&
             is_null( $konsultasi_estetik_online->jenis_kulit_id )
         ) {
-            Log::info(4496);
             if (
                 $this->message == '1' || 
                 $this->message == '2' || 
@@ -4553,7 +4534,6 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online->pengobatan_sebelumnya )&&
             !is_null( $konsultasi_estetik_online->jenis_kulit_id )
         ) {
-            Log::info(4527);
             if ( $this->isPicture() ) {
                 $filename = $this->uploadImage();
                 $konsultasi_estetik_online->gambarPeriksa()->create([
@@ -4622,12 +4602,9 @@ class WablasController extends Controller
                 $this->whatsapp_bot->delete();
                 echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik";
             } else  {
-                Log::info(4596);
                 echo "Balasan yang kakak buat bukan gambar. Mohon masukkan gambar";
             }
-            Log::info(4603);
         }
-        Log::info(4605);
 
         if (!empty(trim($message))) {
             $message .= PHP_EOL;
@@ -4639,7 +4616,6 @@ class WablasController extends Controller
             echo $message;
         } else {
         }
-        Log::info(4617);
     }
 
     public function konsultasiEstetikOnlineStart(){
