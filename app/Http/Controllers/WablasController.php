@@ -4277,6 +4277,10 @@ class WablasController extends Controller
                 $konsultasi_estetik_online->pasien_id                         = $pasien->pasien_id;
                 $konsultasi_estetik_online->nama                              = $pasien->nama;
                 $konsultasi_estetik_online->alamat                            = $pasien->alamat;
+                $konsultasi_estetik_online->sex                            = $pasien->sex;
+                if ($pasien->sex == 1) {
+                    $konsultasi_estetik_online->hamil                            = 0;
+                }
                 $konsultasi_estetik_online->tanggal_lahir                     = $pasien->tanggal_lahir;
                 $message                                                      = $this->tanyaLanjutkanAtauUlangi($konsultasi_estetik_online);
             } else {
