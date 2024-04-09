@@ -151,7 +151,7 @@ class WablasController extends Controller
     }
     
 	
-	public function webhook2(){
+	public function webhook(){
         $date_now = date('Y-m-d H:i:s');
         if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
             echo $this->libur();
