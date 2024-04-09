@@ -127,23 +127,12 @@ class WablasController extends Controller
 
 		}
 	}
-    public function webhook2(){
-        header("Content-Type: application/json");
-
-        $payload[] = [
-            'category' => 'image',
-            'caption' => 'Yog keren',
-            'urlFile' => secure_url('storage/image/online_reservation/qr_code/A163487.png')
-        ];
-
-        return response()->json([
-            'status' => true,
-            'data'   => $payload
-        ])->header('Content-Type', 'application/json');
+    public function webhook(){
+        echo "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H, KLINIK JATI ELOK Tutup tanggal 9 April Pukul 13:00 WIB dan akan buka kembali pada 13 April Pukul 13:00 WIB. Selamat Hari Raya Idul Fitri 1445H. Minal Aidzin Wal Faidzin. Mohon maaf lahir dan batin";
     }
     
 	
-	public function webhook(){
+	public function webhook2(){
         header('Content-Type: application/json');
         if ( $this->message == 'daftar' ) {
             echo $this->registrasiAntrianOnline();
