@@ -128,7 +128,24 @@ class WablasController extends Controller
 		}
 	}
     public function webhook(){
-        echo "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H, KLINIK JATI ELOK Tutup tanggal 9 April Pukul 13:00 WIB dan akan buka kembali pada 13 April Pukul 13:00 WIB. Selamat Hari Raya Idul Fitri 1445H. Minal Aidzin Wal Faidzin. Mohon maaf lahir dan batin";
+        $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
+        $message .= PHP_EOL;
+        $message .= "KLINIK JATI ELOK Tutup tanggal ";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "9 April Pukul 13:00 WIB dan";
+        $message .= PHP_EOL;
+        $message .= "akan buka kembali pada ";
+        $message .= PHP_EOL;
+        $message .= "13 April Pukul 13:00 WIB. ";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Selamat Hari Raya Idul Fitri 1445H. ";
+        $message .= PHP_EOL;
+        $message .= "Minal Aidzin Wal Faidzin.";
+        $message .= PHP_EOL;
+        $message .= " Mohon maaf lahir dan batin";
+        echo $message;
     }
     
 	
