@@ -2230,7 +2230,7 @@ class WablasController extends Controller
                             $message .= PHP_EOL;
                             $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
                             $message .= PHP_EOL;
-                            $message .= 'Apabila antrian Anda terlewat, secara otomatis antrian akan terapus oleh sistem';
+                            $message .= 'Apabila antrian Anda terlewat, *Sebelum melakukan Scab QR CODE*, secara otomatis antrian akan terapus oleh sistem';
                             $message .= PHP_EOL;
 
                         } else if (
@@ -3940,6 +3940,8 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat';
+            $message .= PHP_EOL;
+            $message .= 'Sebelum anda melakukan scan QR di klinik';
             $message .= PHP_EOL;
             $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum antrian anda dipanggil';
             $message .= PHP_EOL;
