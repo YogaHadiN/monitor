@@ -2440,12 +2440,14 @@ class WablasController extends Controller
             }
             if ( $param == 1 ) {
                 $staf = $this->lastStaf();
-                $message .= PHP_EOL;
-                $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel, ucwords( strtolower($staf->nama) ) );
-                $message .= PHP_EOL;
-                $message .= 'untuk memastikan silahkan hubungi 021-5977529';
-                $message .= PHP_EOL;
-                $message .= 'Terima kasih';
+                if (!is_null( $staf )) {
+                    $message .= PHP_EOL;
+                    $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel, ucwords( strtolower($staf->nama) ) );
+                    $message .= PHP_EOL;
+                    $message .= 'untuk memastikan silahkan hubungi 021-5977529';
+                    $message .= PHP_EOL;
+                    $message .= 'Terima kasih';
+                }
             }
         } else {
             $message = 'Fitur ini dalam pengembangan';
@@ -2506,7 +2508,7 @@ class WablasController extends Controller
         $query .= "and sta.tenant_id = 1 ";
         $query .= "ORDER BY prx.id desc ";
         $query .= "LIMIT 1";
-        return DB::select($query)[0];
+        return isset( DB::select($query)[0] ) ?  DB::select($query)[0]  : null;
     }
 
     public function masihAdaYangBelumCekListHariIni(){
