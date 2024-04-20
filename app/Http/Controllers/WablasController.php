@@ -1166,6 +1166,10 @@ class WablasController extends Controller
                     $antrian->complaint = $this->message;
                     $antrian->complain_id = $complain->id;
                     $antrian->save();
+
+                    $complain->tanggal_kejadian = $antrian->created_at;
+                    $complain->nama_pasien      = $antrian->antriable->pasien?->nama;
+                    $complain->save();
                 }
             } else if(
                 !$antrians->count()
