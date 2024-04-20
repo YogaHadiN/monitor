@@ -1167,7 +1167,9 @@ class WablasController extends Controller
                     $antrian->complain_id = $complain->id;
                     $antrian->save();
                 }
-            } else {
+            } else if(
+                !$antrians->count()
+            ) {
                 WhatsappBot::create([
                     'no_telp' => $this->no_telp,
                     'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
