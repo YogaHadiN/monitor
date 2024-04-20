@@ -288,6 +288,9 @@ class WablasController extends Controller
                 } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
                     /* Log::info(265); */
                     return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
+                } else if( $this->validasiTanggalDanNamaPasienKeluhan() ) {
+
+                    return $this->balasanValidasiTanggalDanNamaPasienKeluhan();
                 } else if( $this->validasiWaktuPelayanan() ) {
                     /* Log::info(268); */
                     return $this->balasanKonfirmasiWaktuPelayanan();
@@ -1153,16 +1156,29 @@ class WablasController extends Controller
                 'complain'  => $this->message
             ]);
 
-            $antrian = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->first();
-            if (!is_null( $antrian )) {
-                $antrian->complaint = $this->message;
-                $antrian->complain_id = $complain->id;
-                $antrian->save();
+            $antrians = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->get();
+            if ($antrians->count()) {
+                foreach ($antrians as $antrian) {
+                    $antrian->complaint = $this->message;
+                    $antrian->complain_id = $complain->id;
+                    $antrian->save();
+                }
+            } else {
+                WhatsappBot::create([
+                    'no_telp' => $this->no_telp,
+                    'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
+                ]);
+
+                $message = 'Mohon dapat diinfokan tanggal keluhan tersebut terjadi';
+                $message .= PHP_EOL;
+                $message .= 'Agar kami dapat menindak lanjuti keluhan kakak.';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= '(Contoh : 23-04-2024)';
+                echo $message;
             }
 
             if ( $this->no_telp !== '6281381912803' ) {
-                /* Log::info(1124); */
-                /* Log::info( $this->no_telp ); */
                 $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
                 $messageToBoss .=  PHP_EOL;
                 $messageToBoss .=  PHP_EOL;
@@ -4892,5 +4908,42 @@ class WablasController extends Controller
          $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
          return $message;
     }
+    public function validasiTanggalDanNamaPasienKeluhan(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(15);
+    }
     
+    public function balasanValidasiTanggalDanNamaPasienKeluhan(){
+        $tanggal = $this->convertToPropperDate( $this->message );
+        $today = Carbon::now();
+        $complain = Complain::where('no_telp', $this->no_telp)
+                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                            ->first();
+        if (
+            !is_null( $complain ) &&
+            is_null( $complain->tanggal )
+        ) {
+            if (!is_null( $tanggal )) {
+                $complain->tanggal = $tanggal;
+                $complain->save();
+
+                echo "Mohon diinfokan nama pasien saat keluhan tersebut terjadi";
+            } else {
+                $input_tidak_tepat = true;
+            }
+        } elseif (
+            !is_null( $complain ) &&
+            !is_null( $complain->tanggal ) &&
+            is_null( $complain->nama_pasien )
+        )  {
+            $complain->nama_pasien = $this->message;
+            $complain->save();
+            $message = 'Terima kasih atas informasi yang kakak berikan';
+            $message .= PHP_EOL;
+            $message .= 'Kami akan berusaha semaksimal mungkin agar keluhan yang serupa tidak terjadi kembali';
+            $message .= PHP_EOL;
+            $message .= 'Terima kasih telah membantu kami untuk dapat memperbaiki pelayanan kami';
+            $this->whatsapp_bot->delete();
+            echo $message;
+        }
+    }
 }
