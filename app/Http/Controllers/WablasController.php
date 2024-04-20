@@ -221,6 +221,7 @@ class WablasController extends Controller
 
             $this->tenant = Tenant::find(1);
 
+            Log::info(224);
             if (
                 !is_null( $this->no_telp ) &&
                 !Input::get('isFromMe') 
@@ -304,6 +305,7 @@ class WablasController extends Controller
             } else {
                 Log::info(281);
             }
+            Log::info(309);
         }
 	}
     private function proceedRegistering()
