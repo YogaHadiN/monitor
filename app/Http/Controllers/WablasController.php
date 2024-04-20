@@ -1156,6 +1156,7 @@ class WablasController extends Controller
                 'complain'  => $this->message
             ]);
 
+            $antrian = null;
             $antrians = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->get();
             if ($antrians->count()) {
                 foreach ($antrians as $antrian) {
