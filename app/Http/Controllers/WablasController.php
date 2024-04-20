@@ -1169,14 +1169,7 @@ class WablasController extends Controller
                     'no_telp' => $this->no_telp,
                     'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
                 ]);
-
-                $message = 'Mohon dapat diinfokan tanggal keluhan tersebut terjadi';
-                $message .= PHP_EOL;
-                $message .= 'Agar kami dapat menindak lanjuti keluhan kakak.';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= '(Contoh : 23-04-2024)';
-                echo $message;
+                echo $this->tanyaKapanKeluhanTerjadi();
             }
 
             if ( $this->no_telp !== '6281381912803' ) {
@@ -4922,7 +4915,7 @@ class WablasController extends Controller
                             ->first();
         if (
             !is_null( $complain ) &&
-            is_null( $complain->tanggal )
+            is_null( $complain->tanggal_kejadian )
         ) {
             if (!is_null( $tanggal )) {
                 $complain->tanggal = $tanggal;
@@ -4930,11 +4923,14 @@ class WablasController extends Controller
 
                 echo "Mohon diinfokan nama pasien saat keluhan tersebut terjadi";
             } else {
-                $input_tidak_tepat = true;
+                $message = $this->tanyaKapanKeluhanTerjadi();
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= "Input yang kakak masukkan tidak dikenali. Mohon diulangi";
             }
         } elseif (
             !is_null( $complain ) &&
-            !is_null( $complain->tanggal ) &&
+            !is_null( $complain->tanggal_kejadian ) &&
             is_null( $complain->nama_pasien )
         )  {
             $complain->nama_pasien = $this->message;
@@ -4947,5 +4943,16 @@ class WablasController extends Controller
             $this->whatsapp_bot->delete();
             echo $message;
         }
+    }
+
+    public function tanyaKapanKeluhanTerjadi(){
+        $message = 'Mohon dapat diinfokan tanggal keluhan tersebut terjadi';
+        $message .= PHP_EOL;
+        $message .= 'Agar kami dapat menindak lanjuti keluhan kakak.';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '(Contoh : 23-04-2024)';
+
+        return $message;
     }
 }
