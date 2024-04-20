@@ -2363,6 +2363,7 @@ class WablasController extends Controller
     }
 
     public function prosesMainMenuInquiry(){
+        Log::info(2366);
         $message = '';
         if ( $this->message == 1 ) {
             WhatsappJadwalKonsultasiInquiry::create([
