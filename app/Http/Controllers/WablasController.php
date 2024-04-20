@@ -1170,17 +1170,13 @@ class WablasController extends Controller
                     'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
                 ]);
                 echo $this->tanyaKapanKeluhanTerjadi();
-            }
-
-            if ( $this->no_telp !== '6281381912803' ) {
+            } else if ( $this->no_telp !== '6281381912803' ) {
                 $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
                 $messageToBoss .=  PHP_EOL;
                 $messageToBoss .=  PHP_EOL;
                 $messageToBoss .=  $this->message;
                 $this->sendSingle('6281381912803', $messageToBoss);
-            }
-
-            if (
+            } else if (
                 $this->lama() &&
                 !is_null( $antrian ) &&
                 $antrian->antriable_type == 'App\Models\Periksa'
