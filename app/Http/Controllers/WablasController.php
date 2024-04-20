@@ -4921,7 +4921,9 @@ class WablasController extends Controller
             Log::info(4921);
             if (!is_null( $tanggal )) {
                 Log::info(4923);
-                $complain->tanggal = $tanggal;
+                Log::info('tanggal');
+                Log::info($tanggal);
+                $complain->tanggal_kejadian = $tanggal;
                 $complain->save();
 
                 echo "Mohon diinfokan nama pasien saat keluhan tersebut terjadi";
