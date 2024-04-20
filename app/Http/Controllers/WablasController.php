@@ -4934,6 +4934,7 @@ class WablasController extends Controller
             !is_null( $complain->tanggal_kejadian ) &&
             is_null( $complain->nama_pasien )
         )  {
+            Log::info(4937);
             $complain->nama_pasien = $this->message;
             $complain->save();
             $message = 'Terima kasih atas informasi yang kakak berikan';
@@ -4941,6 +4942,7 @@ class WablasController extends Controller
             $message .= 'Kami akan berusaha semaksimal mungkin agar keluhan yang serupa tidak terjadi kembali';
             $message .= PHP_EOL;
             $message .= 'Terima kasih telah membantu kami untuk dapat memperbaiki pelayanan kami';
+            Log::info(4945);
             $this->whatsapp_bot->delete();
             echo $message;
         }
