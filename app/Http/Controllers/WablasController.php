@@ -84,7 +84,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info(87);
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -222,91 +221,63 @@ class WablasController extends Controller
 
             $this->tenant = Tenant::find(1);
 
-            Log::info(224);
             if (
                 !is_null( $this->no_telp ) &&
                 !Input::get('isFromMe') 
             ) {
                 if ( !is_null( $this->whatsapp_registration ) ) {
-                    Log::info(205);
                     return $this->proceedRegistering(); //register untuk pendaftaran pasien
                 } else if (!is_null( $this->whatsapp_complaint )){
-                    Log::info(208);
                     return $this->registerWhatsappComplaint(); //register untuk pendataan complain pasien
                 } else if (!is_null( $this->failed_therapy  )) {
-                    Log::info(211);
                     return $this->registerFailedTherapy(); //register untuk pendataan kegagalan terapi
                 } else if (!is_null( $this->whatsapp_satisfaction_survey  )) {
-                    Log::info(214);
                     return $this->registerWhatsappSatisfactionSurvey(); //register untuk survey kepuasan pasien
                 } else if (!is_null( $this->whatsapp_recovery_index  )) {
-                    Log::info(217);
                     return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
                 } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
-                    Log::info(220);
                     return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
                 } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
-                    Log::info(223);
                     return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
                 } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
-                    Log::info(226);
                     return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
                 } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
-                    Log::info(229);
                     return $this->prosesCekListBulanan(); // proses cek list bulanan
                 } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
-                    Log::info(232);
                     return $this->prosesCekListBulananInput(); // proses cek list bulanan
                 } else if ( $this->cekListMingguanExists() ) { // Jika ada cek list bulanan
-                    Log::info(235);
                     return $this->prosesCekListMingguan(); // proses cek list bulanan
                 } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan
-                    Log::info(238);
                     return $this->prosesCekListMingguanInput(); // proses cek list bulanan
                 } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
-                    Log::info(241);
                     return $this->prosesCekListHarian(); // proses cek list harian
                 } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
-                    Log::info(244);
                     return $this->prosesCekListHarianInput(); // proses cek list harian
                 } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
-                    Log::info(247);
                     return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
                 } else if ( $this->whatsappKonsultasiEstetikExists() ) {
-                    Log::info(250);
                     return $this->prosesKonsultasiEstetik(); // buat main menu
                 } else if ( $this->batalkanAntrianExists() ) {
-                    Log::info(253);
                     return $this->batalkanAntrian(); // buat main menu
                 } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
-                    Log::info(256);
                     return $this->prosesBpjsNumberInquiry(); // buat main menu
                 } else if ( $this->whatsappAntrianOnlineExists() ) {
-                    Log::info(259);
                     return $this->prosesAntrianOnline(); // buat main menu
                 } else if ( $this->whatsappGambarPeriksaExists() ) {
-                    Log::info(262);
                     return $this->prosesGambarPeriksa(); // buat main menu
                 } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
-                    Log::info(265);
                     return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
                 } else if( $this->validasiTanggalDanNamaPasienKeluhan() ) {
-                    Log::info(292);
                     return $this->balasanValidasiTanggalDanNamaPasienKeluhan();
                 } else if( $this->validasiWaktuPelayanan() ) {
-                    Log::info(268);
                     return $this->balasanKonfirmasiWaktuPelayanan();
                 } else if( $this->noTelpDalamChatWithAdmin() ) {
-                    Log::info(271);
                     $this->createWhatsappChat(); // buat main menu
                 } else if( $this->pasienTidakDalamAntrian() ) {
-                    Log::info(274);
                     return $this->createWhatsappMainMenu(); // buat main menu
                 }
             } else {
-                Log::info(281);
             }
-            Log::info(309);
         }
 	}
     private function proceedRegistering()
@@ -401,19 +372,16 @@ class WablasController extends Controller
             if (
                 preg_match('~[0-9]+~', $this->message)
             ) { ///string mengndung angka
-                /* Log::info(350); */
                 $input_tidak_tepat = true;
                 $this->pesan_error = '```Nama tidak boleh mengandung angka```';
             } else if(
                 strstr( $this->message , PHP_EOL)
             ) { ///string mengndung line break, pasien mencoba mendaftarkan dua pasien sekaligus
-                /* Log::info(356); */
                 $input_tidak_tepat = true;
                 $this->pesan_error = '```Masukkan data pasien satu persatu```';
                 $this->pesan_error .= PHP_EOL;
                 $this->pesan_error .= '```Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
             } else {
-                /* Log::info(360); */
                 $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
                 $this->whatsapp_registration->antrian->save();
             }
@@ -508,10 +476,6 @@ class WablasController extends Controller
                             'message' => 'ERROR :' .$this->message,
                             'no_telp' => $this->no_telp
                         ]);
-                        Log::info('===================');
-                        Log::info('ERRORR');
-                        Log::info( $this->message );
-                        Log::info('===================');
                     }
                     $response .=  PHP_EOL;
                     $response .=  PHP_EOL;
@@ -1223,21 +1187,6 @@ class WablasController extends Controller
             /* https://wa.me/6181381912803?text=hallo%20nama%20saya%20Yoga%20Hadi%20Nugroho */
 
         } else {
-            Log::info("=====================================");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("=====================================");
-            Log::info( Input::get('message') );
-            Log::info("=====================================");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("ERROR");
-            Log::info("=====================================");
         }
 
     }
@@ -2311,9 +2260,6 @@ class WablasController extends Controller
             ->whereRaw("antriable_type not like 'App\\\\\\\Models\\\\\\\Periksa' ") // yang ini gagal
             ->get() ;
 
-        /* Log::info('antrian'); */
-        /* Log::info( $antrian->count() ); */
-        /* Log::info( $antrian ); */
         return !Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->whereRaw("antriable_type not like 'App\\\\\\\Models\\\\\\\Periksa' ") // yang ini gagal
@@ -2362,7 +2308,6 @@ class WablasController extends Controller
     }
 
     public function prosesMainMenuInquiry(){
-        Log::info(2366);
         $message = '';
         if ( $this->message == 1 ) {
             WhatsappJadwalKonsultasiInquiry::create([
@@ -2873,7 +2818,6 @@ class WablasController extends Controller
                      strtotime('now') > strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']))
                 ) {
                     $jam_akhir_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
-                    /* Log::info($jadwalGigi['jam_akhir']); */
                     $jam_akhir_offline  = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
                     $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
@@ -2923,7 +2867,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
-            /* Log::info(2849); */
             if ( 
                 $this->message == 'ya' || 
                 $this->message == 'iya' || 
@@ -2992,13 +2935,11 @@ class WablasController extends Controller
                             $code >= 200 &&
                             $code <= 299
                         ){
-                            /* Log::info(2679); */
                             if ( 
                                 !is_null($message) &&
                                 $message['aktif'] &&
                                 $message['kdProviderPst']['kdProvider'] == '0221B119'
                             ) {
-                                /* Log::info(2685); */
                                 $reservasi_online->pasien_id                         = $pasien->id;
                                 $reservasi_online->nama                              = $pasien->nama;
                                 $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
@@ -3008,21 +2949,18 @@ class WablasController extends Controller
                                      !is_null( $pasien->bpjs_image ) &&
                                      !empty( $pasien->bpjs_image )
                                 ) {
-                                    /* Log::info(2695); */
                                     $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
                                 }
                                 if (
                                      !is_null( $pasien->nomor_asuransi_bpjs ) &&
                                      !empty( $pasien->nomor_asuransi_bpjs )
                                 ) {
-                                    /* Log::info(2702); */
                                     $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
                                 }
                             } else if(
                                 !is_null($message) &&
                                 !$message['aktif']
                             ) {
-                                /* Log::info(2709); */
                                 $input_tidak_tepat = true;
                                 $this->pesan_error = 'Kartu tidak aktif karena :';
                                 $this->pesan_error .= PHP_EOL;
@@ -3031,12 +2969,10 @@ class WablasController extends Controller
                                 !is_null($message) &&
                                 $message['kdProviderPst']['kdProvider'] !== '0221B119'
                             ) {
-                                /* Log::info(2718); */
                                 $input_tidak_tepat = true;
                                 $this->pesan_error = $this->validasiBpjsProviderSalah( $pasien->nomor_asuransi_bpjs, $message );
                             }
                         } else {
-                            /* Log::info(2723); */
                             $reservasi_online->pasien_id                         = $pasien->id;
                             $reservasi_online->nama                              = $pasien->nama;
                             $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
@@ -3081,7 +3017,6 @@ class WablasController extends Controller
                 if (
                     $code == 204 // jika tidak ditemukan
                 ) {
-                    /* Log::info(2744); */
                     $input_tidak_tepat = true;
                     $this->pesan_error = 'Nomor BPJS tidak ditemukan di sistem BPJS';
                 } else if (
@@ -3091,7 +3026,6 @@ class WablasController extends Controller
                     // bagi lagi apakah pasien kartunya aktif atau tidak aktif
                     $pasien                            = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
                     if ( !is_null( $pasien ) ) {
-                        /* Log::info(2755); */
                         $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
                     }
                     if (
@@ -3100,13 +3034,11 @@ class WablasController extends Controller
                         $message['kdProviderPst']['kdProvider'] == '0221B119' &&
                         $reservasi_online->data_bpjs_cocok
                     ) { // jika aktig
-                        /* Log::info(2764); */
                         $reservasi_online->nomor_asuransi_bpjs = $this->message;
                         if ( 
                             !is_null( $pasien ) && // jika pasien dengan nomor asuransi bpjs ditemukan
                             is_null( $reservasi_online->pasien ) // dan pasien tidak dalam pendaftaran previously registered
                         ) {
-                            /* Log::info(2770); */
                             // update sesuai dengan pasien yang ditemukan
                             $reservasi_online->pasien_id            = $pasien->id;
                             $reservasi_online->nama                 = $pasien->nama;
@@ -3117,12 +3049,10 @@ class WablasController extends Controller
                              !is_null( $reservasi_online->pasien ) && // jika previously registered
                              $reservasi_online->data_bpjs_cocok  // dan data bpjs cocok
                         ) {
-                            /* Log::info(2780); */
                             // do nothing?
                         } else if (
                             is_null( $pasien )  // jika pasien yang memiliki tidak ditemukan di atika namun ditemukan di pcare
                         ) {
-                            /* Log::info(2786); */
                             $reservasi_online->nama            = $message['nama'];
                             $reservasi_online->tanggal_lahir   = Carbon::createFromFormat("d-m-Y", $message['tglLahir'])->format("Y-m-d");
                         }
@@ -3130,7 +3060,6 @@ class WablasController extends Controller
                         !is_null( $message ) && 
                         !$message['aktif']
                     ) { // jika tidak aktif
-                        /* Log::info(2794); */
                         $input_tidak_tepat = true;
                         $this->pesan_error = 'Kartu tidak aktif karena :';
                         $this->pesan_error .= PHP_EOL;
@@ -3139,14 +3068,12 @@ class WablasController extends Controller
                         !is_null( $message ) && 
                         $message['kdProviderPst']['kdProvider'] !== '0221B119'
                     ) { // jika tidak aktif
-                        /* Log::info(2803); */
                         $input_tidak_tepat = true;
                         $this->pesan_error = $this->validasiBpjsProviderSalah( $this->message, $message );
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
                     ) { // jika error
-                        /* Log::info(2810); */
                         $input_tidak_tepat = true;
                         $this->pesan_error = $this->validasiBpjsDataTidakCocok( $this->message, $message );
                     }
@@ -3162,7 +3089,6 @@ class WablasController extends Controller
                     }
                 }
             } else {
-                /* Log::info(2816); */
                 $input_tidak_tepat = true;
             }
             $reservasi_online->save();
@@ -3243,7 +3169,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->alamat ) &&
             !is_null( $reservasi_online->kartu_asuransi_image )
         ) {
-            /* Log::info(2834); */
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                 ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
@@ -3335,7 +3260,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
         ) {
-            /* Log::info(2994); */
             $message = $this->tanyaNomorBpjsPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3346,7 +3270,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
             is_null( $reservasi_online->nama ) 
         ) {
-            /* Log::info(3005); */
             $message = $this->tanyaNamaLengkapPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3370,7 +3293,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->tanggal_lahir ) &&
             is_null( $reservasi_online->alamat )
         ) {
-            /* Log::info(3030); */
             $message = $this->tanyaAlamatLengkapPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3384,7 +3306,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->alamat ) &&
             is_null( $reservasi_online->kartu_asuransi_image )
         ) {
-            /* Log::info(3044); */
             $message = $this->tanyaKartuAsuransiImage($reservasi_online);
         } else if ( 
             !is_null( $reservasi_online ) &&
@@ -3398,7 +3319,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->alamat ) &&
             !is_null( $reservasi_online->kartu_asuransi_image )
         ) {
-            /* Log::info(3058); */
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
         }
 
@@ -4922,17 +4842,12 @@ class WablasController extends Controller
             !is_null( $complain ) &&
             is_null( $complain->tanggal_kejadian )
         ) {
-            Log::info(4921);
             if (!is_null( $tanggal )) {
-                Log::info(4923);
-                Log::info('tanggal');
-                Log::info($tanggal);
                 $complain->tanggal_kejadian = $tanggal;
                 $complain->save();
 
                 echo "Mohon diinfokan nama pasien saat keluhan tersebut terjadi";
             } else {
-                Log::info(4929);
                 $message = $this->tanyaKapanKeluhanTerjadi();
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
@@ -4943,7 +4858,6 @@ class WablasController extends Controller
             !is_null( $complain->tanggal_kejadian ) &&
             is_null( $complain->nama_pasien )
         )  {
-            Log::info(4937);
             $complain->nama_pasien = $this->message;
             $complain->save();
             $message = 'Terima kasih atas informasi yang kakak berikan';
@@ -4951,11 +4865,9 @@ class WablasController extends Controller
             $message .= 'Kami akan berusaha semaksimal mungkin agar keluhan yang serupa tidak terjadi kembali';
             $message .= PHP_EOL;
             $message .= 'Terima kasih telah membantu kami untuk dapat memperbaiki pelayanan kami';
-            Log::info(4945);
             $this->whatsapp_bot->delete();
             echo $message;
         }
-        Log::info(4952);
     }
 
     public function tanyaKapanKeluhanTerjadi(){
