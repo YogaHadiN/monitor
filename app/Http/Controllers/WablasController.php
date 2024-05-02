@@ -185,6 +185,11 @@ class WablasController extends Controller
                     'message' => $this->message,
                     'no_telp' => $this->no_telp
                 ]);
+            } else if (
+                $this->message == 'batalkan'
+            ) {
+                resetWhatsappRegistration( $this->no_telp );
+                echo 'layanan dibatalkan semua. Silahkan ulangi kembali';
             }
 
             $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
