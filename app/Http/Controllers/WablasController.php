@@ -2372,6 +2372,8 @@ class WablasController extends Controller
             $message .= "_Balasan yang Anda masukkan tidak dikenali_";
             $message .= PHP_EOL;
             $message .= "_Mohon diulangi_";
+            $message .= PHP_EOL;
+            $message .= "_Atau ketik *batalkan* untuk mengulangi dari awal_";
         }
     }
     public function balasJadwalDokterUmum(){
