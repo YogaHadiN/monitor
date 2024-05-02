@@ -2365,7 +2365,6 @@ class WablasController extends Controller
             $message .= $this->pesanMintaKlienBalasUlang();
             echo $message;
         } else {
-            
             $message .= $this->messageWhatsappMainMenu();
             $message .= PHP_EOL;
             $message .= PHP_EOL;
