@@ -2359,12 +2359,14 @@ class WablasController extends Controller
         } else if ( $this->message == 6 ) {
             echo $this->konsultasiEstetikOnlineStart();
         } else if( isset( $this->whatsapp_bot ) && $this->whatsapp_bot->prevent_repetition == 0 ) {
+            Log::info(2362);
             $this->whatsapp_bot->prevent_repetition = 1;
             $this->whatsapp_bot->save();
             $message = $this->messageWhatsappMainMenu();
             $message .= $this->pesanMintaKlienBalasUlang();
             echo $message;
         } else {
+            Log::info(2369);
             $message .= $this->messageWhatsappMainMenu();
             $message .= PHP_EOL;
             $message .= PHP_EOL;
