@@ -189,7 +189,9 @@ class WablasController extends Controller
                 $this->message == 'batalkan'
             ) {
                 resetWhatsappRegistration( $this->no_telp );
-                echo 'layanan dibatalkan semua. Silahkan ulangi kembali';
+                $message =  'Layanan dibatalkan semua. Silahkan ulangi kembali';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
             }
 
             $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
