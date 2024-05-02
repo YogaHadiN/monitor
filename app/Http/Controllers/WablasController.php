@@ -1393,6 +1393,14 @@ class WablasController extends Controller
      *
      * @return void
      */
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    
+
     private function createWhatsappMainMenu(){
         $message = '*Klinik Jati Elok*';
         $message .= PHP_EOL;
@@ -2356,6 +2364,14 @@ class WablasController extends Controller
             $message = $this->messageWhatsappMainMenu();
             $message .= $this->pesanMintaKlienBalasUlang();
             echo $message;
+        } else {
+            
+            $message .= $this->messageWhatsappMainMenu();
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "_Balasan yang Anda masukkan tidak dikenali_";
+            $message .= PHP_EOL;
+            $message .= "_Mohon diulangi_";
         }
     }
     public function balasJadwalDokterUmum(){
