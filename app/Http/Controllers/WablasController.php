@@ -2332,10 +2332,8 @@ class WablasController extends Controller
                 $this->balasJadwalDokterUsg();
             }
         } else {
-            $message = 'Balasan yang anda masukkan tidak dikenali';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->pertanyaanTipeKonsultasi();
+            $message = $this->pertanyaanTipeKonsultasi();
+            $message .= $this->templateUlangi();
             echo $message;
         }
     }
@@ -2366,17 +2364,27 @@ class WablasController extends Controller
             $message .= $this->pesanMintaKlienBalasUlang();
             echo $message;
         } else {
-            Log::info(2369);
-            $message .= $this->messageWhatsappMainMenu();
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "_Balasan yang Anda masukkan tidak dikenali_";
-            $message .= PHP_EOL;
-            $message .= "_Mohon diulangi_";
-            $message .= PHP_EOL;
-            $message .= "_Atau ketik *batalkan* untuk mengulangi dari awal_";
+            $message = $this->messageWhatsappMainMenu();
+            $message .= $this->templateUlangi();
         }
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function templateUlangi()
+    {
+        $message = PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "_Balasan yang Anda masukkan tidak dikenali_";
+        $message .= PHP_EOL;
+        $message .= "_Mohon diulangi_";
+        $message .= PHP_EOL;
+        $message .= "_Atau ketik *batalkan* untuk mengulangi dari awal_";
+        return $message;
+    }
+    
     public function balasJadwalDokterUmum(){
         echo $this->queryJadwalKonsultasiByTipeKonsultasi(1);
     }
