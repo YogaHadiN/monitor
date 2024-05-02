@@ -152,6 +152,8 @@ class WablasController extends Controller
     
 	
 	public function webhook(){
+        Log::info(155);
+        echo 'oke';
         $date_now = date('Y-m-d H:i:s');
         /* $date_now = '2024-04-13 13:00:01'; */
         if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
