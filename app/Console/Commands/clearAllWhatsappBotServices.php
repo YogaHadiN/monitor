@@ -11,7 +11,7 @@ class clearAllWhatsappBotServices extends Command
      *
      * @var string
      */
-    protected $signature = 'command:name';
+    protected $signature = 'db:clear_wabot';
 
     /**
      * The console command description.
