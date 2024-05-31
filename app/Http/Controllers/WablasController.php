@@ -150,12 +150,13 @@ class WablasController extends Controller
     
 	
 	public function webhook(){
+        Log::info(153);
+        header('Content-Type: application/json');
         $date_now = date('Y-m-d H:i:s');
         /* $date_now = '2024-04-13 13:00:01'; */
         if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
             echo $this->libur();
         } else {
-            header('Content-Type: application/json');
             if ( $this->message == 'daftar' ) {
                 echo $this->registrasiAntrianOnline();
                 return false;
@@ -232,6 +233,7 @@ class WablasController extends Controller
                 !is_null( $this->no_telp ) &&
                 !Input::get('isFromMe') 
             ) {
+                Log::info('oke235');
                 if ( !is_null( $this->whatsapp_registration ) ) {
                     Log::info(236);
                     return $this->proceedRegistering(); //register untuk pendaftaran pasien
@@ -308,7 +310,6 @@ class WablasController extends Controller
                     Log::info(308);
                     return $this->createWhatsappMainMenu(); // buat main menu
                 }
-            } else {
             }
         }
 	}
