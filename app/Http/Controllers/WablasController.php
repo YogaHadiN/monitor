@@ -4021,6 +4021,7 @@ class WablasController extends Controller
                                 ->count();
     }
     public function registrasiAntrianOnline(){
+        Log::info(4024);
         $whatsapp_bot = WhatsappBot::create([
             'no_telp' => $this->no_telp,
             'whatsapp_bot_service_id' => 6 //registrasi online
