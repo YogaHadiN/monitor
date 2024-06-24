@@ -4221,6 +4221,10 @@ class WablasController extends Controller
     }
     public function createWhatsappChat(){
         if ( !is_null( $this->message ) ) {
+            $message_hari_ini = Message::where('no_telp', $this->no_telp)
+                                ->where('created_at', '>', Carbon::now()->subHour(1))
+                                ->first();
+
             Message::create([
                 'no_telp'       => $this->no_telp,
                 'message'       => $this->message,
@@ -4230,8 +4234,19 @@ class WablasController extends Controller
                 'tenant_id'     => 1,
                 'touched'       => 0
             ]);
+
             event(new RefreshDiscussion( $this->no_telp ));
             event(new RefreshChat());
+            if (is_null( $message_hari_ini )) {
+                $message = 'Kakak akan terhubung dengan tim cs kami.';
+                $message .= PHP_EOL;
+                $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
+                $message .= PHP_EOL;
+                $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
+                $message .= PHP_EOL;
+                $message .= 'Ketik *akhiri* untuk mengakhiri percakapan';
+                echo $message;
+            }
         }
     }
     public function akhiriChatWithAdmin(){
@@ -4730,15 +4745,6 @@ class WablasController extends Controller
     }
     public function chatAdmin(){
         $message = 'Halo.';
-        $message .= PHP_EOL;
-        $message .= 'Kakak akan terhubung dengan tim cs kami.';
-        $message .= PHP_EOL;
-        $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
-        $message .= PHP_EOL;
-        $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
-        $message .= PHP_EOL;
-        $message .= 'Ketik *akhiri* untuk mengakhiri percakapan';
-        $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Ada yang bisa kami bantu?';
 
