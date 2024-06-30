@@ -57,7 +57,7 @@ class ValidateController extends Controller
         $query .= "prx.tanggal as tanggal ";
         $query .= "FROM transaksi_periksas as trx ";
         $query .= "JOIN periksas as prx on prx.id = trx.periksa_id ";
-        $query .= "JOIN taifs as trf on trf.id = trx.tarif_id ";
+        $query .= "JOIN tarifs as trf on trf.id = trx.tarif_id ";
         $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
         $query .= "WHERE periksa_id = '{$id}' ";
         $query .= "AND trf.jenis_tarif_id = ";
