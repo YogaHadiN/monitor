@@ -4241,13 +4241,13 @@ class WablasController extends Controller
             event(new RefreshDiscussion( $this->no_telp ));
             event(new RefreshChat());
             if (is_null( $message_hari_ini )) {
-                $message = 'Kakak akan terhubung dengan tim cs kami.';
+                $message = 'Kakak dalam antrian customer service.';
                 $message .= PHP_EOL;
                 $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
                 $message .= PHP_EOL;
                 $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
                 $message .= PHP_EOL;
-                $message .= 'Ketik *akhiri* untuk mengakhiri percakapan';
+                $message .= 'Balas *akhiri* untuk mengakhiri percakapan';
                 echo $message;
             }
         }
