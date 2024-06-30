@@ -2526,6 +2526,7 @@ class WablasController extends Controller
         $query .= "or prx.tanggal = '{$kemarin}') ";
         $query .= "and prx.tenant_id = 1 ";
         $query .= "and sta.tenant_id = 1 ";
+        $query .= "and sta.titel_id = 2 ";
         $query .= "ORDER BY prx.id desc ";
         $query .= "LIMIT 1";
         return isset( DB::select($query)[0] ) ?  DB::select($query)[0]  : null;
@@ -3993,6 +3994,8 @@ class WablasController extends Controller
             ->get();
 
         foreach ($antrians as $antrian) {
+            $antrian->dibatalkan_pasien = 1;
+            $antrian->save();
             $antrian->antriable->delete();
             $antrian->delete();
         }
