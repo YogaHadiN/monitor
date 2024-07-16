@@ -167,6 +167,9 @@ class WablasController extends Controller
             ) {
                 echo $this->akhiriChatWithAdmin();
                 return false;
+            } else if (str_contains( $this->message ,'jadwal dokter gigi' )) {
+                echo $this->queryJadwalKonsultasiByTipeKonsultasi(2);
+                return false;
             } else if ( $this->message == 'komplain' ) {
                 echo $this->autoReplyComplainMessage();
                 return false;
@@ -3939,9 +3942,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat';
             $message .= PHP_EOL;
-            $message .= 'Sebelum anda melakukan scan QR di klinik';
-            $message .= PHP_EOL;
-            $message .= 'Pastikan kehadiran anda di klinik *30 menit* sebelum antrian anda dipanggil';
+            $message .= 'Pastikan kehadiran anda dan scan QR di klinik *30 menit* sebelum antrian anda dipanggil';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Jika setuju balas *ya* untuk melanjutkan';
