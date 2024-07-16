@@ -178,7 +178,6 @@ class WablasController extends Controller
                     'tenant_id'     => 1,
                     'touched'       => 0
                 ]);
-
                 Message::where('no_telp', $this->no_telp)->update([
                     'sudah_dibalas' => 1
                 ]);
