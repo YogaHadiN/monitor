@@ -179,11 +179,23 @@ class WablasController extends Controller
                     'tenant_id'     => 1,
                     'touched'       => 0
                 ]);
+
+                $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(2);
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $pesan,
+                    'tanggal'       => date("Y-m-d H:i:s"),
+                    'sending'       => 1,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0
+                ]);
+
                 Message::where('no_telp', $this->no_telp)->update([
                     'sudah_dibalas' => 1
                 ]);
 
-                echo $this->queryJadwalKonsultasiByTipeKonsultasi(2);
+                echo $pesan;
 
                 return false;
             } else if ( $this->message == 'komplain' ) {
