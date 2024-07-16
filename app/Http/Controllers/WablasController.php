@@ -168,6 +168,7 @@ class WablasController extends Controller
                 echo $this->akhiriChatWithAdmin();
                 return false;
             } else if (str_contains( $this->message ,'jadwal dokter gigi' )) {
+                Log::info(171);
 
                 Message::create([
                     'no_telp'       => $this->no_telp,
