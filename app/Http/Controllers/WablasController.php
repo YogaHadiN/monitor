@@ -3978,40 +3978,41 @@ class WablasController extends Controller
      */
     private function tanyaSyaratdanKetentuan($jenis_antrian_id)
     {
+        $jenis_antrian = $jenis_antrian_id == '3' ? 'USG Kehamilan' : JenisAntrian::find( $jenis_antrian_id )->jenis_antrian;
+        $message = 'Kakak akan melakukan registrasi ' . ucwords( $jenis_antrian ). ' secara online';
+        $message .= PHP_EOL;
+        $message .= 'Reservasi ini akan ';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '*Dibatalkan secara otomatis*';
+
         if ( $jenis_antrian_id == 1 ) {
-            $message = 'Kakak akan melakukan registrasi Poli Umum secara online';
-            $message .= PHP_EOL;
-            $message .= 'Reservasi ini akan ';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '*Dibatalkan secara otomatis*';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Apabila antrian telah terlewat';
             $message .= PHP_EOL;
             $message .= 'Pastikan kehadiran anda dan scan QR di klinik *30 menit* sebelum antrian anda dipanggil';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Jika setuju balas *ya* untuk melanjutkan';
-            return $message;
         } else if ( $jenis_antrian_id == 2) {
-            $message = 'Kakak akan melakukan registrasi Poli Gigi secara online';
-            $message .= PHP_EOL;
-            $message .= 'Reservasi ini akan ';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '*BATAL secara otomatis apabila*';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= '1. Antrian telah terlewat';
             $message .= PHP_EOL;
             $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
             $message .= "2. Belum tiba di klinik jam {$jam_tiba_paling_lambat}";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Jika setuju balas *ya* untuk melanjutkan';
             return $message;
+        } else {
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $jam_tiba_paling_lambat = JadwalKonsultasi::where('tipe_konsultasi_id', 4) // USG
+                                                        ->where('hari_id', date("N"))
+                                                        ->first()->jam_akhir;
+            $message .= "Belum tiba di klinik jam {$jam_tiba_paling_lambat}";
         }
+
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Jika setuju balas *ya* untuk melanjutkan';
+        return $message;
     }
     public function konfirmasiPembatalan(){
         $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
