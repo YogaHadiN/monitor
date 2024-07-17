@@ -1040,11 +1040,13 @@ class WablasController extends Controller
             $response     .= "di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
             $response     .= PHP_EOL;
             $response     .= PHP_EOL;
-            $sisa_antrian  = $antrian->sisa_antrian;
-            $response     .= "masih ada *{$sisa_antrian} antrian* lagi";
-            $response     .= PHP_EOL;
-            $waktu_tunggu  = $this->waktuTunggu( $antrian->sisa_antrian );
-            $response     .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
+            if ( $antrian->jenis_antrian_id < 3 ) {
+                $sisa_antrian  = $antrian->sisa_antrian;
+                $response     .= "masih ada *{$sisa_antrian} antrian* lagi";
+                $response     .= PHP_EOL;
+                $waktu_tunggu  = $this->waktuTunggu( $antrian->sisa_antrian );
+                $response     .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
+            }
         } else {
             $response .= PHP_EOL;
             $response .= "Anda akan menerima notifikasi setiap kali ada panggilan pasien.";
