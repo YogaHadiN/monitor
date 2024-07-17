@@ -4064,7 +4064,7 @@ class WablasController extends Controller
             $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
             $message .= "2. Belum tiba di klinik jam {$jam_tiba_paling_lambat}";
             return $message;
-        } else {
+        } else if ( $jenis_antrian_id == 3) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $jam_tiba_paling_lambat = JadwalKonsultasi::where('tipe_konsultasi_id', 4) // USG
@@ -4072,6 +4072,14 @@ class WablasController extends Controller
                                                         ->first()->jam_akhir;
             $jam_tiba_paling_lambat = Carbon::parse($jam_tiba_paling_lambat)->format('H:i');
             $message .= "Jika belum tiba di klinik jam {$jam_tiba_paling_lambat}";
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Syarat USG dengan menggunakan Asuransi BPJS : ";
+            $message .= PHP_EOL;
+            $message .= "- Membawa Buku KIA";
+            $message .= PHP_EOL;
+            $message .= "- Pemeriksaan Kehamilan pertama kali pada usia kehamilan 4-12 minggu ";
+            $message .= "atau Pemeriksaan Kehamilan kelima kali pada usia kehamilan diatas 28 minggu";
         }
 
         $message .= PHP_EOL;
