@@ -167,6 +167,32 @@ class WablasController extends Controller
             ) {
                 echo $this->akhiriChatWithAdmin();
                 return false;
+            } else if (str_contains( $this->message ,'jadwal usg' )) {
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $this->message,
+                    'tanggal'       => date("Y-m-d H:i:s"),
+                    'sending'       => 0,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0
+                ]);
+
+                $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(4);
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $pesan,
+                    'tanggal'       => date("Y-m-d H:i:s"),
+                    'sending'       => 1,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0
+                ]);
+                Message::where('no_telp', $this->no_telp)->update([
+                    'sudah_dibalas' => 1
+                ]);
+                echo $pesan;
+                return false;
             } else if (str_contains( $this->message ,'jadwal dokter gigi' )) {
                 Log::info(171);
 
@@ -2870,77 +2896,114 @@ class WablasController extends Controller
                 // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
                 $tenant = Tenant::find(1);
                 $jadwalGigi = $this->jamBukaDokterGigiHariIni();
-                if (
-                    (
-                        $this->message == '2' && //antrian poli gigi
-                        !$jadwalGigi &&  //tidak ada jadwal gigi hari ini
-                        $tenant->dentist_available
-                    ) ||
-                    (
-                        $this->message == '2' && //antrian poli gigi
-                        !$tenant->dentist_available
-                    )
-                ) {
-                    $message = 'Hari ini pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    echo $message;
-                    return false;
-                } else if (
-                     $this->message == '2' && //antrian poli gigi
-                     strtotime('now') < strtotime($jadwalGigi['jam_mulai'])
-                ) {
-                    $jam_mulai = $jadwalGigi['jam_mulai'];
-                    $jam_akhir_daftar_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
+                if ( $this->message == '2') { // antrian poli gigi
+                    if (
+                        (
+                            !$jadwalGigi &&  //tidak ada jadwal gigi hari ini
+                            $tenant->dentist_available
+                        ) ||
+                        (
+                            !$tenant->dentist_available
+                        )
+                    ) {
+                        $message = 'Hari ini pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                        echo $message;
+                        return false;
+                    } else if (
+                         strtotime('now') < strtotime($jadwalGigi['jam_mulai'])
+                    ) {
+                        $jam_mulai = $jadwalGigi['jam_mulai'];
+                        $jam_akhir_daftar_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
-                    $message = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai}";
-                    $message .= "sampai pukul {$jam_akhir_daftar_online}.";
-                    $message .= PHP_EOL;
-                    $message .= "Mohon maaf atas ketidaknyamanannya.";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    echo $message;
-                    return false;
-                // jika tidak ada antrian di dalam poli batalkan reservasi
+                        $message = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai}";
+                        $message .= "sampai pukul {$jam_akhir_daftar_online}.";
+                        $message .= PHP_EOL;
+                        $message .= "Mohon maaf atas ketidaknyamanannya.";
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                        echo $message;
+                        return false;
+                    // jika tidak ada antrian di dalam poli batalkan reservasi
+                    } else if (
+                         strtotime('now') > strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']))
+                    ) {
+                        $jam_akhir_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
+                        $jam_akhir_offline  = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
+
+                        $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
+                        $message .= ". Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}";
+                        $message .= ". Mohon maaf atas ketidaknyamanannya.";
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                        echo $message;
+                        return false;
+
+                    // jika tidak ada antrian di dalam poli batalkan reservasi
+                    } else if (
+                         strtotime('now') > strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir']))
+                    ) {
+                        $message = "Pengambilan antrian Poli Gigi hari ini telah berakhir";
+                        $message .= PHP_EOL;
+                        $message .= ". Mohon maaf atas ketidaknyamanannya.";
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                        echo $message;
+                        return false;
+                    }
+                    // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (
-                     $this->message == '2' && //antrian poli gigi
-                     strtotime('now') > strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']))
+                    $this->message == '3' // USG Kehamilan
                 ) {
-                    $jam_akhir_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
-                    $jam_akhir_offline  = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
-
-                    $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
-                    $message .= ". Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}";
-                    $message .= ". Mohon maaf atas ketidaknyamanannya.";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    echo $message;
-                    return false;
-
-                // jika tidak ada antrian di dalam poli batalkan reservasi
+                    // jika hari ini tidak ada jadwal, batalkan
+                    $jadwal_usg = JadwalKonsultasi::where('hari_id', date("N"))
+                                                    ->where('tipe_konsultasi_id', 4)
+                                                    ->first();
+                    if ( !is_null(  $jadwal_usg  ) ) {
+                        // jika sudah lewat waktunya, tidak bisa daftar lagi
+                        $jam_pendaftaran_usg_berakhir = Carbon::parse( $jadwal_usg->jam_akhir )->subHour()->timestamp;
+                        $jam_pelayanan_usg_berakhir   = Carbon::parse( $jadwal_usg->jam_akhir );
+                        if ( strtotime("now") > $jam_pelayanan_usg_berakhir->timestamp ) {
+                            $message = 'Pelayanan USG Kehamilan hari ini telah selesai pada jam ' . $jam_pelayanan_usg_berakhir->format("H:i"). '. Mohon agar dapat mendaftar kembali saat jadwal USG Kehamilan tersedia';
+                            $message .= PHP_EOL;
+                            $message .= 'Untuk mendapatkan informasi jadwal usg, ketik "Jadwal USG"';
+                            $message .= PHP_EOL;
+                            $message .= 'Mohon maaf atas ketidak nyamanannya';
+                            $message .= PHP_EOL;
+                            $message .= PHP_EOL;
+                            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                            echo $message;
+                            return false;
+                        } else if ( strtotime("now") > $jam_pendaftaran_usg_berakhir->timestamp ) {
+                            $message = 'Pendaftaran USG Kehamilan secara online hari ini telah selesai';
+                            $message .= PHP_EOL;
+                            $message .= 'Kakak dapat mendaftar secara langsung hingga pukul ' . $jam_pelayanan_usg_berakhir->format("H:i");
+                            $message .= PHP_EOL;
+                            $message .= PHP_EOL;
+                            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                            echo $message;
+                            return false;
+                        } else {
+                            $reservasi_online->jenis_antrian_id = $this->message;
+                            $reservasi_online->save();
+                        }
+                    } else {
+                        $message = 'Hari ini tidak ada jadwal USG Kehamilan. Mohon agar dapat mendaftar kembali pada jadwal USG Kehamilan tersedia';
+                        $message .= PHP_EOL;
+                        $message .= 'Untuk mendapatkan informasi jadwal usg, ketik "Jadwal USG"';
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                        echo $message;
+                        return false;
+                    }
                 } else if (
-                     $this->message == '2' && //antrian poli gigi
-                     strtotime('now') > strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir']))
-                ) {
-                    $message = "Pengambilan antrian Poli Gigi hari ini telah berakhir";
-                    $message .= PHP_EOL;
-                    $message .= ". Mohon maaf atas ketidaknyamanannya.";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    echo $message;
-                    return false;
-
-                // jika tidak ada antrian di dalam poli batalkan reservasi
-                } else if (
-                    !$this->sudahAdaAntrianUntukJenisAntrian( $this->message ) &&
-                    (
-                        $this->message == '1' ||
-                        $this->message == '2'
-                    )
+                    !$this->sudahAdaAntrianUntukJenisAntrian( $this->message )
                 ) {
                     $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
@@ -2949,8 +3012,7 @@ class WablasController extends Controller
                     echo $message;
                     return false;
                 } else if (
-                    $this->sudahAdaAntrianUntukJenisAntrian( $this->message ) ||
-                    (int) $this->message > 2
+                    $this->sudahAdaAntrianUntukJenisAntrian( $this->message )
                 ) {
                     $reservasi_online->jenis_antrian_id = $this->message;
                     $reservasi_online->save();
@@ -4006,7 +4068,8 @@ class WablasController extends Controller
             $jam_tiba_paling_lambat = JadwalKonsultasi::where('tipe_konsultasi_id', 4) // USG
                                                         ->where('hari_id', date("N"))
                                                         ->first()->jam_akhir;
-            $message .= "Belum tiba di klinik jam {$jam_tiba_paling_lambat}";
+            $jam_tiba_paling_lambat = Carbon::parse($jam_tiba_paling_lambat)->format('H:i');
+            $message .= "Jika belum tiba di klinik jam {$jam_tiba_paling_lambat}";
         }
 
         $message .= PHP_EOL;
