@@ -3341,6 +3341,7 @@ class WablasController extends Controller
             !is_null( $reservasi_online->jenis_antrian_id ) &&
             is_null( $reservasi_online->registrasi_pembayaran_id )
         ) {
+            Log::info(3344);
             $message = $this->pertanyaanPembayaranPasien();
         } else if ( 
             !is_null( $reservasi_online ) &&
