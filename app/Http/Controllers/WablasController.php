@@ -2936,7 +2936,11 @@ class WablasController extends Controller
 
                 // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (
-                    !$this->sudahAdaAntrianUntukJenisAntrian( $this->message )
+                    !$this->sudahAdaAntrianUntukJenisAntrian( $this->message ) &&
+                    (
+                        $this->message == '1' ||
+                        $this->message == '2'
+                    )
                 ) {
                     $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
@@ -2944,7 +2948,10 @@ class WablasController extends Controller
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                     echo $message;
                     return false;
-                } else if ( $this->sudahAdaAntrianUntukJenisAntrian( $this->message ) ) {
+                } else if (
+                    $this->sudahAdaAntrianUntukJenisAntrian( $this->message ) ||
+                    (int) $this->message > 2
+                ) {
                     $reservasi_online->jenis_antrian_id = $this->message;
                     $reservasi_online->save();
                 } else {
@@ -3553,6 +3560,8 @@ class WablasController extends Controller
         $message .= '1. Dokter Umum (ada ' . $jumlah_antrian['dokter_umum']. ' antrian)';
         $message .= PHP_EOL;
         $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian['dokter_gigi']. ' antrian)';
+        $message .= PHP_EOL;
+        $message .= '3. USG Kehamilan';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
