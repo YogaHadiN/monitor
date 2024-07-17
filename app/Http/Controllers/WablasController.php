@@ -2979,7 +2979,7 @@ class WablasController extends Controller
                             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                             echo $message;
                             return false;
-                        } else if ( strtotime("now") > $jam_pendaftaran_usg_berakhir->timestamp ) {
+                        } else if ( strtotime("now") > $jam_pendaftaran_usg_berakhir ) {
                             $message = 'Pendaftaran USG Kehamilan secara online hari ini telah selesai';
                             $message .= PHP_EOL;
                             $message .= 'Kakak dapat mendaftar secara langsung hingga pukul ' . $jam_pelayanan_usg_berakhir->format("H:i");
