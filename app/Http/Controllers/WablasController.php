@@ -2499,6 +2499,7 @@ class WablasController extends Controller
             }
             $message = '*Jadwal ' . ucwords(strtolower($query[0]->tipe_konsultasi)) . '*';
             $message .= PHP_EOL;
+            $message .= "Klinik Jati Elok";
             $message .= PHP_EOL;
             foreach ($result as $k => $r) {
                 if ( strtolower( $k ) != 'senin' ) {
@@ -2908,7 +2909,15 @@ class WablasController extends Controller
                             !$tenant->dentist_available
                         )
                     ) {
-                        $message = 'Hari ini pelayanan poli gigi libur. Mohon maaf atas ketidaknyamanannya.';
+                        $message = 'Hari ini pelayanan poli gigi libur';
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= 'Silahkan untuk mendaftar kembali saat Poli Gigi tersedia';
+                        $message .= PHP_EOL;
+                        $message .= "Untuk informasi tersebut silahkan ketik 'Jadwal Dokter Gigi'";
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= "Mohon maaf atas ketidaknyamanannya";
                         $message .= PHP_EOL;
                         $message .= PHP_EOL;
                         $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -2987,7 +2996,13 @@ class WablasController extends Controller
                         } else if ( strtotime("now") > $jam_pendaftaran_usg_berakhir ) {
                             $message = 'Pendaftaran USG Kehamilan secara online hari ini telah selesai';
                             $message .= PHP_EOL;
-                            $message .= 'Kakak dapat mendaftar secara langsung hingga pukul ' . $jam_pelayanan_usg_berakhir->format("H:i");
+                            $message .= PHP_EOL;
+                            $message .= 'Kakak masih dapat mendaftar secara langsung di klinik hingga pukul ' . $jam_pelayanan_usg_berakhir->format("H:i");
+                            $message .= PHP_EOL;
+                            $message .= "Atau telpon Klinik di 021-5977529"
+                            $message .= PHP_EOL;
+                            $message .= PHP_EOL;
+                            $message .= "Mohon maaf atas ketidaknyamanannya";
                             $message .= PHP_EOL;
                             $message .= PHP_EOL;
                             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -2998,9 +3013,13 @@ class WablasController extends Controller
                             $reservasi_online->save();
                         }
                     } else {
-                        $message = 'Hari ini tidak ada jadwal USG Kehamilan. Mohon agar dapat mendaftar kembali pada jadwal USG Kehamilan tersedia';
+                        $message = 'Hari ini tidak tersedia jadwal USG Kehamilan. Mohon agar dapat mendaftar kembali pada jadwal USG Kehamilan tersedia';
+                        $message .= PHP_EOL;
                         $message .= PHP_EOL;
                         $message .= 'Untuk mendapatkan informasi jadwal usg, ketik "Jadwal USG"';
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= 'Mohoh maaf atas ketidaknyamanannya';
                         $message .= PHP_EOL;
                         $message .= PHP_EOL;
                         $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
