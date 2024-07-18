@@ -2999,7 +2999,7 @@ class WablasController extends Controller
                             $message .= PHP_EOL;
                             $message .= 'Kakak masih dapat mendaftar secara langsung di klinik hingga pukul ' . $jam_pelayanan_usg_berakhir->format("H:i");
                             $message .= PHP_EOL;
-                            $message .= "Atau telpon Klinik di 021-5977529"
+                            $message .= "Atau telpon Klinik di 021-5977529";
                             $message .= PHP_EOL;
                             $message .= PHP_EOL;
                             $message .= "Mohon maaf atas ketidaknyamanannya";
