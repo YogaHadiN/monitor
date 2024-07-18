@@ -2957,6 +2957,9 @@ class WablasController extends Controller
                         $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                         echo $message;
                         return false;
+                    } else {
+                        $reservasi_online->jenis_antrian_id = $this->message;
+                        $reservasi_online->save();
                     }
                     // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (
