@@ -2236,6 +2236,7 @@ class WablasController extends Controller
         } else if (
              str_contains($this->message, 'chat admin')
         ) {
+            resetWhatsappRegistration($this->no_telp);
             $message = $this->chatAdmin();
         } else if (
              str_contains($this->message, 'batalkan') ||
