@@ -2214,8 +2214,6 @@ class WablasController extends Controller
      */
     private function updateNotifikasPanggilanUntukAntrian()
     {
-        Log::info('message');
-        Log::info( $this->message );
         if (
              str_contains( $this->message,'stop' ) ||
              str_contains( $this->message,'setop' )
