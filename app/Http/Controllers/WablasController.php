@@ -83,6 +83,7 @@ class WablasController extends Controller
 
 	public function __construct(){
         Log::info('BLABLA');
+        Log::info( $this->message );
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -121,10 +122,8 @@ class WablasController extends Controller
 			if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
 				$this->estetika_buka = false;
 			}
-
-
-
 		}
+        Log::info( $this->message );
 	}
     public function libur(){
         $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
