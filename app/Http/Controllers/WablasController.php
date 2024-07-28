@@ -225,6 +225,9 @@ class WablasController extends Controller
             } else if ( $this->message == 'komplain' ) {
                 echo $this->autoReplyComplainMessage();
                 return false;
+            } else if ( $this->message == 'chat admin' ) {
+                resetWhatsappRegistration($this->no_telp);
+                echo $this->chatAdmin();
             } else if (
                 !is_null( $this->message ) &&
                 $this->message            !== '1' &&
@@ -2236,9 +2239,6 @@ class WablasController extends Controller
         ) {
             resetWhatsappRegistration($this->no_telp);
             $message = $this->chatAdmin();
-            Log::info('message');
-            Log::info('2242');
-            Log::info( $this->message );
         } else if (
              str_contains($this->message, 'batalkan') ||
              str_contains($this->message, 'btlkan') ||
