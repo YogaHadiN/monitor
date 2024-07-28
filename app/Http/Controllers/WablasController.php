@@ -4371,10 +4371,10 @@ class WablasController extends Controller
     }
     public function createWhatsappChat(){
         if ( !is_null( $this->message ) ) {
-            $message_hari_ini = Message::where('no_telp', $this->no_telp)
-                                ->where('created_at', '>', Carbon::now()->subHour(1))
-                                ->first();
 
+            $message_hari_ini = Message::where('no_telp', $this->no_telp)
+                                ->where('created_at', '>', $this->whatsapp_bot->created_at)
+                                ->first();
             Message::create([
                 'no_telp'       => $this->no_telp,
                 'message'       => $this->message,
@@ -4387,6 +4387,7 @@ class WablasController extends Controller
 
             event(new RefreshDiscussion( $this->no_telp ));
             event(new RefreshChat());
+
             if (is_null( $message_hari_ini )) {
                 $message = 'Kakak dalam antrian customer service.';
                 $message .= PHP_EOL;
@@ -4902,6 +4903,7 @@ class WablasController extends Controller
             'no_telp' => $this->no_telp,
             'whatsapp_bot_service_id' => 12 // chat dengan admin
         ]);
+
         WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
         WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
         echo $message;
