@@ -82,8 +82,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info('BLABLA');
-        Log::info( $this->message );
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -2238,9 +2236,11 @@ class WablasController extends Controller
         } else if (
              str_contains($this->message, 'chat admin')
         ) {
-            Log::info(2239);
             resetWhatsappRegistration($this->no_telp);
             $message = $this->chatAdmin();
+            Log::info('message');
+            Log::info('2242');
+            Log::info( $this->message );
         } else if (
              str_contains($this->message, 'batalkan') ||
              str_contains($this->message, 'btlkan') ||
