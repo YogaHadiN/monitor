@@ -1248,6 +1248,26 @@ class WablasController extends Controller
                 !is_null( $antrian ) &&
                 $antrian->antriable_type == 'App\Models\Periksa'
             ) {
+                $message = 'Sebelumnya kami mohon maaf atas ketidaknyaman yang kakak rasakan. ';
+                $mesagge .= PHP_EOL;
+                $mesagge .= PHP_EOL;
+                $message .= 'Antrian yang terlalu lama seringkali tidak dapat dihindari apabila antrian pasien sedang banyak atau sedang ada tindakan dokter di ruang UGD. ';
+                $mesagge .= PHP_EOL;
+                $message .= 'Mengenai waktu tunggu pelayanan yg lama kakak dapat menggunakan fitur layanan daftar melalui whatsapp.';
+                $mesagge .= PHP_EOL;
+                $mesagge .= PHP_EOL;
+                $message .= '- kakak bisa mendaftar dari rumah dan mendapat antrian dari rumah ';
+                $mesagge .= PHP_EOL;
+                $message .= '- kakak akan dapat notifikasi setiap kali ada panggilan antrian ';
+                $mesagge .= PHP_EOL;
+                $message .= '- kakak bisa datang ke klinik apabila sudah dekat waktu panggilan';
+                $mesagge .= PHP_EOL;
+                $message .= '- sehingga kakak tidak perlu menunggu lama2 di Klinik.';
+                $mesagge .= PHP_EOL;
+                $mesagge .= PHP_EOL;
+                $message .= 'Silahkan dimanfaatkan dengan whatsapp *"daftar"* kirim ke nomor whatsapp ini. ';
+                $mesagge .= PHP_EOL;
+                $message .= 'Semoga dapat memberikan pengalaman berobat yang lebih baik bagi kakak dan keluarga ';
                 WhatsappBot::create([
                     'no_telp' => $this->no_telp,
                     'whatsapp_bot_service_id' => 14,
