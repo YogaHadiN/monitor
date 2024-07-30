@@ -1217,7 +1217,6 @@ class WablasController extends Controller
                 'complain'  => $this->message
             ]);
 
-
             $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
             $messageToBoss .=  PHP_EOL;
             $messageToBoss .=  PHP_EOL;
@@ -1228,7 +1227,7 @@ class WablasController extends Controller
             $antrians = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->get();
             if ($antrians->count()) {
                 foreach ($antrians as $antrian) {
-                    $antrian->complaint = $this->message;
+                    $antrian->complaint   = $this->message;
                     $antrian->complain_id = $complain->id;
                     $antrian->save();
 
@@ -1253,6 +1252,7 @@ class WablasController extends Controller
                     'no_telp' => $this->no_telp,
                     'whatsapp_bot_service_id' => 14,
                 ]);
+
                 $antrian->complain_pelayanan_lama = 1;
                 $antrian->save();
 
@@ -1276,11 +1276,9 @@ class WablasController extends Controller
                 $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
                 echo $message;
             }
-
-
             /* https://wa.me/6181381912803?text=hallo%20nama%20saya%20Yoga%20Hadi%20Nugroho */
-
         } else {
+
         }
 
     }
@@ -2932,7 +2930,7 @@ class WablasController extends Controller
                         $jam_mulai = $jadwalGigi['jam_mulai'];
                         $jam_akhir_daftar_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
-                        $message = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai}";
+                        $message = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai} ";
                         $message .= "sampai pukul {$jam_akhir_daftar_online}.";
                         $message .= PHP_EOL;
                         $message .= "Mohon maaf atas ketidaknyamanannya.";
@@ -2945,8 +2943,8 @@ class WablasController extends Controller
                     } else if (
                          strtotime('now') > strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']))
                     ) {
-                        $jam_akhir_online = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
-                        $jam_akhir_offline  = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
+                        $jam_akhir_online  = date('H:i', strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir'])));
+                        $jam_akhir_offline = date('H:i', strtotime('-1 hours', strtotime( $jadwalGigi['jam_akhir'])));
 
                         $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
                         $message .= ". Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}";
@@ -4084,11 +4082,10 @@ class WablasController extends Controller
         } else if ( $jenis_antrian_id == 2) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= '1. Antrian telah terlewat';
+            $message .= '- Antrian telah terlewat';
             $message .= PHP_EOL;
             $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
-            $message .= "2. Belum tiba di klinik jam {$jam_tiba_paling_lambat}";
-            return $message;
+            $message .= "- Belum tiba di klinik jam {$jam_tiba_paling_lambat}";
         } else if ( $jenis_antrian_id == 3) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
