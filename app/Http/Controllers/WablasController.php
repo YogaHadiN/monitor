@@ -1225,28 +1225,8 @@ class WablasController extends Controller
 
             $antrian = null;
             $antrians = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->get();
-            if ($antrians->count()) {
-                foreach ($antrians as $antrian) {
-                    $antrian->complaint   = $this->message;
-                    $antrian->complain_id = $complain->id;
-                    $antrian->save();
-
-                    $complain->tanggal_kejadian = $antrian->created_at;
-                    $complain->nama_pasien      = $antrian->antriable->pasien?->nama;
-                    $complain->save();
-                }
-            } else if(
-                !$antrians->count()
-            ) {
-                WhatsappBot::create([
-                    'no_telp' => $this->no_telp,
-                    'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
-                ]);
-                echo $this->tanyaKapanKeluhanTerjadi();
-            } else if (
-                $this->lama() &&
-                !is_null( $antrian ) &&
-                $antrian->antriable_type == 'App\Models\Periksa'
+            if (
+                $this->lama()
             ) {
                 $message = 'Sebelumnya kami mohon maaf atas ketidaknyaman yang kakak rasakan. ';
                 $mesagge .= PHP_EOL;
@@ -1269,15 +1249,39 @@ class WablasController extends Controller
                 $mesagge .= PHP_EOL;
                 $message .= 'Semoga dapat memberikan pengalaman berobat yang lebih baik bagi kakak dan keluarga ';
                 echo $message;
-                /* WhatsappBot::create([ */
-                /*     'no_telp' => $this->no_telp, */
-                /*     'whatsapp_bot_service_id' => 14, */
-                /* ]); */
 
-                /* $antrian->complain_pelayanan_lama = 1; */
-                /* $antrian->save(); */
+            } else if ($antrians->count()) {
+                foreach ($antrians as $antrian) {
+                    $antrian->complaint   = $this->message;
+                    $antrian->complain_id = $complain->id;
+                    $antrian->save();
 
-                /* echo $this->tanyaValidasiWaktuPelayanan(); */
+                    $complain->tanggal_kejadian = $antrian->created_at;
+                    $complain->nama_pasien      = $antrian->antriable->pasien?->nama;
+                    $complain->save();
+                }
+            } else if(
+                !$antrians->count()
+            ) {
+                WhatsappBot::create([
+                    'no_telp' => $this->no_telp,
+                    'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
+                ]);
+                echo $this->tanyaKapanKeluhanTerjadi();
+            } else if (
+                $this->lama() &&
+                !is_null( $antrian ) &&
+                $antrian->antriable_type == 'App\Models\Periksa'
+            ) {
+                WhatsappBot::create([
+                    'no_telp' => $this->no_telp,
+                    'whatsapp_bot_service_id' => 14,
+                ]);
+
+                $antrian->complain_pelayanan_lama = 1;
+                $antrian->save();
+
+                echo $this->tanyaValidasiWaktuPelayanan();
             } else {
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 if (
