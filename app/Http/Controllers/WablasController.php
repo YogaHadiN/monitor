@@ -1228,6 +1228,7 @@ class WablasController extends Controller
             if (
                 $this->lama()
             ) {
+
                 $message = 'Sebelumnya kami mohon maaf atas ketidaknyaman yang kakak rasakan. ';
                 $mesagge .= PHP_EOL;
                 $mesagge .= PHP_EOL;
