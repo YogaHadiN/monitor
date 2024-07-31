@@ -1268,15 +1268,16 @@ class WablasController extends Controller
                 $message .= 'Silahkan dimanfaatkan dengan whatsapp *"daftar"* kirim ke nomor whatsapp ini. ';
                 $mesagge .= PHP_EOL;
                 $message .= 'Semoga dapat memberikan pengalaman berobat yang lebih baik bagi kakak dan keluarga ';
-                WhatsappBot::create([
-                    'no_telp' => $this->no_telp,
-                    'whatsapp_bot_service_id' => 14,
-                ]);
+                echo $message;
+                /* WhatsappBot::create([ */
+                /*     'no_telp' => $this->no_telp, */
+                /*     'whatsapp_bot_service_id' => 14, */
+                /* ]); */
 
-                $antrian->complain_pelayanan_lama = 1;
-                $antrian->save();
+                /* $antrian->complain_pelayanan_lama = 1; */
+                /* $antrian->save(); */
 
-                echo $this->tanyaValidasiWaktuPelayanan();
+                /* echo $this->tanyaValidasiWaktuPelayanan(); */
             } else {
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 if (
