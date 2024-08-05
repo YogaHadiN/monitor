@@ -1209,6 +1209,7 @@ class WablasController extends Controller
         $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
         $this->whatsapp_complaint->delete();
         if (!is_null( $this->message )) {
+
             $complain = Complain::create([
                 'tanggal'   => $tanggal_berobat,
                 'media'     => 'Whatsapp Bot',
@@ -1226,8 +1227,11 @@ class WablasController extends Controller
             $antrian = null;
             $antrians = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->get();
             if (
-                $this->lama()
+                $this->lama() &&
             ) {
+                if ( count( $antrians ) ) {
+                    
+                }
 
                 $message = 'Sebelumnya kami mohon maaf atas ketidaknyaman yang kakak rasakan. ';
                 $message .= PHP_EOL;
@@ -3676,7 +3680,11 @@ class WablasController extends Controller
     }
 
     public function pertanyaanPoliYangDituju(){
-        $message = 'Bisa dibantu poli yang dituju?';
+        $message = 'Mohon jawab pertanyaan berikut untuk mendaftar ONLINE';
+        $message .= PHP_EOL;
+        $message .= '===========================';
+        $message .= PHP_EOL;
+        $message .= 'Bisa dibantu poli yang dituju?';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $jumlah_antrian = $this->jumlahAntrian();
