@@ -1227,7 +1227,7 @@ class WablasController extends Controller
             $antrian = null;
             $antrians = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->get();
             if (
-                $this->lama() &&
+                $this->lama()
             ) {
                 if ( count( $antrians ) ) {
                     
