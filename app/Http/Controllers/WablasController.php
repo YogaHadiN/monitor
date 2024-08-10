@@ -3070,7 +3070,7 @@ class WablasController extends Controller
                             $reservasi_online->save();
                         }
                     } else {
-                        $message = 'Hari ini tidak tersedia jadwal USG Kehamilan. Mohon agar dapat mendaftar kembali pada jadwal USG Kehamilan tersedia';
+                        $message = 'Hari ini tidak tersedia jadwal USG Kehamilan. Mohon agar dapat mendaftar kembali saat jadwal USG Kehamilan tersedia';
                         $message .= PHP_EOL;
                         $message .= PHP_EOL;
                         $message .= 'Untuk mendapatkan informasi jadwal usg, ketik "Jadwal USG"';
