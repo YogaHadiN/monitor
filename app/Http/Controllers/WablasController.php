@@ -4944,7 +4944,7 @@ class WablasController extends Controller
             date('G') >= 23 ||
             date('G') < 6
         ) {
-            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan untuk dapat menghubungi melalui telepon 0215977529. Mohon maaf atas ketidaknyamanannya';
+            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529. Mohon maaf atas ketidaknyamanannya';
         } else {
             $message = 'Halo.';
             $message .= PHP_EOL;
