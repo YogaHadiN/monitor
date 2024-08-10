@@ -3667,7 +3667,11 @@ class WablasController extends Controller
             $response .= PHP_EOL;
         }
         if ( !is_null( $model->tanggal_lahir ) ) {
-            $response .= 'Tanggal Lahir : '.  Carbon::parse($model->tanggal_lahir)->format('d M Y');;
+            $response .= 'Tanggal Lahir : '.  Carbon::parse($model->tanggal_lahir)->format('d M Y');
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $model->alamat ) ) {
+            $response .= 'Alamat  : '.  $model->alamat;
             $response .= PHP_EOL;
         }
         if (
