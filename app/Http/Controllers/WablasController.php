@@ -3036,7 +3036,7 @@ class WablasController extends Controller
                             $message .= 'Kami mohon maaf atas ketidak nyamanannya';
                             $message .= PHP_EOL;
                             $message .= PHP_EOL;
-                            $message .= 'Reservasi Dibatalkan';
+                            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                             echo $message;
                             return false;
                         } else if ( strtotime("now") > $jam_pelayanan_usg_berakhir->timestamp ) {
@@ -4236,7 +4236,9 @@ class WablasController extends Controller
             date('G') >= 23 ||
             date('G') < 6
         ) {
-            return 'Pendaftaran secara online sudah tutup dan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message =  'Pendaftaran secara online sudah tutup dan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+            return $message;
         } else {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
@@ -4965,6 +4967,9 @@ class WablasController extends Controller
             date('G') < 6
         ) {
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529. Mohon maaf atas ketidaknyamanannya';
+            WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
+            WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
+
         } else {
             $message = 'Halo.';
             $message .= PHP_EOL;
