@@ -3023,7 +3023,23 @@ class WablasController extends Controller
                         // jika sudah lewat waktunya, tidak bisa daftar lagi
                         $jam_pendaftaran_usg_berakhir = Carbon::parse( $jadwal_usg->jam_akhir )->subHour()->timestamp;
                         $jam_pelayanan_usg_berakhir   = Carbon::parse( $jadwal_usg->jam_akhir );
-                        if ( strtotime("now") > $jam_pelayanan_usg_berakhir->timestamp ) {
+                        if (
+                            !$tenant->usg_available
+                        ) {
+                            $message = 'Karena satu dan lain hal. Pelayanan USG hari ini ditiadakan.';
+                            $message .= PHP_EOL;
+                            $message .= PHP_EOL;
+                            $message .= 'Kakak dapat mendaftar kembali saat jadwal USG Kehamilan tersedia kembali';
+                            $message .= PHP_EOL;
+                            $message .= 'Untuk mendapatkan informasi jadwal usg, ketik "Jadwal USG"';
+                            $message .= PHP_EOL;
+                            $message .= 'Kami mohon maaf atas ketidak nyamanannya';
+                            $message .= PHP_EOL;
+                            $message .= PHP_EOL;
+                            $message .= 'Reservasi Dibatalkan';
+                            echo $message;
+                            return false;
+                        } else if ( strtotime("now") > $jam_pelayanan_usg_berakhir->timestamp ) {
                             $message = 'Pelayanan USG Kehamilan hari ini telah selesai pada jam ' . $jam_pelayanan_usg_berakhir->format("H:i"). '. Mohon agar dapat mendaftar kembali saat jadwal USG Kehamilan tersedia';
                             $message .= PHP_EOL;
                             $message .= 'Untuk mendapatkan informasi jadwal usg, ketik "Jadwal USG"';
