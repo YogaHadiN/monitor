@@ -2932,13 +2932,7 @@ class WablasController extends Controller
                 $jadwalGigi = $this->jamBukaDokterGigiHariIni();
                 if ( $this->message == '2') { // antrian poli gigi
                     if (
-                        (
-                            !$jadwalGigi &&  //tidak ada jadwal gigi hari ini
-                            $tenant->dentist_available
-                        ) ||
-                        (
-                            !$tenant->dentist_available
-                        )
+                        !$jadwalGigi || !$tenant->dentist_available
                     ) {
                         $message = 'Hari ini pelayanan poli gigi libur';
                         $message .= PHP_EOL;
@@ -2954,6 +2948,22 @@ class WablasController extends Controller
                         $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                         echo $message;
                         return false;
+                    } else if (
+                        $tenant->dokter_gigi_stop_pelayanan_hari_ini
+                    ) {
+                        $message = "Pengambilan Antrian Poli Gigi hari ini telah selesai";
+                        $message .= PHP_EOL;
+                        $message .= 'Silahkan untuk mendaftar kembali saat Poli Gigi tersedia';
+                        $message .= PHP_EOL;
+                        $message .= "Untuk informasi tersebut silahkan ketik 'Jadwal Dokter Gigi'";
+                        $message .= PHP_EOL;
+                        $message .= "Mohon maaf atas ketidaknyamanannya.";
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                        echo $message;
+                        return false;
+                    // jika tidak ada antrian di dalam poli batalkan reservasi
                     } else if (
                          strtotime('now') < strtotime($jadwalGigi['jam_mulai'])
                     ) {
