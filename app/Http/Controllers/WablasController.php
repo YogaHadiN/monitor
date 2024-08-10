@@ -4212,18 +4212,22 @@ class WablasController extends Controller
                                 ->count();
     }
     public function registrasiAntrianOnline(){
-        /* Log::info(4024); */
-        $whatsapp_bot = WhatsappBot::create([
-            'no_telp' => $this->no_telp,
-            'whatsapp_bot_service_id' => 6 //registrasi online
-        ]);
-
-        $reservasi_online = ReservasiOnline::create([
-            'no_telp'         => $this->no_telp,
-            'whatsapp_bot_id' => $whatsapp_bot->id
-        ]);
-
-        return $this->pertanyaanPoliYangDituju();
+        if (
+            date('G') >= 23 ||
+            date('G') < 6
+        ) {
+            return 'Pendaftaran secara online sudah tutup dan dibuka kembali jam 6 pagi. Mohon maaf atas ketidaknyamanannya';
+        } else {
+            $whatsapp_bot = WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 6 //registrasi online
+            ]);
+            $reservasi_online = ReservasiOnline::create([
+                'no_telp'         => $this->no_telp,
+                'whatsapp_bot_id' => $whatsapp_bot->id
+            ]);
+            return $this->pertanyaanPoliYangDituju();
+        }
     }
     public function nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien){
         $code     = $response['code'];
