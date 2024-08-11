@@ -82,6 +82,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        echo 'masuk';
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -146,7 +147,6 @@ class WablasController extends Controller
         $message .= "Mohon maaf lahir dan batin";
         return $message;
     }
-    
 	
 	public function webhook(){
         /* Log::info(153); */
