@@ -121,6 +121,7 @@ class WablasController extends Controller
 				$this->estetika_buka = false;
 			}
 		}
+        Log::info( $this->no_telp );
         Log::info( $this->message );
 	}
     public function libur(){
