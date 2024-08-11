@@ -82,7 +82,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        echo 'masuk';
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -124,6 +123,9 @@ class WablasController extends Controller
 		}
         Log::info( $this->no_telp );
         Log::info( $this->message );
+        $masuk =  'masuk';
+        echo $masuk;
+        Log::info( $masuk );
 	}
     public function libur(){
         $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
