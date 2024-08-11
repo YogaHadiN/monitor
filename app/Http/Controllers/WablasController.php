@@ -121,11 +121,6 @@ class WablasController extends Controller
 				$this->estetika_buka = false;
 			}
 		}
-        Log::info( $this->no_telp );
-        Log::info( $this->message );
-        $masuk =  'masuk';
-        echo $masuk;
-        Log::info( $masuk );
 	}
     public function libur(){
         $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
@@ -151,7 +146,6 @@ class WablasController extends Controller
     }
 	
 	public function webhook(){
-        /* Log::info(153); */
         header('Content-Type: application/json');
         $date_now = date('Y-m-d H:i:s');
         /* $date_now = '2024-04-13 13:00:01'; */
