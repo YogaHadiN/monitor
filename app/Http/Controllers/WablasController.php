@@ -3178,6 +3178,7 @@ class WablasController extends Controller
                             $code <= 299
                             && $this->no_telp == '6281381912803'
                         ){
+                            Log::info(json_encode( $response ));
                             if ( 
                                 !is_null($message) &&
                                 $message['aktif'] &&
