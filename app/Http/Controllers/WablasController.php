@@ -3159,27 +3159,26 @@ class WablasController extends Controller
                     ) {
                         $bpjs                                                = new BpjsApiController;
                         $response                                            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
-                        /* $reservasi_online->data_bpjs_cocok                   = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien) ; */
-                        $reservasi_online->data_bpjs_cocok                   = 1;
+                        $reservasi_online->data_bpjs_cocok                   = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien) ;
                         $code                                                = $response['code'];
                         $message                                             = $response['response'];
                         if (
                             $code == 204 
-                            && $this->no_telp == '6281381912803'
                         ) {// jika tidak ditemukan
                             $reservasi_online->pasien_id                         = $pasien->id;
                             $reservasi_online->nama                              = $pasien->nama;
                             $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
                             $reservasi_online->alamat                            = $pasien->alamat;
                             $reservasi_online->register_previously_saved_patient = $this->message;
+
                             $pasien->nomor_asuransi_bpjs = null;
                             $pasien->save();
+
                         } else if (
                             $code >= 200 &&
                             $code <= 299
-                            && $this->no_telp == '6281381912803'
                         ){
-                            Log::info(json_encode( $response ));
+                            // jika kartu aktif dan provider tepat
                             if ( 
                                 !is_null($message) &&
                                 $message['aktif'] &&
@@ -3225,6 +3224,7 @@ class WablasController extends Controller
                             $reservasi_online->alamat                            = $pasien->alamat;
                             $reservasi_online->nomor_asuransi_bpjs               = $pasien->nomor_asuransi_bpjs;
                             $reservasi_online->register_previously_saved_patient = $this->message;
+                            $reservasi_online->verifikasi_bpjs                   = 0;
                         }
                     } else {
                         $reservasi_online->pasien_id                         = $pasien->id;
@@ -3294,6 +3294,7 @@ class WablasController extends Controller
                     Log::info('$reservasi_online->data_bpjs_cocok');
                     Log::info($reservasi_online->data_bpjs_cocok);
                     Log::info("===================================");
+
                     if (
                         !is_null( $message ) && 
                         $message['aktif'] &&
@@ -3302,8 +3303,7 @@ class WablasController extends Controller
                     ) { // jika aktig
                         $reservasi_online->nomor_asuransi_bpjs = $this->message;
                         if ( 
-                            !is_null( $pasien ) && // jika pasien dengan nomor asuransi bpjs ditemukan
-                            is_null( $reservasi_online->pasien ) // dan pasien tidak dalam pendaftaran previously registered
+                            !is_null( $pasien ) 
                         ) {
                             // update sesuai dengan pasien yang ditemukan
                             $reservasi_online->pasien_id            = $pasien->id;
@@ -3311,14 +3311,8 @@ class WablasController extends Controller
                             $reservasi_online->alamat               = $pasien->alamat;
                             $reservasi_online->tanggal_lahir        = $pasien->tanggal_lahir;
                             $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
-                        } else if (
-                             !is_null( $reservasi_online->pasien ) && // jika previously registered
-                             $reservasi_online->data_bpjs_cocok  // dan data bpjs cocok
-                        ) {
-                            // do nothing?
-                        } else if (
-                            is_null( $pasien )  // jika pasien yang memiliki tidak ditemukan di atika namun ditemukan di pcare
-                        ) {
+                            $reservasi_online->verifikasi_bpjs = 1;
+                        } else {
                             $reservasi_online->nama            = $message['nama'];
                             $reservasi_online->tanggal_lahir   = Carbon::createFromFormat("d-m-Y", $message['tglLahir'])->format("Y-m-d");
                         }
@@ -3339,12 +3333,11 @@ class WablasController extends Controller
                     } else if(
                         !is_null( $message ) && 
                         !$reservasi_online->data_bpjs_cocok
-                    ) { // jika error
-                        $input_tidak_tepat = true;
-                        $this->pesan_error = $this->validasiBpjsDataTidakCocok( $this->message, $message );
+                    ) { 
+                        $reservasi_online->verifikasi_bpjs = 0;
                     }
                 } else {
-                    $pasien                            = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
+                    $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
                     $reservasi_online->nomor_asuransi_bpjs            = $this->message;
                     if ( !is_null( $pasien ) ) {
                         $reservasi_online->pasien_id            = $pasien->id;
@@ -3352,6 +3345,7 @@ class WablasController extends Controller
                         $reservasi_online->alamat               = $pasien->alamat;
                         $reservasi_online->tanggal_lahir        = $pasien->tanggal_lahir;
                         $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                        $reservasi_online->verifikasi_bpjs      = 0;
                     }
                 }
             } else {
