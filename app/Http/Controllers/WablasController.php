@@ -3162,7 +3162,10 @@ class WablasController extends Controller
                         $reservasi_online->data_bpjs_cocok                   = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien) ;
                         $code                                                = $response['code'];
                         $message                                             = $response['response'];
-                        if ( $code == 204 ) {// jika tidak ditemukan
+                        if (
+                            $code == 204 
+                            && $this->no_telp == '6281381912803'
+                        ) {// jika tidak ditemukan
                             $reservasi_online->pasien_id                         = $pasien->id;
                             $reservasi_online->nama                              = $pasien->nama;
                             $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
@@ -3173,6 +3176,7 @@ class WablasController extends Controller
                         } else if (
                             $code >= 200 &&
                             $code <= 299
+                            && $this->no_telp == '6281381912803'
                         ){
                             if ( 
                                 !is_null($message) &&
@@ -3195,6 +3199,7 @@ class WablasController extends Controller
                                      !empty( $pasien->nomor_asuransi_bpjs )
                                 ) {
                                     $reservasi_online->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
+                                    $reservasi_online->verifikasi_bpjs = 1;
                                 }
                             } else if(
                                 !is_null($message) &&
@@ -3431,6 +3436,7 @@ class WablasController extends Controller
                     $antrian->alamat                   = $reservasi_online->alamat;
                     $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                     $antrian->pasien_id                = $reservasi_online->pasien_id;
+                    $antrian->verifikasi_bpjs          = $reservasi_online->verifikasi_bpjs;
                     $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
                     $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
                     $antrian->reservasi_online         = 1;
