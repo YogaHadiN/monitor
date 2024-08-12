@@ -3276,6 +3276,7 @@ class WablasController extends Controller
                     }
 
                     Log::info("===================================");
+                    Log::info( $this->no_telp);
                     Log::info("DATA");
                     Log::info(!is_null( $message ));
                     Log::info($message['aktif']);
