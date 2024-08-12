@@ -3159,6 +3159,7 @@ class WablasController extends Controller
                     ) {
                         $bpjs                                                = new BpjsApiController;
                         $response                                            = $bpjs->pencarianNoKartuValid($pasien->nomor_asuransi_bpjs, true);
+                        /* $reservasi_online->data_bpjs_cocok                   = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien) ; */
                         $reservasi_online->data_bpjs_cocok                   = 1;
                         $code                                                = $response['code'];
                         $message                                             = $response['response'];
