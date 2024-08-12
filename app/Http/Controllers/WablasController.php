@@ -3274,6 +3274,14 @@ class WablasController extends Controller
                     if ( !is_null( $pasien ) ) {
                         $reservasi_online->data_bpjs_cocok = $this->nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien );
                     }
+
+                    Log::info("===================================");
+                    Log::info("DATA");
+                    Log::info(!is_null( $message ));
+                    Log::info($message['aktif']);
+                    Log::info($message['kdProviderPst']['kdProvider'] == '0221B119');
+                    Log::info($reservasi_online->data_bpjs_cocok);
+                    Log::info("===================================");
                     if (
                         !is_null( $message ) && 
                         $message['aktif'] &&
