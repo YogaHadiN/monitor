@@ -4214,6 +4214,7 @@ class WablasController extends Controller
         WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
             ->where('no_telp', $this->no_telp)
             ->delete();
+        resetWhatsappRegistration( $this->no_telp );
         return 'Reservasi Dibatalkan';
     }
 
@@ -4971,6 +4972,7 @@ class WablasController extends Controller
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529. Mohon maaf atas ketidaknyamanannya';
             WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
             WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
+            resetWhatsappRegistration( $this->no_telp );
 
         } else {
             $message = 'Halo.';
