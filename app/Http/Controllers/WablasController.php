@@ -82,6 +82,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        Log::info('webhook masuk');
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
