@@ -1587,7 +1587,6 @@ class WablasController extends Controller
      */
     private function registerWhatsappBpjsDentistRegistration()
     {
-
         if ( 
             is_null($this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id)
         ) {
@@ -2461,6 +2460,7 @@ class WablasController extends Controller
         } else {
             $message = $this->messageWhatsappMainMenu();
             $message .= $this->templateUlangi();
+            echo $message;
         }
     }
     /**
