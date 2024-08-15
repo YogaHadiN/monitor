@@ -82,6 +82,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        echo 'all right';
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
