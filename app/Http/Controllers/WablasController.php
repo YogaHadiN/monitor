@@ -4188,34 +4188,29 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function hapusAntrianWhatsappBotReservasiOnline()
+    private function hapusAntrianWhatsappBotReservasiOnline($hapus_antrian = true)
     {
-        $from = date('Y-m-d 00:00:00');
-        $to = date('Y-m-d 23:59:59');
-        $antrians = Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
-            ->where('no_telp', $this->no_telp)
-            ->whereRaw("
-                    ( 
-                        antriable_type = 'App\\\Models\\\Antrian' or
-                        antriable_type = 'App\\\Models\\\AntrianPoli' or
-                        antriable_type = 'App\\\Models\\\AntrianPeriksa'
-                    )
-                ")
-            ->get();
+        if ( $hapus_antrian ) {
+            $from = date('Y-m-d 00:00:00');
+            $to = date('Y-m-d 23:59:59');
+            $antrians = Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
+                ->where('no_telp', $this->no_telp)
+                ->whereRaw("
+                        ( 
+                            antriable_type = 'App\\\Models\\\Antrian' or
+                            antriable_type = 'App\\\Models\\\AntrianPoli' or
+                            antriable_type = 'App\\\Models\\\AntrianPeriksa'
+                        )
+                    ")
+                ->get();
 
-        foreach ($antrians as $antrian) {
-            $antrian->dibatalkan_pasien = 1;
-            $antrian->save();
-            $antrian->antriable->delete();
-            $antrian->delete();
+            foreach ($antrians as $antrian) {
+                $antrian->dibatalkan_pasien = 1;
+                $antrian->save();
+                $antrian->antriable->delete();
+                $antrian->delete();
+            }
         }
-
-        ReservasiOnline::whereRaw("created_at between '{$from}' and '{$to}'")
-            ->where('no_telp', $this->no_telp)
-            ->delete();
-        WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
-            ->where('no_telp', $this->no_telp)
-            ->delete();
         resetWhatsappRegistration( $this->no_telp );
         return 'Reservasi Dibatalkan';
     }
@@ -4972,10 +4967,9 @@ class WablasController extends Controller
             date('G') < 6
         ) {
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529. Mohon maaf atas ketidaknyamanannya';
-            WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
-            WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
-            resetWhatsappRegistration( $this->no_telp );
-
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         } else {
             $message = 'Halo.';
             $message .= PHP_EOL;
