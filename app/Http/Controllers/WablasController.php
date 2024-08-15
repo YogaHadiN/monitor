@@ -2477,6 +2477,8 @@ class WablasController extends Controller
         $message .= "_Mohon diulangi_";
         $message .= PHP_EOL;
         $message .= "_Atau ketik *batalkan* untuk mengulangi dari awal_";
+        $message .= PHP_EOL;
+        $message .= "_Atau ketik *chat admin* untuk bantuan admin_";
         return $message;
     }
     
