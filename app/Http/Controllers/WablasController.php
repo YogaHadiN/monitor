@@ -4236,7 +4236,9 @@ class WablasController extends Controller
             date('G') >= 23 ||
             date('G') < 6
         ) {
-            $message =  'Pendaftaran secara online sudah tutup dan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message =  'Pendaftaran secara online sudah tutup dan akan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
             return $message;
         } else {
