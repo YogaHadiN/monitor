@@ -473,7 +473,6 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
                 $this->pesan_error = '```Nama tidak boleh mengandung angka```';
             } else if(
-                Log::info(476);
                 strstr( $this->message , PHP_EOL)
             ) { ///string mengndung line break, pasien mencoba mendaftarkan dua pasien sekaligus
                 Log::info(480);
