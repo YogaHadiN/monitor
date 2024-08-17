@@ -642,6 +642,7 @@ class WablasController extends Controller
 
             } else if ( $category == 'text' ){
                 Log::info(644);
+                Log::info($response);
                 /* $response .= $payload['message']; */
                 echo $response;
             }
