@@ -831,7 +831,6 @@
     }
 	var hitung = 0
 
-
 	var channel_name = 'my-channel';
 	var event_name   = 'form-submitted';
 
@@ -856,6 +855,7 @@
 
     var menangani_gawat_darurat = {{ $menangani_gawat_darurat }};
     var status_gawat_darurat_saat_ini = {{ $menangani_gawat_darurat }};
+
 </script>
 
 <script src="{!! url("js/antrian.js?ver=123") !!}"></script>

@@ -4230,32 +4230,32 @@ class WablasController extends Controller
                                 ->count();
     }
     public function registrasiAntrianOnline(){
-        $message =  'Antrian secara online dalam proses maintenance. Mohon maaf atas ketidak nyamanannya';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-        return $message;
+        /* $message =  'Antrian secara online dalam proses maintenance. Mohon maaf atas ketidak nyamanannya'; */
+        /* $message .= PHP_EOL; */
+        /* $message .= PHP_EOL; */
+        /* $message .= $this->hapusAntrianWhatsappBotReservasiOnline(); */
+        /* return $message; */
 
-        /* if ( */
-        /*     date('G') >= 23 || */
-        /*     date('G') < 6 */
-        /* ) { */
-        /*     $message =  'Pendaftaran secara online sudah tutup dan akan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya'; */
-        /*     $message .= PHP_EOL; */
-        /*     $message .= PHP_EOL; */
-        /*     $message .= $this->hapusAntrianWhatsappBotReservasiOnline(); */
-        /*     return $message; */
-        /* } else { */
-        /*     $whatsapp_bot = WhatsappBot::create([ */
-        /*         'no_telp' => $this->no_telp, */
-        /*         'whatsapp_bot_service_id' => 6 //registrasi online */
-        /*     ]); */
-        /*     $reservasi_online = ReservasiOnline::create([ */
-        /*         'no_telp'         => $this->no_telp, */
-        /*         'whatsapp_bot_id' => $whatsapp_bot->id */
-        /*     ]); */
-        /*     return $this->pertanyaanPoliYangDituju(); */
-        /* } */
+        if (
+            date('G') >= 23 ||
+            date('G') < 6
+        ) {
+            $message =  'Pendaftaran secara online sudah tutup dan akan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+            return $message;
+        } else {
+            $whatsapp_bot = WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 6 //registrasi online
+            ]);
+            $reservasi_online = ReservasiOnline::create([
+                'no_telp'         => $this->no_telp,
+                'whatsapp_bot_id' => $whatsapp_bot->id
+            ]);
+            return $this->pertanyaanPoliYangDituju();
+        }
     }
     public function nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien){
         $code     = $response['code'];
