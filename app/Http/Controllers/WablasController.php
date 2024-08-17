@@ -371,6 +371,7 @@ class WablasController extends Controller
 	}
     private function proceedRegistering()
     {
+        Log::info(374);
         header('Content-Type: application/json');
 
         if ( !is_null($this->whatsapp_registration) ) {
@@ -556,7 +557,7 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
             }
         }
-
+        Log::info(561);
         if (
             isset( $this->whatsapp_registration ) &&
             !is_null($this->whatsapp_registration->antrian)
@@ -716,6 +717,7 @@ class WablasController extends Controller
             $this->saveNomorTeleponPasien();
             echo $this->pesanBalasanBilaTerdaftar( $this->antrian );
         }
+        Log::info(720);
     }
     
 	private function clean($param)
