@@ -624,7 +624,7 @@ class WablasController extends Controller
             }
             $category = $payload['category'];
             if ( $category == 'button' ) {
-                Log::info(629);
+                Log::info(627);
                 $message['buttons'] = $payload['message']['buttons'];
                 $message['content'] = $response;
                 $payload = null;
@@ -641,7 +641,7 @@ class WablasController extends Controller
                 ])->header('Content-Type', 'application/json');
 
             } else if ( $category == 'text' ){
-                Log::info(629);
+                Log::info(644);
                 /* $response .= $payload['message']; */
                 echo $response;
             }
