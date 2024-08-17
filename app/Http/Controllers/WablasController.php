@@ -737,6 +737,7 @@ class WablasController extends Controller
             !$this->whatsapp_registration_deleted &&
              $this->whatsapp_registration->registering_confirmation < 1
         ) {
+            Log::info(740);
             $payload = [];
 			$text = '*KLINIK JATI ELOK*' ;
 			$text .= PHP_EOL;
@@ -746,6 +747,9 @@ class WablasController extends Controller
 			$text .= 'Fasilitas ini akan memproses antrian Untuk berkonsultasi ke *Dokter Umum*';
 			$text .= PHP_EOL;
             if ( $this->tenant->iphone_whatsapp_button_available ) {
+                Log::info("====================");
+                Log::info(751);
+                Log::info("====================");
                 $text .= 'Apakah Anda ingin melanjutkan?';
                 $text .= PHP_EOL;
 
@@ -762,6 +766,9 @@ class WablasController extends Controller
                     'message' => $message
                 ];
             } else {
+                Log::info("====================");
+                Log::info(770);
+                Log::info("====================");
                 $text .= 'Balas *ya* untuk melanjutkan';
 
                 $payload[] = [
