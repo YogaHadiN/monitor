@@ -387,11 +387,13 @@ class WablasController extends Controller
             isset( $this->whatsapp_registration ) &&
             !is_null($this->whatsapp_registration->antrian)
         ) {
+            Log::info(390);
             $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antrian);
         } else if ( 
             isset( $this->whatsapp_registration ) &&
             $this->whatsapp_registration->registering_confirmation < 1
         ){
+            Log::info(396);
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
                 ( $this->message == 'ya' && !$this->tenant->iphone_whatsapp_button_available ) ||
@@ -407,6 +409,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
         ){
+            Log::info(412);
             if (
                 $this->validasiRegistrasiPembayaran()
             ) {
@@ -419,6 +422,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
         ) {
+            Log::info(425);
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if (
@@ -426,6 +430,7 @@ class WablasController extends Controller
                 (int)$this->message <= $dataCount && 
                 (int)$this->message > 0  
             ) {
+                Log::info(433);
                 $pasien = Pasien::find( $data[ (int) $this->message -1 ]->pasien_id );
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
                 $this->whatsapp_registration->antrian->pasien_id                          = $pasien->id;
@@ -436,41 +441,48 @@ class WablasController extends Controller
                     $this->whatsapp_registration->antrian->registrasi_pembayaran_id == 2 && // jika pembayaran BPJS
                     !empty($pasien->bpjs_image)  // dan gambar kartu BPJS tidak kosong
                 ) {
+                    Log::info(434);
                     $this->whatsapp_registration->antrian->kartu_asuransi_image = $pasien->bpjs_image;
                     $this->whatsapp_registration->antrian->nomor_bpjs           = $pasien->nomor_asuransi_bpjs;
                 } 
-
-
+                Log::info(448);
                 $this->whatsapp_registration->antrian->save();
-                
             } else if (
                 is_numeric( $this->message ) &&
                 (int)$this->message > $dataCount && 
                 (int)$this->message > 0  
             ){
+                Log::info(457);
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
             } else {
+                Log::info(460);
                 $this->input_tidak_tepat = true;
             }
+            Log::info(463);
             $this->whatsapp_registration->antrian->save();
         } else if ( 
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->nama ) 
         ) {
+            Log::info(470);
             if (
                 preg_match('~[0-9]+~', $this->message)
             ) { ///string mengndung angka
+                Log::info(474);
                 $input_tidak_tepat = true;
                 $this->pesan_error = '```Nama tidak boleh mengandung angka```';
             } else if(
+                Log::info(476);
                 strstr( $this->message , PHP_EOL)
             ) { ///string mengndung line break, pasien mencoba mendaftarkan dua pasien sekaligus
+                Log::info(480);
                 $input_tidak_tepat = true;
                 $this->pesan_error = '```Masukkan data pasien satu persatu```';
                 $this->pesan_error .= PHP_EOL;
                 $this->pesan_error .= '```Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
             } else {
+                Log::info(486);
                 $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
                 $this->whatsapp_registration->antrian->save();
             }
@@ -479,11 +491,14 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian ) &&
             is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
         ) {
+            Log::info(495);
             $tanggal = $this->convertToPropperDate();
             if (!is_null( $tanggal )) {
+                Log::info(498);
                 $this->whatsapp_registration->antrian->tanggal_lahir  = $tanggal;
                 $this->whatsapp_registration->antrian->save();
             } else {
+                Log::info(502);
                 $this->input_tidak_tepat = true;
             }
         } else if ( 
@@ -494,10 +509,13 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
             is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
+            Log::info(513);
             if ( Input::get('messageType') == 'image' ) {
+                Log::info(515);
                 $this->whatsapp_registration->antrian->kartu_asuransi_image = $this->uploadImage(); 
                 $this->whatsapp_registration->antrian->save();
             } else {
+                Log::info(519);
                 $this->input_tidak_tepat = true;
             }
         } else if ( 
@@ -508,16 +526,19 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
             !is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
+            Log::info(530);
             if (
                 ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                 ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
                 (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
                 (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
             ) {
+                Log::info(537);
                 if (
                     ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
                     (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
+                    Log::info(542);
                     $whatsapp_registration_id = $this->whatsapp_registration->id;
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
                     /* $this->langsungKeAntrianPoliBilaMemungkinkan( $this->whatsapp_registration->antrian ); */
@@ -528,9 +549,11 @@ class WablasController extends Controller
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
                     (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
+                    Log::info(553);
                     $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antrian);
                 }
             } else {
+                Log::info(557);
                 $input_tidak_tepat = true;
             }
         }
@@ -539,19 +562,23 @@ class WablasController extends Controller
             isset( $this->whatsapp_registration ) &&
             !is_null($this->whatsapp_registration->antrian)
         ) {
+            Log::info(566);
             $response .= $this->uraianPengisian($this->whatsapp_registration->antrian);
         }
 
         if ( 
             !is_null($this->whatsapp_registration)
         ) {
+            Log::info(573);
             $botKirim = $this->botKirim($this->whatsapp_registration);
             if (!is_null( $botKirim )) {
+                Log::info(576);
                 $payload   = $botKirim[0];
                 $category = $payload['category'];
                 $response .= $category == 'button' ? $payload['message']['content'] : $payload['message'];
 
                 if (is_null($this->whatsapp_registration_deleted)) {
+                    Log::info(582);
                     /* $response .=  PHP_EOL; */
                     /* $response .=  PHP_EOL; */
                     /* $response .= "=============="; */
@@ -560,7 +587,9 @@ class WablasController extends Controller
                     /* $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal"; */
                 }
                 if ( $input_tidak_tepat ) {
+                    Log::info(591);
                     if (Input::get('messageType') == 'text') {
+                        Log::info(593);
                         WhatsappInbox::create([
                             'message' => 'ERROR :' .$this->message,
                             'no_telp' => $this->no_telp
@@ -572,6 +601,7 @@ class WablasController extends Controller
                     $response .= PHP_EOL;
                     $response .= '```Input yang anda masukkan salah```';
                     if (!is_null( $this->pesan_error )) {
+                        Log::info(605);
                         $response .= PHP_EOL;
                         $response .= $this->pesan_error;
                     }
@@ -579,19 +609,22 @@ class WablasController extends Controller
                     $response .= '```Mohon Diulangi```';
                     $response .= PHP_EOL;
                 }
+                Log::info(613);
                 $input_tidak_tepat = false;
             } else {
+                Log::info(616);
                 echo 'Antrian kakak sudah berhasil kami daftarkan';
             }
         }
-
         if (!empty($response)) {
+            Log::info(616);
             try {
                 $payload   = $this->botKirim($this->whatsapp_registration)[0];
             } catch (\Exception $e) {
             }
             $category = $payload['category'];
             if ( $category == 'button' ) {
+                Log::info(629);
                 $message['buttons'] = $payload['message']['buttons'];
                 $message['content'] = $response;
                 $payload = null;
@@ -608,6 +641,7 @@ class WablasController extends Controller
                 ])->header('Content-Type', 'application/json');
 
             } else if ( $category == 'text' ){
+                Log::info(629);
                 /* $response .= $payload['message']; */
                 echo $response;
             }
@@ -617,6 +651,7 @@ class WablasController extends Controller
         // Cek kepuasan pelanggan
 
         if ( str_contains( $this->message, '(pqid' ) ) {
+            Log::info(654);
             $id = explode('pqid', $this->message)[1];
             $id = preg_replace('~\D~', '', $id);
 
@@ -627,6 +662,7 @@ class WablasController extends Controller
                 && !$antrian->recovery_index_id
                 && $antrian->no_telp == $this->no_telp
             ) {
+                Log::info(655);
                 $antrian->recovery_index_id = $recovery_index_id;
                 $antrian->save();
 
@@ -634,6 +670,7 @@ class WablasController extends Controller
                 // Jika pasien memilih gagal pengobatan, maka dapatkan informasi mengenai kondisi pasien
                 //
                 if ( $recovery_index_id == 1 ) {
+                    Log::info(673);
                     $failed_therapy             = new FailedTherapy;
                     $failed_therapy->no_telp    = $antrian->no_telp;
                     $failed_therapy->antrian_id = $antrian->id;
@@ -647,6 +684,7 @@ class WablasController extends Controller
                 // Jika pasien memilih mengalami perbaikan, ucapkan terima kasih
                 //
                 } else {
+                    Log::info(687);
                     $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                     $message .= PHP_EOL;
                     $message .= "Informasi ini akan menjadi bahan evaluasi kami";
@@ -660,12 +698,14 @@ class WablasController extends Controller
             $this->antrian &&
             $this->antrian->antriable_type == 'App\\Models\\AntrianKasir'             
         ){
+            Log::info(701);
             $this->saveNomorTeleponPasien();
             // kirimkan nomor rekening beserta dengan jumlah yang harus ditransfer
         } else if (
             $this->antrian &&
              $this->antrian->antriable_type == 'App\\Models\\Periksa' 
         ){
+            Log::info(708);
             $this->saveNomorTeleponPasien();
             // kirimkan umpan balik pelayanan
             // jika pasien sudah didaftarkan oleh admin
@@ -673,6 +713,7 @@ class WablasController extends Controller
             $this->antrian &&
             $this->antrian->antriable_type != 'App\\Models\\Antrian'
         ){
+            Log::info(716);
             $this->saveNomorTeleponPasien();
             echo $this->pesanBalasanBilaTerdaftar( $this->antrian );
         }
