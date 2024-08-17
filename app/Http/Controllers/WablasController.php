@@ -372,8 +372,6 @@ class WablasController extends Controller
     private function proceedRegistering()
     {
         Log::info(374);
-        header('Content-Type: application/json');
-
         if ( !is_null($this->whatsapp_registration) ) {
             $this->antrian = $this->whatsapp_registration->antrian;
         }
@@ -1042,19 +1040,6 @@ class WablasController extends Controller
         } else {
             return null;
         }
-    }
-    public function wablas2(){
-        
-        header('Content-Type: application/json');
-        $payload[] = [
-            'category' => 'button',
-            'message' => '{"buttons":["button 12","button 22","button 33"],"content":"sending button message.","footer":"footer here"}'
-        ];
-
-        return response()->json([
-            'status' => true,
-            'data' => $payload
-        ])->header('Content-Type', 'application/json');
     }
     /**
      * undocumented function
@@ -4049,7 +4034,6 @@ class WablasController extends Controller
         $result = $writer->write($qr_code);
 
         // Output the QR code image to the browser
-        /* header("Content-Type: " . $result->getMimeType()); */
         $destination_path = 'image/online_reservation/qr_code/';
 
         \Storage::disk('s3')->put($destination_path. $filename,  $result->getString() );
