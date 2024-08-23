@@ -452,9 +452,9 @@ class AntrianOnlineController extends Controller
             $query .= "FROM periksas as prx ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
             $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' "
-            $query .= "AND prx.asuransi_id = 32 "
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' "
+            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
+            $query .= "AND prx.asuransi_id = 32 ";
+            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
                 $valid = false;
@@ -468,9 +468,9 @@ class AntrianOnlineController extends Controller
             $query .= "FROM antrian_polis as prx ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
             $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' "
-            $query .= "AND prx.asuransi_id = 32 "
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' "
+            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
+            $query .= "AND prx.asuransi_id = 32 ";
+            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
                 $valid = false;
@@ -485,9 +485,9 @@ class AntrianOnlineController extends Controller
             $query .= "FROM antrian_periksas as prx ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
             $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' "
-            $query .= "AND prx.asuransi_id = 32 "
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' "
+            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
+            $query .= "AND prx.asuransi_id = 32 ";
+            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
                 $valid = false;
@@ -501,9 +501,9 @@ class AntrianOnlineController extends Controller
             $query .= "FROM antrian_kasirs as prx ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
             $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' "
-            $query .= "AND prx.asuransi_id = 32 "
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' "
+            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
+            $query .= "AND prx.asuransi_id = 32 ";
+            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
                 $valid = false;
