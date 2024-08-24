@@ -56,11 +56,11 @@ class Handler extends ExceptionHandler
             ],201);
         });
 
-        $this->renderable(function (JWTException $e, $request) {
-            return Response::json([
-                'message' => 'Token Not Parsed',
-                'code' => 401
-            ],401);
-        });
+        /* $this->renderable(function (JWTException $e, $request) { */
+        /*     return Response::json([ */
+        /*         'message' => 'Token Not Parsed', */
+        /*         'code' => 401 */
+        /*     ],401); */
+        /* }); */
     }
 }
