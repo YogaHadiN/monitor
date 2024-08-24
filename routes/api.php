@@ -35,7 +35,7 @@ Route::get("antrian_online/bpjs/ref/poli/tanggal/{tanggal}", [
 
 
 Route::group([
-    "middleware" => ["auth:api"]
+    "middleware" => ["auth.jwt"]
 ], function(){
 
     Route::get("antrian_online/bpjs/antrean/status/{kode_poli}/{tanggalperiksa}", [
