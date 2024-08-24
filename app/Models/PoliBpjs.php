@@ -8,4 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PoliBpjs extends Model
 {
     use HasFactory;
+    public function poli(){
+        return $this->hasOne(Poli::class);
+    }
 }
