@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Log;
 
 class Handler extends ExceptionHandler
 {
@@ -39,6 +40,11 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (Tymon\JWTAuth\Exceptions\TokenExpiredException $e, Request $request) {
+            Log::info('------------------------------------');
+            Log::info('------------------------------------');
+            Log::info('LOOOOOOOOOOOOOOOOOOOOOOOOGGGGGG');
+            Log::info('------------------------------------');
+            Log::info('------------------------------------');
             if ($request->is('api/*')) {
                 return response()->json([
                     'message' => 'Token Expired',

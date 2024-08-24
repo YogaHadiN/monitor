@@ -82,7 +82,6 @@ class AntrianOnlineController extends Controller
             ], 201);
         }
         $jenis_antrian = $poli_bpjs->poli->poli_antrian->jenis_antrian;
-
         try {
             Carbon::createFromFormat('Y-m-d', $tanggal);
         } catch (\Carbon\Exceptions\InvalidFormatException $e) {
