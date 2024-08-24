@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use JWTAuth;
 
-class JWTMiddleWare
+class JwtHandlerMiddleware
 {
     /**
      * Handle an incoming request.
