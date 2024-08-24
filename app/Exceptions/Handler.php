@@ -35,14 +35,16 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-             if ($e instanceof Tymon\JWTAuth\Exceptions\TokenExpiredException) {
-                 return response()->json([
-                     'metadata' => [
-                         'message' => 'Token Expired',
-                         'code' => 201
-                     ]
-                 ], $e->getStatusCode());
-            }           //
+            //
+        });
+
+        $this->renderable(function (Tymon\JWTAuth\Exceptions\TokenExpiredException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Token Expired',
+                    'code' => 201
+                ], 201);
+            }
         });
     }
 }
