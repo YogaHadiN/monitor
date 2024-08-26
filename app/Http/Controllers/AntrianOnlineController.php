@@ -389,6 +389,7 @@ class AntrianOnlineController extends Controller
     }
 
     public function registrasiOnlineDitutup($kodepoli){
+        return true;
         if (
             $kodepoli == '001' &&
             (
@@ -524,7 +525,7 @@ class AntrianOnlineController extends Controller
     }
 
     public function dokterTidakDitemukan($kodedokter){
-        return true;
+        return false;
     }
     public function dataPasienTidakDitemukan($nomorkartu, $nik){
         $this->pasien = Pasien::where('nomor_asuransi_bpjs', $nomorkartu)->first();
