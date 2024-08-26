@@ -170,7 +170,7 @@ class AntrianOnlineController extends Controller
         //VALIDASI BEROBAT SEKALI
         //==========================
         if (
-            !$this->pasienBpjsHanyaBisaBerobatSekali($nomorkartu)
+            $this->validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu)
         ) {
             $response = '{
                 "metadata": {
@@ -351,7 +351,6 @@ class AntrianOnlineController extends Controller
         $antrean_sudah_dibatalkan = false;
 
         if ($this->antrean_tidak_ditemukan()) {
-            
             $response = '{
                             "metadata": {
                                 "message": "Antrean Tidak Ditemukan",
@@ -400,7 +399,10 @@ class AntrianOnlineController extends Controller
                 date("G") >=23
             )
         ) {
+            $this->message = "Pendaftaran secara online sudah tutup dan akan buka lagi jam 6 pagi";
+            $this->message .= ". Mohon maaf atas ketidaknyamanannya.";
             return true;
+
         } else if (
             $kodepoli == '002'
         ) {
@@ -427,17 +429,16 @@ class AntrianOnlineController extends Controller
                 $this->message .= ". Mohon maaf atas ketidaknyamanannya.";
             }
 
-
             $tenant = Tenant::find(1);
             return !$jadwal->count();
         } else {
             return false;
         }
     }
-    public function pasienBpjsHanyaBisaBerobatSekali($nomorkartu){
+    public function validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu){
         $startOfDay = Carbon::now()->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay   = Carbon::now()->endOfDay()->format('Y-m-d H:i:s');
-        $valid = true;
+        $valid = false;
         if (
             Antrian::where('nomor_bpjs', $nomorkartu)
                 ->whereBetween('created_at', [
@@ -446,7 +447,7 @@ class AntrianOnlineController extends Controller
                 ->where('registrasi_pembayaran_id', 1)
                 ->exists()
         ) {
-            $valid = false;
+            $valid = true;
         }
 
         if (
@@ -461,7 +462,7 @@ class AntrianOnlineController extends Controller
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
-                $valid = false;
+                $valid = true;
             }
         }
 
@@ -477,7 +478,7 @@ class AntrianOnlineController extends Controller
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
-                $valid = false;
+                $valid = true;
             }
         }
 
@@ -494,7 +495,7 @@ class AntrianOnlineController extends Controller
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
-                $valid = false;
+                $valid = true;
             }
         }
 
@@ -511,7 +512,7 @@ class AntrianOnlineController extends Controller
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
             if (count( $data)) {
-                $valid = false;
+                $valid = true;
             }
         }
         return $valid;
