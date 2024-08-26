@@ -444,7 +444,7 @@ class AntrianOnlineController extends Controller
                 ->whereBetween('created_at', [
                     $startOfDay, $endOfDay
                 ])
-                ->where('registrasi_pembayaran_id', 1)
+                ->where('registrasi_pembayaran_id', 2)
                 ->exists()
         ) {
             $valid = true;
