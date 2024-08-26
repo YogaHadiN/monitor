@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Asuransi;
 use App\Models\Pasien;
 use App\Models\Antrian;
+use App\Events\FormSubmitted;
 use App\Models\AntrianPoli;
 use Carbon\Carbon;
 use Input;
@@ -58,5 +59,9 @@ class AntrianPoliController extends Controller
 		$ap->save();
 
 		return $ap;
+	}
+
+	public function updateJumlahAntrian($panggil_pasien, $ruangan){
+		event(new FormSubmitted($panggil_pasien, $ruangan));
 	}
 }

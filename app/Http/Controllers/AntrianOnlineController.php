@@ -1,7 +1,9 @@
 <?php
 namespace App\Http\Controllers;
 use App\Models\Antrian;
+use App\Models\Asuransi;
 use App\Models\Pasien;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Input;
 use Response;
@@ -12,6 +14,7 @@ use App\Models\User;
 use App\Models\PoliBpjs;
 use App\Models\MobileJknUser;
 use App\Models\JenisAntrian;
+use App\Models\JadwalKonsultasi;
 use Carbon\Carbon;
 use App\Models\AntrolJkntoken;
 use DB;
@@ -20,7 +23,10 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class AntrianOnlineController extends Controller
 {
     public $base_url;
+    public $message;
+    public $pasien;
     public $jenis_antrian;
+    public $antrian;
     public function __construct()
     {
         $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev';
@@ -91,7 +97,7 @@ class AntrianOnlineController extends Controller
                         "code": 201
                     }
                 }';
-            return Response::json([json_decode( $response, true )], 201);
+            return Response::json(json_decode( $response, true ), 201);
         }
 
         $todaynumber = strtotime('today');
@@ -104,22 +110,27 @@ class AntrianOnlineController extends Controller
                                 "code": 201
                             }
                         }';
-            return Response::json([json_decode( $response, true )], 201);
+            return Response::json(json_decode( $response, true ), 201);
         }
 
         $startOfDay    = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay      = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
         $antrians      = Antrian::where('jenis_antrian_id', $jenis_antrian->id)
                                     ->whereBetween('created_at', [ $startOfDay, $endOfDay ])
+                                    ->where('tenant_id', 1)
                                     ->get();
 
         $total_antrean = $antrians->count();
         $sisa_antrean = 0;
+        $antrian_terakhir_id = $jenis_antrian->antrian_terakhir->id;
         foreach ($antrians as $antrian) {
             if (
-                $antrian->antriable_type == 'App\Models\Antrian' ||
-                $antrian->antriable_type == 'App\Models\AntrianPoli' ||
-                $antrian->antriable_type == 'App\Models\AntrianPeriksa'
+                $antrian->id > $antrian_terakhir_id &&
+                (
+                    $antrian->antriable_type == 'App\Models\Antrian' ||
+                    $antrian->antriable_type == 'App\Models\AntrianPoli' ||
+                    $antrian->antriable_type == 'App\Models\AntrianPeriksa'
+                )
             ) {
                 $sisa_antrean++;
             }
@@ -141,7 +152,7 @@ class AntrianOnlineController extends Controller
                 "code": 200
             }
         }';
-        return Response::json([json_decode( $response, true )], 200);
+        return Response::json(json_decode( $response, true ), 200);
     }
     public function ambil_antrean(){
 
@@ -149,15 +160,17 @@ class AntrianOnlineController extends Controller
         $nomorkartu     = $request['nomorkartu'];
         $nik            = $request['nik'];
         $kodepoli       = $request['kodepoli'];
-        $kodedokter       = $request['kodedokter'];
+        $kodedokter     = $request['kodedokter'];
         $tanggalperiksa = $request['tanggalperiksa'];
         $keluhan        = $request['keluhan'];
+
+
 
         //==========================
         //VALIDASI BEROBAT SEKALI
         //==========================
         if (
-            $this->pasienBpjsHanyaBisaBerobatSekali($nomorkartu)
+            !$this->pasienBpjsHanyaBisaBerobatSekali($nomorkartu)
         ) {
             $response = '{
                 "metadata": {
@@ -165,7 +178,7 @@ class AntrianOnlineController extends Controller
                     "code": 201
                 }
             }';
-            return Response::json([json_decode( $response, true )], 201);
+            return Response::json(json_decode( $response, true ), 201);
         }
 
         //==========================
@@ -181,14 +194,13 @@ class AntrianOnlineController extends Controller
                     "code": 201 
                 }
             }';
-            return Response::json([json_decode( $response, true )], 201);
+            return Response::json(json_decode( $response, true ), 201);
         }
 
         //==========================
         //VALIDASI DOKTER TIDAK DITEMUKAN
         //==========================
         //
-            
         if (
             $this->dokterTidakDitemukan( $kodedokter )
         ) {
@@ -207,34 +219,26 @@ class AntrianOnlineController extends Controller
         //VALIDASI POLI SUDAH TUTUP PENDAFARAN ONLINE
         //==========================
         //
-
-            
         if (
-            $this->poliTutup( $kodepoli )
+            $this->registrasiOnlineDitutup( $kodepoli )
         ) {
-
             $response = [
                 'metadata' => [
-                    'message' => 'Pendaftaran Ke Poli Gigi Sudah Tutup Jam  18.00',
+                    'message' => $this->message,
                     'code' => 201
                 ]
             ];
             return Response::json($response, 201);
         };
 
-
-
+        //
         //==========================
         //VALIDASI DATA PASIEN TIDAK DITEMUKAN
         //==========================
 
-        $pasien = Pasien::where('nomor_asuransi_bpjs', $nomorkartu)->first();
-        if (is_null( $pasien )) {
-            $pasien = Pasien::where('nomor_ktp', $nik)->first();
-        }
 
         if (
-            is_null( $pasien )
+            $this->dataPasienTidakDitemukan($nomorkartu, $nik)
         ) {
             $response = '{
                 "metadata": {
@@ -242,44 +246,36 @@ class AntrianOnlineController extends Controller
                     "code": 202
                 }
             }';
-            return Response::json([json_decode( $response, true )], 202);
+            return Response::json(json_decode( $response, true ), 202);
         };
 
-        $fc = new FasilitasController;
-        $antrian = $fc->antrianPost($this->jenis_antrian->id);
-        $antrian->no_telp          = $request['nohp'];
-        if (!is_null( $pasien )) {
-            $antrian->pasien_id      = $pasien->id;
-            $antrian->tanggal_lahir  = $pasien->tanggal_lahir;
-            $antrian->alamat         = $pasien->alamat;
-            $antrian->nama           = $pasien->nama;
-            $antrian->reservasi_online = 1;
-        }
+        $poli_bpjs                         = PoliBpjs::where('kdPoli', $kodepoli)->first();
+        $this->jenis_antrian               = $poli_bpjs->poli->poli_antrian->jenis_antrian;
+        $fc                                = new FasilitasController;
+        $antrian                           = $fc->antrianPost($this->jenis_antrian->id);
+        $antrian->no_telp                  = $request['nohp'];
+        $antrian->antriable_id             = $antrian->id;
+        $antrian->pasien_id                = $this->pasien->id;
+        $antrian->tanggal_lahir            = $this->pasien->tanggal_lahir;
+        $antrian->alamat                   = $this->pasien->alamat;
+        $antrian->nama                     = $this->pasien->nama;
+        $antrian->nomor_bpjs               = $nomorkartu;
+        $antrian->reservasi_online         = 1;
+        $antrian->registrasi_pembayaran_id = 2;
         $antrian->save();
 
-
-        $tanggal    = $tanggalperiksa;
-        $startOfDay = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay   = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
-        $antrian_sisa_antrian   = Antrian::where('jenis_antrian_id', $this->jenis_antrian->id)
-                        ->whereRaw(
-                            '
-                                antriable_type = "App\\\Models\\\Antrian" ||
-                                antriable_type = "App\\\Models\\\AntrianPoli" ||
-                                antriable_type = "App\\\Models\\\AntrianPeriksa"
-                            '
-                        )->whereBetween('created_at', [ $startOfDay, $endOfDay ])
-                        ->count();
-
-        $antrian_panggil = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
+        if ( empty( trim(   $this->pasien->no_telp   ) ) ) {
+           $this->pasien->no_telp = $request['nohp'] ;
+           $this->pasien->save();
+        }
 
         $response = '{
             "response": {
                     "nomorantrean" : "' . $antrian->nomor_antrian. '",
                     "angkaantrean" : "' .$antrian->nomor. '",
                     "namapoli" : "' . $antrian->jenis_antrian->jenis_antrian. '",
-                    "sisaantrean" : "'.$antrian_sisa_antrian.'",
-                    "antreanpanggil" : "'.$antrian_panggil.'",
+                    "sisaantrean" : "'.$antrian->sisa_antrian.'",
+                    "antreanpanggil" : "'.$antrian->jenis_antrian->antrian_terakhir->nomor_antrian.'",
                     "keterangan" : "Apabila antrean terlewat harap mengambil antrean kembali."
             },
             "metadata": {
@@ -287,11 +283,18 @@ class AntrianOnlineController extends Controller
                 "code": 200
             }
         }';
-        return Response::json([json_decode( $response, true )], 200);
+        return Response::json(json_decode( $response, true ), 200);
     }
-    public function sisa_antrean($sisaantrean, $kodepoli, $tanggal){
-        $sisa_antrean_tidak_ditemukan = false;
-        if ( $sisa_antrean_tidak_ditemukan ) {
+    public function sisa_antrean($nomorkartu_jkn,$kode_poli,$tanggalperiksa){
+
+        $startOfDay = Carbon::parse($tanggalperiksa)->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay   = Carbon::parse($tanggalperiksa)->endOfDay()->format('Y-m-d H:i:s');
+        $antrian    = Antrian::where('nomor_bpjs', $nomorkartu_jkn)
+                            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+                            ->first();
+        if (
+            is_null( $antrian )
+        ) {
             return Response::json([
                 'metadata' => [
                     'message' => 'Antrean Tidak Ditemukan',
@@ -299,28 +302,13 @@ class AntrianOnlineController extends Controller
                 ]
             ], 200);
         } else {
-            $tanggal    = $tanggalperiksa;
-            $startOfDay = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
-            $endOfDay   = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
-            $antrian_sisa_antrian   = Antrian::where('jenis_antrian_id', $this->jenis_antrian->id)
-                            ->whereRaw(
-                                '
-                                    antriable_type = "App\\\Models\\\Antrian" ||
-                                    antriable_type = "App\\\Models\\\AntrianPoli" ||
-                                    antriable_type = "App\\\Models\\\AntrianPeriksa"
-                                '
-                            )->whereBetween('created_at', [ $startOfDay, $endOfDay ])
-                            ->count();
-
-            $antrian_panggil = $antrian->jenis_antrian->antrian_terakhir->nomor_antrian;
-
             $response = '{
                 "response": {
                         "nomorantrean" : "' . $antrian->nomor_antrian. '",
                         "angkaantrean" : "' .$antrian->nomor. '",
                         "namapoli" : "' . $antrian->jenis_antrian->jenis_antrian. '",
-                        "sisaantrean" : "'.$antrian_sisa_antrian.'",
-                        "antreanpanggil" : "'.$antrian_panggil.'",
+                        "sisaantrean" : "'.$antrian->sisa_antrian.'",
+                        "antreanpanggil" : "'.$antrian->jenis_antrian->antrian_terakhir->nomor_antrian.'",
                         "keterangan" : "Apabila antrean terlewat harap mengambil antrean kembali."
                 },
                 "metadata": {
@@ -328,61 +316,41 @@ class AntrianOnlineController extends Controller
                     "code": 200
                 }
             }';
-            return Response::json([json_decode( $response, true )], 200);
-            $response = [
-                'response' => [
-                    'nomorantrean'   => 'A32',
-                    'namapoli'       => 'Poli Umum',
-                    'sisaantrean'    => '8',
-                    'antreanpanggil' => 'A29',
-                    'keterangan'     => ''
-                ], 
-                'metadata' => [
-                    'message' => 'Ok',
-                    'code'    => 200
-                ]
-            ];
-            return Response::json($response, 200);
+            return Response::json(json_decode( $response, true ), 200);
         }
     }
 
     public function pasien_baru(){
-        $request = '{
-            "nomorkartu": "00012345678",
-            "nik": "3212345678987654",
-            "nomorkk": "3212345678987654",
-            "nama": "sumarsono",
-            "jeniskelamin": "L",
-            "tanggallahir": "1985-03-01",
-            "alamat": "alamat yang muncul merupakan alamat lengkap",
-            "kodeprop": "11",
-            "namaprop": "Jawa Barat",
-            "kodedati2": "0120",
-            "namadati2": "Kab. Bandung",
-            "kodekec": "1319",
-            "namakec": "Soreang",
-            "kodekel": "D2105",
-            "namakel": "Cingcin",
-            "rw": "001",
-            "rt": "013"
-        }';
-        $response = '{
+        session()->put('tenant_id', 1);
+
+        $pasien                      = new Pasien;
+        $pasien->nama                = Input::get('nama');
+        $pasien->nomor_asuransi_bpjs = Input::get('nomorkartu');
+        $pasien->nomor_asuransi      = Input::get('nomorkartu');
+        $pasien->nomor_ktp           = Input::get('nik');
+        $pasien->sex                 = Input::get('jeniskelamin') == 'L' ? 1 : 0;
+        $pasien->tanggal_lahir       = Input::get('tanggallahir');
+        $pasien->alamat              = Input::get('alamat');
+        $pasien->asuransi_id         = Asuransi::Bpjs()->id;
+        $pasien->jenis_peserta_id    = 1;
+        if (
+            $pasien->save()
+        ) {
+            
+            $response = '{
                         "metadata": {
                             "message": "Ok",
                             "code": 200
                         }
                     }';
-        return Response::json([json_decode( $response, true )], 200);
-
+            return Response::json(json_decode( $response, true ), 200);
+        }
     }
     public function batal_antrean(){
-
         $request                  = Input::all();
-        $antrean_tidak_ditemukan  = false;
-        $antrean_sudah_dilayani   = false;
-        $antrean_sudah_dibatalkan = true;
+        $antrean_sudah_dibatalkan = false;
 
-        if ($antrean_tidak_ditemukan) {
+        if ($this->antrean_tidak_ditemukan()) {
             
             $response = '{
                             "metadata": {
@@ -390,9 +358,9 @@ class AntrianOnlineController extends Controller
                                 "code": 201
                             }
                         }';
-            return Response::json([json_decode( $response, true )], 201);
+            return Response::json(json_decode( $response, true ), 201);
         } else if (
-            $antrean_sudah_dilayani
+            $this->antrean_sudah_dilayani()
         ) {
             $response = '{
                         "metadata": {
@@ -400,7 +368,7 @@ class AntrianOnlineController extends Controller
                             "code": 201
                         }
                     }';
-            return Response::json([json_decode( $response, true )], 201);
+            return Response::json(json_decode( $response, true ), 201);
         } else if (
             $antrean_sudah_dibatalkan
         ) {
@@ -410,36 +378,73 @@ class AntrianOnlineController extends Controller
                                 "code": 201
                             }
                         }';
-            return Response::json([json_decode( $response, true )], 201);
+            return Response::json(json_decode( $response, true ), 201);
         } else {
+            $this->antrian->antriable->delete();
+            $this->antrian->delete();
             $response = '{
                             "metadata": {
                                 "message": "Ok",
                                 "code": 200
                             }
                         }';
-
-            return Response::json([json_decode( $response, true )], 200);
+            return Response::json(json_decode( $response, true ), 200);
         }
     }
 
-    public function poliTutup($kodepoli){
-        $poli_bpjs = PoliBpjs::where('kodepoli', $kodepoli)->first();
-        $tipe_konsultasi_id = $poli_bpjs->poli->tipe_konsultasi_id;
-        return !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)
-            ->where('hari', date("N"))
-            ->where('jam_mulai', '<', date("H:i:s"))
-            ->where('jam_akhir', '>', date("H:i:s"))
-            ->exists();
+    public function registrasiOnlineDitutup($kodepoli){
+        if (
+            $kodepoli == '001' &&
+            (
+                date("G") < 6 ||
+                date("G") >=23
+            )
+        ) {
+            return true;
+        } else if (
+            $kodepoli == '002'
+        ) {
+            $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
+            $tipe_konsultasi_id = $poli_bpjs->poli->tipe_konsultasi_id;
+            $jadwal =  JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                ->where('hari_id', date("N"))
+                ->first();
+
+            $now = strtotime("now");
+
+            $jam_akhir_online  = date('H:i', strtotime('-3 hours', strtotime( $jadwal->jam_akhir)));
+            $jam_akhir_offline = date('H:i', strtotime('-1 hours', strtotime( $jadwal->jam_akhir)));
+
+            if (
+                $now < strtotime( $jadwal->jam_mulai )
+            ) {
+                $this->message = 'Pendaftaran ke poli ini baru dimulai jam ' . Carbon::parse($jadwal->jam_mulai)->format('H:i') ;
+            } else if (
+                $now > strtotime($jam_akhir_online)
+            ) {
+                $this->message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
+                $this->message .= ". Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}";
+                $this->message .= ". Mohon maaf atas ketidaknyamanannya.";
+            }
+
+
+            $tenant = Tenant::find(1);
+            return !$jadwal->count();
+        } else {
+            return false;
+        }
     }
     public function pasienBpjsHanyaBisaBerobatSekali($nomorkartu){
         $startOfDay = Carbon::now()->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay   = Carbon::now()->endOfDay()->format('Y-m-d H:i:s');
         $valid = true;
         if (
-            Antrian::where('nomor_bpjs', $nomorkartu)->whereBetween('created_at', [
-                $startOfDay, $endOfDay
-            ])->exists()
+            Antrian::where('nomor_bpjs', $nomorkartu)
+                ->whereBetween('created_at', [
+                    $startOfDay, $endOfDay
+                ])
+                ->where('registrasi_pembayaran_id', 1)
+                ->exists()
         ) {
             $valid = false;
         }
@@ -450,7 +455,7 @@ class AntrianOnlineController extends Controller
             $query  = "SELECT * ";
             $query .= "FROM periksas as prx ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
+            $query .= "WHERE prx.tenant_id= 1 ";
             $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
             $query .= "AND prx.asuransi_id = 32 ";
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
@@ -466,7 +471,7 @@ class AntrianOnlineController extends Controller
             $query  = "SELECT * ";
             $query .= "FROM antrian_polis as prx ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
+            $query .= "WHERE prx.tenant_id= 1 ";
             $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
             $query .= "AND prx.asuransi_id = 32 ";
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
@@ -483,7 +488,7 @@ class AntrianOnlineController extends Controller
             $query  = "SELECT * ";
             $query .= "FROM antrian_periksas as prx ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
+            $query .= "WHERE prx.tenant_id= 1 ";
             $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
             $query .= "AND prx.asuransi_id = 32 ";
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
@@ -497,10 +502,11 @@ class AntrianOnlineController extends Controller
             $valid
         ) {
             $query  = "SELECT * ";
-            $query .= "FROM antrian_kasirs as prx ";
+            $query .= "FROM antrian_kasirs as aks ";
+            $query .= "JOIN periksas as prx on prx.id = aks.periksa_id ";
             $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
+            $query .= "WHERE prx.tenant_id= 1 ";
+            $query .= "AND prx.tanggal between '{$startOfDay}' and '{$endOfDay}' ";
             $query .= "AND prx.asuransi_id = 32 ";
             $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
             $data = DB::select($query);
@@ -508,17 +514,45 @@ class AntrianOnlineController extends Controller
                 $valid = false;
             }
         }
-
         return $valid;
-
     }
     public function poliSedangLibur($kodepoli){
-        $poli_bpjs = PoliBpjs::where('kodepoli', $kodepoli)->first();
-        $tipe_konsultasi_id = $poli_bpjs->poli->tipe_konsultasi_id;
-        return !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari', date("N"))->exists();
+        $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
+        $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
+        $tenant = Tenant::find(1);
+        return 
+            !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari_id', date("N"))->exists() 
+            || !$tenant->dentist_available;
     }
 
     public function dokterTidakDitemukan($kodedokter){
         return false;
+    }
+    public function dataPasienTidakDitemukan($nomorkartu, $nik){
+        $this->pasien = Pasien::where('nomor_asuransi_bpjs', $nomorkartu)->first();
+        if (is_null( $this->pasien )) {
+            $this->pasien = Pasien::where('nomor_ktp', $nik)->first();
+        }
+
+        return is_null( $this->pasien );
+    }
+    public function antrean_tidak_ditemukan(){
+        $startOfDay = Carbon::parse( Input::get('tanggalperiksa') )->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = Carbon::parse( Input::get('tanggalperiksa') )->endOfDay()->format('Y-m-d H:i:s');
+        $this->antrian = Antrian::where('nomor_bpjs', Input::get('nomorkartu'))
+                            ->whereBetween('created_at', [
+                                $startOfDay, $endOfDay
+                            ])
+                            ->where('tenant_id', 1)
+                            ->first();
+        return is_null( $this->antrian );
+    }
+
+    public function antrean_sudah_dilayani(){
+        return 
+            !is_null( $this->antrian ) &&
+            $this->antrian->antriable_type !== 'App\Models\Antrian' &&
+            $this->antrian->antriable_type !== 'App\Models\AntrianPoli' &&
+            $this->antrian->antriable_type !== 'App\Models\AntrianPeriksa';
     }
 }    

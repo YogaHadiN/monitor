@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Antrian;
+use Carbon\Carbon;
 use App\Models\WhatsappRegistration;
 use DateTimeInterface;
 
@@ -115,18 +116,20 @@ class Antrian extends Model
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
     public function getSisaAntrianAttribute(){
-        $from = date('Y-m-d 00:00:00');
-        $to   = date('Y-m-d 23:59:59');
-        return Antrian::where('jenis_antrian_id', $this->jenis_antrian_id)// hapus antrian yang memiliki jenis_antrian_id yang sama 
-            ->whereRaw("created_at between '{$from}' and '{$to}'")// yang di lakukan hari ini, 
-            ->where('id', '<', $this->id)// yang antriannya sudah terlewat
-            ->whereRaw(
-                                "(
-                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                                    antriable_type = 'App\\\Models\\\Antrian' or
-                                    antriable_type = 'App\\\Models\\\AntrianPoli'
-                                )"
-                                )
-            ->count();
+        $tanggal = $this->created_at;
+        $startOfDay = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay   = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
+        $antrian_panggil = $this->jenis_antrian->antrian_terakhir;
+        return Antrian::where('jenis_antrian_id', $this->jenis_antrian->id)
+                        ->whereRaw(
+                            '(
+                                antriable_type = "App\\\Models\\\Antrian" ||
+                                antriable_type = "App\\\Models\\\AntrianPoli" ||
+                                antriable_type = "App\\\Models\\\AntrianPeriksa"
+                            )'
+                        )->whereBetween('created_at', [ $startOfDay, $endOfDay ])
+                        ->where('id', '>', $antrian_panggil->id)
+                        ->where('tenant_id', $this->tenant_id)
+                        ->count();
     }
 }

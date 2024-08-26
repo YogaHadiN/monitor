@@ -11,7 +11,6 @@ class Poli extends Model
     public static function konsultasiDokterUmum(){
         return Poli::where('poli', 'Poli Umum - Konsul Dokter')->first();
     }
-
     protected $guarded = [];
 
 	public static function list(){
@@ -23,11 +22,6 @@ class Poli extends Model
     public function poli_bpjs(){
         return $this->belongsTo(PoliBpjs::class);
     }
-
-    
-    public static function konsultasiDokterUmum(){
-        return Poli::where('poli', 'Poli Umum - Konsul Dokter')->first();
-    }
     public static function gawatDarurat(){
         return Poli::where('poli', 'Poli Gawat Darurat')->first();
     }
@@ -35,6 +29,6 @@ class Poli extends Model
         return Poli::where('poli', 'Poli Estetika')->first();
     }
     public function tipe_konsultasi(){
-        return $this->belongsTo(TipeKonsultasi::class);
+        return $this->hasOne(TipeKonsultasi::class);
     }
 }

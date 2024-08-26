@@ -101,7 +101,7 @@ return [
     |
     */
 
-    'ttl' => env('JWT_TTL', 1),
+    'ttl' => env('JWT_TTL', 40),
 
     /*
     |--------------------------------------------------------------------------
@@ -297,5 +297,4 @@ return [
         'storage' => Tymon\JWTAuth\Providers\Storage\Illuminate::class,
 
     ],
-    'header-name' => 'x-token',
 ];

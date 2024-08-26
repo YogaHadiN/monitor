@@ -11,4 +11,7 @@ class PoliBpjs extends Model
     public function poli(){
         return $this->hasOne(Poli::class);
     }
+    public function tipe_konsultasi(){
+        return $this->hasOne(TipeKonsultasi::class);
+    }
 }

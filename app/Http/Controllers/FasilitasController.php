@@ -8,7 +8,7 @@ use DB;
 use Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PasiensController;
-use App\Http\Controllers\AntrianPolisController;
+use App\Http\Controllers\AntrianPoliController;
 use App\Http\Controllers\AntriansController;
 use App\Http\Controllers\AntrianPeriksasController;
 use App\Http\Requests;
@@ -50,18 +50,36 @@ class FasilitasController extends Controller
 	}
 	
 	public function antrianPost($id){
+        $today = date("Y-m-d");
 
-        $antrian                   = new Antrian;
-        $antrian->nomor            = Antrian::nomorAntrian($id) ;
-        $antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-        $antrian->jenis_antrian_id = $id ;
-        $antrian->save();
+		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', $today . '%')
+							->where('jenis_antrian_id',$id)
+							->where('tenant_id', 1)
+							->orderBy('nomor', 'desc')
+							->first();
+
+		if ( is_null( $antrians ) ) {
+			$antrian                   = new Antrian;
+			$antrian->nomor            = 1 ;
+			$antrian->tenant_id        = 1 ;
+			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
+			$antrian->jenis_antrian_id = $id ;
+
+		} else {
+			$antrian_terakhir          = $antrians->nomor + 1;
+			$antrian                   = new Antrian;
+			$antrian->tenant_id        = 1 ;
+			$antrian->nomor            = $antrian_terakhir ;
+			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
+			$antrian->jenis_antrian_id = $id ;
+		}
+		$antrian->antriable_id   = $antrian->id;
 		$antrian->antriable_id   = $antrian->id;
 		$antrian->antriable_type = 'App\\Models\\Antrian';
 		$antrian->save();
 
-		$apc                     = new AntrianPolisController;
-		$apc->updateJumlahAntrian(false);
+		$apc                     = new AntrianPoliController;
+		$apc->updateJumlahAntrian(false, null);
 		return $antrian;
 	}
 	public function antrian($id){
@@ -128,7 +146,7 @@ class FasilitasController extends Controller
 		return $p->index();
 	}
 	public function antrianPoliPost($id, Request $request ){
-		$apc = new AntrianPolisController;
+		$apc = new AntrianPoliController;
 		$apc->input_antrian_id   = $id;
 		return $apc->store($request);
 	}
