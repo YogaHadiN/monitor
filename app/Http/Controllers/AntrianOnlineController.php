@@ -389,6 +389,8 @@ class AntrianOnlineController extends Controller
     }
 
     public function registrasiOnlineDitutup($kodepoli){
+        $this->message = "Pendaftaran secara online sudah tutup dan akan buka lagi jam 6 pagi";
+        $this->message .= ". Mohon maaf atas ketidaknyamanannya.";
         return true;
         if (
             $kodepoli == '001' &&
