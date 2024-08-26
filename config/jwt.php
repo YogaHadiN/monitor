@@ -297,5 +297,5 @@ return [
         'storage' => Tymon\JWTAuth\Providers\Storage\Illuminate::class,
 
     ],
-
+    'header' => 'x-token',
 ];
