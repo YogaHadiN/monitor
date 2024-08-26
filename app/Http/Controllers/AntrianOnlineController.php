@@ -155,7 +155,6 @@ class AntrianOnlineController extends Controller
         return Response::json(json_decode( $response, true ), 200);
     }
     public function ambil_antrean(){
-
         $request        = Input::all();
         $nomorkartu     = $request['nomorkartu'];
         $nik            = $request['nik'];
@@ -163,8 +162,6 @@ class AntrianOnlineController extends Controller
         $kodedokter     = $request['kodedokter'];
         $tanggalperiksa = $request['tanggalperiksa'];
         $keluhan        = $request['keluhan'];
-
-
 
         //==========================
         //VALIDASI BEROBAT SEKALI
@@ -523,7 +520,7 @@ class AntrianOnlineController extends Controller
         $tenant = Tenant::find(1);
         return 
             !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari_id', date("N"))->exists() 
-            || !$tenant->dentist_available;
+            || ( !$tenant->dentist_available && $kodepoli == '002' );
     }
 
     public function dokterTidakDitemukan($kodedokter){
