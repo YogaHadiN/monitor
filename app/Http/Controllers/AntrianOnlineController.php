@@ -527,7 +527,7 @@ class AntrianOnlineController extends Controller
     }
 
     public function dokterTidakDitemukan($kodedokter){
-        return false;
+        return true;
     }
     public function dataPasienTidakDitemukan($nomorkartu, $nik){
         $this->pasien = Pasien::where('nomor_asuransi_bpjs', $nomorkartu)->first();
