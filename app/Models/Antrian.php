@@ -13,7 +13,7 @@ class Antrian extends Model
     public static function boot(){
         parent::boot();
         self::creating(function($antrian){
-            $existing_antrian = Antrian::wherewhere('created_at', 'like' , date('Y-m-d') . '%' )
+            $existing_antrian = Antrian::where('created_at', 'like' , date('Y-m-d') . '%' )
                                             ->where('jenis_antrian_id',  $antrian->jenis_antrian_id )
                                             ->where('tenant_id',  1 )
                                             ->orderBy('nomor', 'desc')
