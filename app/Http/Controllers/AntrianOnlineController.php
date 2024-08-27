@@ -260,6 +260,7 @@ class AntrianOnlineController extends Controller
         $antrian->nomor_bpjs               = $nomorkartu;
         $antrian->reservasi_online         = 1;
         $antrian->registrasi_pembayaran_id = 2;
+        $antrian->verifikasi_bpjs          = 1;
         $antrian->save();
 
         if ( empty( trim(   $this->pasien->no_telp   ) ) ) {
@@ -347,7 +348,7 @@ class AntrianOnlineController extends Controller
     }
     public function batal_antrean(){
         $request                  = Input::all();
-        $antrean_sudah_dibatalkan = true;
+        $antrean_sudah_dibatalkan = false;
 
         if ($this->antrean_tidak_ditemukan()) {
             $response = '{
