@@ -12,10 +12,23 @@ class Antrian extends Model
 {
     public static function boot(){
         parent::boot();
+        self::creating(function($antrian){
+            $existing_antrian = Antrian::wherewhere('created_at', 'like' , date('Y-m-d') . '%' )
+                                            ->where('jenis_antrian_id',  $antrian->jenis_antrian_id )
+                                            ->where('tenant_id',  1 )
+                                            ->orderBy('nomor', 'desc');
+                                            ->first();
+            if ( is_null( $existing_antrian ) ) {
+                $antrian->nomor = 1;
+            } else {
+                $antrian->nomor = $existing_antrian->nomor + 1;
+            }
+        });
         self::created(function($antrian){
             $existing_antrians = Antrian::where('antriable_type', 'App\Models\Antrian')
                 ->where('created_at', 'like' , date('Y-m-d') . '%' )
                 ->where('id', 'not like' , $antrian->id )
+                ->where('tenant_id', 1 )
                 ->get();
             $existing_antrian_ids = [];
             foreach ($existing_antrians as $ant) {
