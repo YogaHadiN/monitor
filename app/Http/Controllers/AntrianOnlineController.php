@@ -320,14 +320,6 @@ class AntrianOnlineController extends Controller
 
     public function pasien_baru(){
 
-        $response = '{
-                    "metadata": {
-                        "message": "Ok",
-                        "code": 200
-                    }
-                }';
-        return Response::json(json_decode( $response, true ), 200);
-
         session()->put('tenant_id', 1);
 
         $pasien                      = new Pasien;
