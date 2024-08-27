@@ -379,8 +379,11 @@ class AntrianOnlineController extends Controller
                         }';
             return Response::json(json_decode( $response, true ), 201);
         } else {
+            $antrian_id = $this->antrian->id;
             $this->antrian->antriable->delete();
-            $this->antrian->delete();
+            if ( !is_null( Antrian::find( $antrian_id ) ) ) {
+                $this->antrian->delete();
+            }
             $response = '{
                             "metadata": {
                                 "message": "Ok",
@@ -390,7 +393,6 @@ class AntrianOnlineController extends Controller
             return Response::json(json_decode( $response, true ), 200);
         }
     }
-
     public function registrasiOnlineDitutup($kodepoli){
         if (
             $kodepoli == '001' &&
