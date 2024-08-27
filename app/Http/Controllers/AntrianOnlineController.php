@@ -123,6 +123,7 @@ class AntrianOnlineController extends Controller
         $total_antrean = $antrians->count();
         $sisa_antrean = 0;
         $antrian_terakhir_id = $jenis_antrian->antrian_terakhir->id;
+        $return = [];
         foreach ($antrians as $antrian) {
             if (
                 $antrian->id > $antrian_terakhir_id &&
@@ -134,7 +135,13 @@ class AntrianOnlineController extends Controller
             ) {
                 $sisa_antrean++;
             }
+
+            $return[] = [
+                'nomor_antrian' => $antrian->nomor_antrian,
+            ];
         }
+
+        dd( $return );
 
         $antrian_terakhir_id = $jenis_antrian->antrian_terakhir_id;
         $antrian_terakhir = Antrian::find( $antrian_terakhir_id );
