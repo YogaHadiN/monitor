@@ -552,7 +552,6 @@ class AntrianOnlineController extends Controller
         return is_null( $this->pasien );
     }
     public function antrean_tidak_ditemukan(){
-        return false;
         $startOfDay = Carbon::parse( Input::get('tanggalperiksa') )->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay = Carbon::parse( Input::get('tanggalperiksa') )->endOfDay()->format('Y-m-d H:i:s');
         $this->antrian = Antrian::where('nomor_bpjs', Input::get('nomorkartu'))
@@ -565,7 +564,6 @@ class AntrianOnlineController extends Controller
     }
 
     public function antrean_sudah_dilayani(){
-        return false;
         return 
             !is_null( $this->antrian ) &&
             $this->antrian->antriable_type !== 'App\Models\Antrian' &&
