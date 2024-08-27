@@ -144,8 +144,6 @@ class AntrianOnlineController extends Controller
             ];
         }
 
-        dd( $return );
-
         $antrian_terakhir_id = $jenis_antrian->antrian_terakhir_id;
         $antrian_terakhir = Antrian::find( $antrian_terakhir_id );
 
