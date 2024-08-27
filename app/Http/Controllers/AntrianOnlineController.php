@@ -347,7 +347,7 @@ class AntrianOnlineController extends Controller
     }
     public function batal_antrean(){
         $request                  = Input::all();
-        $antrean_sudah_dibatalkan = false;
+        $antrean_sudah_dibatalkan = true;
 
         if ($this->antrean_tidak_ditemukan()) {
             $response = '{
@@ -552,7 +552,7 @@ class AntrianOnlineController extends Controller
     }
 
     public function antrean_sudah_dilayani(){
-        return true;
+        return false;
         return 
             !is_null( $this->antrian ) &&
             $this->antrian->antriable_type !== 'App\Models\Antrian' &&
