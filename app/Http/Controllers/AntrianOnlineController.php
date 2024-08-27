@@ -254,6 +254,7 @@ class AntrianOnlineController extends Controller
         $antrian->antriable_id             = $antrian->id;
         $antrian->pasien_id                = $this->pasien->id;
         $antrian->tanggal_lahir            = $this->pasien->tanggal_lahir;
+        $antrian->sudah_hadir_di_klinik    = 0;
         $antrian->alamat                   = $this->pasien->alamat;
         $antrian->nama                     = $this->pasien->nama;
         $antrian->nomor_bpjs               = $nomorkartu;
@@ -318,6 +319,15 @@ class AntrianOnlineController extends Controller
     }
 
     public function pasien_baru(){
+
+        $response = '{
+                    "metadata": {
+                        "message": "Ok",
+                        "code": 200
+                    }
+                }';
+        return Response::json(json_decode( $response, true ), 200);
+
         session()->put('tenant_id', 1);
 
         $pasien                      = new Pasien;
