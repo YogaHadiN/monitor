@@ -16,7 +16,7 @@ class Antrian extends Model
             $existing_antrian = Antrian::wherewhere('created_at', 'like' , date('Y-m-d') . '%' )
                                             ->where('jenis_antrian_id',  $antrian->jenis_antrian_id )
                                             ->where('tenant_id',  1 )
-                                            ->orderBy('nomor', 'desc');
+                                            ->orderBy('nomor', 'desc')
                                             ->first();
             if ( is_null( $existing_antrian ) ) {
                 $antrian->nomor = 1;
