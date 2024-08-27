@@ -138,6 +138,9 @@ class AntrianOnlineController extends Controller
 
             $return[] = [
                 'nomor_antrian' => $antrian->nomor_antrian,
+                'id' => $antrian->id,
+                'nomor' => $antrian->nomor,
+                'tenant_id' => $antrian->tenant_id,
             ];
         }
 
