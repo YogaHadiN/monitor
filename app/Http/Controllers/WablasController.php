@@ -3170,6 +3170,10 @@ class WablasController extends Controller
                             ) {
                                 $input_tidak_tepat = true;
                                 $this->pesan_error = $this->validasiBpjsProviderSalah( $pasien->nomor_asuransi_bpjs, $message );
+                            } else {
+
+                                $reservasi_online->nomor_asuransi_bpjs               = $this->message;
+
                             }
                         } else {
                             $reservasi_online->pasien_id                         = $pasien->id;
@@ -3212,16 +3216,21 @@ class WablasController extends Controller
             if (empty( $this->pesan_error )) {
                 $bpjs     = new BpjsApiController;
                 $response = $bpjs->pencarianNoKartuValid( $this->message, true );
-                $code     = $response['code'];
                 $message  = $response['response'];
                 if (
-                    $code == 204 // jika tidak ditemukan
+                    isset( $response['code'] ) &&
+                    $response['code'] == 204 // jika tidak ditemukan
                 ) {
                     $input_tidak_tepat = true;
-                    $this->pesan_error = 'Nomor BPJS tidak ditemukan di sistem BPJS';
+                    if ( isset( $response['message'] ) ) {
+                        $this->pesan_error = $response['message'];
+                    } else {
+                        $this->pesan_error = 'Nomor BPJS tidak ditemukan di sistem BPJS';
+                    }
                 } else if (
-                    $code >=200 &&
-                    $code <=299 // jika oke
+                    isset( $response['code'] ) &&
+                    $response['code'] >=200 &&
+                    $response['code'] <=299 // jika oke
                 ) {
                     // bagi lagi apakah pasien kartunya aktif atau tidak aktif
                     $pasien                            = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
