@@ -418,7 +418,6 @@ class AntrianOnlineController extends Controller
         ) {
             $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
             $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
-            dd( $tipe_konsultasi_id );
             $jadwal =  JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)
                 ->where('hari_id', date("N"))
                 ->first();
