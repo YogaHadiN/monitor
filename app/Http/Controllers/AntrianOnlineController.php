@@ -317,7 +317,6 @@ class AntrianOnlineController extends Controller
             $response = '{
                 "response": {
                         "nomorantrean" : "' . $antrian->nomor_antrian. '",
-                        "angkaantrean" : "' .$antrian->nomor. '",
                         "namapoli" : "' . $antrian->jenis_antrian->jenis_antrian. '",
                         "sisaantrean" : "'.$antrian->sisa_antrian.'",
                         "antreanpanggil" : "'.$antrian->jenis_antrian->antrian_terakhir->nomor_antrian.'",
