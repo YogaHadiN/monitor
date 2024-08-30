@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Models\KeluhanEstetik;
 use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
+use App\Models\BpjsApiLog;
 use App\Models\Complain;
 use App\Models\NoTelp;
 use App\Models\DentistReservation;
@@ -3173,6 +3174,10 @@ class WablasController extends Controller
                             } else {
 
                                 $reservasi_online->nomor_asuransi_bpjs               = $this->message;
+                                $bpjs_api_log                = new BpjsApiLog ;
+                                $bpjs_api_log->nomor_bpjs    = $this->message ;
+                                $bpjs_api_log->error_message = $response['message'];
+                                $bpjs_api_log->save();
 
                             }
                         } else {
