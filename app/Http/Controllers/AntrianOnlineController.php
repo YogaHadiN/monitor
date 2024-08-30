@@ -148,13 +148,18 @@ class AntrianOnlineController extends Controller
         $antrian_terakhir = Antrian::find( $antrian_terakhir_id );
 
         $response = '{
-            "response": {
+            "response": [
+                {
                     "namapoli" : "' . $jenis_antrian->jenis_antrian. '",
                     "totalantrean" : "' . $total_antrean. '",
                     "sisaantrean" : "' . $sisa_antrean. '",
                     "antreanpanggil" : "' . $antrian_terakhir->nomor_antrian. '",
-                    "keterangan" : ""
-            },
+                    "keterangan" : "",
+                    "kodedokter" : 347011,
+                    "namadokter" : "dr. JUNIARTI ELYANI",
+                    "jampraktek" : "08:00-22:00"
+                }
+            ],
             "metadata": {
                 "message": "Ok",
                 "code": 200
