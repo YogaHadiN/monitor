@@ -3220,9 +3220,9 @@ class WablasController extends Controller
             $this->pesan_error =   pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
             if (empty( $this->pesan_error )) {
                 $reservasi_online->nomor_asuransi_bpjs = $this->message;
-                $bpjs     = new BpjsApiController;
-                $response = $bpjs->pencarianNoKartuValid( $this->message, true );
-                $message  = $response['response'];
+                $bpjs                                  = new BpjsApiController;
+                $response                              = $bpjs->pencarianNoKartuValid( $this->message, true );
+                $message                               = $response['response'];
                 if (
                     isset( $response['code'] ) &&
                     $response['code'] == 204 // jika tidak ditemukan
