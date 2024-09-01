@@ -3219,6 +3219,7 @@ class WablasController extends Controller
         ) {
             $this->pesan_error =   pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
             if (empty( $this->pesan_error )) {
+                $reservasi_online->nomor_asuransi_bpjs = $this->message;
                 $bpjs     = new BpjsApiController;
                 $response = $bpjs->pencarianNoKartuValid( $this->message, true );
                 $message  = $response['response'];
@@ -3249,7 +3250,6 @@ class WablasController extends Controller
                         $message['kdProviderPst']['kdProvider'] == '0221B119' &&
                         $reservasi_online->data_bpjs_cocok
                     ) { // jika aktig
-                        $reservasi_online->nomor_asuransi_bpjs = $this->message;
                         if ( 
                             !is_null( $pasien ) 
                         ) {
@@ -3283,6 +3283,11 @@ class WablasController extends Controller
                         !$reservasi_online->data_bpjs_cocok
                     ) { 
                         $reservasi_online->verifikasi_bpjs = 0;
+                    } else {
+                        $bpjs_api_log                = new BpjsApiLog ;
+                        $bpjs_api_log->nomor_bpjs    = $this->message ;
+                        $bpjs_api_log->error_message = json_encode( $response );
+                        $bpjs_api_log->save();
                     }
                 } else {
                     $pasien = Pasien::where('nomor_asuransi_bpjs', $this->message)->first();
