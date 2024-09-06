@@ -241,6 +241,54 @@ class AntrianOnlineController extends Controller
             return Response::json($response, 201);
         };
 
+        //==========================
+        // VALIDASI PENDAFTARAN POLI GIGI BELUM BUKA
+        //==========================
+        //
+        if (
+            $this->pendaftaranPoliGigiBelumDibuka()
+        ) {
+            $response = [
+                'metadata' => [
+                    'message' => 'Pendaftaran Poli Gigi baru dibuka pukul 15:00',
+                    'code' => 201
+                ]
+            ];
+            return Response::json($response, 201);
+        };
+
+        //==========================
+        // VALIDASI PENDAFTARAN HANYA UNTUK POLI UMUM DAN POLI GIGI
+        //==========================
+        //
+        if (
+            $kodepoli !== '001' &&
+            $kodepoli !== '002'
+        ) {
+            $response = [
+                'metadata' => [
+                    'message' => 'Pendaftaran online hanya untuk Poli Umum dan Poli Gigi saja',
+                    'code' => 201
+                ]
+            ];
+            return Response::json($response, 201);
+        };
+        //==========================
+        // VALIDASI PENDAFTARAN HANYA PADA HARI YANG SAMA
+        //==========================
+        //
+        if (
+            $tanggalperiksa !== date('Y-m-d')
+        ) {
+            $response = [
+                'metadata' => [
+                    'message' => 'Antrian hanya bisa diambil pada hari yang sama',
+                    'code' => 201
+                ]
+            ];
+            return Response::json($response, 201);
+        };
+
         //
         //==========================
         //VALIDASI DATA PASIEN TIDAK DITEMUKAN
@@ -571,5 +619,21 @@ class AntrianOnlineController extends Controller
             $this->antrian->antriable_type !== 'App\Models\Antrian' &&
             $this->antrian->antriable_type !== 'App\Models\AntrianPoli' &&
             $this->antrian->antriable_type !== 'App\Models\AntrianPeriksa';
+    }
+    public function pendaftaranPoliGigiBelumDibuka(){
+        $kodepoli           = Input::get('kodepoli');
+        $poli_bpjs          = PoliBpjs::where('kdPoli', $kodepoli)->first();
+        $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
+
+        $jadwal_konsultasi = JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id )
+                                            ->where('hari_id',  date('N', Input::get('tanggalperiksa')) )
+                                            ->first();
+        $jam_mulai = strtotime( $jadwal_konsultasi->jam_mulai );
+        if (  
+            $kodepoli == '002' &&
+            $jam_mulai > strtotime("now")
+        ) {
+            return true;
+        }
     }
 }    

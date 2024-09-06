@@ -4106,10 +4106,10 @@ class WablasController extends Controller
         $jenis_antrian = $jenis_antrian_id == '3' ? 'USG Kehamilan' : JenisAntrian::find( $jenis_antrian_id )->jenis_antrian;
         $message = 'Kakak akan melakukan registrasi ' . ucwords( $jenis_antrian ). ' secara online';
         $message .= PHP_EOL;
-        $message .= 'Reservasi ini akan ';
+        $message .= 'Reservasi ini';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= '*Dibatalkan secara otomatis*';
+        $message .= '*Akan dibatalkan secara otomatis*';
 
         if ( $jenis_antrian_id == 1 ) {
             $message .= PHP_EOL;
