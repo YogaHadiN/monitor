@@ -257,6 +257,23 @@ class AntrianOnlineController extends Controller
             return Response::json($response, 201);
         };
 
+
+        //==========================
+        // VALIDASI PENDAFTARAN POLI GIGI DITUTUP
+        //==========================
+        //
+        if (
+            $this->pendaftaranPoliGigiDitutup()
+        ) {
+            $response = [
+                'metadata' => [
+                    'message' => 'Pendaftaran Poli Gigi baru dibuka pukul 15:00',
+                    'code' => 201
+                ]
+            ];
+            return Response::json($response, 201);
+        };
+
         //==========================
         // VALIDASI PENDAFTARAN HANYA UNTUK POLI UMUM DAN POLI GIGI
         //==========================
@@ -329,6 +346,11 @@ class AntrianOnlineController extends Controller
            $this->pasien->save();
         }
 
+        $keterangan =  "Apabila antrean terlewat harap mengambil antrean kembali";
+        if ($kodepoli == '002') {
+            $keterangan =  "Apabila antrean terlewat harap mengambil antrean kembali. Terakhir penerimaan pasien adalah 1 jam sebelum pelayanan berakhir.";
+        }
+
         $response = '{
             "response": {
                     "nomorantrean" : "' . $antrian->nomor_antrian. '",
@@ -336,7 +358,7 @@ class AntrianOnlineController extends Controller
                     "namapoli" : "' . $antrian->jenis_antrian->jenis_antrian. '",
                     "sisaantrean" : "'.$antrian->sisa_antrian.'",
                     "antreanpanggil" : "'.$antrian->jenis_antrian->antrian_terakhir->nomor_antrian.'",
-                    "keterangan" : "Apabila antrean terlewat harap mengambil antrean kembali."
+                    "keterangan" : "' . $keterangan. '"
             },
             "metadata": {
                 "message": "Ok",
@@ -636,4 +658,9 @@ class AntrianOnlineController extends Controller
             return true;
         }
     }
+    public function pendaftaranPoliGigiDitutup(){
+        $tenant = Tenant::find(1);
+        return $tenant->dokter_gigi_stop_pelayanan_hari_ini;
+    }
+    
 }    
