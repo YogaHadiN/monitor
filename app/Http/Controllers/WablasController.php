@@ -156,9 +156,7 @@ class WablasController extends Controller
                 echo $this->registrasiAntrianOnline();
                 return false;
             } else if (
-                 $this->message == 'akhiri' ||
-                 $this->message == 'ahiri' ||
-                 $this->message == 'akhir'
+                 str_contains($this->message ,'akhiri')
             ) {
                 echo $this->akhiriChatWithAdmin();
                 return false;
@@ -435,7 +433,7 @@ class WablasController extends Controller
                 strstr( $this->message , PHP_EOL)
             ) { ///string mengndung line break, pasien mencoba mendaftarkan dua pasien sekaligus
                 $input_tidak_tepat = true;
-                $this->pesan_error = '```Masukkan data pasien satu persatu```';
+                $this->pesan_error = '```Masukkan data pasien satu pasien saja```';
                 $this->pesan_error .= PHP_EOL;
                 $this->pesan_error .= '```Pendaftaran pasien selanjutnya akan dilakukan setelah pendaftaran ini selesai dikerjakan```';
             } else {
@@ -4106,24 +4104,17 @@ class WablasController extends Controller
         $jenis_antrian = $jenis_antrian_id == '3' ? 'USG Kehamilan' : JenisAntrian::find( $jenis_antrian_id )->jenis_antrian;
         $message = 'Kakak akan melakukan registrasi ' . ucwords( $jenis_antrian ). ' secara online';
         $message .= PHP_EOL;
-        $message .= 'Reservasi ini';
         $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= '*Akan dibatalkan secara otomatis*';
+        $message .= '*Apabila antrean terlewat harap mengambil antrean kembali*';
 
         if ( $jenis_antrian_id == 1 ) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= 'Apabila antrian telah terlewat';
-            $message .= PHP_EOL;
             $message .= 'Pastikan kehadiran anda dan scan QR di klinik *30 menit* sebelum antrian anda dipanggil';
         } else if ( $jenis_antrian_id == 2) {
             $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '- Antrian telah terlewat';
-            $message .= PHP_EOL;
             $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
-            $message .= "- Belum tiba di klinik jam {$jam_tiba_paling_lambat}";
+            $message .= "*Terakhir penerimaan pasien jam {$jam_tiba_paling_lambat}*";
         } else if ( $jenis_antrian_id == 3) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
@@ -4131,7 +4122,7 @@ class WablasController extends Controller
                                                         ->where('hari_id', date("N"))
                                                         ->first()->jam_akhir;
             $jam_tiba_paling_lambat = Carbon::parse($jam_tiba_paling_lambat)->format('H:i');
-            $message .= "Jika belum tiba di klinik jam {$jam_tiba_paling_lambat}";
+            $message .= "*Terakhir penerimaan pasien jam {$jam_tiba_paling_lambat}*";
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= "Syarat USG dengan menggunakan Asuransi BPJS : ";
