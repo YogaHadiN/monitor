@@ -2286,15 +2286,24 @@ class WablasController extends Controller
                     }
 
                     $message .= PHP_EOL;
-                    $message .= '==================';
-                    $message .= PHP_EOL;
-                    $message .= 'Balas *daftar* untuk mendaftarkan pasien berikutnya';
-                    $message .= PHP_EOL;
-                    $message .= 'Balas *batalkan* untuk membatalkan antrian ini';
-                    $message .= PHP_EOL;
-                    $message .= 'Balas *cek antrian* untuk melihat antrian terakhir';
+                    $message .= $this->templateFooter();
                 }
             }
+        } else if (
+             str_contains($this->message, 'kirim qr')
+        ) {
+
+            $message = 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda mungkin membutuhkan waktu 2-5 menit.';
+            $message .= PHP_EOL;
+            $message .= $this->templateFooter();
+
+            $antrian = Antrian::where('no_telp', $this->no_telp)
+                ->where('created_at', 'like', date('Y-m-d') . '%')
+                ->latest()->first();
+            $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
+            $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3);
+            $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
+
         } else if (
              str_contains($this->message, 'aktivkan') ||
              str_contains($this->message, 'aktipkan') ||
@@ -3383,60 +3392,70 @@ class WablasController extends Controller
             !is_null( $reservasi_online->kartu_asuransi_image )
         ) {
             if (
-                ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
-                ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
-                ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                !$reservasi_online->reservasi_selesai
             ) {
                 if (
-                    ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
-                ) {
-                    WhatsappBot::where('no_telp', $this->no_telp)
-                        ->delete();
-                    ReservasiOnline::where('no_telp', $this->no_telp)->delete();
-                    $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
-                    $antrian                = $this->antrianPost( $reservasi_online->jenis_antrian_id );
-
-                    $antrian->nama                     = $reservasi_online->nama;
-                    $antrian->nomor_bpjs               = $reservasi_online->nomor_asuransi_bpjs;
-                    $antrian->no_telp                  = $reservasi_online->no_telp;
-                    $antrian->tanggal_lahir            = $reservasi_online->tanggal_lahir;
-                    $antrian->alamat                   = $reservasi_online->alamat;
-                    $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
-                    $antrian->pasien_id                = $reservasi_online->pasien_id;
-                    $antrian->verifikasi_bpjs          = $reservasi_online->verifikasi_bpjs;
-                    $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
-                    $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
-                    $antrian->reservasi_online         = 1;
-                    $antrian->sudah_hadir_di_klinik    = 0;
-                    $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
-                    $antrian->save();
-                    $antrian->antriable_id             = $antrian->id;
-                    $antrian->save();
-
-                    /* $this->langsungKeAntrianPoliBilaMemungkinkan($antrian); */
-
-                    $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
-
-                    $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
-                    echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
-                    $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
-                    return false;
-                }
-                if (
+                    ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                    ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
                     ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
-                    $whatsapp_bot_id = $reservasi_online->whatsapp_bot_id;
-                    $reservasi_online = ReservasiOnline::create([
-                        'no_telp'         => $this->no_telp,
-                        'whatsapp_bot_id' => $whatsapp_bot_id,
-                        'konfirmasi_sdk'  => 1,
-                    ]);
+                    if (
+                        ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
+                        ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
+                    ) {
+                        $reservasi_online->reservasi_selesai = 1;
+                        $reservasi_online->save();
+
+                        $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
+                        $antrian                = $this->antrianPost( $reservasi_online->jenis_antrian_id );
+
+
+                        $antrian->nama                     = $reservasi_online->nama;
+                        $antrian->nomor_bpjs               = $reservasi_online->nomor_asuransi_bpjs;
+                        $antrian->no_telp                  = $reservasi_online->no_telp;
+                        $antrian->tanggal_lahir            = $reservasi_online->tanggal_lahir;
+                        $antrian->alamat                   = $reservasi_online->alamat;
+                        $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
+                        $antrian->pasien_id                = $reservasi_online->pasien_id;
+                        $antrian->verifikasi_bpjs          = $reservasi_online->verifikasi_bpjs;
+                        $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
+                        $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
+                        $antrian->reservasi_online         = 1;
+                        $antrian->sudah_hadir_di_klinik    = 0;
+                        $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
+                        $antrian->save();
+                        $antrian->antriable_id             = $antrian->id;
+                        $antrian->save();
+
+                        /* $this->langsungKeAntrianPoliBilaMemungkinkan($antrian); */
+
+
+                        echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
+                        $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
+                        $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
+                        $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
+                        WhatsappBot::where('no_telp', $this->no_telp)->delete();
+                        ReservasiOnline::where('no_telp', $this->no_telp)->delete();
+
+                        return false;
+                    }
+                    if (
+                        ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
+                        ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                    ) {
+                        $whatsapp_bot_id = $reservasi_online->whatsapp_bot_id;
+                        $reservasi_online = ReservasiOnline::create([
+                            'no_telp'         => $this->no_telp,
+                            'whatsapp_bot_id' => $whatsapp_bot_id,
+                            'konfirmasi_sdk'  => 1,
+                        ]);
+                    }
+                } else {
+                    $input_tidak_tepat = true;
                 }
             } else {
-                $input_tidak_tepat = true;
+                echo 'Antrian Anda sudah diproses. Mohon ditunggu Sistem mengirimkan QrCode';
             }
         }
 
@@ -5144,4 +5163,17 @@ class WablasController extends Controller
 
         return $message;
     }
+    public function templateFooter(){
+        $message = '==================';
+        $message .= PHP_EOL;
+        $message .= 'Balas *daftar* untuk mendaftarkan pasien berikutnya';
+        $message .= PHP_EOL;
+        $message .= 'Balas *batalkan* untuk membatalkan antrian ini';
+        $message .= PHP_EOL;
+        $message .= 'Balas *cek antrian* untuk melihat antrian terakhir';
+        $message .= PHP_EOL;
+        $message .= 'Balas *kirim qr* untuk mengirim ulang qr code';
+        return $message;
+    }
+    
 }
