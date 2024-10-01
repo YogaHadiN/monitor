@@ -18,13 +18,11 @@ class PastikanBukanNomorBlokir
     public function handle(Request $request, Closure $next)
     {
         $no_telp = $request->phone;
-
         if (
             !BlokirWa::where('no_telp', $no_telp)->exists()
         ) {
             return $next($request);
         }
         echo 'Pesan anda tidak dapat diproses. Mohon dapat telpon ke 0215977529. Mohon maaf atas ketidak nyamanannya';
-    
     }
 }

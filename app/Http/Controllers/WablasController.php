@@ -122,8 +122,7 @@ class WablasController extends Controller
 				$this->estetika_buka = false;
 			}
 		}
-        $this->middleware('bukan_blokir', ['only' => ['webhook']]);
-
+        /* $this->middleware('bukan_blokir', ['only' => ['webhook']]); */
         Log::info( $this->no_telp . ' : ' . $this->message );
 	}
     public function libur(){
