@@ -122,7 +122,7 @@ class AntrianOnlineController extends Controller
 
         $total_antrean = $antrians->count();
         $sisa_antrean = 0;
-        $antrian_terakhir_id = $jenis_antrian->antrian_terakhir->id;
+        $antrian_terakhir_id = $jenis_antrian->antrian_terakhir?->id;
         $return = [];
         foreach ($antrians as $antrian) {
             if (

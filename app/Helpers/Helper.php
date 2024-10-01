@@ -55,6 +55,17 @@ if (!function_exists('pesanErrorValidateNomorAsuransiBpjs')) {
     }
 }
 
+if (!function_exists('convertToWablasFriendlyFormat')) {
+     function convertToWablasFriendlyFormat($no_telp) {
+         if (
+             !empty($no_telp) &&
+              $no_telp[0] == 0
+         ) {
+             $no_telp = '62' . substr($no_telp, 1);
+         }
+         return $no_telp;
+    }
+}
 if (!function_exists('datePrep')) {
      function datePrep($tanggal) {
         if ($tanggal == null) {

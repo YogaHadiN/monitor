@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Log;
+use App\Models\Tenant;
 
 class BpjsApiController extends Controller
 {
@@ -1146,12 +1147,13 @@ class BpjsApiController extends Controller
     
     public function apiBpjsGetRequest($parameter, $returnResponse = false)
     {
+        $tenant = Tenant::find(1);
 		$uri        = "https://apijkn.bpjs-kesehatan.go.id/pcare-rest/" . $parameter; //url web service bpjs;
 		$this->url  = $uri;
 		$consID     = env('BPJS_CONSID'); //customer ID anda
 		$secretKey  = env('BPJS_SECRET_KEY'); //secretKey anda
-		$pcareUname = env('BPJS_PCARE_UNAME'); //username pcare
-		$pcarePWD   = env('BPJS_PCARE_PWD'); //password pcare anda
+		$pcareUname = $tenant->pcare_uname; //username pcare
+		$pcarePWD   = $tenant->pcare_password;//password pcare anda
 		$user_key   = env('BPJS_USER_KEY'); //password pcare anda
 		$kdAplikasi = env('BPJS_KD_APLIKASI'); //kode aplikasi
 
