@@ -225,25 +225,15 @@ class WablasController extends Controller
                 echo $this->chatAdmin();
                 return false;
             } else if (
-                !is_null( $this->message ) &&
-                $this->message            !== '1' &&
-                $this->message            !== '2' &&
-                $this->message            !== '3' &&
-                $this->message            !== '4' &&
-                $this->message            !== '5' &&
-                $this->message            !== 'ya' &&
-                $this->message            !== 'batalkan' &&
-                Input::get('messageType') == 'text'
-            ) {
-                WhatsappInbox::create([
-                    'message' => $this->message,
-                    'no_telp' => $this->no_telp
-                ]);
-            } else if (
                 $this->message == 'batalkan'
             ) {
                 echo $this->hapusAntrianWhatsappBotReservasiOnline();
             } else {
+
+                WhatsappInbox::create([
+                    'message' => $this->message,
+                    'no_telp' => $this->no_telp
+                ]);
                 $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                      ->first();
