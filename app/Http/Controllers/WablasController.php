@@ -242,11 +242,7 @@ class WablasController extends Controller
             } else if (
                 $this->message == 'batalkan'
             ) {
-                resetWhatsappRegistration( $this->no_telp );
-                $message =  'Layanan dibatalkan semua. Silahkan ulangi kembali';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                echo $message;
+                echo $this->hapusAntrianWhatsappBotReservasiOnline();
             }
 
             $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
@@ -319,8 +315,8 @@ class WablasController extends Controller
                     return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
                 } else if ( $this->whatsappKonsultasiEstetikExists() ) {
                     return $this->prosesKonsultasiEstetik(); // buat main menu
-                } else if ( $this->batalkanAntrianExists() ) {
-                    return $this->batalkanAntrian(); // buat main menu
+                /* } else if ( $this->batalkanAntrianExists() ) { */
+                /*     return $this->batalkanAntrian(); // buat main menu */
                 } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
                     return $this->prosesBpjsNumberInquiry(); // buat main menu
                 } else if ( $this->whatsappAntrianOnlineExists() ) {
@@ -4195,7 +4191,7 @@ class WablasController extends Controller
             }
         }
         resetWhatsappRegistration( $this->no_telp );
-        return 'Reservasi Dibatalkan';
+        return 'Reservasi dan semua fitur dibatalkan. Mohon dapat mengulangi kembali';
     }
 
     public function sudahAdaAntrianUntukJenisAntrian($jenis_antrian_id){
@@ -4459,11 +4455,6 @@ class WablasController extends Controller
     public function akhiriChatWithAdmin(){
         resetWhatsappRegistration( $this->no_telp );
         return 'Fitur dihentikan. Silahkan ulangi apabila ada yang ingin disampaikan';
-    }
-    public function akhiriSemuaWhatsappBot(){
-        resetWhatsappRegistration( $this->no_telp );
-        WhatsappBot::where('no_telp', $this->no_telp )->delete();
-        echo 'Semua fitur dibatalkan. Silahkan ulangi jika diperlukan';
     }
     public function prosesKonsultasiEstetik(){
         $now = Carbon::now();
@@ -5177,4 +5168,6 @@ class WablasController extends Controller
         return $message;
     }
     
+    public function batalkanSemuaFitur(){
+    }
 }
