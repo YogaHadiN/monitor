@@ -4181,7 +4181,7 @@ class WablasController extends Controller
             }
         }
         resetWhatsappRegistration( $this->no_telp );
-        return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali';
+        return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
     }
 
     public function sudahAdaAntrianUntukJenisAntrian($jenis_antrian_id){
