@@ -129,9 +129,9 @@ class Antrian extends Model
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
     public function getSisaAntrianAttribute(){
-        $tanggal = $this->created_at;
-        $startOfDay = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay   = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
+        $tanggal         = $this->created_at;
+        $startOfDay      = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay        = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
         $antrian_panggil = $this->jenis_antrian->antrian_terakhir;
         return Antrian::where('jenis_antrian_id', $this->jenis_antrian->id)
                         ->whereRaw(
@@ -141,7 +141,7 @@ class Antrian extends Model
                                 antriable_type = "App\\\Models\\\AntrianPeriksa"
                             )'
                         )->whereBetween('created_at', [ $startOfDay, $endOfDay ])
-                        ->where('id', '>', $antrian_panggil->id)
+                        ->where('id', '>', is_null( $antrian_panggil ) ? 0 : $antrian_panggil->id)
                         ->where('tenant_id', $this->tenant_id)
                         ->count();
     }
