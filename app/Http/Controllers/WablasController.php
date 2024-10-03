@@ -229,11 +229,12 @@ class WablasController extends Controller
             ) {
                 echo $this->hapusAntrianWhatsappBotReservasiOnline();
             } else {
-
-                WhatsappInbox::create([
-                    'message' => $this->message,
-                    'no_telp' => $this->no_telp
-                ]);
+                if (Input::get('messageType') == 'text') {
+                    WhatsappInbox::create([
+                        'message' => $this->message,
+                        'no_telp' => $this->no_telp
+                    ]);
+                }
                 $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                      ->first();
