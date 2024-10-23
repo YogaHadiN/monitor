@@ -1150,12 +1150,12 @@ class BpjsApiController extends Controller
         $tenant = Tenant::find(1);
 		$uri        = "https://apijkn.bpjs-kesehatan.go.id/pcare-rest/" . $parameter; //url web service bpjs;
 		$this->url  = $uri;
-		$consID     = env('BPJS_CONSID'); //customer ID anda
-		$secretKey  = env('BPJS_SECRET_KEY'); //secretKey anda
+		$consID     = $tenant->bpjs_consid;
+		$secretKey  = $tenant->bpjs_secret_key; //secretKey anda
 		$pcareUname = $tenant->pcare_uname; //username pcare
 		$pcarePWD   = $tenant->pcare_password;//password pcare anda
-		$user_key   = env('BPJS_USER_KEY'); //password pcare anda
-		$kdAplikasi = env('BPJS_KD_APLIKASI'); //kode aplikasi
+		$user_key   = $tenant->bpjs_user_key; //password pcare anda
+		$kdAplikasi = $tenant->bpjs_kd_aplikasi; //kode aplikasi
 
         $this->stamp = time();
         $this->request_type = "GET";

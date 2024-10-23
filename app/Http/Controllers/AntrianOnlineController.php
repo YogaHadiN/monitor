@@ -138,14 +138,24 @@ class AntrianOnlineController extends Controller
 
             $return[] = [
                 'nomor_antrian' => $antrian->nomor_antrian,
-                'id' => $antrian->id,
-                'nomor' => $antrian->nomor,
-                'tenant_id' => $antrian->nomor,
+                'id'            => $antrian->id,
+                'nomor'         => $antrian->nomor,
+                'tenant_id'     => $antrian->nomor,
             ];
         }
 
         $antrian_terakhir_id = $jenis_antrian->antrian_terakhir_id;
-        $antrian_terakhir = Antrian::find( $antrian_terakhir_id );
+        if (!is_null( $antrian_terakhir_id )) {
+            $antrian_terakhir = Antrian::find( $antrian_terakhir_id );
+            if (is_null( $antrian_terakhir )) {
+                $antrian_terakhir = Antrian::where('jenis_antrian_id', $jenis_antrian->antrian_terakhir_id)->orderBy('id', 'desc')->first();
+            }
+        } else {
+            $antrian_terakhir = Antrian::where('jenis_antrian_id', $jenis_antrian->antrian_terakhir_id)->orderBy('id', 'desc')->first();
+        }
+
+
+
 
         $response = '{
             "response": [
@@ -668,5 +678,16 @@ class AntrianOnlineController extends Controller
         $tenant = Tenant::find(1);
         return $tenant->dokter_gigi_stop_pelayanan_hari_ini;
     }
+
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function getDokter()
+    {
+        return null;
+    }
+    
     
 }    
