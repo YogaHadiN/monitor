@@ -8,6 +8,7 @@ use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
 use App\Models\BpjsApiLog;
 use App\Models\Complain;
+use App\Models\Ruangan;
 use App\Models\PetugasPemeriksa;
 use App\Models\NoTelp;
 use App\Models\DentistReservation;
