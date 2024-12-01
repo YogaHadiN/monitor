@@ -414,18 +414,18 @@
                         $("#antrian_terakhir_kasir").html(dt['pendaftaran'].nomor_antrian_terakhir);
                         $("#antrian_terakhir_farmasi").html(dt['timbang_tensi'].nomor_antrian_terakhir);
 
-                        var jenis_antrian_ids = data.jenis_antrian_ids;
+                        var tipe_konsultasi_ids = data.tipe_konsultasi_ids;
 
-                        for (let a = 0; a < jenis_antrian_ids.length; a++) {
+                        for (let a = 0; a < tipe_konsultasi_ids.length; a++) {
                             var temp            = '';
-                            var antrian_periksa = antrian_by_type.antrian_periksa[jenis_antrian_ids[a].id]
+                            var antrian_periksa = antrian_by_type.antrian_periksa[tipe_konsultasi_ids[a].id]
                             if (typeof antrian_periksa !== 'undefined') {
                                 for (let i = 0; i < antrian_periksa.length; i++) {
                                     temp += '<div>'
                                     temp += ' ' + antrian_periksa[i].nomor_antrian + ' '
                                     temp += '</div>'
                                 }
-                                $("#antrian_poli" + "_" + jenis_antrian_ids[a].id).html(temp);
+                                $("#antrian_poli" + "_" + tipe_konsultasi_ids[a].id).html(temp);
                             }
                         }
 

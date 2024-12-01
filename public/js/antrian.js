@@ -36,21 +36,20 @@ channel.bind(event_name, function (data) {
                     ruangan: ruangan,
                 },
                 function (data, textStatus, jqXHR) {
-                    if (data.antrian_dipanggil.nomor_antrian !== null) {
-                        var nomor_panggilan =
-                            data.antrian_dipanggil.nomor_antrian;
-                        var ruangan_panggilan = data.antrian_dipanggil.ruangan;
-                        $("#poli_panggilan").html(ruangan_panggilan);
-                        $("#nomor_panggilan").html(nomor_panggilan);
+                    if (panggil_pasien == 1) {
+                        if (data.antrian_dipanggil.nomor_antrian !== null) {
+                            var nomor_panggilan =
+                                data.antrian_dipanggil.nomor_antrian;
+                            var ruangan_panggilan =
+                                data.antrian_dipanggil.ruangan;
+                            $("#poli_panggilan").html(ruangan_panggilan);
+                            $("#nomor_panggilan").html(nomor_panggilan);
+                        } else {
+                            $("#poli_panggilan").html("-");
+                            $("#nomor_panggilan").html("-");
+                        }
                     }
 
-                    console.log(
-                        "====================interval=========================="
-                    );
-                    console.log(interval);
-                    console.log(
-                        "====================interval=========================="
-                    );
                     if (panggil_pasien && interval == null) {
                         var times = 0;
                         interval = setInterval(function () {

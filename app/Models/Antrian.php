@@ -1,20 +1,21 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Antrian;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\BelongsToTenant; 
+use App\Models\Asuransi;
+use App\Models\DeletedAntrian;
 use App\Models\WhatsappRegistration;
-use DateTimeInterface;
-
+use DB;
+use Carbon\Carbon;
 class Antrian extends Model
 {
+    use BelongsToTenant,HasFactory;
     public static function boot(){
         parent::boot();
         self::creating(function($antrian){
             $existing_antrian = Antrian::where('created_at', 'like' , date('Y-m-d') . '%' )
-                                            ->where('jenis_antrian_id',  $antrian->jenis_antrian_id )
+                                            ->where('ruangan_id',  $antrian->ruangan_id )
                                             ->where('tenant_id',  1 )
                                             ->orderBy('nomor', 'desc')
                                             ->first();
@@ -28,44 +29,97 @@ class Antrian extends Model
             $existing_antrians = Antrian::where('antriable_type', 'App\Models\Antrian')
                 ->where('created_at', 'like' , date('Y-m-d') . '%' )
                 ->where('id', 'not like' , $antrian->id )
-                ->where('tenant_id', 1 )
                 ->get();
             $existing_antrian_ids = [];
             foreach ($existing_antrians as $ant) {
                 $existing_antrian_ids[] = $ant->id;
             }
             $antrian->existing_antrian_ids = json_encode( $existing_antrian_ids );
-            $antrian->jam_pasien_mulai_mengantri = date('H:i:s') ;
+            $antrian->jam_pasien_mulai_mengantri = date('Y-m-d H:i:s') ;
             $antrian->save();
+        });
+        self::deleting(function($model){
+            $last_updated_antrian_id = Antrian::orderBy('updated_at','DESC')->first()->id;
+            $model->deleting_antrian_id = $last_updated_antrian_id;
+            $model->save();
         });
         self::deleted(function($model){
             WhatsappRegistration::where('antrian_id', $model->id)->delete();
+            DeletedAntrian::create([
+                'timestamp_antrian_dibuat'                      => $model->create_at,
+                'ruangan_id'                              => $model->ruangan_id,
+                'url'                                           => $model->url,
+                'deleting_antrian_id'                           => $model->deleting_antrian_id,
+                'nomor'                                         => $model->nomor,
+                'antrian_id'                                    => $model->id,
+                'antriable_id'                                  => $model->antriable_id,
+                'antriable_type'                                => $model->antriable_type,
+                'dipanggil'                                     => $model->dipanggil,
+                'no_telp'                                       => $model->no_telp,
+                'nama'                                          => $model->nama,
+                'tanggal_lahir'                                 => $model->tanggal_lahir,
+                'kode_unik'                                     => $model->kode_unik,
+                'registrasi_pembayaran_id'                      => $model->registrasi_pembayaran_id,
+                'nomor_bpjs'                                    => $model->nomor_bpjs,
+                'satisfaction_index'                            => $model->satisfaction_index,
+                'complaint'                                     => $model->complaint,
+                'register_previously_saved_patient'             => $model->register_previously_saved_patient,
+                'pasien_id'                                     => $model->pasien_id,
+                'recovery_index_id'                             => $model->recovery_index_id,
+                'informasi_terapi_gagal'                        => $model->informasi_terapi_gagal,
+                'menunggu'                                      => $model->menunggu,
+                'notifikasi_panggilan_aktif'                    => $model->notifikasi_panggilan_aktif,
+                'alamat'                                        => $model->alamat,
+                'notifikasi_resep_terkirim'                     => $model->notifikasi_resep_terkirim,
+                'jam_panggil_pasien_di_pendaftaran'             => $model->jam_panggil_pasien_di_pendaftaran,
+                'jam_selesai_didaftarkan_dan_status_didapatkan' => $model->jam_selesai_didaftarkan_dan_status_didapatkan,
+                'jam_mulai_pemeriksaan_fisik'                   => $model->jam_mulai_pemeriksaan_fisik,
+                'jam_selesai_pemeriksaan_fisik'                 => $model->jam_selesai_pemeriksaan_fisik,
+                'kartu_asuransi_image'                          => $model->kartu_asuransi_image,
+                'existing_antrian_ids'                          => $model->existing_antrian_ids,
+                'complain_id'                                   => $model->complain_id,
+                'qr_code_path_s3'                               => $model->qr_code_path_s3,
+                'reservasi_online'                              => $model->reservasi_online,
+                'sudah_hadir_di_klinik'                         => $model->sudah_hadir_di_klinik,
+                'data_bpjs_cocok'                               => $model->data_bpjs_cocok,
+                'jam_pasien_mulai_mengantri'                    => $model->jam_pasien_mulai_mengantri,
+                'customer_satisfaction_survey_sent'             => $model->customer_satisfaction_survey_sent,
+                'terakhir_dipanggil'                            => $model->terakhir_dipanggil,
+                'dibatalkan_pasien'                             => $model->dibatalkan_pasien
+            ]);
         });
     }
+    
     protected $guarded = [];
-	public function jenis_antrian(){
-		return $this->belongsTo('App\Models\JenisAntrian');
-	}
+	protected $casts = [
+		'tanggal_lahir' => 'datetime'
+	];
 
 	public function whatsapp_registration(){
-		return $this->belongsTo('App\Models\WhatsappRegistration');
+		return $this->hasOne(WhatsappRegistration::class);
 	}
+    
+    public function complain(){
+        return $this->belongsTo(Complain::class);
+    }
 
-    public function pasien(){
-        return $this->belongsTo(Pasien::class);
+    public function registrasi_pembayaran(){
+        return $this->belongsTo(RegistrasiPembayaran::class);
     }
 
 	public function antriable(){
-		return $this->morphto()->withDefault();
+		return $this->morphTo();
 	}
 
-	public function getNomorAntrianAttribute(){
-		return $this->jenis_antrian->prefix . $this->nomor;
+	public static function nomorAntrianTerakhir($ruangan_id){
+        return Antrian::whereBetween('created_at',  [Carbon::now()->startOfDay(), Carbon::now()])
+                ->where('ruangan_id', $ruangan_id)
+                ->orderBy('id', 'desc')
+                ->first()->nomor;
 	}
-    public function ruangan(){
-        return $this->hasOne(Ruangan::class);
-    }
-    
+	public function getNomorAntrianAttribute(){
+		return $this->ruangan->prefix_antrian . $this->nomor;
+	}
 	public function getJenisAntrianIdAttribute($value){
 		if ( is_null($value) ) {
 			return '6';
@@ -73,67 +127,43 @@ class Antrian extends Model
 		return $value;
 	}
 
-	/**
-	 * Prepare a date for array / JSON serialization.
-	 *
-	 * @param  \DateTimeInterface  $date
-	 * @return string
-	 */
-	protected function serializeDate(DateTimeInterface $date)
-	{
-		return $date->format('Y-m-d H:i:s');
+	public function getIsTodayAttribute(){
+		return $this->created_at->format('Y-m-d') == date('Y-m-d');
 	}
-	public function poli(){
-		return $this->belongsTo('App\Models\Poli');
-	}
-
-    public static function createFromWhatsappRegistration($whatsapp_registration){
-        $antrian                           = new Antrian;
-        $antrian->jenis_antrian_id         = 1;
-        $antrian->nomor                    = Antrian::nomorAntrian(1);
-        $antrian->no_telp                  = $whatsapp_registration->no_telp;
-        $antrian->nama                     = $whatsapp_registration->nama;
-        $antrian->tanggal_lahir            = $whatsapp_registration->tanggal_lahir;
-        $antrian->tenant_id                = 1;
-        $antrian->kode_unik                = Antrian::kodeUnik();
-        $antrian->registrasi_pembayaran_id = $whatsapp_registration->registrasi_pembayaran_id;
-        $antrian->save();
-        $antrian->antriable_id             = $antrian->id;
-		$antrian->antriable_type           = 'App\\Models\\Antrian';
-        $antrian->save();
-        return $antrian;
-    }
-    
-    public static function nomorAntrian($id)
-    {
-		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', date('Y-m-d') . '%')
-							->where('jenis_antrian_id',$id)
-							->orderBy('nomor', 'desc')
-							->first();
-
-		if ( is_null( $antrians ) ) {
-            return 1;
-
-		} else {
-			return $antrians->nomor + 1;
-		}
-    }
-    public static function kodeUnik(){
-        $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
-        while (Antrian::where('created_at', 'like', date('Y-m-d') . '%')->where('kode_unik', $kode_unik)->exists()) {
-            $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
+    public function getAsuransiIdByRegistrasiPembayaranIdAttribute(){
+        $registrasi_pembayaran_id = $this->registrasi_pembayaran_id;
+        if ( $registrasi_pembayaran_id == 1 ) {
+            return Asuransi::BiayaPribadi()->id;
+        } else if( $registrasi_pembayaran_id == 2 ) {
+            return Asuransi::BPJS()->id;
+        } else{
+            return null;
         }
-        return $kode_unik;
     }
-    public function registrasiPembayaran(){
-        return $this->belongsTo(RegistrasiPembayaran::class);
+    public function pasien(){
+        return $this->belongsTo(Pasien::class);
+    }
+    public function getRegistrasiSebelumnyaAttribute(){
+        $no_telp = $this->no_telp;
+        $query  = "SELECT ";
+        $query .= "psn.nama as nama_pasien, ";
+        $query .= "psn.tanggal_lahir as tanggal_lahir, ";
+        $query .= "psn.id as id_pasien ";
+        $query .= "FROM antrians as ant ";
+        $query .= "JOIN periksas as prx on prx.id = ant.antriable_id and antriable_type = 'App\\\Models\\\Periksa' ";
+        $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
+        $query .= "WHERE ant.no_telp = '{$no_telp}' ";
+        $query .= "and trim(ant.no_telp) not like '' ";
+        $query .= "and ant.no_telp is not null ";
+        $query .= "group by psn.id";
+        return DB::select($query);
     }
     public function getSisaAntrianAttribute(){
         $tanggal         = $this->created_at;
         $startOfDay      = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay        = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
-        $antrian_panggil = $this->jenis_antrian->antrian_terakhir;
-        return Antrian::where('jenis_antrian_id', $this->jenis_antrian->id)
+        $antrian_panggil = $this->ruangan->antrian;
+        return Antrian::where('ruangan_id', $this->ruangan_id)
                         ->whereRaw(
                             '(
                                 antriable_type = "App\\\Models\\\Antrian" ||
@@ -141,8 +171,18 @@ class Antrian extends Model
                                 antriable_type = "App\\\Models\\\AntrianPeriksa"
                             )'
                         )->whereBetween('created_at', [ $startOfDay, $endOfDay ])
-                        ->where('id', '>', is_null( $antrian_panggil ) ? 0 : $antrian_panggil->id)
-                        ->where('tenant_id', $this->tenant_id)
+                        ->where('id', '>', $antrian_panggil->id)
+                        ->where('id', '<', $this->id)
+                        ->where('tenant_id', 1)
                         ->count();
+    }
+    public function ruangan(){
+        return $this->belongsTo(Ruangan::class);
+    }
+    public function tipe_konsultasi(){
+        return $this->belongsTo(TipeKonsultasi::class);
+    }
+    public function petugas_pemeriksa(){
+        return $this->belongsTo(PetugasPemeriksa::class);
     }
 }

@@ -4,19 +4,19 @@ channel.bind(event_name, function (data) {
         base + "/antrianperiksa/monitor/getDataBaru",
         {},
         function (data, textStatus, jqXHR) {
-            $("#jumlah_jenis_antrian_id_1").html(
+            $("#jumlah_tipe_konsultasi_id_1").html(
                 data.antrian_dokter_umum.length
             );
-            $("#jumlah_jenis_antrian_id_2").html(
+            $("#jumlah_tipe_konsultasi_id_2").html(
                 data.antrian_dokter_gigi.length
             );
-            $("#jumlah_jenis_antrian_id_3").html(data.antrian_bidan.length);
+            $("#jumlah_tipe_konsultasi_id_3").html(data.antrian_bidan.length);
 
             var waktu_tunggu_dokter_umum = waktuTunggu(
                 data.antrian_dokter_umum,
                 1
             );
-            $("#waktu_tunggu_jenis_antrian_id_1").html(
+            $("#waktu_tunggu_tipe_konsultasi_id_1").html(
                 waktu_tunggu_dokter_umum
             );
 
@@ -24,11 +24,11 @@ channel.bind(event_name, function (data) {
                 data.antrian_dokter_gigi,
                 2
             );
-            $("#waktu_tunggu_jenis_antrian_id_2").html(
+            $("#waktu_tunggu_tipe_konsultasi_id_2").html(
                 waktu_tunggu_dokter_gigi
             );
             var waktu_tunggu_bidan = waktuTunggu(data.antrian_bidan, 3);
-            $("#waktu_tunggu_jenis_antrian_id_3").html(waktu_tunggu_bidan);
+            $("#waktu_tunggu_tipe_konsultasi_id_3").html(waktu_tunggu_bidan);
         }
     );
 });

@@ -8,6 +8,7 @@ use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
 use App\Models\BpjsApiLog;
 use App\Models\Complain;
+use App\Models\PetugasPemeriksa;
 use App\Models\NoTelp;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
@@ -18,7 +19,7 @@ use App\Models\ReservasiOnline;
 use App\Models\Antrian;
 use App\Models\CekListDikerjakan;
 use App\Models\Tenant;
-use App\Models\JenisAntrian;
+use App\Models\TipeKonsultasi;
 use App\Models\WhatsappRegistration;
 use App\Models\KonsultasiEstetikOnline;
 use App\Models\WhatsappBot;
@@ -124,6 +125,7 @@ class WablasController extends Controller
 		}
         /* $this->middleware('bukan_blokir', ['only' => ['webhook']]); */
         Log::info( $this->no_telp . ' : ' . $this->message );
+        session()->put('tenant_id', 1);
 	}
     public function libur(){
         $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
@@ -720,21 +722,11 @@ class WablasController extends Controller
 			$text = PHP_EOL;
 
             if ( $this->tenant->iphone_whatsapp_button_available ) {
-                if (
-                     $this->whatsapp_registration->antrian->jenis_antrian_id == 7 ||
-                     $this->whatsapp_registration->antrian->jenis_antrian_id == 8
-                ) {
-                    $payment_options = [
-                        'Biaya Pribadi',
-                        'Lainnya'
-                    ];
-                } else {
-                    $payment_options = [
-                        'Biaya Pribadi',
-                        'BPJS',
-                        'Lainnya'
-                    ];
-                }
+                $payment_options = [
+                    'Biaya Pribadi',
+                    'BPJS',
+                    'Lainnya'
+                ];
                 $message = [
                     'buttons' => $payment_options,
                     'content' => $text,
@@ -1003,7 +995,7 @@ class WablasController extends Controller
             $response     .= "di mesin antrian untuk segera mengkonfirmasikan kehadiran anda";
             $response     .= PHP_EOL;
             $response     .= PHP_EOL;
-            if ( $antrian->jenis_antrian_id < 3 ) {
+            if ( $antrian->tipe_konsultasi_id < 3 ) {
                 $sisa_antrian  = $antrian->sisa_antrian;
                 $response     .= "masih ada *{$sisa_antrian} antrian* lagi";
                 $response     .= PHP_EOL;
@@ -2268,7 +2260,7 @@ class WablasController extends Controller
                     $message .= PHP_EOL;
                     $message .= '*'.$ant->nomor_antrian.'*';
                     $message .= PHP_EOL;
-                    if ( $antrian->jenis_antrian_id == 1 ) {
+                    if ( $antrian->tipe_konsultasi_id == 1 ) {
                         $message .= PHP_EOL;
                         $sisa_antrian =$ant->sisa_antrian;
                         $message .= "masih ada *{$sisa_antrian} antrian* lagi";
@@ -2891,14 +2883,37 @@ class WablasController extends Controller
             return false;
         } else if (
             !is_null( $reservasi_online ) &&
-            is_null( $reservasi_online->jenis_antrian_id )
+            is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
             if ( 
                 $this->message == '1' || 
                 $this->message == '2' || 
                 $this->message == '3'
             ) {
-                $jenis_antrian = JenisAntrian::find( $this->message );
+                if (
+                    $this->message == '3'
+                ) {
+                    $this->message = '4';
+                }
+                $tipe_konsultasi_id = TipeKonsultasi::find( $this->message );
+
+                $petugas_pemeriksa = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
+                                ->where('tanggal', date('Y-m-d'))
+                                ->get();
+
+                // cek apakah ada pelayanan yang dimaksud
+                if (!count( $petugas_pemeriksa )) {
+                    $tipe_konsultasi = TipeKonsultasi::find( $this->message );
+                    $message = 'Hari ini tidak ada pelayanan ' . $tipe_konsultasi->tipe_konsultasi;
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= "Mohon maaf atas ketidaknyamanannya";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+                }
                 // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
                 // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
                 $tenant = Tenant::find(1);
@@ -2981,16 +2996,17 @@ class WablasController extends Controller
                         echo $message;
                         return false;
                     } else {
-                        $reservasi_online->jenis_antrian_id = $this->message;
+                        $reservasi_online->tipe_konsultasi_id = $this->message;
                         $reservasi_online->save();
                     }
                     // jika tidak ada antrian di dalam poli batalkan reservasi
                 } else if (
                     $this->message == '3' // USG Kehamilan
                 ) {
+                    $this->message = '4';
                     // jika hari ini tidak ada jadwal, batalkan
                     $jadwal_usg = JadwalKonsultasi::where('hari_id', date("N"))
-                                                    ->where('tipe_konsultasi_id', 4)
+                                                    ->where('tipe_konsultasi_id', $this->message)
                                                     ->first();
                     if ( !is_null(  $jadwal_usg  ) ) {
                         // jika sudah lewat waktunya, tidak bisa daftar lagi
@@ -3039,7 +3055,7 @@ class WablasController extends Controller
                             echo $message;
                             return false;
                         } else {
-                            $reservasi_online->jenis_antrian_id = $this->message;
+                            $reservasi_online->tipe_konsultasi_id = $this->message;
                             $reservasi_online->save();
                         }
                     } else {
@@ -3057,28 +3073,33 @@ class WablasController extends Controller
                         return false;
                     }
                 } else if (
-                    !$this->sudahAdaAntrianUntukJenisAntrian( $this->message )
+                    !$this->sudahAdaAntrianUntukTipeKonsultasi( $this->message )
                 ) {
-                    $message = 'Saat ini tidak ada antrian di ' . $jenis_antrian->jenis_antrian .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
+                    $message = 'Saat ini tidak ada antrian di ' . $tipe_konsultasi->tipe_konsultasi .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                     echo $message;
                     return false;
                 } else if (
-                    $this->sudahAdaAntrianUntukJenisAntrian( $this->message )
+                    $this->sudahAdaAntrianUntukTipeKonsultasi( $this->message )
                 ) {
-                    $reservasi_online->jenis_antrian_id = $this->message;
+                    $reservasi_online->tipe_konsultasi_id = $this->message;
                     $reservasi_online->save();
+                    if ($petugas_pemeriksa->count() == 1) {
+                        $reservasi_online->staf_id = $petugas_pemeriksa->first()->staf_id;
+                        $reservasi_online->save();
+                    }
                 } else {
 
                 }
+
             } else {
                 $input_tidak_tepat = true;
             }
         } else if (
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
             if ( 
@@ -3093,7 +3114,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             is_null( $reservasi_online->registrasi_pembayaran_id )
         ) {
             if ( $this->validasiRegistrasiPembayaran()) {
@@ -3118,7 +3139,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
@@ -3230,7 +3251,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
@@ -3330,7 +3351,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3345,7 +3366,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3362,7 +3383,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3375,7 +3396,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id )&&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3395,7 +3416,32 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat ) &&
+            !is_null( $reservasi_online->kartu_asuransi_image ) &&
+            is_null( $reservasi_online->staf_id )
+        ) {
+            if ( 
+                is_numeric( $this->message ) &&
+                $this->message > 0 &&
+                $this->message <= PetugasPemeriksa::where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
+                                                    ->where('tanggal', date('Y-m-d'))
+                                                    ->count()
+            ) {
+                $reservasi_online->staf_id = $this->message;
+                $reservasi_online->save();
+            } else {
+                $input_tidak_tepat = true;
+            }
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id )&&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3421,7 +3467,7 @@ class WablasController extends Controller
                         $reservasi_online->save();
 
                         $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
-                        $antrian                = $this->antrianPost( $reservasi_online->jenis_antrian_id );
+                        $antrian                = $this->antrianPost( $reservasi_online->tipe_konsultasi_id );
 
 
                         $antrian->nama                     = $reservasi_online->nama;
@@ -3474,21 +3520,21 @@ class WablasController extends Controller
 
         if (
             !is_null( $reservasi_online ) &&
-            is_null( $reservasi_online->jenis_antrian_id )
+            is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
             /* Log::info(3331); */
             $message = $this->pertanyaanPoliYangDituju();
         } else if (
             !is_null( $reservasi_online ) &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
             /* Log::info(3338); */
-            $message = $this->tanyaSyaratdanKetentuan($reservasi_online->jenis_antrian_id);
+            $message = $this->tanyaSyaratdanKetentuan($reservasi_online->tipe_konsultasi_id);
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             is_null( $reservasi_online->registrasi_pembayaran_id )
         ) {
             /* Log::info(3344); */
@@ -3496,7 +3542,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             is_null( $reservasi_online->register_previously_saved_patient ) 
         ) {
@@ -3505,7 +3551,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             is_null( $reservasi_online->nomor_asuransi_bpjs ) 
@@ -3515,7 +3561,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3526,7 +3572,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3538,7 +3584,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3551,7 +3597,7 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id )&&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3565,7 +3611,21 @@ class WablasController extends Controller
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->jenis_antrian_id ) &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat ) &&
+            !is_null( $reservasi_online->kartu_asuransi_image ) &&
+            is_null( $reservasi_online->staf_id )
+        ) {
+            $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id )&&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
@@ -3574,7 +3634,6 @@ class WablasController extends Controller
             !is_null( $reservasi_online->alamat ) &&
             !is_null( $reservasi_online->kartu_asuransi_image )
         ) {
-            /* Log::info(3429); */
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
         }
 
@@ -3723,9 +3782,9 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $jumlah_antrian = $this->jumlahAntrian();
-        $message .= '1. Dokter Umum (ada ' . $jumlah_antrian['dokter_umum']. ' antrian)';
+        $message .= '1. Dokter Umum (ada ' . $jumlah_antrian[1]. ' antrian)';
         $message .= PHP_EOL;
-        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian['dokter_gigi']. ' antrian)';
+        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian[2]. ' antrian)';
         $message .= PHP_EOL;
         $message .= '3. USG Kehamilan';
         $message .= PHP_EOL;
@@ -3735,9 +3794,9 @@ class WablasController extends Controller
     }
     public function jamBukaDokterGigiHariIni(){
         $dayNameNumber = date('w');
-        $jadwal = JadwalKonsultasi::where('hari_id', $dayNameNumber)
-            ->where('tipe_konsultasi_id', 2)
-            ->first();
+        $jadwal = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                ->where('tipe_konsultasi_id', 2)
+                                ->first();
         if (is_null($jadwal)) {
             return false;
         } else {
@@ -3749,8 +3808,8 @@ class WablasController extends Controller
     
 
 	public function antrianPost($id){
-		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', date('Y-m-d') . '%')
-							->where('jenis_antrian_id',$id)
+		$antrians = Antrian::with('tipe_konsultasi')->where('created_at', 'like', date('Y-m-d') . '%')
+							->where('tipe_konsultasi_id',$id)
 							->where('tenant_id', 1)
 							->orderBy('nomor', 'desc')
 							->first();
@@ -3760,7 +3819,7 @@ class WablasController extends Controller
 			$antrian->nomor            = 1 ;
 			$antrian->tenant_id        = 1 ;
 			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->jenis_antrian_id = $id ;
+			$antrian->tipe_konsultasi_id = $id ;
 
 		} else {
 			$antrian_terakhir          = $antrians->nomor + 1;
@@ -3768,7 +3827,7 @@ class WablasController extends Controller
 			$antrian->tenant_id        = 1 ;
 			$antrian->nomor            = $antrian_terakhir ;
 			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->jenis_antrian_id = $id ;
+			$antrian->tipe_konsultasi_id = $id ;
 		}
 		$antrian->antriable_id   = $antrian->id;
 		$antrian->kode_unik      = $this->kodeUnik();
@@ -3930,32 +3989,13 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function jumlahAntrian()
-    {
-        $antrians = Antrian::whereRaw(
-                                "(
-                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                                    antriable_type = 'App\\\Models\\\Antrian' or
-                                    antriable_type = 'App\\\Models\\\AntrianPoli'
-                                )"
-                                )
-                                ->where('created_at', 'like', date('Y-m-d') . '%')
-                                ->get();
-
-        $jumlah_antrian_dokter_umum = 0;
-        $jumlah_antrian_dokter_gigi = 0;
-        foreach ($antrians as $antrian) {
-            if ( $antrian->jenis_antrian_id == 1 ) {
-                $jumlah_antrian_dokter_umum++;
-            } else if (  $antrian->jenis_antrian_id == 2  ){
-                $jumlah_antrian_dokter_gigi++;
-            }
+    private function jumlahAntrian(){
+        $tipe_konsultasis = TipeKonsultasi::where('tenant_id', 1)->get();
+        $result = [];
+        foreach ($tipe_konsultasis as $tipe) {
+            $result[ $tipe->id ] = $tipe->sisa_antrian;
         }
-
-        return [
-            'dokter_umum' => $jumlah_antrian_dokter_umum,
-            'dokter_gigi' => $jumlah_antrian_dokter_gigi
-        ];
+        return $result;
     }
 
     private function sendWhatsappImage($noTelp, $urlFile, $caption)
@@ -4018,6 +4058,34 @@ class WablasController extends Controller
      *
      * @return void
      */
+    private function tanyaSiapaPetugasPemeriksa($reservasi_online){
+        $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                                ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
+                                                ->get();
+
+        $petugas_dengan_jumlah = [];
+        foreach ($petugas_pemeriksas as $petugas) {
+            $petugas_dengan_jumlah[] = [
+                'sisa_antrian' => $petugas->sisa_antrian,
+                'petugas' => $petugas
+            ];
+        }
+
+        usort($petugas_dengan_jumlah, function($a, $b) {
+            return $a['sisa_antrian'] <=> $b['sisa_antrian'];
+        });
+
+        $message = 'Silahkan Pilih Dokter pemeriksa.';
+        $message .=  PHP_EOL;
+        foreach ($petugas_dengan_jumlah as $k => $petugas) {
+            $message .=  PHP_EOL;
+            $nomor = $k+1;
+            $message .=  $nomor '. ' . $petugas['petugas']->staf->nama_dengan_gelar;
+        }
+        $message .=  PHP_EOL;
+        return $message;
+
+    }
     private function tanyaKartuAsuransiImage($reservasi_online){
         $message = 'Bisa dibantu kirimkan';
         $message .=  PHP_EOL;
@@ -4131,23 +4199,23 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tanyaSyaratdanKetentuan($jenis_antrian_id)
+    private function tanyaSyaratdanKetentuan($tipe_konsultasi_id)
     {
-        $jenis_antrian = $jenis_antrian_id == '3' ? 'USG Kehamilan' : JenisAntrian::find( $jenis_antrian_id )->jenis_antrian;
-        $message = 'Kakak akan melakukan registrasi ' . ucwords( $jenis_antrian ). ' secara online';
+        $tipe_konsultasi = $tipe_konsultasi_id == '3' ? 'USG Kehamilan' : TipeKonsultasi::find( $tipe_konsultasi_id )->tipe_konsultasi;
+        $message = 'Kakak akan melakukan registrasi ' . ucwords( $tipe_konsultasi ). ' secara online';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '*Apabila antrean terlewat harap mengambil antrean kembali*';
 
-        if ( $jenis_antrian_id == 1 ) {
+        if ( $tipe_konsultasi_id == 1 ) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= 'Pastikan kehadiran anda dan scan QR di klinik *30 menit* sebelum antrian anda dipanggil';
-        } else if ( $jenis_antrian_id == 2) {
+        } else if ( $tipe_konsultasi_id == 2) {
             $message .= PHP_EOL;
             $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
             $message .= "*Terakhir penerimaan pasien jam {$jam_tiba_paling_lambat}*";
-        } else if ( $jenis_antrian_id == 3) {
+        } else if ( $tipe_konsultasi_id == 3) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $jam_tiba_paling_lambat = JadwalKonsultasi::where('tipe_konsultasi_id', 4) // USG
@@ -4210,7 +4278,7 @@ class WablasController extends Controller
         return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
     }
 
-    public function sudahAdaAntrianUntukJenisAntrian($jenis_antrian_id){
+    public function sudahAdaAntrianUntukTipeKonsultasi($tipe_konsultasi_id){
         $from = date('Y-m-d 00:00:00');
         $to = date('Y-m-d 23:59:59');
         return Antrian::whereRaw(
@@ -4221,7 +4289,7 @@ class WablasController extends Controller
                                 )"
                                 )
                                 ->whereRaw("created_at between '{$from}' and '{$to}'")
-                                ->where('jenis_antrian_id', $jenis_antrian_id)
+                                ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                                 ->count();
     }
     public function registrasiAntrianOnline(){
@@ -4790,9 +4858,9 @@ class WablasController extends Controller
                 $message .= $this->syaratFoto();
             } else if ( $this->message == 'selesai' ) {
                 $antrian_template = [
-                    'jenis_antrian_id'                                  => 4,
+                    'tipe_konsultasi_id'                                  => 5,
                     'url'                                               => null,
-                    'nomor'                                             => Antrian::nomorAntrian(4),
+                    'nomor'                                             => Antrian::nomorAntrian(5),
                     'antriable_id'                                      => null,
                     'antriable_type'                                    => 'App\Models\Antrian',
                     'dipanggil'                                         => 0,

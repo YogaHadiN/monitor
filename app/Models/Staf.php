@@ -11,4 +11,7 @@ class Staf extends Model
     public function titel(){
         return $this->belongsTo(Titel::class);
     }
+    public function getNamaDenganGelarAttribute(){
+        return tambahkanGelar( $this->titel->singkatan, substr($this->nama, 0, 15) );
+    }
 }
