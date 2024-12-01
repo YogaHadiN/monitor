@@ -2900,8 +2900,8 @@ class WablasController extends Controller
                 $tipe_konsultasi_id = TipeKonsultasi::find( $this->message );
 
                 $petugas_pemeriksa = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
-                                ->where('tanggal', date('Y-m-d'))
-                                ->get();
+                                    ->where('tanggal', date('Y-m-d'))
+                                    ->get();
 
                 // cek apakah ada pelayanan yang dimaksud
                 if (!count( $petugas_pemeriksa )) {
@@ -3428,14 +3428,18 @@ class WablasController extends Controller
             !is_null( $reservasi_online->kartu_asuransi_image ) &&
             is_null( $reservasi_online->staf_id )
         ) {
+            $petugas = PetugasPemeriksa::where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
+                                        ->where('tanggal', date('Y-m-d'))
+                                        ->where('jam_mulai', '<=', $reservasi_online->created_at->format('H:i:s'))
+                                        ->where('jam_akhir', '>=', $reservasi_online->created_at->format('H:i:s'))
+                                        ->get();
             if ( 
                 is_numeric( $this->message ) &&
                 $this->message > 0 &&
-                $this->message <= PetugasPemeriksa::where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
-                                                    ->where('tanggal', date('Y-m-d'))
-                                                    ->count()
+                $this->message <= $petugas->count()
             ) {
-                $reservasi_online->staf_id = $this->message;
+                $urutan = $this->message -1;
+                $reservasi_online->staf_id = $petugas->get($urutan)->staf_id;
                 $reservasi_online->save();
             } else {
                 $input_tidak_tepat = true;
@@ -4066,29 +4070,20 @@ class WablasController extends Controller
      */
     private function tanyaSiapaPetugasPemeriksa($reservasi_online){
         $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
-                                                ->where('jam_mulai' , '<', date('H:i:s'))
-                                                ->where('jam_akhir' , '>', date('H:i:s'))
+                                                ->where('jam_mulai' , '<', $reservasi_online->created_at->format('H:i:s'))
+                                                ->where('jam_akhir' , '>', $reservasi_online->created_at->format('H:i:s'))
                                                 ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
                                                 ->get();
 
-        $petugas_dengan_jumlah = [];
-        foreach ($petugas_pemeriksas as $petugas) {
-            $petugas_dengan_jumlah[] = [
-                'sisa_antrian' => $petugas->sisa_antrian,
-                'petugas' => $petugas
-            ];
-        }
-
-        usort($petugas_dengan_jumlah, function($a, $b) {
-            return $a['sisa_antrian'] <=> $b['sisa_antrian'];
-        });
-
         $message = 'Silahkan Pilih Dokter pemeriksa.';
         $message .=  PHP_EOL;
-        foreach ($petugas_dengan_jumlah as $k => $petugas) {
+        foreach ($petugas_pemeriksas as $k => $petugas) {
             $message .=  PHP_EOL;
             $nomor = $k+1;
-            $message .=  $nomor . '. ' . $petugas['petugas']->staf->nama_dengan_gelar;
+            $message .=  $nomor . '. ' . $petugas->staf->nama_dengan_gelar;
+            if ($petugas->antrian_terpendek) {
+                $message .=  '(Antrian Terpendek)';
+            }
         }
         $message .=  PHP_EOL;
         return $message;

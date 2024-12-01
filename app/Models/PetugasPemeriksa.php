@@ -54,4 +54,27 @@ class PetugasPemeriksa extends Model
     public function getTanggalAttribute( $value ) {
         return Carbon::parse($value)->format('d-m-Y');
     }
+
+    public function getAntrianTerpendekAttribute() {
+        $petugas = PetugasPemeriksa::where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+                                    ->where('tanggal', date('Y-m-d'))
+                                    ->where('jam_mulai', '<=', date('H:i:s'))
+                                    ->where('jam_akhir', '>=', date('H:i:s'))
+                                    ->get();
+
+        $data = [];
+        foreach ($petugas as $p) {
+            $data = [
+                'petugas' => $p,
+                'sisa_antrian' => $p->sisa_antrian
+            ];
+        }
+
+        usort($data, function($a, $b) {
+            return $a['sisa_antrian'] <=> $b['sisa_antrian'];
+        });
+
+        $petugas = $data[0]['petugas'];
+        return $this->id == $petugas->id;
+    }
 }
