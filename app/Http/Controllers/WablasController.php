@@ -3494,6 +3494,7 @@ class WablasController extends Controller
                         $antrian->save();
                         $antrian->antriable_id             = $antrian->id;
                         $antrian->save();
+                        $antrian->refresh();
 
                         /* $this->langsungKeAntrianPoliBilaMemungkinkan($antrian); */
 
