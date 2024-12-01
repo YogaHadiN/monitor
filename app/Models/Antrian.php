@@ -7,6 +7,7 @@ use App\Models\Asuransi;
 use App\Models\DeletedAntrian;
 use App\Models\WhatsappRegistration;
 use DB;
+use Log;
 use Carbon\Carbon;
 class Antrian extends Model
 {
@@ -118,6 +119,8 @@ class Antrian extends Model
                 ->first()->nomor;
 	}
 	public function getNomorAntrianAttribute(){
+        Log::info('antrian');
+        Log::info( $this );
 		return $this->ruangan->prefix_antrian . $this->nomor;
 	}
 	public function getJenisAntrianIdAttribute($value){

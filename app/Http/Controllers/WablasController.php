@@ -3747,7 +3747,7 @@ class WablasController extends Controller
             $response .= PHP_EOL;
         }
         if ( !is_null( $model->staf_id ) ) {
-            $response .= 'Dokter Pemeriksa  : '.  $model->staf->nama;
+            $response .= 'Pemeriksa  : '.  $model->staf->nama_dengan_gelar;
             $response .= PHP_EOL;
         }
         if (
