@@ -1,4 +1,4 @@
-<?php
+<?php 
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -119,8 +119,11 @@ class Antrian extends Model
                 ->first()->nomor;
 	}
 	public function getNomorAntrianAttribute(){
+        Log::info('getNomorAntrianAttribute');
         Log::info('antrian');
         Log::info( $this );
+        Log::info('ruangan');
+        Log::info( $this->ruangan );
 		return $this->ruangan->prefix_antrian . $this->nomor;
 	}
 	public function getJenisAntrianIdAttribute($value){
