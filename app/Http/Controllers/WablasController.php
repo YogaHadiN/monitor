@@ -3092,6 +3092,7 @@ class WablasController extends Controller
                     $reservasi_online->save();
                     if ($petugas_pemeriksa->count() == 1) {
                         $reservasi_online->staf_id = $petugas_pemeriksa->first()->staf_id;
+                        $reservasi_online->ruangan_id = $petugas_pemeriksa->first()->ruangan_id;
                         $reservasi_online->save();
                     }
                 } else {
@@ -3442,6 +3443,7 @@ class WablasController extends Controller
             ) {
                 $urutan = $this->message -1;
                 $reservasi_online->staf_id = $petugas->get($urutan)->staf_id;
+                $reservasi_online->ruangan_id = $petugas->get($urutan)->ruangan_id;
                 $reservasi_online->save();
             } else {
                 $input_tidak_tepat = true;
@@ -3486,6 +3488,7 @@ class WablasController extends Controller
                         $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                         $antrian->pasien_id                = $reservasi_online->pasien_id;
                         $antrian->verifikasi_bpjs          = $reservasi_online->verifikasi_bpjs;
+                        $antrian->ruangan_id          = $reservasi_online->ruangan_id;
                         $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
                         $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
                         $antrian->reservasi_online         = 1;
@@ -3494,7 +3497,6 @@ class WablasController extends Controller
                         $antrian->save();
                         $antrian->antriable_id             = $antrian->id;
                         $antrian->save();
-                        $antrian->refresh();
 
                         /* $this->langsungKeAntrianPoliBilaMemungkinkan($antrian); */
 
