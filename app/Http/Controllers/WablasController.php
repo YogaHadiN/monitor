@@ -4080,7 +4080,7 @@ class WablasController extends Controller
         foreach ($petugas_dengan_jumlah as $k => $petugas) {
             $message .=  PHP_EOL;
             $nomor = $k+1;
-            $message .=  $nomor '. ' . $petugas['petugas']->staf->nama_dengan_gelar;
+            $message .=  $nomor . '. ' . $petugas['petugas']->staf->nama_dengan_gelar;
         }
         $message .=  PHP_EOL;
         return $message;
