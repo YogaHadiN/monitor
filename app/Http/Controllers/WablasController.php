@@ -3839,7 +3839,8 @@ class WablasController extends Controller
 			$antrian->nomor            = $antrian_terakhir ;
 		}
 
-        if ( !is_null( Ruangan::find($id) ) ) {
+        $ruangan =  Ruangan::find($id) ;
+        if ( !is_null($ruangan) ) {
             $tipe_konsultasi_id = $ruangan->default_tipe_konsultasi_id;
         }
 
