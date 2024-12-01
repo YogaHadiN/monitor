@@ -4300,15 +4300,13 @@ class WablasController extends Controller
         /* return $message; */
 
         if (
-            date('G') >= 23 ||
-            date('G') < 6
+            (
+                date('G') < 23 &&
+                date('G') >= 6
+            ) ||
+            $this->no_telp == '6281381912803'
         ) {
-            $message =  'Pendaftaran secara online sudah tutup dan akan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-            return $message;
-        } else {
+
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 6 //registrasi online
@@ -4318,6 +4316,12 @@ class WablasController extends Controller
                 'whatsapp_bot_id' => $whatsapp_bot->id
             ]);
             return $this->pertanyaanPoliYangDituju();
+        } else {
+            $message =  'Pendaftaran secara online sudah tutup dan akan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+            return $message;
         }
     }
     public function nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien){
@@ -5027,26 +5031,22 @@ class WablasController extends Controller
     }
     public function chatAdmin(){
         if (
-            date('G') >= 23 ||
-            date('G') < 6
+            (
+                date('G') < 23 &&
+                date('G') >= 6 
+            ) ||
+            $this->no_telp == '6281381912803'
         ) {
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 6 pagi. Mohon maaf atas ketidaknyamanannya';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         } else {
-            $message = 'Halo.';
+
+            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 6 pagi. Mohon maaf atas ketidaknyamanannya';
             $message .= PHP_EOL;
-            $message .= 'Ada yang bisa kami bantu?';
-
-            WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 12 // chat dengan admin
-            ]);
-
-            WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
-            WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
-            return $message;
+            $message .= PHP_EOL;
+            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         }
     }
     public function balasanKonfirmasiWaktuPelayanan(){
