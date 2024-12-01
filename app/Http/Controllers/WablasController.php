@@ -1174,7 +1174,7 @@ class WablasController extends Controller
             $messageToBoss .=  PHP_EOL;
             $messageToBoss .=  PHP_EOL;
             $messageToBoss .=  $this->message;
-            $this->sendSingle('6281381912803', $messageToBoss);
+            $this->sendSingle('6281381912802', $messageToBoss);
 
             $antrian = null;
             $antrians = Antrian::where('no_telp', $this->no_telp)->where('created_at', 'like', $tanggal_berobat . '%')->get();
@@ -2360,7 +2360,7 @@ class WablasController extends Controller
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->whereRaw("antriable_type not like 'App\\\\\\\Models\\\\\\\Periksa' ") // yang ini gagal
             ->exists() ;
-        /* && $this->no_telp = '6281381912803'; */
+        /* && $this->no_telp = '6281381912802'; */
     }
     public function whatsappMainMenuExists(){
         return WhatsappMainMenu::where('no_telp', $this->no_telp)
@@ -4318,7 +4318,7 @@ class WablasController extends Controller
                 date('G') < 23 &&
                 date('G') >= 6
             ) ||
-            $this->no_telp == '6281381912803'
+            $this->no_telp == '6281381912802'
         ) {
 
             $whatsapp_bot = WhatsappBot::create([
@@ -5049,7 +5049,7 @@ class WablasController extends Controller
                 date('G') < 23 &&
                 date('G') >= 6 
             ) ||
-            $this->no_telp == '6281381912803'
+            $this->no_telp == '6281381912802'
         ) {
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 6 pagi. Mohon maaf atas ketidaknyamanannya';
             $message .= PHP_EOL;
