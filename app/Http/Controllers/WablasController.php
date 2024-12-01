@@ -2057,6 +2057,10 @@ class WablasController extends Controller
             $response .= 'Tanggal Lahir : '.  Carbon::parse($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)->format('d M Y');;
             $response .= PHP_EOL;
         }
+        if ( !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir ) ) {
+            $response .= 'Tanggal Lahir : '.  Carbon::parse($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)->format('d M Y');;
+            $response .= PHP_EOL;
+        }
         if (
             !is_null( $this->whatsapp_bpjs_dentist_registrations->nama ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id) ||
@@ -3734,6 +3738,10 @@ class WablasController extends Controller
         }
         if ( !is_null( $model->alamat ) ) {
             $response .= 'Alamat  : '.  $model->alamat;
+            $response .= PHP_EOL;
+        }
+        if ( !is_null( $model->staf_id ) ) {
+            $response .= 'Dokter Pemeriksa  : '.  $model->staf->nama;
             $response .= PHP_EOL;
         }
         if (
