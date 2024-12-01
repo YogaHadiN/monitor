@@ -237,6 +237,7 @@ class WablasController extends Controller
                         'no_telp' => $this->no_telp
                     ]);
                 }
+                Log::info(240);
                 $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                      ->first();
