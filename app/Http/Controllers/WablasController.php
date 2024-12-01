@@ -4058,6 +4058,8 @@ class WablasController extends Controller
      */
     private function tanyaSiapaPetugasPemeriksa($reservasi_online){
         $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                                ->where('jam_mulai' , '<', date('H:i:s'))
+                                                ->where('jam_akhir' , '>', date('H:i:s'))
                                                 ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
                                                 ->get();
 
