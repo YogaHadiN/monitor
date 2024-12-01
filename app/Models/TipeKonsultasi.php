@@ -32,7 +32,7 @@ class TipeKonsultasi extends Model
         $query .= "ORDER BY count(ant.id) DESC;" ;
         $data = DB::select($query);
 
-        return $data[0]->jumlah;
+        return count( $data )? $data[0]->jumlah :0 ;
     }
     
 }
