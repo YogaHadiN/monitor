@@ -131,3 +131,16 @@ if (!function_exists('diffInMinutes')) {
         return floor(abs($to_time - $from_time) / 60.2);
     }
 }
+if (!function_exists('tambahkanGelar')) {
+     function tambahkanGelar($titel, $nama) {
+        if (
+            !str_contains( strtolower($nama), 'dr.' ) &&
+            !str_contains( strtolower($nama), 'drg' ) &&
+            !str_contains( strtolower($nama), 'dr ' )
+        ) {
+            return $titel.'. ' . $nama;
+        } else {
+            return $nama;
+        }
+    }
+}
