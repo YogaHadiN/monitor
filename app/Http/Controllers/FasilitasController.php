@@ -50,28 +50,26 @@ class FasilitasController extends Controller
 	}
 	
 	public function antrianPost($id){
-        $today = date("Y-m-d");
-
-		$antrians = Antrian::with('jenis_antrian')->where('created_at', 'like', $today . '%')
-							->where('jenis_antrian_id',$id)
+		$antrians = Antrian::where('created_at', 'like', date('Y-m-d') . '%')
+							->where('ruangan_id',$id)
 							->where('tenant_id', 1)
 							->orderBy('nomor', 'desc')
 							->first();
 
+        $antrian                   = new Antrian;
 		if ( is_null( $antrians ) ) {
-			$antrian                   = new Antrian;
-			$antrian->tenant_id        = 1 ;
-			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->jenis_antrian_id = $id ;
+			$antrian->nomor            = 1 ;
+
 		} else {
 			$antrian_terakhir          = $antrians->nomor + 1;
-			$antrian                   = new Antrian;
-			$antrian->tenant_id        = 1 ;
-			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->jenis_antrian_id = $id ;
+			$antrian->nomor            = $antrian_terakhir ;
 		}
+
+        $antrian->tenant_id      = 1 ;
+        $antrian->nomor_bpjs     = $this->input_nomor_bpjs;
+        $antrian->ruangan_id     = $id ;
 		$antrian->antriable_id   = $antrian->id;
-		$antrian->antriable_id   = $antrian->id;
+		$antrian->kode_unik      = $this->kodeUnik();
 		$antrian->antriable_type = 'App\\Models\\Antrian';
 		$antrian->save();
 

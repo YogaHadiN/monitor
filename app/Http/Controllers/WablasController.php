@@ -3477,7 +3477,7 @@ class WablasController extends Controller
                         $reservasi_online->save();
 
                         $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
-                        $antrian                = $this->antrianPost( $reservasi_online->tipe_konsultasi_id );
+                        $antrian                = $this->antrianPost( $reservasi_online->ruangan_id );
 
 
                         $antrian->nama                     = $reservasi_online->nama;
@@ -3488,7 +3488,7 @@ class WablasController extends Controller
                         $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                         $antrian->pasien_id                = $reservasi_online->pasien_id;
                         $antrian->verifikasi_bpjs          = $reservasi_online->verifikasi_bpjs;
-                        $antrian->ruangan_id          = $reservasi_online->ruangan_id;
+                        $antrian->ruangan_id               = $reservasi_online->ruangan_id;
                         $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
                         $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
                         $antrian->reservasi_online         = 1;
@@ -3823,27 +3823,29 @@ class WablasController extends Controller
     
 
 	public function antrianPost($id){
-		$antrians = Antrian::with('tipe_konsultasi')->where('created_at', 'like', date('Y-m-d') . '%')
-							->where('tipe_konsultasi_id',$id)
+		$antrians = Antrian::where('created_at', 'like', date('Y-m-d') . '%')
+							->where('ruangan_id',$id)
 							->where('tenant_id', 1)
 							->orderBy('nomor', 'desc')
 							->first();
 
+        $antrian                   = new Antrian;
 		if ( is_null( $antrians ) ) {
-			$antrian                   = new Antrian;
 			$antrian->nomor            = 1 ;
-			$antrian->tenant_id        = 1 ;
-			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->tipe_konsultasi_id = $id ;
 
 		} else {
 			$antrian_terakhir          = $antrians->nomor + 1;
-			$antrian                   = new Antrian;
-			$antrian->tenant_id        = 1 ;
 			$antrian->nomor            = $antrian_terakhir ;
-			$antrian->nomor_bpjs       = $this->input_nomor_bpjs;
-			$antrian->tipe_konsultasi_id = $id ;
 		}
+
+        if ( !is_null( Ruangan::find($id) ) ) {
+            $tipe_konsultasi_id = $ruangan->default_tipe_konsultasi_id;
+        }
+
+        $antrian->tenant_id      = 1 ;
+        $antrian->nomor_bpjs     = $this->input_nomor_bpjs;
+        $antrian->ruangan_id     = $id ;
+        $antrian->tipe_konsultasi_id     = $tipe_konsultasi_id ;
 		$antrian->antriable_id   = $antrian->id;
 		$antrian->kode_unik      = $this->kodeUnik();
 		$antrian->antriable_type = 'App\\Models\\Antrian';
