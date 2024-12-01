@@ -3991,7 +3991,7 @@ class WablasController extends Controller
      * @return void
      */
     private function jumlahAntrian(){
-        $tipe_konsultasis = TipeKonsultasi::where('tenant_id', 1)->get();
+        $tipe_konsultasis = TipeKonsultasi::all();
         $result = [];
         foreach ($tipe_konsultasis as $tipe) {
             $result[ $tipe->id ] = $tipe->sisa_antrian;
