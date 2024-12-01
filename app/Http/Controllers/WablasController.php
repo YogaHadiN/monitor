@@ -2901,6 +2901,8 @@ class WablasController extends Controller
 
                 $petugas_pemeriksa = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
                                     ->where('tanggal', date('Y-m-d'))
+                                    ->where('jam_mulai', '<=', $reservasi_online->created_at->format('H:i:s'))
+                                    ->where('jam_akhir', '>=', $reservasi_online->created_at->format('H:i:s'))
                                     ->get();
 
                 // cek apakah ada pelayanan yang dimaksud
@@ -4082,7 +4084,9 @@ class WablasController extends Controller
             $nomor = $k+1;
             $message .=  $nomor . '. ' . $petugas->staf->nama_dengan_gelar;
             if ($petugas->antrian_terpendek) {
+                $message .=  PHP_EOL;
                 $message .=  '(Antrian Terpendek)';
+                $message .=  PHP_EOL;
             }
         }
         $message .=  PHP_EOL;
