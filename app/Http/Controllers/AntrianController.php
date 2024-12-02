@@ -205,8 +205,7 @@ class AntrianController extends Controller
 			}
 		}
 		$result[] =	'silahkanmenuju';
-		$result[] = $ruangan;
-        dd( $ruangan );
+		$result[] = $ruangan['file_panggilan'];
 		return $result;
 	
 	}
