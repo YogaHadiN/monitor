@@ -212,7 +212,7 @@ class AntrianController extends Controller
 
 	public function updateJumlahAntrianBaru( $panggil_pasien = true ){
         $ruangan = Input::get('ruangan');
-        dd( $ruangan );
+        dd( $ruangan['id'] );
         $ruangans = Ruangan::with('antrian')
                             ->where('ruang_periksa', 1)
                             ->get();
