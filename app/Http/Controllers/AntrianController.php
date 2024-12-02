@@ -234,7 +234,6 @@ class AntrianController extends Controller
                     'antrian_id' => null
                 ]);
                 $ruangan                                = Ruangan::find( $ruangan_id );
-                dd( $ruangan );
                 $ruangan->antrian_id = $antrian_dipanggil->id;
                 $ruangan->save();
 
