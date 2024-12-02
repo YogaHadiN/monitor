@@ -5051,16 +5051,49 @@ class WablasController extends Controller
             ) ||
             $this->no_telp == '6281381912802'
         ) {
-            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 6 pagi. Mohon maaf atas ketidaknyamanannya';
+            $message = 'Halo.';
             $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+            $message .= 'Ada yang bisa kami bantu?';
+
+            WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 12 // chat dengan admin
+            ]);
+
+            WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
+            WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
+            return $message;
         } else {
 
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 6 pagi. Mohon maaf atas ketidaknyamanannya';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+        }
+    }
+
+    public function chatAdmin(){
+        if (
+            date('G') >= 23 ||
+            date('G') < 6
+        ) {
+            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+        } else {
+            $message = 'Halo.';
+            $message .= PHP_EOL;
+            $message .= 'Ada yang bisa kami bantu?';
+
+            WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 12 // chat dengan admin
+            ]);
+
+            WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
+            WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
+            return $message;
         }
     }
     public function balasanKonfirmasiWaktuPelayanan(){
