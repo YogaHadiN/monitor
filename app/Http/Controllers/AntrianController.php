@@ -232,6 +232,7 @@ class AntrianController extends Controller
                 Ruangan::where('antrian_id', $antrian_dipanggil->id)->update([
                     'antrian_id' => null
                 ]);
+                dd( $ruangan );
                 $ruangan                                = Ruangan::where('file_panggilan', $ruangan )->first();
                 $ruangan->antrian_id = $antrian_dipanggil->id;
                 $ruangan->save();
