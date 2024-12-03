@@ -232,10 +232,21 @@ class WablasController extends Controller
                 echo $this->hapusAntrianWhatsappBotReservasiOnline();
             } else {
                 if (Input::get('messageType') == 'text') {
+
+                    if ( is_null(  $this->message  ) ) {
+                        Log::info('========================');
+                        Log::info('MESSAGE NULL KARENA');
+                        Log::info( Input::all() );
+                        Log::info('========================');
+                    }
+
                     WhatsappInbox::create([
                         'message' => $this->message,
                         'no_telp' => $this->no_telp
                     ]);
+
+
+
                 }
                 $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
@@ -3739,7 +3750,7 @@ class WablasController extends Controller
         }
         if ( !is_null( $model->registrasi_pembayaran_id ) ) {
             $response .= 'Pembayaran : ';
-            $response .= ucwords($model->registrasiPembayaran->pembayaran);
+            $response .= ucwords($model->registrasi_pembayaran->pembayaran);
             $response .= PHP_EOL;
         }
         if ( !is_null( $model->tanggal_lahir ) ) {

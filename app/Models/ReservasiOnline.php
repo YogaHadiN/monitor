@@ -12,7 +12,7 @@ class ReservasiOnline extends Model
     public function whatsappBot(){
         return $this->belongsTo(WhatsappBot::class);
     }
-    public function registrasiPembayaran(){
+    public function registrasi_pembayaran(){
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
     public static function boot(){

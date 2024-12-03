@@ -656,7 +656,7 @@ class AntrianOnlineController extends Controller
         $kodepoli           = Input::get('kodepoli');
         $poli_bpjs          = PoliBpjs::where('kdPoli', $kodepoli)->first();
         $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
-        $hari_id            = (int) date('N', Input::get('tanggalperiksa'));
+        $hari_id            = (int) date('N', strtotime( Input::get('tanggalperiksa') ));
 
         Log::info('tipe_konsultasi_id');
         Log::info($tipe_konsultasi_id);
