@@ -186,4 +186,7 @@ class Antrian extends Model
     public function petugas_pemeriksa(){
         return $this->belongsTo(PetugasPemeriksa::class);
     }
+    public function staf(){
+        return $this->belongsTo(Staf::class);
+    }
 }
