@@ -29,7 +29,7 @@ class TipeKonsultasi extends Model
         $query .= "antriable_type = 'App\\\Models\\\AntrianPeriksa' "; 
         $query .= ") "; 
         $query .= "GROUP BY ant.ruangan_id " ;
-        $query .= "ORDER BY count(ant.id) DESC;" ;
+        $query .= "ORDER BY count(ant.id) ASC;" ;
         $data = DB::select($query);
 
         return count( $data )? $data[0]->jumlah :0 ;
