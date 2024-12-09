@@ -2251,7 +2251,10 @@ class WablasController extends Controller
              str_contains($this->message, 'ck antri') ||
              str_contains($this->message, 'ck antran')
         ) {
-            $antrian = Antrian::where('terakhir_dipanggil', 1)->first();
+            $ant = Antrian::where('no_telp', $this->no_telp)
+                ->where('created_at', 'like', date('Y-m-d') . '%')
+                ->latest()->first();
+            $antrian = $ant->ruangan->antrian;
             if (!is_null($antrian)) {
                 $ant = Antrian::where('no_telp', $this->no_telp)
                     ->where('created_at', 'like', date('Y-m-d') . '%')
@@ -3500,6 +3503,8 @@ class WablasController extends Controller
                         $antrian->pasien_id                = $reservasi_online->pasien_id;
                         $antrian->verifikasi_bpjs          = $reservasi_online->verifikasi_bpjs;
                         $antrian->ruangan_id               = $reservasi_online->ruangan_id;
+                        $antrian->tipe_konsultasi_id       = $reservasi_online->tipe_konsultasi_id;
+                        $antrian->staf_id                  = $reservasi_online->staf_id;
                         $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
                         $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
                         $antrian->reservasi_online         = 1;
