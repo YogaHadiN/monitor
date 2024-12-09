@@ -30,7 +30,7 @@ class PetugasPemeriksa extends Model
                                             antriable_type = 'App\\\\\Models\\\\\AntrianPeriksa'
                                         )
                                     "
-                                    )->where('ruangan_id', $this->ruangan_id)
+                                    )->where('staf_id', $this->staf_id)
                                 ->count();
     }
 
