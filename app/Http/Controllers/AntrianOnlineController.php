@@ -658,11 +658,6 @@ class AntrianOnlineController extends Controller
         $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
         $hari_id            = (int) date('N', strtotime( Input::get('tanggalperiksa') ));
 
-        Log::info('tipe_konsultasi_id');
-        Log::info($tipe_konsultasi_id);
-        Log::info('hari_id');
-        Log::info($hari_id);
-
         $jadwal_konsultasi = JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id )
                                             ->where('hari_id',  $hari_id )
                                             ->first();

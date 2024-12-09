@@ -18,28 +18,23 @@ class FonnteController extends Controller
     public function postWebhook(){
         Log::info('fonnte');
         Log::info('postWebhook');
-        Log::info(13);
         $this->webhook();
     }
     public function getChaning(){
         Log::info('fonnte');
         Log::info('getChaining');
-        Log::info(17);
     }
     public function postChaning(){
         Log::info('fonnte');
         Log::info('postChaning');
-        Log::info(20);
     }
     public function getStatus(){
         Log::info('fonnte');
         Log::info('getStatus');
-        Log::info(23);
     }
     public function postStatus(){
         Log::info('fonnte');
         Log::info('postStatus');
-        Log::info(26);
     }
 
     /**
