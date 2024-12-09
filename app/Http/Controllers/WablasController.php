@@ -4105,6 +4105,21 @@ class WablasController extends Controller
             $message .=  PHP_EOL;
         }
         $message .=  PHP_EOL;
+        $message .=  "Balas dengan angka ";
+
+        foreach ($petugas_pemeriksas as $k => $petugas) {
+            $nomor = $k+1;
+            if ( $k > 0 ) {
+                if ($k == count( $petugas_pemeriksas ) - 1) {
+                    $message .= 'atau' .  $nomor;
+                } else {
+                    $message .= ', ' . $nomor;
+                }
+            } else {
+                $message .=  $nomor;
+            }
+        }
+        $message .=  " sesuai dengan pilihan diatas";
         return $message;
 
     }
