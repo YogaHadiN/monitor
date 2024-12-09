@@ -858,7 +858,7 @@
 
 </script>
 
-<script src="{!! url("js/antrian.js?ver=123") !!}"></script>
+<script src="{!! url("js/antrian.js?ver=23") !!}"></script>
 {{-- <script src="{!! url("js/inspinia.js") !!}"></script> --}}
 </body>
 </html>
