@@ -30,7 +30,8 @@ class PetugasPemeriksa extends Model
                                             antriable_type = 'App\\\\\Models\\\\\AntrianPeriksa'
                                         )
                                     "
-                                )->where('staf_id', $this->staf_id)->count();
+                                    )->where('ruangan_id', $this->ruangan_id)
+                                ->count();
     }
 
     public function getWaktuTungguAttribute(){
