@@ -264,6 +264,10 @@ function panggilPasien(ruangan) {
             ruangan: ruangan,
         },
         function (data, textStatus, jqXHR) {
+            console.log("========================");
+            console.log("data sound panggilan");
+            console.log(data);
+            console.log("========================");
             pglPasien(data);
         }
     );
