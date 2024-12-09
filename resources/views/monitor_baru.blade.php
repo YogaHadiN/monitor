@@ -795,6 +795,10 @@
   <source src="{{ url('sound/loketdua.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
+<audio id="audio_ruangperiksatiga">
+  <source src="{{ url('sound/ruangperiksatiga.mp3') }}" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
 <audio id="audio_silahkanmenuju">
   <source src="{{ url('sound/silahkanmenuju.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
