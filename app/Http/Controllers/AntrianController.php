@@ -110,6 +110,9 @@ class AntrianController extends Controller
     }
 
 	public function convertSoundToArray(){
+        Log::info(
+            Input::all()
+        );
 		$nomor_antrian = Input::get('nomor_antrian');
 		$ruangan       = Input::get('ruangan');
 		$huruf         = strtolower(str_split($nomor_antrian)[0]);
