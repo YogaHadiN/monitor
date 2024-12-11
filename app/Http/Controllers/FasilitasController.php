@@ -92,7 +92,9 @@ class FasilitasController extends Controller
 	}
 	
 	public function listAntrian(){
-		$antrians = Antrian::with('jenis_antrian')->where('antriable_type', 'App\\Models\\Antrian')->get();
+        $antrians = Antrian::with('jenis_antrian')->where('antriable_type', 'App\\Models\\Antrian')
+                                                  ->orderBy('sudah_hadir_di_klinik', 'desc')
+                                                  ->get();
 		return view('fasilitas.list_antrian', compact(
 			'antrians'
 		));
