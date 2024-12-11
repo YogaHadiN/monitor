@@ -237,6 +237,8 @@ class WablasController extends Controller
                         Log::info('========================');
                         Log::info('MESSAGE NULL KARENA');
                         Log::info( Input::all() );
+                        Log::info('this->message');
+                        Log::info(  $this->message  );
                         Log::info('========================');
                     }
 

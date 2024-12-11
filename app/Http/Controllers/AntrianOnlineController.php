@@ -6,6 +6,7 @@ use App\Models\Pasien;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Input;
+use Log;
 use Response;
 use Hash;
 use DateTime;
