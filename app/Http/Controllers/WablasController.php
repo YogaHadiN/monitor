@@ -242,7 +242,7 @@ class WablasController extends Controller
                         Log::info('========================');
                     }
 
-                    if ( is_null(  $this->message  ) ) {
+                    if ( !is_null(  $this->message  ) ) {
                         WhatsappInbox::create([
                             'message' => $this->message,
                             'no_telp' => $this->no_telp
