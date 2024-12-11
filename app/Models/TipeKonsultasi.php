@@ -32,7 +32,11 @@ class TipeKonsultasi extends Model
         $query .= "ORDER BY count(ant.id) ASC;" ;
         $data = DB::select($query);
 
-        return count( $data )? $data[0]->jumlah :0 ;
+        return count( $data )? (int) $data[0]->jumlah :0 ;
+    }
+
+    public function getWaktuTungguMenitAttribute(){
+        return $this->sisa_antrian * 3;
     }
     
 }

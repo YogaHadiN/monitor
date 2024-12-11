@@ -4093,11 +4093,62 @@ class WablasController extends Controller
      * @return void
      */
     private function tanyaSiapaPetugasPemeriksa($reservasi_online){
+
         $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
-                                                ->where('jam_mulai' , '<', $reservasi_online->created_at->format('H:i:s'))
-                                                ->where('jam_akhir' , '>', $reservasi_online->created_at->format('H:i:s'))
+                                                ->where('jam_mulai' , '<=', $reservasi_online->created_at->format('H:i:s'))
+                                                ->where('jam_akhir' , '>=', $reservasi_online->created_at->format('H:i:s'))
                                                 ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
                                                 ->get();
+
+        $jumlah_petugas_pemeriksas_saat_ini = $petugas_pemeriksas->count();
+
+
+        //
+        // JIKA PASIEN SUDAH MENUMPUK NAMUN DOKTER KEDUA BELUM DATANG
+        // ANTRIKAN PASIEN UNTUK DOKTER KEDUA
+        //
+        if (
+            $jumlah_petugas_pemeriksas_saat_ini == 1
+        ) {
+            $tipe_konsultasi = TipeKonsultasi::find( $tipe_konsultasi_id );
+            $waktu_tunggu_menit = $tipe_konsultasi->waktu_tunggu_menit;
+
+            $jam_mulai_akhir_antrian = Carbon::now()->addMinutes( $waktu_tunggu_menit )->format('Y-m-d');
+            $petugas_pemeriksas_nanti = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                        ->where('jam_mulai', '<=', $jam_mulai_akhir_antrian)
+                                        ->where('jam_akhir', '>=', date('H:i:s'))
+                                        ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                        ->get();
+            if ($petugas_pemeriksas_nanti->count() > 1) {
+                $petugas_pemeriksas = $petugas_pemeriksas_nanti;
+            }
+        }
+
+
+        if ( $petugas_pemeriksas->count() > 1 ) {
+            // populate ulang petugas pemeriksa
+            $repopulate = [];
+            foreach ($petugas_pemeriksas as $petugas) {
+                $repopulate[] = [
+                    'data'         => $petugas,
+                    'sisa_antrian' => $petugas->sisa_antrian
+                ];
+            }
+            usort($repopulate, function($a, $b) {
+                return $a['sisa_antrian'] <=> $b['sisa_antrian'];
+            });
+
+            $data = [];
+            foreach ($repopulate as $petugas) {
+                $data[] = $petugas['data'];
+            }
+            $petugas_pemeriksas = collect($data);
+        } else if (
+            $petugas_pemeriksas->count() < 1
+        ) {
+            $tipe_konsultasi = TipeKonsultasi::find( $tipe_konsultasi_id );
+            $message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas saat ini';
+        }
 
         $message = 'Silahkan Pilih Dokter pemeriksa.';
         $message .=  PHP_EOL;
