@@ -232,16 +232,6 @@ class WablasController extends Controller
                 echo $this->hapusAntrianWhatsappBotReservasiOnline();
             } else {
                 if (Input::get('messageType') == 'text') {
-
-                    if ( is_null(  $this->message  ) ) {
-                        Log::info('========================');
-                        Log::info('MESSAGE NULL KARENA');
-                        Log::info( Input::all() );
-                        Log::info('this->message');
-                        Log::info(  $this->message  );
-                        Log::info('========================');
-                    }
-
                     if ( !is_null(  $this->message  ) ) {
                         WhatsappInbox::create([
                             'message' => $this->message,
