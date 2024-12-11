@@ -3452,6 +3452,7 @@ class WablasController extends Controller
                                         ->where('jam_mulai', '<=', $reservasi_online->created_at->format('H:i:s'))
                                         ->where('jam_akhir', '>=', $reservasi_online->created_at->format('H:i:s'))
                                         ->get();
+            $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
             if ( 
                 is_numeric( $this->message ) &&
                 $this->message > 0 &&
@@ -4099,7 +4100,7 @@ class WablasController extends Controller
         // JIKA PASIEN SUDAH MENUMPUK NAMUN DOKTER KEDUA BELUM DATANG
         // ANTRIKAN PASIEN UNTUK DOKTER KEDUA
         //
-        $petugas_pemeriksas = $this->petugas_pemeriksa_sekarang();
+        $petugas_pemeriksas = $this->petugas_pemeriksa_sekarang($reservasi_online);
         
         if (
             $petugas_pemeriksas->count() < 1
@@ -5315,7 +5316,7 @@ class WablasController extends Controller
     
     public function batalkanSemuaFitur(){
     }
-    public function petugas_pemeriksa_sekarang(){
+    public function petugas_pemeriksa_sekarang($reservasi_online){
 
         $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
                                                 ->where('jam_mulai' , '<=', $reservasi_online->created_at->format('H:i:s'))
