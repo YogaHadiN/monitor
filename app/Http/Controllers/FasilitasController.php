@@ -69,7 +69,7 @@ class FasilitasController extends Controller
         $antrian->nomor_bpjs     = $this->input_nomor_bpjs;
         $antrian->ruangan_id     = $id ;
 		$antrian->antriable_id   = $antrian->id;
-		$antrian->kode_unik      = null;
+		$antrian->kode_unik      = 'A';
 		$antrian->antriable_type = 'App\\Models\\Antrian';
 		$antrian->save();
 
