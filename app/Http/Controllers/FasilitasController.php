@@ -69,7 +69,7 @@ class FasilitasController extends Controller
         $antrian->nomor_bpjs     = $this->input_nomor_bpjs;
         $antrian->ruangan_id     = $id ;
 		$antrian->antriable_id   = $antrian->id;
-		$antrian->kode_unik      = 'A';
+		$antrian->kode_unik      = $this->kodeUnik();
 		$antrian->antriable_type = 'App\\Models\\Antrian';
 		$antrian->save();
 
@@ -174,12 +174,19 @@ class FasilitasController extends Controller
 
 		return redirect()->back()->withPesan($pesan);
 	}
+
+    private function kodeUnik()
+    {
+        $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
+        while (Antrian::where('created_at', 'like', date('Y-m-d') . '%')->where('kode_unik', $kode_unik)->exists()) {
+            $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
+        }
+        return $kode_unik;
+    }
     /**
      * undocumented function
      *
      * @return void
      */
-
-    
 }
 
