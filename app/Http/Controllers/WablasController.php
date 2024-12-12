@@ -5322,7 +5322,7 @@ class WablasController extends Controller
         if (
             $jumlah_petugas_pemeriksas_saat_ini == 1
         ) {
-            $tipe_konsultasi = TipeKonsultasi::find( $tipe_konsultasi_id );
+            $tipe_konsultasi = TipeKonsultasi::find( $reservasi_online->tipe_konsultasi_id );
             $waktu_tunggu_menit = $tipe_konsultasi->waktu_tunggu_menit;
 
             $jam_mulai_akhir_antrian = Carbon::now()->addMinutes( $waktu_tunggu_menit )->format('Y-m-d');
