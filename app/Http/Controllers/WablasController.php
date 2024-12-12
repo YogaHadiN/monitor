@@ -3096,8 +3096,10 @@ class WablasController extends Controller
                 ) {
                     $reservasi_online->tipe_konsultasi_id = $this->message;
                     $reservasi_online->save();
+
+                    $petugas_pemeriksa = $this->petugas_pemeriksa_sekarang($reservasi_online);
                     if ($petugas_pemeriksa->count() == 1) {
-                        $reservasi_online->staf_id = $petugas_pemeriksa->first()->staf_id;
+                        $reservasi_online->staf_id    = $petugas_pemeriksa->first()->staf_id;
                         $reservasi_online->ruangan_id = $petugas_pemeriksa->first()->ruangan_id;
                         $reservasi_online->save();
                     }
@@ -3465,7 +3467,8 @@ class WablasController extends Controller
             !is_null( $reservasi_online->nama ) &&
             !is_null( $reservasi_online->tanggal_lahir ) &&
             !is_null( $reservasi_online->alamat ) &&
-            !is_null( $reservasi_online->kartu_asuransi_image )
+            !is_null( $reservasi_online->kartu_asuransi_image ) &&
+            !is_null( $reservasi_online->staf_id )
         ) {
             if (
                 !$reservasi_online->reservasi_selesai
