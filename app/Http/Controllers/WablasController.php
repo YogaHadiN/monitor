@@ -5329,7 +5329,7 @@ class WablasController extends Controller
             $petugas_pemeriksas_nanti = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
                                         ->where('jam_mulai', '<=', $jam_mulai_akhir_antrian)
                                         ->where('jam_akhir', '>=', date('H:i:s'))
-                                        ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                        ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
                                         ->get();
             if ($petugas_pemeriksas_nanti->count() > 1) {
                 $petugas_pemeriksas = $petugas_pemeriksas_nanti;
