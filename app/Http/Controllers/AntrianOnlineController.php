@@ -26,7 +26,7 @@ class AntrianOnlineController extends Controller
     public $base_url;
     public $message;
     public $pasien;
-    public $jenis_antrian;
+    public $tipe_konsultasi;
     public $antrian;
     public function __construct()
     {
@@ -88,7 +88,7 @@ class AntrianOnlineController extends Controller
                 ]
             ], 201);
         }
-        $jenis_antrian = $poli_bpjs->poli->poli_antrian->jenis_antrian;
+        $tipe_konsultasi = $poli_bpjs->tipe_konsultasi;
         try {
             Carbon::createFromFormat('Y-m-d', $tanggal);
         } catch (\Carbon\Exceptions\InvalidFormatException $e) {
@@ -116,14 +116,14 @@ class AntrianOnlineController extends Controller
 
         $startOfDay    = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay      = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
-        $antrians      = Antrian::where('jenis_antrian_id', $jenis_antrian->id)
+        $antrians      = Antrian::where('tipe_konsultasi_id', $tipe_konsultasi->id)
                                     ->whereBetween('created_at', [ $startOfDay, $endOfDay ])
                                     ->where('tenant_id', 1)
                                     ->get();
 
         $total_antrean = $antrians->count();
         $sisa_antrean = 0;
-        $antrian_terakhir_id = $jenis_antrian->antrian_terakhir?->id;
+        $antrian_terakhir_id = $tipe_konsultasi->antrian?->id;
         $return = [];
         foreach ($antrians as $antrian) {
             if (
@@ -145,14 +145,14 @@ class AntrianOnlineController extends Controller
             ];
         }
 
-        $antrian_terakhir_id = $jenis_antrian->antrian_terakhir_id;
+        $antrian_terakhir_id = $tipe_konsultasi->ruangan->antrian_id;
         if (!is_null( $antrian_terakhir_id )) {
             $antrian_terakhir = Antrian::find( $antrian_terakhir_id );
             if (is_null( $antrian_terakhir )) {
-                $antrian_terakhir = Antrian::where('jenis_antrian_id', $jenis_antrian->antrian_terakhir_id)->orderBy('id', 'desc')->first();
+                $antrian_terakhir = Antrian::where('ruangan_id', $tipe_konsultasi->ruangan_id)->orderBy('id', 'desc')->first();
             }
         } else {
-            $antrian_terakhir = Antrian::where('jenis_antrian_id', $jenis_antrian->antrian_terakhir_id)->orderBy('id', 'desc')->first();
+            $antrian_terakhir = Antrian::where('ruangan_id', $tipe_konsultasi->ruangan_id)->orderBy('id', 'desc')->first();
         }
 
 
@@ -161,7 +161,7 @@ class AntrianOnlineController extends Controller
         $response = '{
             "response": [
                 {
-                    "namapoli" : "' . $jenis_antrian->jenis_antrian. '",
+                    "namapoli" : "' . $tipe_konsultasi->poli_bpjs->nmPoli. '",
                     "totalantrean" : "' . $total_antrean. '",
                     "sisaantrean" : "' . $sisa_antrean. '",
                     "antreanpanggil" : "' . $antrian_terakhir->nomor_antrian. '",
@@ -336,9 +336,9 @@ class AntrianOnlineController extends Controller
         };
 
         $poli_bpjs                         = PoliBpjs::where('kdPoli', $kodepoli)->first();
-        $this->jenis_antrian               = $poli_bpjs->poli->poli_antrian->jenis_antrian;
+        $this->tipe_konsultasi             = $poli_bpjs->tipe_konsultasi;
         $fc                                = new FasilitasController;
-        $antrian                           = $fc->antrianPost($this->jenis_antrian->id);
+        $antrian                           = $fc->antrianPost($this->tipe_konsultasi->id);
         $antrian->no_telp                  = $request['nohp'];
         $antrian->antriable_id             = $antrian->id;
         $antrian->pasien_id                = $this->pasien->id;
@@ -366,9 +366,9 @@ class AntrianOnlineController extends Controller
             "response": {
                     "nomorantrean" : "' . $antrian->nomor_antrian. '",
                     "angkaantrean" : ' .$antrian->nomor. ',
-                    "namapoli" : "' . $antrian->jenis_antrian->jenis_antrian. '",
+                    "namapoli" : "' . $antrian->tipe_konsultasi->poli_bpjs->nmPoli. '",
                     "sisaantrean" : "'.$antrian->sisa_antrian.'",
-                    "antreanpanggil" : "'.$antrian->jenis_antrian->antrian_terakhir->nomor_antrian.'",
+                    "antreanpanggil" : "'.$antrian->ruangan->antrian->nomor_antrian.'",
                     "keterangan" : "' . $keterangan. '"
             },
             "metadata": {
@@ -398,9 +398,9 @@ class AntrianOnlineController extends Controller
             $response = '{
                 "response": {
                         "nomorantrean" : "' . $antrian->nomor_antrian. '",
-                        "namapoli" : "' . $antrian->jenis_antrian->jenis_antrian. '",
+                        "namapoli" : "' . $antrian->tipe_konsultasi->poli_bpjs->nmPoli. '",
                         "sisaantrean" : "'.$antrian->sisa_antrian.'",
-                        "antreanpanggil" : "'.$antrian->jenis_antrian->antrian_terakhir->nomor_antrian.'",
+                        "antreanpanggil" : "'.$antrian->ruangan->antrian->nomor_antrian.'",
                         "keterangan" : "Apabila antrean terlewat harap mengambil antrean kembali."
                 },
                 "metadata": {

@@ -39,4 +39,10 @@ class TipeKonsultasi extends Model
         return $this->sisa_antrian * 3;
     }
     
+    public function poli_bpjs(){
+        return $this->belongsTo(PoliBpjs::class);
+    }
+    public function ruangan(){
+        return $this->belongsTo(Ruangan::class);
+    }
 }
