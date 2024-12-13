@@ -3085,7 +3085,7 @@ class WablasController extends Controller
                 } else if (
                     !$this->sudahAdaAntrianUntukTipeKonsultasi( $this->message )
                 ) {
-                    $message = 'Saat ini tidak ada antrian di ' . $tipe_konsultasi->tipe_konsultasi .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
+                    $message = 'Saat ini tidak ada antrian di ' . $reservasi_online->tipe_konsultasi->tipe_konsultasi .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();

@@ -49,31 +49,43 @@ class FasilitasController extends Controller
 		]]);
 	}
 	
-	public function antrianPost($id){
-		$antrians = Antrian::where('created_at', 'like', date('Y-m-d') . '%')
-							->where('ruangan_id',$id)
-							->where('tenant_id', 1)
-							->orderBy('nomor', 'desc')
-							->first();
+	public function antrianPost(){
 
-        $antrian                   = new Antrian;
-		if ( is_null( $antrians ) ) {
-			$antrian->nomor            = 1 ;
+        $id                 = $this->input_ruangan_id;
+        $tipe_konsultasi_id = $this->input_tipe_konsultasi_id;
+        $staf_id            = $this->input_staf_id;
 
-		} else {
-			$antrian_terakhir          = $antrians->nomor + 1;
-			$antrian->nomor            = $antrian_terakhir ;
-		}
+        if (is_null( $tipe_konsultasi_id )) {
+            $ruangan = Ruangan::find( $id );
+            $tipe_konsultasi_id = $ruangan->tipe_konsultasi_id;
+        }
 
-        $antrian->tenant_id      = 1 ;
-        $antrian->nomor_bpjs     = $this->input_nomor_bpjs;
-        $antrian->ruangan_id     = $id ;
-		$antrian->antriable_id   = $antrian->id;
-		$antrian->kode_unik      = $this->kodeUnik();
-		$antrian->antriable_type = 'App\\Models\\Antrian';
+        if (
+            is_null( $id ) 
+        ) {
+            if (!is_null( $staf_id )) {
+                $petugas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                    ->where('staf_id', $staf_id)
+                    ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                    ->first();
+                $id = $petugas->ruangan_id;
+            } else {
+                $id = TipeKonsultasi::find( $tipe_konsultasi_id )->ruangan_id;
+            }
+        }
+
+        $antrian                     = new Antrian;
+        $antrian->tenant_id          = 1 ;
+        $antrian->nomor_bpjs         = $this->input_nomor_bpjs;
+        $antrian->tipe_konsultasi_id = $tipe_konsultasi_id;
+        $antrian->staf_id            = $this->input_staf_id;
+        $antrian->ruangan_id         = $id ;
+		$antrian->antriable_id       = $antrian->id;
+		$antrian->antriable_id       = $antrian->id;
+		$antrian->antriable_type     = 'App\\Models\\Antrian';
 		$antrian->save();
 
-		$apc                     = new AntrianPoliController;
+		$apc                     = new AntrianPolisController;
 		$apc->updateJumlahAntrian(false, null);
 		return $antrian;
 	}

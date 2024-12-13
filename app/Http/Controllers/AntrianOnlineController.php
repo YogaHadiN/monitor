@@ -80,7 +80,13 @@ class AntrianOnlineController extends Controller
     }
     public function status_antrean($kodepoli, $tanggal){
         $poli_bpjs     = PoliBpjs::where('kdPoli', $kodepoli)->first();
-        if (is_null( $poli_bpjs )) {
+        if (
+            is_null( $poli_bpjs ) ||
+            (
+                !is_null( $poli_bpjs ) &&
+                is_null( $poli_bpjs->tipe_konsultasi )
+            )
+        ) {
             return Response::json([
                 'metadata' => [
                     'message' => 'Poli tidak ditemukan',
@@ -337,8 +343,11 @@ class AntrianOnlineController extends Controller
 
         $poli_bpjs                         = PoliBpjs::where('kdPoli', $kodepoli)->first();
         $this->tipe_konsultasi             = $poli_bpjs->tipe_konsultasi;
+        $ruangan_id                        = $this->tipe_konsultasi->ruangan_id;
         $fc                                = new FasilitasController;
-        $antrian                           = $fc->antrianPost($this->tipe_konsultasi->id);
+        $fc->tipe_konsultasi_id            = $this->tipe_konsultasi->id;
+        $fc->ruangan_id                    = $ruangan_id;
+        $antrian                           = $fc->antrianPost();
         $antrian->no_telp                  = $request['nohp'];
         $antrian->antriable_id             = $antrian->id;
         $antrian->pasien_id                = $this->pasien->id;
