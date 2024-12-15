@@ -40,8 +40,14 @@ use App\Models\DeletedPeriksa;
 class FasilitasController extends Controller
 {
 	public $input_nomor_bpjs;
+	public $input_ruangan_id;
+    public $input_tipe_konsultasi_id;
+    public $input_staf_id;
 
 	public function __construct(){
+        $this->input_ruangan_id         = Input::get("ruangan_id");
+        $this->input_tipe_konsultasi_id = Input::get("tipe_konsultasi_id");
+        $this->input_staf_id            = Input::get("staf_id");
         $this->middleware('redirectBackIfIdAntrianNotFound', ['only' => ['prosesAntrian']]);
 		$this->input_nomor_bpjs = Input::get('nomor_bpjs');
 		$this->middleware('prolanisFlagging', ['only' => [

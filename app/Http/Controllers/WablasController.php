@@ -2314,7 +2314,7 @@ class WablasController extends Controller
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->latest()->first();
             $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
-            $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3);
+            $urlFile =  !is_null( $antrian->qr_code_path_s3 ) ? \Storage::disk('s3')->url($antrian->qr_code_path_s3) : null;
             $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
 
         } else if (
