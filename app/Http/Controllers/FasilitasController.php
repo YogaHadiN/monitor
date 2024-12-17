@@ -25,6 +25,7 @@ use App\Models\Staf;
 use App\Models\Dispensing;
 use App\Models\BukanPeserta;
 use App\Models\AntrianPoli;
+use App\Models\Ruangan;
 use App\Models\Classes\Yoga;
 use App\Models\RumahSakit;
 use App\Models\Terapi;
