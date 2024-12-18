@@ -6,6 +6,7 @@ use Input;
 
 use DB;
 use Auth;
+use Log;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PasiensController;
 use App\Http\Controllers\AntrianPoliController;
@@ -64,6 +65,12 @@ class FasilitasController extends Controller
 
         if (is_null( $tipe_konsultasi_id )) {
             $ruangan = Ruangan::find( $id );
+            if (is_null( $ruangan )) {
+                Log::info('=======================');
+                Log::info('RUANGAN KOSONG KARENA');
+                Log::info( Input::all() );
+                Log::info('=======================');
+            }
             $tipe_konsultasi_id = $ruangan->tipe_konsultasi_id;
         }
 
