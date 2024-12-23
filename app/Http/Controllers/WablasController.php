@@ -1097,6 +1097,10 @@ class WablasController extends Controller
         $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
         $query .= "WHERE antriable_type = 'App\\\Models\\\Periksa' ";
         $query .= "AND ant.no_telp = '{$this->no_telp}' ";
+
+        $tenant_id =  session()->get('tenant_id');
+
+        $query .= "AND ant.tenant_id = $tenant_id ";
         $query .= "GROUP BY prx.pasien_id";
         return DB::select($query);
     }
@@ -1947,7 +1951,9 @@ class WablasController extends Controller
         $query      = "SELECT tanggal ";
         $query     .= "FROM antrian_polis ";
         $query     .= "WHERE tanggal like '{$bulan_ini}%' ";
-        $query     .= "AND poli_id = 4;";
+        $query     .= "AND poli_id = 4 ";
+        $tenant_id = session()->get('tenant_id');
+        $query     .= "AND tenant_id = $tenant_id ";
         $data       = DB::select($query);
 
         $result = [];
@@ -2136,7 +2142,9 @@ class WablasController extends Controller
         $query .= "or antriable_type = 'App\\\Models\\\AntrianApotek' ";
         $query .= "or antriable_type = 'App\\\Models\\\Antrian' ";
         $query .= ") ";
-        $query .= "AND created_at like '{$today}%'";
+        $query .= "AND created_at like '{$today}%' ";
+        $tenant_id = session()->get('tenant_id');
+        $query .= "AND tenant_id = $tenant_id ";
         $data = DB::select($query);
 
         return count($data) == 0;
@@ -2487,6 +2495,8 @@ class WablasController extends Controller
         $query .= "JOIN tipe_konsultasis as tip on tip.id = jad.tipe_konsultasi_id ";
         $query .= "JOIN haris as har on har.id = jad.hari_id ";
         $query .= "WHERE jad.tipe_konsultasi_id = {$param} ";
+        $tenant_id = session()->get('tenant_id');
+        $query .= "AND jad.tenant_id = $tenant_id ";
         $query .= "ORDER BY hari_id asc, jam_mulai asc";
 
         $query = DB::select($query);
@@ -2591,6 +2601,8 @@ class WablasController extends Controller
         $query .= "and prx.tenant_id = 1 ";
         $query .= "and sta.tenant_id = 1 ";
         $query .= "and sta.titel_id = 2 ";
+        $tenant_id = session()->get('tenant_id');
+        $query .= "and prx.tenant_id = $tenant_id ";
         $query .= "ORDER BY prx.id desc ";
         $query .= "LIMIT 1";
         return isset( DB::select($query)[0] ) ?  DB::select($query)[0]  : null;
@@ -2841,6 +2853,8 @@ class WablasController extends Controller
         $query .= "limit_id = 2 and cld.jumlah > clr.jumlah_normal or "; // limit 2 maksimal
         $query .= "limit_id = 3 and cld.jumlah not like clr.jumlah_normal "; // limit 3 sama dengan
         $query .= ") ";
+        $tenant_id = session()->get('tenant_id');
+        $query .= "AND cld.tenant_id = $tenant_id ";
         $query .= "GROUP BY cld.id ";
 
         $data = DB::select($query);
