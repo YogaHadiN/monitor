@@ -69,6 +69,12 @@ class FasilitasController extends Controller
                 Log::info('=======================');
                 Log::info('RUANGAN KOSONG KARENA');
                 Log::info( Input::all() );
+                Log::info('id');
+                Log::info($id);
+                Log::info('tipe_konsultasi_id');
+                Log::info($tipe_konsultasi_id);
+                Log::info('staf_id');
+                Log::info($staf_id);
                 Log::info('=======================');
             }
             $tipe_konsultasi_id = $ruangan->tipe_konsultasi_id;
