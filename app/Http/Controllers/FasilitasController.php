@@ -15,6 +15,7 @@ use App\Http\Controllers\AntrianPeriksasController;
 use App\Http\Requests;
 use App\Models\Fasilitas;
 use App\Models\Pasien;
+use App\Models\PoliBpjs;
 use App\Models\Antrian;
 use App\Models\Panggilan;
 use App\Models\JurnalUmum;
@@ -58,7 +59,6 @@ class FasilitasController extends Controller
 	}
 	
 	public function antrianPost(){
-
         $id                 = $this->input_ruangan_id;
         $tipe_konsultasi_id = $this->input_tipe_konsultasi_id;
         $staf_id            = $this->input_staf_id;
@@ -76,6 +76,10 @@ class FasilitasController extends Controller
                 Log::info('staf_id');
                 Log::info($staf_id);
                 Log::info('=======================');
+
+                $kdPoli    = Input::get('kodepoli');
+                $poli_bpjs = PoliBpjs::where('kdPoli', $kdPoli)->first();
+                $ruangan   = $poli_bpjs->tipe_konsultasi->ruangan;
             }
             $tipe_konsultasi_id = $ruangan->tipe_konsultasi_id;
         }
