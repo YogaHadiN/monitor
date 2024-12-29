@@ -78,8 +78,10 @@ class FasilitasController extends Controller
                 Log::info('=======================');
 
                 $kdPoli    = Input::get('kodepoli');
-                $poli_bpjs = PoliBpjs::where('kdPoli', $kdPoli)->first();
-                $ruangan   = $poli_bpjs->tipe_konsultasi->ruangan;
+                if (!empty( $kdPoli )) {
+                    $poli_bpjs = PoliBpjs::where('kdPoli', $kdPoli)->first();
+                    $ruangan   = $poli_bpjs->tipe_konsultasi->ruangan;
+                }
             }
             $tipe_konsultasi_id = $ruangan->tipe_konsultasi_id;
         }
