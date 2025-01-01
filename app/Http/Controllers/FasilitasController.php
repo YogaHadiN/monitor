@@ -10,6 +10,7 @@ use Log;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PasiensController;
 use App\Http\Controllers\AntrianPoliController;
+use App\Http\Controllers\TipeKonsultasi;
 use App\Http\Controllers\AntriansController;
 use App\Http\Controllers\AntrianPeriksasController;
 use App\Http\Requests;
