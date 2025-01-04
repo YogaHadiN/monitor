@@ -424,8 +424,20 @@ class AntrianOnlineController extends Controller
     }
 
     public function pasien_baru(){
-
         session()->put('tenant_id', 1);
+        $pasien_sudah_terdaftar = Pasien::where('nomor_asuransi_bpjs', Input::get('nomorkartu'))
+                                            ->orWhere('nomor_ktp', Input::get('nik'))
+                                            ->first();
+
+        if (!is_null(  $pasien_sudah_terdaftar  )) {
+            $response = '{
+                        "metadata": {
+                            "message": "Pasien sudah terdaftar di FKTP sebelumnya dengan nama ' .$pasien_sudah_terdaftar->nama. '",
+                            "code": 500
+                        }
+                    }';
+            return Response::json(json_decode( $response, true ), 200);
+        }
 
         $pasien                      = new Pasien;
         $pasien->nama                = Input::get('nama');
