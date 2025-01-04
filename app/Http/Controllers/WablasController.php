@@ -4386,7 +4386,7 @@ class WablasController extends Controller
         }
     }
     public function nomorKartuBpjsDitemukanDiPcareDanDataKonsisten($response, $pasien){
-        $code     = $btresponse['code'];
+        $code     = $response['code'];
         $response = $response['response'];
         $result   = 0;
         if (
