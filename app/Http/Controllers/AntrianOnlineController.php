@@ -28,9 +28,11 @@ class AntrianOnlineController extends Controller
     public $pasien;
     public $tipe_konsultasi;
     public $antrian;
+    public $tenant_id;
     public function __construct()
     {
         $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev';
+        $this->tenant_id = 1;
     }
     public function token(Request $request){
         $username = $request->header('x-username');
@@ -433,6 +435,7 @@ class AntrianOnlineController extends Controller
         $pasien->sex                 = Input::get('jeniskelamin') == 'L' ? 1 : 0;
         $pasien->tanggal_lahir       = Input::get('tanggallahir');
         $pasien->alamat              = Input::get('alamat');
+        $pasien->tenant_id           = $this->tenant_id;
         $pasien->asuransi_id         = Asuransi::Bpjs()->id;
         $pasien->jenis_peserta_id    = 1;
         if (
