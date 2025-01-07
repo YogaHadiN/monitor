@@ -4363,11 +4363,10 @@ class WablasController extends Controller
         if (
             (
                 date('G') < 23 &&
-                date('G') >= 6
+                date('G') >= 7
             ) ||
             $this->no_telp == '6281381912803'
         ) {
-
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 6 //registrasi online
@@ -4378,7 +4377,11 @@ class WablasController extends Controller
             ]);
             return $this->pertanyaanPoliYangDituju();
         } else {
-            $message =  'Pendaftaran secara online sudah tutup dan akan dibuka kembali jam 6 pagi. Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
+            $message =  'Pendaftaran secara online sudah tutup dan akan dibuka kembali jam 7 pagi.';
+            $message .= PHP_EOL;
+            $message .=  'Klinik tutup jam 23:00 dan akan buka kembali jam 07:00';
+            $message .= PHP_EOL;
+            $message .=  'Untuk menghubungi silahkan telpon ke 0215977529. Mohon maaf atas ketidaknyamanannya';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
