@@ -81,7 +81,21 @@ class FasilitasController extends Controller
                 $kdPoli    = Input::get('kodepoli');
                 if (!empty( $kdPoli )) {
                     $poli_bpjs = PoliBpjs::where('kdPoli', $kdPoli)->first();
-                    $ruangan   = $poli_bpjs->tipe_konsultasi->ruangan;
+                    $tipe_konsultasi   = $poli_bpjs->tipe_konsultasi;
+                    $ruangan   = $tipe_konsultasi->ruangan;
+                    Log::info('=======================');
+                    Log::info('kodepoli');
+                    Log::info($kdPoli);
+                    Log::info('=======================');
+                    Log::info('poli_bpjs');
+                    Log::info($poli_bpjs);
+                    Log::info('=======================');
+                    Log::info('tipe_konsultasi');
+                    Log::info($tipe_konsultasi);
+                    Log::info('=======================');
+                    Log::info('ruangan');
+                    Log::info($ruangan);
+                    Log::info('=======================');
                 }
             }
             $tipe_konsultasi_id = $ruangan->tipe_konsultasi_id;
