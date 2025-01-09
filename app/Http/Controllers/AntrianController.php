@@ -325,9 +325,15 @@ class AntrianController extends Controller
         // jika qr tidak hari ini, maka throw error tidak ditemukan
         // jika qr sudah diproses maka throw error tidak ditemukan
         if (
-            is_null( $antrian->qr_code_path_s3 ) || 
-            date('Ymd') !== date('Ymd', strtotime($antrian->created_at)) || 
-            $antrian->antriable_type !== 'App\Models\Antrian'
+            is_null( $antrian ) || 
+            (
+                !is_null( $antrian ) &&
+                (
+                    is_null( $antrian->qr_code_path_s3 ) || 
+                    date('Ymd') !== date('Ymd', strtotime($antrian->created_at)) || 
+                    $antrian->antriable_type !== 'App\Models\Antrian'
+                )
+            )
         ) {
             return 'Data tidak ditemukan silahkan hubungi petugas';
         }
