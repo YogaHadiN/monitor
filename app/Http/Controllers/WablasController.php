@@ -5377,13 +5377,16 @@ class WablasController extends Controller
     }
     public function getQrCodeMessage($antrian){
         $message = 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda mungkin membutuhkan waktu 2-5 menit.';
-        /* $message .= PHP_EOL; */
-        /* $message .= PHP_EOL; */
-        /* $message .= 'Apabila code QR tidak terkirim '; */
-        /* $message .= PHP_EOL; */
-        /* $message .= 'Silahkan klik link berikut :'; */
-        /* $message .= PHP_EOL; */
-        /* $message .= 'https://www.klinikjatielok.com/antrians/get/qrcode/' . $antrian->id; */
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Apabila code QR tidak terkirim ';
+        $message .= PHP_EOL;
+        $message .= 'Klik link berikut :';
+        $message .= PHP_EOL;
+        $message .= 'https://www.klinikjatielok.com/antrians/get/qrcode/' . $antrian->id;
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Mohon untuk menyimpan nomor ini agar dapat mengaktifkan link diatas';
         return $message;
     }
 }

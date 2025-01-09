@@ -319,4 +319,19 @@ class AntrianController extends Controller
 
         return $result;
     }
+    public function getQr($id){
+        $antrian = Antrian::find( $id );
+        // jika qr tidak ada di dalam row, maka throw error tidak ditemukan
+        // jika qr tidak hari ini, maka throw error tidak ditemukan
+        // jika qr sudah diproses maka throw error tidak ditemukan
+        if (
+            is_null( $antrian->qr_code_path_s3 ) || 
+            date('Ymd') !== date('Ymd', strtotime($antrian->created_at)) || 
+            $antrian->antriable_type !== 'App\Models\Antrian'
+        ) {
+            return 'Data tidak ditemukan silahkan hubungi petugas';
+        }
+        $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
+        return "<img src='$urlFile' alt=''/>";
+    }
 }
