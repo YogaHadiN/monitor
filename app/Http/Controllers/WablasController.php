@@ -2314,13 +2314,12 @@ class WablasController extends Controller
              str_contains($this->message, 'kirim qr')
         ) {
 
-            $message = 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda mungkin membutuhkan waktu 2-5 menit.';
-            $message .= PHP_EOL;
-            $message .= $this->templateFooter();
-
             $antrian = Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->latest()->first();
+            $message = $this->getQrCodeMessage($antrian);
+            $message .= $this->templateFooter();
+
             $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
             $urlFile =  !is_null( $antrian->qr_code_path_s3 ) ? \Storage::disk('s3')->url($antrian->qr_code_path_s3) : null;
             $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
@@ -3527,8 +3526,8 @@ class WablasController extends Controller
 
                         /* $this->langsungKeAntrianPoliBilaMemungkinkan($antrian); */
 
+                        echo $this->getQrCodeMessage( $antrian );
 
-                        echo 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda';
                         $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
                         $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
                         $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
@@ -5375,5 +5374,16 @@ class WablasController extends Controller
             $petugas_pemeriksas = collect($data);
         }
         return $petugas_pemeriksas;
+    }
+    public function getQrCodeMessage($antrian){
+        $message = 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda mungkin membutuhkan waktu 2-5 menit.';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Apabila code QR tidak terkirim ';
+        $message .= PHP_EOL;
+        $message .= 'Silahkan klik link berikut :';
+        $message .= PHP_EOL;
+        $message .= 'https://www.klinikjatielok.com/antrians/get/qrcode/' . $antrian->id;
+        return $message;
     }
 }
