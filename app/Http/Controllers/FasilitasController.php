@@ -98,6 +98,10 @@ class FasilitasController extends Controller
                     Log::info('=======================');
                 }
             }
+            Log::info('=======================');
+            Log::info('ruangan KEDUA');
+            Log::info($ruangan);
+            Log::info('=======================');
             $tipe_konsultasi_id = $ruangan->tipe_konsultasi_id;
         }
 
@@ -111,6 +115,10 @@ class FasilitasController extends Controller
                     ->first();
                 $id = $petugas->ruangan_id;
             } else {
+                Log::info('=======================');
+                Log::info('tipe_konsultasi KEDUA');
+                Log::info($tipe_konsultasi_id);
+                Log::info('=======================');
                 $id = TipeKonsultasi::find( $tipe_konsultasi_id )->ruangan_id;
             }
         }
