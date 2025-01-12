@@ -81,4 +81,8 @@ class Ruangan extends Model
     public static function gawatDarurat(){
         return Ruangan::where('nama', 'Ruang UGD')->first();
     }
+
+    public function tipe_konsultasi(){
+        return $this->hasOne(TipeKonsultasi::class);
+    }
 }

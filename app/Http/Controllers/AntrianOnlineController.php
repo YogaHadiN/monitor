@@ -515,7 +515,7 @@ class AntrianOnlineController extends Controller
             $kodepoli == '001' &&
             (
                 date("G") < 6 ||
-                date("G") >=23
+                date("G") >=22
             )
         ) {
             $this->message = "Pendaftaran secara online sudah tutup dan akan buka lagi jam 6 pagi";
