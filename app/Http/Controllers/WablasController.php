@@ -5344,7 +5344,6 @@ class WablasController extends Controller
             $jam_mulai_akhir_antrian = Carbon::now()->addMinutes( $waktu_tunggu_menit )->format('H:i:s');
             $petugas_pemeriksas_nanti = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
                                         ->where('jam_mulai', '<=', $jam_mulai_akhir_antrian)
-                                        ->where('jam_akhir', '>=', $jam_mulai_akhir_antrian)
                                         ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
                                         ->get();
             if ($petugas_pemeriksas_nanti->count() > 1) {
