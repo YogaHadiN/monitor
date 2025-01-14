@@ -134,7 +134,7 @@ class FasilitasController extends Controller
 		$antrian->antriable_type     = 'App\\Models\\Antrian';
 		$antrian->save();
 
-		$apc                     = new AntrianPolisController;
+		$apc                     = new AntrianPoliController;
 		$apc->updateJumlahAntrian(false, null);
 		return $antrian;
 	}
