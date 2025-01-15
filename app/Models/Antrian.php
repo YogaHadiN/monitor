@@ -160,23 +160,11 @@ class Antrian extends Model
         return DB::select($query);
     }
     public function getSisaAntrianAttribute(){
-        $tanggal            = $this->created_at;
-        $startOfDay         = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay           = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
-        $antrian_panggil    = $this->ruangan->antrian;
-        $antrian_panggil_id = !is_null( $antrian_panggil ) ? $antrian_panggil->id : 0;
-        return Antrian::where('ruangan_id', $this->ruangan_id)
-                        ->whereRaw(
-                            '(
-                                antriable_type = "App\\\Models\\\Antrian" ||
-                                antriable_type = "App\\\Models\\\AntrianPoli" ||
-                                antriable_type = "App\\\Models\\\AntrianPeriksa"
-                            )'
-                        )->whereBetween('created_at', [ $startOfDay, $endOfDay ])
-                        ->where('id', '>', $antrian_panggil_id)
-                        ->where('id', '<', $this->id)
-                        ->where('tenant_id', 1)
-                        ->count();
+        $petugas_pemeriksa = PetugasPemeriksa::whereDate('tanggal', $this->created_at)
+                                            ->where('ruangan_id', $this->ruangan_id)
+                                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+                                            ->first();
+        return $petugas_pemeriksa->sisa_antrian;
     }
     public function ruangan(){
         return $this->belongsTo(Ruangan::class);

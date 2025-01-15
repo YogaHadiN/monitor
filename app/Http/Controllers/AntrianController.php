@@ -25,7 +25,6 @@ class AntrianController extends Controller
 	public $estetika_buka = true;
 
     public function __construct(){
-        $this->middleware('avail')->only('antri');
         session()->put('tenant_id', 1);
     }
   public function index(){
