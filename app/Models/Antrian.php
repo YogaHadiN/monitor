@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\BelongsToTenant; 
 use App\Models\Asuransi;
 use App\Models\DeletedAntrian;
+use App\Models\PetugasPemeriksa;
 use App\Models\WhatsappRegistration;
 use DB;
 use Log;
@@ -38,6 +39,20 @@ class Antrian extends Model
             $antrian->existing_antrian_ids = json_encode( $existing_antrian_ids );
             $antrian->jam_pasien_mulai_mengantri = date('Y-m-d H:i:s') ;
             $antrian->save();
+
+            //update antrian supaya sudah diantrikan
+            $petugas_pemeriksa = PetugasPemeriksa::where('tanggal', $antrian->created_at->format('Y-m-d'))
+                                                    ->where('staf_id', $antrian->staf_id)
+                                                    ->where('tipe_konsultasi_id', $antrian->tipe_konsultasi_id)
+                                                    ->where('ruangan_id', $antrian->ruangan_id)
+                                                    ->first();
+            if (
+                !is_null( $petugas_pemeriksa ) &&
+                strtotime( $petugas_pemeriksa->jam_mulai ) >= strtotime( $antrian->created_at->format("H:i:s") )
+            ) {
+                $petugas_pemeriksa->jam_mulai = $antrian->created_at->format("H:i:s") ;
+                $petugas_pemeriksa->save();
+            }
         });
         self::deleting(function($model){
             $last_updated_antrian_id = Antrian::orderBy('updated_at','DESC')->first()->id;
