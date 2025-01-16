@@ -815,7 +815,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 <script src="https://js.pusher.com/5.1/pusher.min.js"></script>
 <script src="{!! asset('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js') !!}"></script>
-<script src="{!!secure_url"js/moment.locale.js") !!}"></script>
+<script src="{!!secure_url("js/moment.locale.js") !!}"></script>
 
 <script>
     $('#carousel1').carousel({
@@ -863,6 +863,6 @@
 </script>
 
 <script src="{!! secure_url("js/antrian.js?ver=23") !!}"></script>
-{{-- <script src="{!!secure_url"js/inspinia.js") !!}"></script> --}}
+{{-- <script src="{!!secure_url("js/inspinia.js") !!}"></script> --}}
 </body>
 </html>
