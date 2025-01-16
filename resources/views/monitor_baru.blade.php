@@ -712,99 +712,99 @@
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_c">
-  <source src="{{secure_url'sound/c.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/c.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_d">
-  <source src="{{secure_url'sound/d.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/d.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_e">
-  <source src="{{secure_url'sound/e.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/e.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_f">
-  <source src="{{secure_url'sound/f.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/f.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_g">
-  <source src="{{secure_url'sound/g.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/g.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_h">
-  <source src="{{secure_url'sound/h.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/h.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_i">
-  <source src="{{secure_url'sound/i.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/i.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_j">
-  <source src="{{secure_url'sound/j.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/j.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_k">
-  <source src="{{secure_url'sound/k.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/k.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_farmasi">
-  <source src="{{secure_url'sound/farmasi.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/farmasi.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_kasir">
-  <source src="{{secure_url'sound/kasir.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/kasir.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_pendaftaran">
-  <source src="{{secure_url'sound/pendaftaran.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/pendaftaran.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_rapidtest">
-  <source src="{{secure_url'sound/rapidtest.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/rapidtest.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ratus">
-  <source src="{{secure_url'sound/ratus.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ratus.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksa">
-  <source src="{{secure_url'sound/ruangperiksa.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksa.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksasatu">
-  <source src="{{secure_url'sound/ruangperiksasatu.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksasatu.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksadua">
-  <source src="{{secure_url'sound/ruangperiksadua.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksadua.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksagigi">
-  <source src="{{secure_url'sound/ruangperiksagigi.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksagigi.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangpf">
-  <source src="{{secure_url'sound/ruangpf.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangpf.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_loketsatu">
-  <source src="{{secure_url'sound/loketsatu.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/loketsatu.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_loketdua">
-  <source src="{{secure_url'sound/loketdua.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/loketdua.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_ruangperiksatiga">
-  <source src="{{secure_url'sound/ruangperiksatiga.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/ruangperiksatiga.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_silahkanmenuju">
-  <source src="{{secure_url'sound/silahkanmenuju.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/silahkanmenuju.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 <audio id="audio_menunggu">
-  <source src="{{secure_url'sound/menunggu.mp3') }}" type="audio/mpeg">
+  <source src="{{ secure_url('sound/menunggu.mp3') }}" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
 </div>
@@ -829,7 +829,7 @@
     }, 1000);
 
     if (location.protocol !== 'https:') {
-        var base = "{{secure_url'/') }}";
+        var base = "{{ secure_url('/') }}";
     } else {
         var base = "{{ secure_url('/') }}";
     }
