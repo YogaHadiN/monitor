@@ -67,41 +67,13 @@ class FasilitasController extends Controller
         if (is_null( $tipe_konsultasi_id )) {
             $ruangan = Ruangan::find( $id );
             if (is_null( $ruangan )) {
-                Log::info('=======================');
-                Log::info('RUANGAN KOSONG KARENA');
-                Log::info( Input::all() );
-                Log::info('id');
-                Log::info($id);
-                Log::info('tipe_konsultasi_id');
-                Log::info($tipe_konsultasi_id);
-                Log::info('staf_id');
-                Log::info($staf_id);
-                Log::info('=======================');
-
                 $kdPoli    = Input::get('kodepoli');
                 if (!empty( $kdPoli )) {
                     $poli_bpjs = PoliBpjs::where('kdPoli', $kdPoli)->first();
                     $tipe_konsultasi   = $poli_bpjs->tipe_konsultasi;
                     $ruangan   = $tipe_konsultasi->ruangan;
-                    Log::info('=======================');
-                    Log::info('kodepoli');
-                    Log::info($kdPoli);
-                    Log::info('=======================');
-                    Log::info('poli_bpjs');
-                    Log::info($poli_bpjs);
-                    Log::info('=======================');
-                    Log::info('tipe_konsultasi');
-                    Log::info($tipe_konsultasi);
-                    Log::info('=======================');
-                    Log::info('ruangan');
-                    Log::info($ruangan);
-                    Log::info('=======================');
                 }
             }
-            Log::info('=======================');
-            Log::info('ruangan KEDUA');
-            Log::info($ruangan);
-            Log::info('=======================');
             $tipe_konsultasi_id = $ruangan->tipe_konsultasi->id;
         }
 
