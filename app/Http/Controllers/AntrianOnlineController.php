@@ -397,7 +397,8 @@ class AntrianOnlineController extends Controller
                             ->whereBetween('created_at', [$startOfDay, $endOfDay])
                             ->first();
         if (
-            is_null( $antrian )
+            is_null( $antrian ) ||
+            is_null( $antrian->tipe_konsultasi->poli_bpjs )
         ) {
             return Response::json([
                 'metadata' => [
