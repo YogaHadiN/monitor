@@ -594,7 +594,7 @@
                             <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
                                 <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                                 <span class="wa_no">
-                                    082113781271
+                                    @include('no_wa_klinik')
                                     <img id="qr" height="90px" class="text-right" src="{{ $base64 }}" />
                                 </span>
                             </div>
@@ -621,7 +621,7 @@
                         <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 keterangan_waktu_tunggu text-right">
                             <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                             <span class="wa_no">
-                                082113781271
+                                @include('no_wa_klinik')
                                 <img id="qr" height="100px" class="text-right" src="{{ $base64_daftar_online }}" />
                             </span>
                         </div>
