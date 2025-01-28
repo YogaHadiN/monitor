@@ -256,3 +256,6 @@ function alamat_keyup(control) {
         $("#submit_alamat_button").hide();
     }
 }
+function nomor_asuransi_bpjs_onpaste(control) {
+    console.log("pasted");
+}
