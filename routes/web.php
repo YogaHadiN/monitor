@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\ValidateController;
 use App\Http\Controllers\PasienController;
+use App\Http\Controllers\WebRegistrationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,21 @@ Route::get('antrianperiksa/{id}', [AntrianController::class, 'antri']);
 Route::get('eksklusi/{id}', [PasienController::class, 'eksklusi']);
 Route::get('antrianperiksa/monitor/getDataBaru/{panggil_pasien}', [AntrianController::class, 'updateJumlahAntrianBaru']);
 Route::get('antrians/get/qrcode/{id}', [AntrianController::class, 'getQr']);
+
+Route::get('daftar_online', [WebRegistrationController::class, 'daftar_online']);
+Route::get('daftar_online/{no_telp}', [WebRegistrationController::class, 'daftar_online_by_phone']);
+Route::get('daftar_online_by_phone/view/refresh', [WebRegistrationController::class, 'view_refresh']);
+Route::post('daftar_online_by_phone/submit/tipe_konsultasi', [WebRegistrationController::class, 'submit_tipe_konsultasi']);
+Route::post('daftar_online_by_phone/submit/pembayaran', [WebRegistrationController::class, 'submit_pembayaran']);
+Route::post('daftar_online_by_phone/submit/nomor_asuransi_bpjs', [WebRegistrationController::class, 'nomor_asuransi_bpjs']);
+Route::post('daftar_online_by_phone/submit/nama', [WebRegistrationController::class, 'nama']);
+Route::post('daftar_online_by_phone/submit/tanggal_lahir', [WebRegistrationController::class, 'tanggal_lahir']);
+Route::post('daftar_online_by_phone/submit/alamat', [WebRegistrationController::class, 'alamat']);
+Route::post('daftar_online_by_phone/submit/staf', [WebRegistrationController::class, 'staf']);
+Route::post('/daftar_online_by_phone/submit/pasien', [WebRegistrationController::class, 'pasien']);
+Route::post('/daftar_online_by_phone/submit/lanjutkan', [WebRegistrationController::class, 'lanjutkan']);
+Route::post('/daftar_online_by_phone/submit/ulangi', [WebRegistrationController::class, 'ulangi']);
+Route::post('/daftar_online_by_phone/validasi/bpjs', [WebRegistrationController::class, 'validasi_bpjs']);
 
 
 

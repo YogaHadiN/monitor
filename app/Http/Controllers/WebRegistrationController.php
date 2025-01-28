@@ -1,0 +1,655 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Input;
+use App\Models\WebRegistration;
+use App\Models\Antrian;
+use App\Models\Pasien;
+use App\Models\TipeKonsultasi;
+use App\Models\PetugasPemeriksa;
+use App\Http\Controllers\WablasController;
+use App\Http\Controllers\BpjsApiController;
+use Carbon\Carbon;
+
+class WebRegistrationController extends Controller
+{
+    public function daftar_online(){
+        return view('web_registrations.daftar_online');
+    }
+    public function daftar_online_by_phone($no_telp){
+        return view('web_registrations.daftar_online_by_phone', compact(
+            'no_telp'
+        ));
+    }
+    public function submit_pembayaran(){
+        $registrasi_pembayaran_id = Input::get('registrasi_pembayaran_id');
+        $no_telp                  = Input::get('no_telp');
+
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+        $nomor_asuransi_bpjs = null;
+        if (
+            $registrasi_pembayaran_id != 2 //BPJS
+        ) {
+            $nomor_asuransi_bpjs = 0;
+        }
+
+        $web_registration->registrasi_pembayaran_id = $registrasi_pembayaran_id;
+        $web_registration->nomor_asuransi_bpjs = $nomor_asuransi_bpjs;
+        $web_registration->save();
+
+        $wablas = new WablasController;
+        $wablas->no_telp = $no_telp;
+        $previousData = $wablas->queryPreviouslySavedPatientRegistry();
+
+        if ( count($previousData) < 1 ) {
+            $web_registration->register_previously_saved_patient = '';
+            $web_registration->save();
+        }
+
+    }
+
+    public function view_refresh(){
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+
+        $antrian = Antrian::where('no_telp', $no_telp)->whereDate('created_at', date('Y-m-d'))->first();
+        if (
+            !is_null( $antrian ) &&
+            is_null( $web_registration )
+        ) {
+            return view('web_registrations.nomor_antrian', compact('antrian'));
+        } else if (
+            is_null( $web_registration ) || 
+            (
+                !is_null( $web_registration ) &&
+                !is_null( $web_registration->no_telp ) &&
+                is_null( $web_registration->tipe_konsultasi_id )
+            )
+        ) {
+            return view('web_registrations.tipe_konsultasi');
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            is_null( $web_registration->registrasi_pembayaran_id )
+        ) {
+            return view('web_registrations.registrasi_pembayaran');
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            is_null( $web_registration->register_previously_saved_patient )
+        ) {
+            $wablas = new WablasController;
+            $wablas->no_telp = $no_telp;
+            $pasiens = $wablas->queryPreviouslySavedPatientRegistry();
+            return view('web_registrations.register_previously_saved_patient', compact('pasiens'));
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            is_null( $web_registration->nomor_asuransi_bpjs )
+        ) {
+            return view('web_registrations.nomor_asuransi_bpjs');
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            !is_null( $web_registration->register_previously_saved_patient ) &&
+            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
+            is_null( $web_registration->nama )
+        ) {
+            return view('web_registrations.nama');
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            !is_null( $web_registration->register_previously_saved_patient ) &&
+            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
+            !is_null( $web_registration->nama ) &&
+            is_null( $web_registration->tanggal_lahir )
+        ) {
+            return view('web_registrations.tanggal_lahir');
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            !is_null( $web_registration->register_previously_saved_patient ) &&
+            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
+            !is_null( $web_registration->nama ) &&
+            !is_null( $web_registration->tanggal_lahir ) &&
+            is_null( $web_registration->alamat )
+        ) {
+            return view('web_registrations.alamat');
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            !is_null( $web_registration->register_previously_saved_patient ) &&
+            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
+            !is_null( $web_registration->nama ) &&
+            !is_null( $web_registration->tanggal_lahir ) &&
+            !is_null( $web_registration->alamat ) &&
+            is_null( $web_registration->staf_id )
+        ) {
+            $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+            $tipe_konsultasi_id = $web_registration->tipe_konsultasi_id;
+            $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
+                                                    ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                                    ->get();
+            $message = null;
+
+            //
+            // jika dokter gigi ada tapi belum masuk waktu pendaftaran
+            // buat pesan error pendaftaran dimulai jam sekian
+            //
+            if (
+                 $petugas_pemeriksas->count()
+            ) {
+                $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                            ->where('jam_mulai', '<=', date('H:i:s'))
+                                            ->where('jam_akhir', '>=', date('H:i:s'))
+                                            ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                            ->where('ruangan_id','>', 0)
+                                            ->get();
+
+                $jumlah_petugas_pemeriksas_saat_ini = $petugas_pemeriksas->count();
+
+
+                //
+                // ANTRIKAN PASIEN UNTUK DOKTER KEDUA
+                //
+                if (
+                    $jumlah_petugas_pemeriksas_saat_ini == 1
+                ) {
+
+                    //
+                    // JIKA SUDAH ADA 2 RUANGAN YANG DIAKTIFKAN, AKTIFKAN KEDUANYA
+                    //
+
+
+
+
+                    //
+                    // JIKA PASIEN SUDAH MENUMPUK NAMUN DOKTER KEDUA BELUM DATANG
+                    //
+                    $sisa_antrian = $petugas_pemeriksas->first()->sisa_antrian;
+                    $waktu_tunggu_menit = $sisa_antrian * 3;
+
+                    $jam_mulai_akhir_antrian = Carbon::now()->addMinutes( $waktu_tunggu_menit )->format('H:i:s');
+                    $petugas_pemeriksas_nanti = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                                ->where('jam_mulai', '<=', $jam_mulai_akhir_antrian)
+                                                ->where('jam_akhir', '>=', $jam_mulai_akhir_antrian)
+                                                ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                                ->get();
+                    /* dd($petugas_pemeriksas_nanti); */
+                    if ($petugas_pemeriksas_nanti->count() > 1) {
+                        $petugas_pemeriksas = $petugas_pemeriksas_nanti;
+                    }
+                }
+
+
+                if ( $petugas_pemeriksas->count() > 1 ) {
+                    // populate ulang petugas pemeriksa
+                    $repopulate = [];
+                    foreach ($petugas_pemeriksas as $petugas) {
+                        $repopulate[] = [
+                            'data'         => $petugas,
+                            'sisa_antrian' => $petugas->sisa_antrian
+                        ];
+                    }
+                    usort($repopulate, function($a, $b) {
+                        return $a['sisa_antrian'] <=> $b['sisa_antrian'];
+                    });
+
+                    $data = [];
+                    foreach ($repopulate as $petugas) {
+                        $data[] = $petugas['data'];
+                    }
+                    $petugas_pemeriksas = collect($data);
+                }
+            }
+            return view('web_registrations.staf', compact('petugas_pemeriksas'));
+        } else if (
+            !is_null( $web_registration ) &&
+            !is_null( $web_registration->tipe_konsultasi_id ) &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            !is_null( $web_registration->register_previously_saved_patient ) &&
+            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
+            !is_null( $web_registration->nama ) &&
+            !is_null( $web_registration->tanggal_lahir ) &&
+            !is_null( $web_registration->alamat ) &&
+            !is_null( $web_registration->staf_id ) &&
+            $web_registration->data_terkonfirmasi == 0
+
+        ) {
+            return view('web_registrations.data_terkonfirmasi', compact('web_registration'));
+        }
+    }
+    public function submit_tipe_konsultasi(){
+        $tipe_konsultasi_id = Input::get('tipe_konsultasi_id');
+        $no_telp            = Input::get('no_telp');
+        $cek                = $this->cek( $tipe_konsultasi_id );
+        $message            = $cek['message'];
+        $web_registration = null;
+        if (is_null( $message )) {
+            $web_registration = WebRegistration::create([
+                'no_telp'            => $no_telp,
+                'tipe_konsultasi_id' => $tipe_konsultasi_id,
+            ]);
+        }
+        $message =  null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        $web_registration =  view('web_registrations.web_registration', compact(
+            'web_registration'
+        ))->render();
+        return compact(
+            'message',
+            'web_registration'
+        );
+    }
+    public function nomor_asuransi_bpjs(){
+        $nomor_asuransi_bpjs = Input::get('nomor_asuransi_bpjs');
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+
+        $web_registration->nomor_asuransi_bpjs = $nomor_asuransi_bpjs;
+        $pasien = Pasien::where('nomor_asuransi_bpjs', $nomor_asuransi_bpjs )->first();
+
+        if (!is_null( $pasien )) {
+            $web_registration->nama          = $pasien->nama;
+            $web_registration->tanggal_lahir = $pasien->tanggal_lahir;
+            $web_registration->alamat        = $pasien->alamat;
+            $web_registration->pasien_id     = $pasien->id;
+        } else {
+            $bpjs                                  = new BpjsApiController;
+            $response                              = $bpjs->pencarianNoKartuValid( $nomor_asuransi_bpjs, true );
+            $message                               = $response['response'];
+            if (
+                !is_null( $message ) && 
+                $message['aktif'] &&
+                isset( $message['kdProviderPst'] ) &&
+                $message['kdProviderPst']['kdProvider'] == '0221B119' &&
+                $reservasi_online->data_bpjs_cocok
+            ) { // jika aktig
+                $web_registration->nama                = $message['nama'];
+                $web_registration->tanggal_lahir       = Carbon::createFromFormat("d-m-Y", $message['tglLahir'])->format("Y-m-d");
+            }
+        }
+        $web_registration->save();
+
+        $message = null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message',
+        );
+    }
+
+    public function nama(){
+        $nama = Input::get('nama');
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+
+        $web_registration->nama = $nama;
+        $web_registration->save();
+
+        $message = null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message',
+        );
+    }
+
+    public function tanggal_lahir(){
+        $tanggal_lahir = Input::get('tanggal_lahir');
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+
+        $web_registration->tanggal_lahir = Carbon::createFromFormat('d-m-Y', $tanggal_lahir)->format('Y-m-d');
+        $web_registration->save();
+
+        $message = null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message',
+        );
+    }
+    
+    public function alamat(){
+        $alamat = Input::get('alamat');
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+
+        $web_registration->alamat = $alamat;
+        $web_registration->save();
+
+        $message = null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message',
+        );
+    }
+    public function staf(){
+        $petugas_pemeriksa_id    = Input::get('petugas_pemeriksa_id');
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                            ->whereDate('created_at', date('Y-m-d'))
+                                            ->first();
+
+        $petugas_pemeriksa = PetugasPemeriksa::find( $petugas_pemeriksa_id );
+
+        $web_registration->staf_id = $petugas_pemeriksa->staf_id;
+        $web_registration->ruangan_id = $petugas_pemeriksa->ruangan_id;
+        $web_registration->save();
+
+        $message = null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message',
+        );
+    }
+
+    public function cek($tipe_konsultasi_id){
+        $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
+                                                ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                                ->get();
+        $message = null;
+
+        //
+        // jika dokter gigi ada tapi belum masuk waktu pendaftaran
+        // buat pesan error pendaftaran dimulai jam sekian
+        //
+        if (
+             $petugas_pemeriksas->count()
+        ) {
+            if (
+                $tipe_konsultasi_id == 2 // dokter gigi
+            ) {
+                $jam_akhir_gigi = $petugas_pemeriksas[0]->jam_akhir;
+                $jam_akhir_pendaftaran_gigi = Carbon::parse( $petugas_pemeriksas[0]->jam_akhir )->subMinutes(30)->format('H:i:s');
+                if (
+                    $petugas_pemeriksas[0]->jam_mulai >= date("H:i:s")
+                ) {
+                    $message = 'Pendaftaran dokter gigi dimulai jam ' . $petugas_pemeriksas[0]->jam_mulai;
+                } else if (
+                    $jam_akhir_pendaftaran_gigi <= date("H:i:s")
+                ) {
+                    $message = 'Pendaftaran dokter gigi telah berakhir hari ini';
+                } 
+            } else  {
+
+                $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                            ->where('jam_mulai', '<=', date('H:i:s'))
+                                            ->where('jam_akhir', '>=', date('H:i:s'))
+                                            ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                            ->where('ruangan_id','>', 0)
+                                            ->get();
+
+                $jumlah_petugas_pemeriksas_saat_ini = $petugas_pemeriksas->count();
+
+
+                //
+                // ANTRIKAN PASIEN UNTUK DOKTER KEDUA
+                //
+                if (
+                    $jumlah_petugas_pemeriksas_saat_ini == 1
+                ) {
+
+                    //
+                    // JIKA SUDAH ADA 2 RUANGAN YANG DIAKTIFKAN, AKTIFKAN KEDUANYA
+                    //
+
+
+
+
+                    //
+                    // JIKA PASIEN SUDAH MENUMPUK NAMUN DOKTER KEDUA BELUM DATANG
+                    //
+                    $sisa_antrian = $petugas_pemeriksas->first()->sisa_antrian;
+                    $waktu_tunggu_menit = $sisa_antrian * 3;
+
+                    $jam_mulai_akhir_antrian = Carbon::now()->addMinutes( $waktu_tunggu_menit )->format('H:i:s');
+                    $petugas_pemeriksas_nanti = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
+                                                ->where('jam_mulai', '<=', $jam_mulai_akhir_antrian)
+                                                ->where('jam_akhir', '>=', $jam_mulai_akhir_antrian)
+                                                ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                                                ->get();
+                    /* dd($petugas_pemeriksas_nanti); */
+                    if ($petugas_pemeriksas_nanti->count() > 1) {
+                        $petugas_pemeriksas = $petugas_pemeriksas_nanti;
+                    }
+                }
+
+
+                if ( $petugas_pemeriksas->count() > 1 ) {
+                    // populate ulang petugas pemeriksa
+                    $repopulate = [];
+                    foreach ($petugas_pemeriksas as $petugas) {
+                        $repopulate[] = [
+                            'data'         => $petugas,
+                            'sisa_antrian' => $petugas->sisa_antrian
+                        ];
+                    }
+                    usort($repopulate, function($a, $b) {
+                        return $a['sisa_antrian'] <=> $b['sisa_antrian'];
+                    });
+
+                    $data = [];
+                    foreach ($repopulate as $petugas) {
+                        $data[] = $petugas['data'];
+                    }
+                    $petugas_pemeriksas = collect($data);
+                } else if (
+                    $petugas_pemeriksas->count() < 1
+                ) {
+                    $tipe_konsultasi = TipeKonsultasi::find( $tipe_konsultasi_id );
+                    $message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas saat ini';
+                }
+            }
+        } else {
+            $tipe_konsultasi = TipeKonsultasi::find( $tipe_konsultasi_id );
+            if (is_null( $tipe_konsultasi )) {
+                Log::info('===========================');
+                Log::info('TIPE KONSULTASI NULL KARENA');
+                Log::info(Input::all());
+                Log::info('===========================');
+            }
+            $message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas hari ini';
+        }
+
+        return [
+            'count'              => count( $petugas_pemeriksas ),
+            'petugas'            => $petugas_pemeriksas ,
+            'message'            => $message,
+            'tipe_konsultasi_id' => $tipe_konsultasi_id,
+        ];
+    }
+    public function pasien(){
+        $pasien_id = Input::get('pasien_id');
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                        ->whereDate('created_at', date('Y-m-d'))
+                                        ->first();
+        if (!is_null( $pasien_id )) {
+            $pasien = Pasien::find( $pasien_id );
+            $web_registration->pasien_id = $pasien_id;
+            $web_registration->nama = $pasien->nama;
+            $web_registration->alamat = $pasien->alamat;
+            $web_registration->tanggal_lahir = $pasien->tanggal_lahir;
+            $web_registration->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
+            $web_registration->register_previously_saved_patient = 1;
+        } else {
+            $web_registration->register_previously_saved_patient = 0;
+        }
+
+        $web_registration->save();
+
+        $message =  null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message'
+        );
+    }
+    public function lanjutkan(){
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                        ->whereDate('created_at', date('Y-m-d'))
+                                        ->first();
+        $web_registration->data_terkonfirmasi = 1;
+        $web_registration->save();
+
+        $wablas = new WablasController;
+        $antrian                = $wablas->antrianPost( $web_registration->ruangan_id );
+
+
+        $antrian->nama                     = $web_registration->nama;
+        $antrian->nomor_bpjs               = $web_registration->nomor_asuransi_bpjs;
+        $antrian->no_telp                  = $web_registration->no_telp;
+        $antrian->tanggal_lahir            = $web_registration->tanggal_lahir;
+        $antrian->alamat                   = $web_registration->alamat;
+        $antrian->registrasi_pembayaran_id = $web_registration->registrasi_pembayaran_id;
+        $antrian->pasien_id                = $web_registration->pasien_id;
+        $antrian->ruangan_id               = $web_registration->ruangan_id;
+        $antrian->tipe_konsultasi_id       = $web_registration->tipe_konsultasi_id;
+        $antrian->staf_id                  = $web_registration->staf_id;
+        $antrian->reservasi_online         = 1;
+        $antrian->sudah_hadir_di_klinik    = 0;
+        $antrian->qr_code_path_s3          = $wablas->generateQrCodeForOnlineReservation($antrian);
+        $antrian->save();
+        $antrian->antriable_id             = $antrian->id;
+        $antrian->save();
+
+        $web_registration->delete();
+
+        $message =  null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message'
+        );
+    }
+
+    public function ulangi(){
+        $no_telp = Input::get('no_telp');
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+                                        ->whereDate('created_at', date('Y-m-d'))
+                                        ->first();
+        $web_registration->delete();
+        $message =  null;
+        $message =  view('web_registrations.message', compact(
+            'message'
+        ))->render();
+        return compact(
+            'message'
+        );
+    }
+    public function validasi_bpjs(){
+        $nomor_asuransi_bpjs = Input::get('nomor_asuransi_bpjs');
+        $bpjs                                                = new BpjsApiController;
+        $response                                            = $bpjs->pencarianNoKartuValid($nomor_asuransi_bpjs, true);
+        if (
+            !is_null( $response ) &&
+            isset( $response['code'] ) &&
+            (
+                isset( $response['response'] ) ||
+                is_null( $response['response'] )
+            )
+            
+        ) {
+            $code                                                = $response['code'];
+            $message                                             = $response['response'];
+            if (
+                $code == 204 
+            ) {// jika tidak ditemukan
+                $pesan = 'Nomor Kartu tidak ditemukan di sistem BPJS';
+                $bisa_digunakan = false;
+                return compact(
+                    'bisa_digunakan',
+                    'pesan'
+                );
+
+            } else if (
+                $code >= 200 &&
+                $code <= 299
+            ){
+                // jika kartu aktif dan provider tepat
+                if ( 
+                    !is_null($message) &&
+                    $message['aktif'] &&
+                    $message['kdProviderPst']['kdProvider'] == '0221B119'
+                ) {
+                    $pesan = 'Kartu bisa digunakan';
+                    $bisa_digunakan = true;
+                    return compact(
+                        'bisa_digunakan',
+                        'pesan'
+                    );
+
+                } else if(
+                    !is_null($message) &&
+                    !$message['aktif']
+                ) {
+                    $pesan = 'Kartu tidak aktif karena : ';
+                    $pesan .= $message['ketAktif'];
+                    $bisa_digunakan = false;
+
+                    return compact(
+                        'bisa_digunakan',
+                        'pesan'
+                    );
+
+                } else if(
+                    !is_null($message) &&
+                    $message['kdProviderPst']['kdProvider'] !== '0221B119'
+                ) {
+                    $pesan = 'kartu tidak dapat digunakan karena tercatat aktif di : ' . $message['kdProviderPst']['kdProvider'];
+                    $pesan .= "Jika menurut Anda ini adalah kesalahan, silahkan langsung daftar di klinik";
+                    $bisa_digunakan = false;
+
+                    return compact(
+                        'bisa_digunakan',
+                        'pesan'
+                    );
+                }
+            }
+        }
+
+        $bisa_digunakan = true;
+        $pesan = 'Validasi dilanjutkan di Klinik';
+        $code = null;
+        return compact(
+            'bisa_digunakan',
+            'pesan'
+        );
+    }
+}

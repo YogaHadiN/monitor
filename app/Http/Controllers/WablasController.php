@@ -1083,7 +1083,7 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function queryPreviouslySavedPatientRegistry()
+    public function queryPreviouslySavedPatientRegistry()
     {
         $query  = "SELECT ";
         $query .= "psn.alamat as alamat, ";
@@ -3870,7 +3870,6 @@ class WablasController extends Controller
         }
 
         $antrian->tenant_id      = 1 ;
-        $antrian->nomor_bpjs     = $this->input_nomor_bpjs;
         $antrian->ruangan_id     = $id ;
         $antrian->tipe_konsultasi_id     = $tipe_konsultasi_id ;
 		$antrian->antriable_id   = $antrian->id;

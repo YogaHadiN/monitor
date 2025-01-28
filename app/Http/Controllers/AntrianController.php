@@ -339,4 +339,5 @@ class AntrianController extends Controller
         $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
         return "<img src='$urlFile' alt=''/>";
     }
+    
 }

@@ -75,7 +75,7 @@ class PetugasPemeriksa extends Model
 
         $data = [];
         foreach ($petugas as $p) {
-            $data = [
+            $data[] = [
                 'petugas' => $p,
                 'sisa_antrian' => $p->sisa_antrian
             ];
