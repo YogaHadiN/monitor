@@ -3,7 +3,7 @@
 </div>
 @foreach ($pasiens as $k => $pasien)
     <button class="btn btn-info btn-lg btn-block" onclick="pilihPasien({{$pasien->pasien_id}});return false;">
-        {{ $pasien->nama }}
+        {{ ucwords(  strtolower(  $pasien->nama  )  ) }}
     </button>
 @endforeach
     <button class="btn btn-success btn-lg btn-block" onclick="pilihPasien();return false;">

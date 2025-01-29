@@ -1,9 +1,11 @@
 <div class="text-center">
     <p>Antrian Terpanggil</p>
-    <p>{{ $antrian->ruangan->antrian?->nomor_antrian }}</p>
+    <p>{{ $antrians->first()->ruangan->antrian?->nomor_antrian }}</p>
     <p>Nomor Antrian Anda</p>
     <div class="alert alert-info">
-        <h4>{{ $antrian->nomor_antrian }}  ( {{ ucwords( $antrian->nama ) }} )</h4>
+        @foreach ($antrians as $antrian)
+            <h4>{{ $antrian->nomor_antrian }}  ( {{ ucwords( $antrian->nama ) }} )</h4>
+        @endforeach
     </div>
     <div class="row mb-10">
         <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">

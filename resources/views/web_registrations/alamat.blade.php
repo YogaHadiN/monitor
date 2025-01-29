@@ -4,7 +4,7 @@
 <div id="info_alamat">
     
 </div>
-<textarea type="text" value="" name="alamat" onkeyup="alamat_keyup(this);return false;" class="form-control textareacustom" id="alamat"/>
+<textarea placeholder="Klik disini untuk mulai mengisi..." type="text" value="" name="alamat" onkeyup="alamat_keyup(this);return false;" class="form-control textareacustom" id="alamat"/>
 <br>
 <button id="submit_alamat_button" class="btn btn-info btn-lg btn-block" onclick="alamat();return false;">
     Submit

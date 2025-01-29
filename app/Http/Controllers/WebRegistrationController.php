@@ -58,12 +58,12 @@ class WebRegistrationController extends Controller
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();
 
-        $antrian = Antrian::where('no_telp', $no_telp)->whereDate('created_at', date('Y-m-d'))->first();
+        $antrians = Antrian::where('no_telp', $no_telp)->whereDate('created_at', date('Y-m-d'))->get();
         if (
-            !is_null( $antrian ) &&
+            count( $antrians ) &&
             is_null( $web_registration )
         ) {
-            return view('web_registrations.nomor_antrian', compact('antrian'));
+            return view('web_registrations.nomor_antrian', compact('antrians'));
         } else if (
             is_null( $web_registration ) || 
             (
@@ -240,10 +240,18 @@ class WebRegistrationController extends Controller
         $message            = $cek['message'];
         $web_registration = null;
         if (empty( $message )) {
-            $web_registration = WebRegistration::create([
-                'no_telp'            => $no_telp,
-                'tipe_konsultasi_id' => $tipe_konsultasi_id,
-            ]);
+            $web_registration = WebRegistration::whereDate('created_at', date('Y-m-d'))
+                                                ->where('no_telp', $no_telp)
+                                                ->first();
+            if (is_null( $web_registration )) {
+                $web_registration = WebRegistration::create([
+                    'no_telp'            => $no_telp,
+                    'tipe_konsultasi_id' => $tipe_konsultasi_id,
+                ]);
+            } else {
+                $web_registration->tipe_konsultasi_id = $tipe_konsultasi_id;
+                $web_registration->save();
+            }
         }
         $message =  view('web_registrations.message', compact(
             'message'
@@ -492,21 +500,38 @@ class WebRegistrationController extends Controller
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                         ->whereDate('created_at', date('Y-m-d'))
                                         ->first();
+        $bisa_digunakan = true;
+        $message = null;
         if (!is_null( $pasien_id )) {
             $pasien = Pasien::find( $pasien_id );
-            $web_registration->pasien_id = $pasien_id;
-            $web_registration->nama = $pasien->nama;
-            $web_registration->alamat = $pasien->alamat;
-            $web_registration->tanggal_lahir = $pasien->tanggal_lahir;
-            $web_registration->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
-            $web_registration->register_previously_saved_patient = 1;
+            if (!is_null( $pasien )) {
+                if (
+                    $web_registration->registrasi_pembayaran_id == 2 // Pembayaran BPJS
+                ) {
+                    $response = $this->cekBpjsApi( $pasien->nomor_asuransi_bpjs );
+                    if (
+                        isset( $response['bisa_digunakan'] ) &&
+                        isset( $response['pesan'] )
+                    ) {
+                        $bisa_digunakan = $response['bisa_digunakan'] ;
+                        $message = $response['pesan'] ;
+                    }
+                } 
+
+                if ($bisa_digunakan) {
+                    $web_registration->pasien_id = $pasien_id;
+                    $web_registration->nama = $pasien->nama;
+                    $web_registration->alamat = $pasien->alamat;
+                    $web_registration->tanggal_lahir = $pasien->tanggal_lahir;
+                    $web_registration->nomor_asuransi_bpjs = $pasien->nomor_asuransi_bpjs;
+                    $web_registration->register_previously_saved_patient = 1;
+                }
+            }
         } else {
             $web_registration->register_previously_saved_patient = 0;
         }
 
         $web_registration->save();
-
-        $message =  null;
         $message =  view('web_registrations.message', compact(
             'message'
         ))->render();
@@ -543,7 +568,7 @@ class WebRegistrationController extends Controller
         $antrian->antriable_id             = $antrian->id;
         $antrian->save();
 
-        $web_registration->delete();
+        WebRegistration::where('no_telp', $no_telp)->delete();
 
         $message =  null;
         $message =  view('web_registrations.message', compact(
@@ -570,6 +595,22 @@ class WebRegistrationController extends Controller
     }
     public function validasi_bpjs(){
         $nomor_asuransi_bpjs = Input::get('nomor_asuransi_bpjs');
+        return $this->cekBpjsApi( $nomor_asuransi_bpjs );
+    }
+    public function batalkan(){
+        $no_telp = Input::get('no_telp');
+        $antrian = Antrian::where('no_telp',  $no_telp )
+                            ->whereDate('created_at', date('Y-m-d'))
+                            ->delete();
+    }
+
+    public function daftar_lagi(){
+        $no_telp = Input::get('no_telp');
+        WebRegistration::create([
+            'no_telp' => $no_telp
+        ]);
+    }
+    public function cekBpjsApi($nomor_asuransi_bpjs){
         $bpjs                                                = new BpjsApiController;
         $response                                            = $bpjs->pencarianNoKartuValid($nomor_asuransi_bpjs, true);
         if (
@@ -586,7 +627,7 @@ class WebRegistrationController extends Controller
             if (
                 $code == 204 
             ) {// jika tidak ditemukan
-                $pesan = 'Nomor Kartu tidak ditemukan di sistem BPJS';
+                $pesan = "Nomor Kartu $nomor_asuransi_bpjs tidak ditemukan di sistem BPJS";
                 $bisa_digunakan = false;
                 return compact(
                     'bisa_digunakan',
@@ -647,4 +688,5 @@ class WebRegistrationController extends Controller
             'pesan'
         );
     }
+    
 }

@@ -73,9 +73,8 @@ td {
 <body>
     <input type="text" value="{{ $no_telp }}" name="no_telp" class="hide" id="no_telp"/>
     <div class="container">
-        <div class="text-center">
-            <h2>Klinik Jati Elok</h2>
-        </div>
+        <h4>Klinik Jati Elok</h4>
+        <hr>
         <div id="message">
 
         </div>
@@ -89,7 +88,7 @@ td {
 <script src="https://js.pusher.com/5.1/pusher.min.js"></script>
 <script src="{!! asset('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js') !!}"></script>
 <script src="{!!secure_url("js/moment.locale.js") !!}"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script charset="utf-8">
       var base = '{{ url("") }}';
 		$.ajaxSetup({

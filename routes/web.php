@@ -48,6 +48,10 @@ Route::post('/daftar_online_by_phone/submit/pasien', [WebRegistrationController:
 Route::post('/daftar_online_by_phone/submit/lanjutkan', [WebRegistrationController::class, 'lanjutkan']);
 Route::post('/daftar_online_by_phone/submit/ulangi', [WebRegistrationController::class, 'ulangi']);
 Route::post('/daftar_online_by_phone/validasi/bpjs', [WebRegistrationController::class, 'validasi_bpjs']);
+Route::post('/daftar_online_by_phone/submit/batalkan', [WebRegistrationController::class, 'batalkan']);
+Route::post('/daftar_online_by_phone/submit/daftar_lagi', [WebRegistrationController::class, 'daftar_lagi']);
+
+
 
 
 

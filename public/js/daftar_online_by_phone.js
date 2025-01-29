@@ -379,3 +379,38 @@ function alamat_keyup(control) {
 function nomor_asuransi_bpjs_oninput(control) {
     console.log("pasted");
 }
+
+function batalkan() {
+    Swal.fire({
+        title: "Konfirmasi",
+        text: "Anda akan mengahpus semua antrian yang anda buat hari ini",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Lanjutkan",
+        cancelButtonText: "Batalkan",
+    }).then((result) => {
+        $.post(
+            base + "/daftar_online_by_phone/submit/batalkan",
+            {
+                no_telp: $("#no_telp").val(),
+            },
+            function (data, textStatus, jqXHR) {
+                view(data.message);
+            }
+        );
+    });
+}
+
+function daftar_lagi() {
+    $.post(
+        base + "/daftar_online_by_phone/submit/daftar_lagi",
+        {
+            no_telp: $("#no_telp").val(),
+        },
+        function (data, textStatus, jqXHR) {
+            view(data.message);
+        }
+    );
+}
