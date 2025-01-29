@@ -10,6 +10,18 @@ use Carbon\Carbon;
 class TipeKonsultasi extends Model
 {
     use HasFactory;
+    /**
+     * @param 
+     */
+    public function __construct()
+    {
+        if (
+            !session()->has('tenant_id')
+        ) {
+            session()->put('tenant_id', 1);
+        }
+    }
+    
     public function getSisaAntrianAttribute(){
 
         $tipe_konsultasi_id = $this->id;
