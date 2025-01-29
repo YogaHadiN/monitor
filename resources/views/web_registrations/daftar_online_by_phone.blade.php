@@ -21,6 +21,9 @@
 .textareacustom {
     height: 75px !important;
 }
+.mb-10 {
+    margin-bottom: 10px;
+}
 .ulangi {
     margin-top: 10px;
 }
@@ -70,6 +73,9 @@ td {
 <body>
     <input type="text" value="{{ $no_telp }}" name="no_telp" class="hide" id="no_telp"/>
     <div class="container">
+        <div class="text-center">
+            <h2>Klinik Jati Elok</h2>
+        </div>
         <div id="message">
 
         </div>

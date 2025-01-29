@@ -1,16 +1,29 @@
 <div class="text-center">
-    <h3>Antrian Terpanggil</h3>
-    <h4>{{ $antrian->ruangan->antrian?->nomor_antrian }}</h4>
-    <br>
-    <h3>Nomor Antrian</h3>
-    <h4>{{ $antrian->nomor_antrian }}</h4>
+    <p>Antrian Terpanggil</p>
+    <p>{{ $antrian->ruangan->antrian?->nomor_antrian }}</p>
+    <p>Nomor Antrian Anda</p>
+    <div class="alert alert-info">
+        <h4>{{ $antrian->nomor_antrian }}  ( {{ ucwords( $antrian->nama ) }} )</h4>
+    </div>
+    <div class="row mb-10">
+        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            <button class="btn btn-danger btn-block" onclick="batalkan();return false;">
+                Batalkan
+            </button>
+        </div>
+        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            <button class="btn btn-success btn-block" onclick="daftar_lagi();return false;">
+                Daftar Lagi
+            </button>
+        </div>
+    </div>
+    <div class="alert alert-danger">
+        Mohon ambil antrian kembali apabila antrian terlewat
+    </div>
     <div class="alert alert-info">
         Scan QR berikut saat tiba di klinik
     </div>
     <div>
         <img class="center-fit" src="{{ \Storage::disk('s3')->url($antrian->qr_code_path_s3) }}" alt=''/>
-    </div>
-    <div class="alert alert-danger">
-        Mohon ambil antrian kembali apabila antrian terlewat
     </div>
 </div>

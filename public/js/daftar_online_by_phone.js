@@ -7,17 +7,94 @@ function view(message = null, web_registration = null) {
         },
         function (data, textStatus, jqXHR) {
             $("#container").html(data);
-            console.log("message");
-            console.log(message);
             $("#message").html(message);
-            console.log("web_registration");
-            console.log(web_registration);
-            $("#web_registration").html(web_registration);
         }
     );
 }
 
 function dokter_umum() {
+    $("#dokter_umum").html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
+    submitTipeKonsultasi(1);
+}
+function dokter_gigi() {
+    $("#dokter_gigi").html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
+    submitTipeKonsultasi(2);
+}
+function bidan() {
+    $("#bidan").html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
+    submitTipeKonsultasi(3);
+}
+
+function submitTipeKonsultasi(tipe_konsultasi_id) {
+    $.post(
+        base + "/daftar_online_by_phone/submit/tipe_konsultasi",
+        {
+            no_telp: $("#no_telp").val(),
+            tipe_konsultasi_id: tipe_konsultasi_id,
+        },
+        function (data, textStatus, jqXHR) {
+            view(data.message, data.web_registration);
+        }
+    );
+}
+
+function biaya_pribadi(control) {
+    submitPembayaran(1, control);
+}
+function bpjs(control) {
+    submitPembayaran(2, control);
+}
+function lainnya(control) {
+    submitPembayaran(3, control);
+}
+
+function submitPembayaran(registrasi_pembayaran_id, control) {
+    $(control).html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
+    $.post(
+        base + "/daftar_online_by_phone/submit/pembayaran",
+        {
+            no_telp: $("#no_telp").val(),
+            registrasi_pembayaran_id: registrasi_pembayaran_id,
+        },
+        function (data, textStatus, jqXHR) {
+            view(data.message, data.web_registration);
+        }
+    );
+}
+function nomor_asuransi_bpjs_submit() {
+    $.post(
+        base + "/daftar_online_by_phone/submit/nomor_asuransi_bpjs",
+        {
+            no_telp: $("#no_telp").val(),
+            nomor_asuransi_bpjs: $("#nomor_asuransi_bpjs").val(),
+        },
+        function (data, textStatus, jqXHR) {
+            view(data.message, data.web_registration);
+        }
+    );
+}
+
+function nama() {
+    var nama = $("#nama").val();
+    if (nama.length < 3) {
+        $("#info_nama").html("Minimal 3 huruf");
+        $("#info_nama").attr("class", "alert alert-danger");
+    } else if (/\d/.test(nama)) {
+        $("#info_nama").html("Nama tidak boleh mengandung angka");
+        $("#info_nama").attr("class", "alert alert-danger");
+    } else {
+        $("#submit_nama_button").html(
+            '<span class="glyphicon glyphicon-refresh spinning"></span>'
+        );
+    }
     submitTipeKonsultasi(1);
 }
 function dokter_gigi() {
