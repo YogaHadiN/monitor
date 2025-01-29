@@ -386,20 +386,22 @@ function batalkan() {
         text: "Anda akan mengahpus semua antrian yang anda buat hari ini",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#5cb85c",
         confirmButtonText: "Hapus Semua",
         cancelButtonText: "Kembali",
     }).then((result) => {
-        $.post(
-            base + "/daftar_online_by_phone/submit/batalkan",
-            {
-                no_telp: $("#no_telp").val(),
-            },
-            function (data, textStatus, jqXHR) {
-                view(data.message);
-            }
-        );
+        if (result.isConfirmed) {
+            $.post(
+                base + "/daftar_online_by_phone/submit/batalkan",
+                {
+                    no_telp: $("#no_telp").val(),
+                },
+                function (data, textStatus, jqXHR) {
+                    view(data.message);
+                }
+            );
+        }
     });
 }
 

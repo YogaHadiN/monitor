@@ -11,3 +11,8 @@
     Bidan
 </button>
 
+@if ($antrians->count())
+    <button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+        Kembali
+    </button>
+@endif

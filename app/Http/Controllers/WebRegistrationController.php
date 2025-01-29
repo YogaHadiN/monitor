@@ -72,7 +72,7 @@ class WebRegistrationController extends Controller
                 is_null( $web_registration->tipe_konsultasi_id )
             )
         ) {
-            return view('web_registrations.tipe_konsultasi');
+            return view('web_registrations.tipe_konsultasi', compact('antrians'));
         } else if (
             !is_null( $web_registration ) &&
             !is_null( $web_registration->tipe_konsultasi_id ) &&
