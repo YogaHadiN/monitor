@@ -76,40 +76,73 @@ function nomor_asuransi_bpjs_submit() {
 }
 
 function nama() {
-    $.post(
-        base + "/daftar_online_by_phone/submit/nama",
-        {
-            no_telp: $("#no_telp").val(),
-            nama: $("#nama").val(),
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
+    var nama = $("#nama").val();
+    if (nama.length < 3) {
+        $("#info_nama").html("Minimal 3 huruf");
+        $("#info_nama").attr("class", "alert alert-danger");
+    } else if (/\d/.test(nama)) {
+        $("#info_nama").html("Nama tidak boleh mengandung angka");
+        $("#info_nama").attr("class", "alert alert-danger");
+    } else {
+        $("#submit_nama_button").html(
+            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+        );
+        $.post(
+            base + "/daftar_online_by_phone/submit/nama",
+            {
+                no_telp: $("#no_telp").val(),
+                nama: $("#nama").val(),
+            },
+            function (data, textStatus, jqXHR) {
+                $("#submit_nama_button").html("Submit");
+                view(data.message, data.web_registration);
+            }
+        );
+    }
 }
 function tanggal_lahir() {
-    $.post(
-        base + "/daftar_online_by_phone/submit/tanggal_lahir",
-        {
-            no_telp: $("#no_telp").val(),
-            tanggal_lahir: $("#tanggal_lahir").val(),
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
+    var tanggal_lahir = $("#tanggal_lahir").val();
+    if (moment(tanggal_lahir, "DD-MM-YYYY", true).isValid()) {
+        $("#submit_tanggal_lahir_button").html(
+            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+        );
+        $.post(
+            base + "/daftar_online_by_phone/submit/tanggal_lahir",
+            {
+                no_telp: $("#no_telp").val(),
+                tanggal_lahir: $("#tanggal_lahir").val(),
+            },
+            function (data, textStatus, jqXHR) {
+                $("#submit_tanggal_lahir_button").html("Submit");
+                view(data.message, data.web_registration);
+            }
+        );
+    } else {
+        $("#info_tanggal").html("Format tanggal salah. Contoh : 19-07-2003");
+        $("#info_tanggal").attr("class", "alert alert-danger");
+    }
 }
 function alamat() {
-    $.post(
-        base + "/daftar_online_by_phone/submit/alamat",
-        {
-            no_telp: $("#no_telp").val(),
-            alamat: $("#alamat").val(),
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
+    var alamat = $("#alamat").val();
+    if (alamat.length < 3) {
+        $("#info_alamat").html("Minimal 3 huruf");
+        $("#info_alamat").attr("class", "alert alert-danger");
+    } else {
+        $("#submit_alamat_button").html(
+            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+        );
+        $.post(
+            base + "/daftar_online_by_phone/submit/alamat",
+            {
+                no_telp: $("#no_telp").val(),
+                alamat: $("#alamat").val(),
+            },
+            function (data, textStatus, jqXHR) {
+                $("#submit_alamat_button").html("Submit");
+                view(data.message, data.web_registration);
+            }
+        );
+    }
 }
 function staf(petugas_pemeriksa_id) {
     $.post(
@@ -216,7 +249,6 @@ function namaKeyup(control) {
     if ($(control).val().length > 1) {
         $("#submit_nama_button").show();
     } else {
-        $("#submit_nama_button").hide();
     }
 }
 function preventNumeric(e) {
@@ -244,7 +276,6 @@ function tanggal_lahir_keyup(control) {
     if (moment(tanggal_lahir, "DD-MM-YYYY", true).isValid()) {
         $("#submit_tanggal_lahir_button").show();
     } else {
-        $("#submit_tanggal_lahir_button").hide();
     }
     // var tanggal_lahir = $(control).val();
     // if (
@@ -265,7 +296,6 @@ function alamat_keyup(control) {
     if (alamat.length > 1) {
         $("#submit_alamat_button").show();
     } else {
-        $("#submit_alamat_button").hide();
     }
 }
 

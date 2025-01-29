@@ -1,7 +1,7 @@
 <div class="text-center">
     <h2>Nama Lengkap Pasien</h2>
 </div>
-<div class="alert alert-info">
+<div id="info_nama" class="alert alert-info">
     Hanya bisa memasukkan 1 nama pasien saja
 </div>
 <input type="text" value="" name="nama" class="form-control" onkeydown="preventNumeric(event);" onkeyup="namaKeyup(this);return false;" id="nama"/>
@@ -14,6 +14,5 @@
 </button>
 <script charset="utf-8">
     $("#nama").focus();
-    $("#submit_nama_button").hide();
 </script>
 

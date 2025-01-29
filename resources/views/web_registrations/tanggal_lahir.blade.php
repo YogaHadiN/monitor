@@ -16,6 +16,5 @@
 </button>
 <script charset="utf-8">
     $("#tanggal_lahir").focus();
-    $("#submit_tanggal_lahir_button").hide();
 </script>
 
