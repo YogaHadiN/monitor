@@ -3,18 +3,6 @@
     <div class="table-responsive">
         <table class="table table-hover table-condensed table-bordered" width="100%">
             <tbody>
-                @if ($web_registration->tipe_konsultasi_id)
-                    <tr>
-                        <td>Poli</td>
-                        <td>{{ ucwords( $web_registration->tipe_konsultasi->tipe_konsultasi ) }}</td>
-                    </tr>
-                @endif
-                @if ($web_registration->registrasi_pembayaran_id)
-                    <tr>
-                        <td>Pembayaran</td>
-                        <td>{{ $web_registration->registrasi_pembayaran->pembayaran }}</td>
-                    </tr>
-                @endif
                 @if ($web_registration->nama)
                     <tr>
                         <td>Nama</td>
@@ -31,6 +19,18 @@
                     <tr>
                         <td>Tanggal Lahir</td>
                         <td>{{ $web_registration->tanggal_lahir }}</td>
+                    </tr>
+                @endif
+                @if ($web_registration->tipe_konsultasi_id)
+                    <tr>
+                        <td>Poli</td>
+                        <td>{{ ucwords( $web_registration->tipe_konsultasi->tipe_konsultasi ) }}</td>
+                    </tr>
+                @endif
+                @if ($web_registration->registrasi_pembayaran_id)
+                    <tr>
+                        <td>Pembayaran</td>
+                        <td>{{ $web_registration->registrasi_pembayaran->pembayaran }}</td>
                     </tr>
                 @endif
                 @if (

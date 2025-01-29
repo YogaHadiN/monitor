@@ -1,7 +1,7 @@
 <div class="text-center">
     <h2>Nomor Asuransi BPJS</h2>
 </div>
-<input type="text" value="" onpaste="nomor_asuransi_bpjs_onpaste(this);return false;" onkeyup="validasiBpjs(this);return false;" name="nomor_asuransi_bpjs" class="form-control" id="nomor_asuransi_bpjs"/>
+<input type="text" value="" oninput="nomor_asuransi_bpjs_oninput(this);return false;" onkeyup="validasiBpjs(this);return false;" name="nomor_asuransi_bpjs" class="form-control" id="nomor_asuransi_bpjs"/>
 <br>
 <div class="alert alert-info" id="info_nomor_asuransi_bpjs">
     Nomor BPJS terdiri dari 13 angka

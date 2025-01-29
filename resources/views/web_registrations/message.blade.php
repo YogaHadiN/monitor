@@ -1,4 +1,4 @@
-@if (!is_null( $message ))
+@if (!empty( $message ))
     <br>
     <div class="alert alert-danger">
         {{ $message }}

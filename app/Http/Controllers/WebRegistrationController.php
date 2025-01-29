@@ -239,13 +239,12 @@ class WebRegistrationController extends Controller
         $cek                = $this->cek( $tipe_konsultasi_id );
         $message            = $cek['message'];
         $web_registration = null;
-        if (is_null( $message )) {
+        if (empty( $message )) {
             $web_registration = WebRegistration::create([
                 'no_telp'            => $no_telp,
                 'tipe_konsultasi_id' => $tipe_konsultasi_id,
             ]);
         }
-        $message =  null;
         $message =  view('web_registrations.message', compact(
             'message'
         ))->render();
