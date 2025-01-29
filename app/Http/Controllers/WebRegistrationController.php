@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+
 use Illuminate\Http\Request;
 use Input;
 use App\Models\WebRegistration;
@@ -15,6 +16,17 @@ use Carbon\Carbon;
 
 class WebRegistrationController extends Controller
 {
+    /**
+     * @param 
+     */
+    public function __construct()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Credentials: true ");
+        header("Access-Control-Allow-Methods: OPTIONS, GET, POST");
+        header("Access-Control-Allow-Headers: Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, If-Modified-Since, X-File-Name, Cache-Control");
+    }
+    
     public function daftar_online(){
         return view('web_registrations.daftar_online');
     }
