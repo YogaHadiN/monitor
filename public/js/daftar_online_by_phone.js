@@ -388,8 +388,8 @@ function batalkan() {
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "Lanjutkan",
-        cancelButtonText: "Batalkan",
+        confirmButtonText: "Hapus Semua",
+        cancelButtonText: "Kembali",
     }).then((result) => {
         $.post(
             base + "/daftar_online_by_phone/submit/batalkan",
