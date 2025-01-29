@@ -11,7 +11,9 @@
 <button id="submit_tanggal_lahir_button" class="btn btn-info btn-lg btn-block" onclick="tanggal_lahir();return false;">
     Submit
 </button>
-
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+    Ulangi
+</button>
 <script charset="utf-8">
     $("#tanggal_lahir").focus();
     $("#submit_tanggal_lahir_button").hide();

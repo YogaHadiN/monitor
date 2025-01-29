@@ -248,12 +248,8 @@ class WebRegistrationController extends Controller
         $message =  view('web_registrations.message', compact(
             'message'
         ))->render();
-        $web_registration =  view('web_registrations.web_registration', compact(
-            'web_registration'
-        ))->render();
         return compact(
-            'message',
-            'web_registration'
+            'message'
         );
     }
     public function nomor_asuransi_bpjs(){

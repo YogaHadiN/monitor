@@ -10,4 +10,6 @@
 <button class="btn btn-info btn-lg btn-block" onclick="lainnya();return false;">
   Lainnya
 </button>
-
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+    Ulangi
+</button>

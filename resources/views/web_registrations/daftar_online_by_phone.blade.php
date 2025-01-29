@@ -21,6 +21,9 @@
 .textareacustom {
     height: 75px !important;
 }
+.ulangi {
+    margin-top: 10px;
+}
 .table-condensed{
   font-size: 10px;
 }

@@ -9,7 +9,9 @@
 <button id="submit_nama_button" class="btn btn-info btn-lg btn-block" onclick="nama();return false;">
     Submit
 </button>
-
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+    Ulangi
+</button>
 <script charset="utf-8">
     $("#nama").focus();
     $("#submit_nama_button").hide();

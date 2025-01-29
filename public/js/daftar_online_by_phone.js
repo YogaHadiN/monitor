@@ -62,7 +62,7 @@ function submitPembayaran(registrasi_pembayaran_id) {
         }
     );
 }
-function nomor_asuransi_bpjs() {
+function nomor_asuransi_bpjs_submit() {
     $.post(
         base + "/daftar_online_by_phone/submit/nomor_asuransi_bpjs",
         {
@@ -167,38 +167,50 @@ function validasiBpjs(control) {
         control.value = control.value.replace(/\D/g, "");
     }
     var length = $(control).val().length;
-    if (length < 13) {
+    if (length < 1) {
+        $("#info_nomor_asuransi_bpjs").html("Nomor BPJS harus 13 angka");
+        $("#info_nomor_asuransi_bpjs").attr("class", "alert alert-info");
+    } else if (length < 13) {
         var sisa = 13 - length;
         $("#info_nomor_asuransi_bpjs").html("sisa " + sisa + " angka lagi");
         $("#info_nomor_asuransi_bpjs").attr("class", "alert alert-info");
-        $("#submit_nomor_asuransi_bpjs_button").hide();
     } else if (length == 13) {
-        $("#info_nomor_asuransi_bpjs").html("Mohon ditunggu ... ");
-        validasiNomorKartuAktif();
+        $("#info_nomor_asuransi_bpjs").html("Format sesuai");
+        $("#info_nomor_asuransi_bpjs").attr("class", "alert alert-success");
+        $("#submit_nomor_asuransi_bpjs_button").show();
     }
 }
 
 function validasiNomorKartuAktif() {
-    $.post(
-        base + "/daftar_online_by_phone/validasi/bpjs",
-        { nomor_asuransi_bpjs: $("#nomor_asuransi_bpjs").val() },
-        function (data, textStatus, jqXHR) {
-            if (data.bisa_digunakan) {
-                $("#submit_nomor_asuransi_bpjs_button").show();
-                $("#info_nomor_asuransi_bpjs").attr(
-                    "class",
-                    "alert alert-success"
-                );
-            } else {
-                $("#submit_nomor_asuransi_bpjs_button").hide();
-                $("#info_nomor_asuransi_bpjs").attr(
-                    "class",
-                    "alert alert-danger"
-                );
+    var nomor_asuransi_bpjs = $("#nomor_asuransi_bpjs").val();
+    if (nomor_asuransi_bpjs.match(/[^$,.\d]/)) {
+        $("#info_nomor_asuransi_bpjs").html("Nomor BPJS harus semuanya angka");
+        $("#info_nomor_asuransi_bpjs").attr("class", "alert alert-danger");
+    } else if (nomor_asuransi_bpjs.length !== 13) {
+        $("#info_nomor_asuransi_bpjs").html("Nomor BPJS harus 13 angka");
+        $("#info_nomor_asuransi_bpjs").attr("class", "alert alert-danger");
+    } else {
+        $("#submit_nomor_asuransi_bpjs_button").html(
+            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+        );
+        $.post(
+            base + "/daftar_online_by_phone/validasi/bpjs",
+            { nomor_asuransi_bpjs: $("#nomor_asuransi_bpjs").val() },
+            function (data, textStatus, jqXHR) {
+                if (data.bisa_digunakan) {
+                    nomor_asuransi_bpjs_submit();
+                } else {
+                    $("#submit_nomor_asuransi_bpjs_button").show();
+                    $("#info_nomor_asuransi_bpjs").attr(
+                        "class",
+                        "alert alert-danger"
+                    );
+                }
+                $("#info_nomor_asuransi_bpjs").html(data.pesan);
+                $("#submit_nomor_asuransi_bpjs_button").html("Submit");
             }
-            $("#info_nomor_asuransi_bpjs").html(data.pesan);
-        }
-    );
+        );
+    }
 }
 function namaKeyup(control) {
     if ($(control).val().length > 1) {

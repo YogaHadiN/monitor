@@ -9,3 +9,7 @@
     <button class="btn btn-success btn-lg btn-block" onclick="pilihPasien();return false;">
         Lainnya
     </button>
+    <br>
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+    Ulangi
+</button>

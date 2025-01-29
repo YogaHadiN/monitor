@@ -6,7 +6,9 @@
 <button id="submit_alamat_button" class="btn btn-info btn-lg btn-block" onclick="alamat();return false;">
     Submit
 </button>
-
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+    Ulangi
+</button>
 <script charset="utf-8">
     $("#alamat").focus();
     $("#submit_alamat_button").hide();
