@@ -14,7 +14,6 @@
 <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <script src="https://kit.fontawesome.com/888ab79ab3.js" crossorigin="anonymous"></script>
-<link href="{!! asset('css/animate.css') !!}" rel="stylesheet">
 <style type="text/css" media="all">
 .text-center {
     text-align: center;
