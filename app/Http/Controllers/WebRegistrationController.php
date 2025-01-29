@@ -63,7 +63,9 @@ class WebRegistrationController extends Controller
             count( $antrians ) &&
             is_null( $web_registration )
         ) {
-            return view('web_registrations.nomor_antrian', compact('antrians'));
+            return view('web_registrations.nomor_antrian', compact(
+                'antrians'
+            ));
         } else if (
             is_null( $web_registration ) || 
             (
@@ -72,7 +74,15 @@ class WebRegistrationController extends Controller
                 is_null( $web_registration->tipe_konsultasi_id )
             )
         ) {
-            return view('web_registrations.tipe_konsultasi', compact('antrians'));
+            $tipe_konsultasi_dokter_umum = TipeKonsultasi::find(1);
+            $tipe_konsultasi_dokter_gigi = TipeKonsultasi::find(2);
+            $tipe_konsultasi_bidan = TipeKonsultasi::find(3);
+            return view('web_registrations.tipe_konsultasi', compact(
+                'antrians',
+                'tipe_konsultasi_dokter_umum',
+                'tipe_konsultasi_dokter_gigi',
+                'tipe_konsultasi_bidan'
+            ));
         } else if (
             !is_null( $web_registration ) &&
             !is_null( $web_registration->tipe_konsultasi_id ) &&
