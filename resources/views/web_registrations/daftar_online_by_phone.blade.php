@@ -21,11 +21,17 @@
 .textareacustom {
     height: 75px !important;
 }
+.mt-10 {
+    margin-top: 10px;
+}
 .mb-10 {
     margin-bottom: 10px;
 }
 .ulangi {
     margin-top: 10px;
+}
+.text-left{
+    text-align: left;
 }
 .table-condensed{
   font-size: 10px;
