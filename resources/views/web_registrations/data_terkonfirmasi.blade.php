@@ -45,7 +45,7 @@
             @if ($web_registration->staf_id)
                 <tr>
                     <td>Pemeriksa</td>
-                    <td>{{ $web_registration->staf->nama }}</td>
+                    <td>{{ $web_registration->staf->nama_dengan_gelar }}</td>
                 </tr>
             @endif
         </tbody>
