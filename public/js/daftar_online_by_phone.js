@@ -28,16 +28,6 @@ function submitTipeKonsultasi(tipe_konsultasi_id, control) {
     );
 }
 
-function biaya_pribadi(control) {
-    submitPembayaran(1, control);
-}
-function bpjs(control) {
-    submitPembayaran(2, control);
-}
-function lainnya(control) {
-    submitPembayaran(3, control);
-}
-
 function submitPembayaran(registrasi_pembayaran_id, control) {
     $(control).html(
         '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
