@@ -365,3 +365,37 @@ function daftar_lagi() {
         }
     );
 }
+function hapusAntrian(antrian_id, control) {
+    var nomor_antrian = $(control)
+        .closest(".alert-info")
+        .find(".nomor_antrian")
+        .html();
+    console.log(nomor_antrian);
+
+    Swal.fire({
+        title: "Konfirmasi",
+        text: "Anda akan menghapus antrian " + nomor_antrian,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#5cb85c",
+        confirmButtonText: "Hapus Antrian Ini",
+        cancelButtonText: "Kembali",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $(control).html(
+                '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+            );
+            $.post(
+                base + "/daftar_online_by_phone/submit/hapus_antrian",
+                {
+                    no_telp: $("#no_telp").val(),
+                    antrian_id: antrian_id,
+                },
+                function (data, textStatus, jqXHR) {
+                    view(data.message, data.web_registration);
+                }
+            );
+        }
+    });
+}

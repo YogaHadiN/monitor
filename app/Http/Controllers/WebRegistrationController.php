@@ -710,5 +710,9 @@ class WebRegistrationController extends Controller
             'pesan'
         );
     }
-    
+    public function hapus_antrian(){
+        $antrian_id = Input::get('antrian_id');
+        $antrian = Antrian::find( $antrian_id );
+        $antrian->delete();
+    }
 }
