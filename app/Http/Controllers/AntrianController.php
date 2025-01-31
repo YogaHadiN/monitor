@@ -98,7 +98,6 @@ class AntrianController extends Controller
         $qr = new QrCodeController;
         $base64 = $qr->inPdf($url);
         $base64_daftar_online = $qr->inPdf($url_daftar_online);
-
         $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
 
 		return view('monitor_baru', compact(

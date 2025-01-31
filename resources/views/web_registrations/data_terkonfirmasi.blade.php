@@ -52,7 +52,7 @@
     </table>
 </div>
 
-<button class="btn btn-lg btn-info btn-block" id="lanjutkan" onclick="lanjutkan();return false;">
+<button class="btn btn-lg btn-info btn-block" id="lanjutkan" onclick="submit(this, 'lanjutkan');return false;">
     Lanjutkan
 </button>
 <button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">

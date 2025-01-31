@@ -1,12 +1,12 @@
 <div class="text-center">
     <h2>Nomor Asuransi BPJS</h2>
 </div>
-<input placeholder="Klik disini untuk mulai mengisi..." type="text" value="" oninput="nomor_asuransi_bpjs_oninput(this);return false;" onkeyup="validasiBpjs(this);return false;" name="nomor_asuransi_bpjs" class="form-control" id="nomor_asuransi_bpjs"/>
+<input placeholder="Klik disini untuk mulai mengisi..." type="text" value="" onkeyup="validasiBpjs(this);return false;" name="nomor_asuransi_bpjs" class="form-control value" id="nomor_asuransi_bpjs"/>
 <br>
 <div class="alert alert-info" id="info_nomor_asuransi_bpjs">
     Nomor BPJS terdiri dari 13 angka
 </div>
-<button class="btn btn-info btn-lg btn-block" id="submit_nomor_asuransi_bpjs_button" onclick="validasiNomorKartuAktif();return false;">
+<button class="btn btn-info btn-lg btn-block not_a_value" id="submit_nomor_asuransi_bpjs_button" onclick="validasiNomorKartuAktif(this);return false;">
     Submit
 </button>
 <button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">

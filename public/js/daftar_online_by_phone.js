@@ -12,15 +12,21 @@ function view(message = null, web_registration = null) {
     );
 }
 
-function submitTipeKonsultasi(tipe_konsultasi_id, control) {
+function submit(control, route_parameter) {
+    if ($(control).hasClass("not_a_value")) {
+        var value = $(".value:first").val();
+    } else {
+        var value = $(control).val();
+    }
+
     $(control).html(
         '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
     );
     $.post(
-        base + "/daftar_online_by_phone/submit/tipe_konsultasi",
+        base + "/daftar_online_by_phone/submit/" + route_parameter,
         {
             no_telp: $("#no_telp").val(),
-            tipe_konsultasi_id: tipe_konsultasi_id,
+            value: value,
         },
         function (data, textStatus, jqXHR) {
             view(data.message, data.web_registration);
@@ -28,70 +34,7 @@ function submitTipeKonsultasi(tipe_konsultasi_id, control) {
     );
 }
 
-function submitPembayaran(registrasi_pembayaran_id, control) {
-    $(control).html(
-        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
-    );
-    $.post(
-        base + "/daftar_online_by_phone/submit/pembayaran",
-        {
-            no_telp: $("#no_telp").val(),
-            registrasi_pembayaran_id: registrasi_pembayaran_id,
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
-}
-function nomor_asuransi_bpjs_submit() {
-    $.post(
-        base + "/daftar_online_by_phone/submit/nomor_asuransi_bpjs",
-        {
-            no_telp: $("#no_telp").val(),
-            nomor_asuransi_bpjs: $("#nomor_asuransi_bpjs").val(),
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
-}
-
-function biaya_pribadi() {
-    submitPembayaran(1);
-}
-function bpjs() {
-    submitPembayaran(2);
-}
-function lainnya() {
-    submitPembayaran(3);
-}
-
-function submitPembayaran(registrasi_pembayaran_id) {
-    $.post(
-        base + "/daftar_online_by_phone/submit/pembayaran",
-        {
-            no_telp: $("#no_telp").val(),
-            registrasi_pembayaran_id: registrasi_pembayaran_id,
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
-}
-function nomor_asuransi_bpjs_submit() {
-    $.post(
-        base + "/daftar_online_by_phone/submit/nomor_asuransi_bpjs",
-        {
-            no_telp: $("#no_telp").val(),
-            nomor_asuransi_bpjs: $("#nomor_asuransi_bpjs").val(),
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
-}
-
-function nama() {
+function nama(control) {
     var nama = $("#nama").val();
     if (nama.length < 3) {
         $("#info_nama").html("Minimal 3 huruf");
@@ -100,89 +43,26 @@ function nama() {
         $("#info_nama").html("Nama tidak boleh mengandung angka");
         $("#info_nama").attr("class", "alert alert-danger");
     } else {
-        $("#submit_nama_button").html(
-            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
-        );
-        $.post(
-            base + "/daftar_online_by_phone/submit/nama",
-            {
-                no_telp: $("#no_telp").val(),
-                nama: $("#nama").val(),
-            },
-            function (data, textStatus, jqXHR) {
-                $("#submit_nama_button").html("Submit");
-                view(data.message, data.web_registration);
-            }
-        );
+        submit(control, "nama");
     }
 }
-function tanggal_lahir() {
+function tanggal_lahir(control) {
     var tanggal_lahir = $("#tanggal_lahir").val();
     if (moment(tanggal_lahir, "DD-MM-YYYY", true).isValid()) {
-        $("#submit_tanggal_lahir_button").html(
-            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
-        );
-        $.post(
-            base + "/daftar_online_by_phone/submit/tanggal_lahir",
-            {
-                no_telp: $("#no_telp").val(),
-                tanggal_lahir: $("#tanggal_lahir").val(),
-            },
-            function (data, textStatus, jqXHR) {
-                $("#submit_tanggal_lahir_button").html("Submit");
-                view(data.message, data.web_registration);
-            }
-        );
+        submit(control, "tanggal_lahir");
     } else {
         $("#info_tanggal").html("Format tanggal salah. Contoh : 19-07-2003");
         $("#info_tanggal").attr("class", "alert alert-danger");
     }
 }
-function alamat() {
+function alamat(control) {
     var alamat = $("#alamat").val();
     if (alamat.length < 3) {
         $("#info_alamat").html("Minimal 3 huruf");
         $("#info_alamat").attr("class", "alert alert-danger");
     } else {
-        $("#submit_alamat_button").html(
-            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
-        );
-        $.post(
-            base + "/daftar_online_by_phone/submit/alamat",
-            {
-                no_telp: $("#no_telp").val(),
-                alamat: $("#alamat").val(),
-            },
-            function (data, textStatus, jqXHR) {
-                $("#submit_alamat_button").html("Submit");
-                view(data.message, data.web_registration);
-            }
-        );
+        submit(control, "alamat");
     }
-}
-function staf(petugas_pemeriksa_id) {
-    $.post(
-        base + "/daftar_online_by_phone/submit/staf",
-        {
-            no_telp: $("#no_telp").val(),
-            petugas_pemeriksa_id: petugas_pemeriksa_id,
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
-}
-function pilihPasien(pasien_id = null) {
-    $.post(
-        base + "/daftar_online_by_phone/submit/pasien",
-        {
-            no_telp: $("#no_telp").val(),
-            pasien_id: pasien_id,
-        },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
-    );
 }
 function lanjutkan() {
     $("#lanjutkan").html(
@@ -230,7 +110,7 @@ function validasiBpjs(control) {
     }
 }
 
-function validasiNomorKartuAktif() {
+function validasiNomorKartuAktif(control) {
     var nomor_asuransi_bpjs = $("#nomor_asuransi_bpjs").val();
     if (nomor_asuransi_bpjs.match(/[^$,.\d]/)) {
         $("#info_nomor_asuransi_bpjs").html("Nomor BPJS harus semuanya angka");
@@ -239,32 +119,7 @@ function validasiNomorKartuAktif() {
         $("#info_nomor_asuransi_bpjs").html("Nomor BPJS harus 13 angka");
         $("#info_nomor_asuransi_bpjs").attr("class", "alert alert-danger");
     } else {
-        $("#submit_nomor_asuransi_bpjs_button").html(
-            '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
-        );
-        $.post(
-            base + "/daftar_online_by_phone/validasi/bpjs",
-            { nomor_asuransi_bpjs: $("#nomor_asuransi_bpjs").val() },
-            function (data, textStatus, jqXHR) {
-                if (data.bisa_digunakan) {
-                    nomor_asuransi_bpjs_submit();
-                } else {
-                    $("#submit_nomor_asuransi_bpjs_button").show();
-                    $("#info_nomor_asuransi_bpjs").attr(
-                        "class",
-                        "alert alert-danger"
-                    );
-                }
-                $("#info_nomor_asuransi_bpjs").html(data.pesan);
-                $("#submit_nomor_asuransi_bpjs_button").html("Submit");
-            }
-        );
-    }
-}
-function namaKeyup(control) {
-    if ($(control).val().length > 1) {
-        $("#submit_nama_button").show();
-    } else {
+        submit(control, "nomor_asuransi_bpjs");
     }
 }
 function preventNumeric(e) {
@@ -284,39 +139,6 @@ function tanggal_lahir_keypress(evt) {
         return false;
 
     return true;
-}
-
-function tanggal_lahir_keyup(control) {
-    console.log("s");
-    var tanggal_lahir = $(control).val();
-    if (moment(tanggal_lahir, "DD-MM-YYYY", true).isValid()) {
-        $("#submit_tanggal_lahir_button").show();
-    } else {
-    }
-    // var tanggal_lahir = $(control).val();
-    // if (
-    //     tanggal_lahir.length == 2 &&
-    //     tanggal_lahir.charAt(tanggal_lahir.length - 1) !== "-"
-    // ) {
-    //     tanggal_lahir = tanggal_lahir.toString();
-    //     $(control).val(tanggal_lahir + "-");
-    //     $("#info_tanggal").html("masukkan 2 angka bulan");
-    // } else if (tanggal_lahir.length == 5) {
-    //     tanggal_lahir = tanggal_lahir.toString();
-    //     $(control).val(tanggal_lahir + "-");
-    //     $("#info_tanggal").html("masukkan 4 angka tahun");
-    // }
-}
-function alamat_keyup(control) {
-    var alamat = $(control).val();
-    if (alamat.length > 1) {
-        $("#submit_alamat_button").show();
-    } else {
-    }
-}
-
-function nomor_asuransi_bpjs_oninput(control) {
-    console.log("pasted");
 }
 
 function batalkan() {
@@ -360,8 +182,6 @@ function hapusAntrian(antrian_id, control) {
         .closest(".alert-info")
         .find(".nomor_antrian")
         .html();
-    console.log(nomor_antrian);
-
     Swal.fire({
         title: "Konfirmasi",
         text: "Anda akan menghapus antrian " + nomor_antrian,

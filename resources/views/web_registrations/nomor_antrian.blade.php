@@ -1,13 +1,23 @@
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <button onclick="pglPasien([]); return false" class="btn btn-success btn-sm">
+                Aktifkan Notifikasi
+            </button>
+            
+        </div>
+    </div>
 <div class="text-center">
     <div class="row mb-10">
-        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-            <button class="btn btn-danger btn-block" onclick="batalkan();return false;">
-                Batalkan
-            </button>
-        </div>
-        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <button class="btn btn-success btn-block" onclick="daftar_lagi();return false;">
                 Daftar Lagi
+            </button>
+        </div>
+    </div>
+    <div class="row mb-10">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <button class="btn btn-danger btn-block" onclick="batalkan();return false;">
+                Batalkan Semua Antrian
             </button>
         </div>
     </div>

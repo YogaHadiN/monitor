@@ -19,6 +19,7 @@ if (menangani_gawat_darurat) {
     clearInterval(timer);
 }
 channel.bind(event_name, function (data) {
+    console.log(data);
     if (
         typeof data.panggil !== "undefined" &&
         typeof data.ruangan !== "undefined"

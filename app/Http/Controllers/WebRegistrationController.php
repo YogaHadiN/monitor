@@ -8,6 +8,7 @@ use Input;
 use App\Models\WebRegistration;
 use App\Models\Antrian;
 use App\Models\Pasien;
+use App\Models\Tenant;
 use App\Models\TipeKonsultasi;
 use App\Models\PetugasPemeriksa;
 use App\Http\Controllers\WablasController;
@@ -31,12 +32,14 @@ class WebRegistrationController extends Controller
         return view('web_registrations.daftar_online');
     }
     public function daftar_online_by_phone($no_telp){
+        $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
         return view('web_registrations.daftar_online_by_phone', compact(
-            'no_telp'
+            'no_telp',
+            'menangani_gawat_darurat'
         ));
     }
     public function submit_pembayaran(){
-        $registrasi_pembayaran_id = Input::get('registrasi_pembayaran_id');
+        $registrasi_pembayaran_id = Input::get('value');
         $no_telp                  = Input::get('no_telp');
 
         $web_registration = WebRegistration::where('no_telp', $no_telp)
@@ -256,7 +259,7 @@ class WebRegistrationController extends Controller
         }
     }
     public function submit_tipe_konsultasi(){
-        $tipe_konsultasi_id = Input::get('tipe_konsultasi_id');
+        $tipe_konsultasi_id = Input::get('value');
         $no_telp            = Input::get('no_telp');
         $cek                = $this->cek( $tipe_konsultasi_id );
         $message            = $cek['message'];
@@ -283,7 +286,7 @@ class WebRegistrationController extends Controller
         );
     }
     public function nomor_asuransi_bpjs(){
-        $nomor_asuransi_bpjs = Input::get('nomor_asuransi_bpjs');
+        $nomor_asuransi_bpjs = Input::get('value');
         $no_telp = Input::get('no_telp');
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
@@ -324,7 +327,7 @@ class WebRegistrationController extends Controller
     }
 
     public function nama(){
-        $nama = Input::get('nama');
+        $nama = Input::get('value');
         $no_telp = Input::get('no_telp');
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
@@ -343,7 +346,7 @@ class WebRegistrationController extends Controller
     }
 
     public function tanggal_lahir(){
-        $tanggal_lahir = Input::get('tanggal_lahir');
+        $tanggal_lahir = Input::get('value');
         $no_telp = Input::get('no_telp');
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
@@ -362,7 +365,7 @@ class WebRegistrationController extends Controller
     }
     
     public function alamat(){
-        $alamat = Input::get('alamat');
+        $alamat = Input::get('value');
         $no_telp = Input::get('no_telp');
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
@@ -380,7 +383,7 @@ class WebRegistrationController extends Controller
         );
     }
     public function staf(){
-        $petugas_pemeriksa_id    = Input::get('petugas_pemeriksa_id');
+        $petugas_pemeriksa_id    = Input::get('value');
         $no_telp = Input::get('no_telp');
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
@@ -517,7 +520,7 @@ class WebRegistrationController extends Controller
         ];
     }
     public function pasien(){
-        $pasien_id = Input::get('pasien_id');
+        $pasien_id = Input::get('value');
         $no_telp = Input::get('no_telp');
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                         ->whereDate('created_at', date('Y-m-d'))
@@ -616,7 +619,7 @@ class WebRegistrationController extends Controller
         );
     }
     public function validasi_bpjs(){
-        $nomor_asuransi_bpjs = Input::get('nomor_asuransi_bpjs');
+        $nomor_asuransi_bpjs = Input::get('value');
         return $this->cekBpjsApi( $nomor_asuransi_bpjs );
     }
     public function batalkan(){
@@ -711,7 +714,7 @@ class WebRegistrationController extends Controller
         );
     }
     public function hapus_antrian(){
-        $antrian_id = Input::get('antrian_id');
+        $antrian_id = Input::get('value');
         $antrian = Antrian::find( $antrian_id );
         $antrian->delete();
     }
