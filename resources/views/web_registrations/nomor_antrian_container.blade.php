@@ -8,7 +8,9 @@
             Scan QR berikut saat tiba di klinik
         </div>
         <div>
-            <img class="center-fit" src="{{ \Storage::disk('s3')->url($antrian->qr_code_path_s3) }}" alt=''/>
+            @if ( !is_null( $antrian->qr_code_path_s3 ) )
+                <img class="center-fit" src="{{ \Storage::disk('s3')->url($antrian->qr_code_path_s3) }}" alt=''/>
+            @endif
         </div>
         <div class="row mb-10 mt-10">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
