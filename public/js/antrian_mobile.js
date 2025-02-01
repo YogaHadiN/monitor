@@ -261,7 +261,7 @@ function panggilPasien(ruangan, nomor_panggilan) {
     $.get(
         base + "/antrianperiksa/monitor/convert_sound_to_array/mobile",
         {
-            no_telp: $('#no_telp').val();,
+            no_telp: $("#no_telp").val(),
             nomor_antrian: nomor_panggilan,
             ruangan: ruangan,
         },
