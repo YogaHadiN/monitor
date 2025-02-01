@@ -339,4 +339,125 @@ class AntrianController extends Controller
         return "<img src='$urlFile' alt=''/>";
     }
     
+    public function convertSoundToArrayMobile(){
+		$nomor_antrian = Input::get('nomor_antrian');
+		$no_telp = Input::get('no_telp');
+		$ruangan       = Input::get('ruangan');
+		$huruf         = strtolower(str_split($nomor_antrian)[0]);
+		$angka         = substr($nomor_antrian, 1);
+
+		$result = [];
+		$result[] =	'nomorantrian';
+		if ( (int)$angka < 12 || $angka == '100' ) {
+			$result[] = $huruf;
+			$result[] = (int) $angka;
+		} else if ( (int) $angka % 100 == 0 ) {
+			$angka    = str_split($angka)[0];
+			$result[] = (int) $angka;
+			$result[] = 'ratus';
+		} else if ( (int)$angka < 20  ) {
+			$angka    = substr($angka, 1);
+			$result[] = $huruf;
+			$result[] = (int) $angka;
+			$result[] = 'belas';
+		} else if ( (int)$angka < 100  ) {
+			$angka = str_split($angka, 1);
+			if ($angka[1] != '0') {
+				$result[] = $huruf;
+				$result[] = (int) $angka[0];
+				$result[] = 'puluh';
+				$result[] = (int) $angka[1];
+			} else {
+				$result[] =	$huruf;
+				$result[] =	(int) $angka[0];
+				$result[] =	'puluh';
+			}
+		} else if ( (int)$angka < 112  ) {
+			$angka    = substr($angka, 1);
+			$result[] = $huruf;
+			$result[] = '100';
+			$result[] = (int) $angka;
+		} else if ( (int)$angka < 120  ) {
+			$angka = substr($angka, 1);
+			$angka = str_split($angka);
+			$result[] =$huruf;
+			$result[] ='100';
+			$result[] =(int) $angka[1];
+			$result[] ='belas';
+		} else if ( (int)$angka < 200  ) {
+			$angka = substr($angka, 1);
+			$angka = str_split($angka);
+			if($angka[1] != '0'){
+				$result[] =	$huruf;
+				$result[] =	'100';
+				$result[] =	(int) $angka[0];
+				$result[] ='puluh';
+				$result[] =	(int) $angka[1];
+			} else {
+				$result[] =	$huruf;
+				$result[] =	'100';
+				$result[] =	(int) $angka[0];
+				$result[] =	'puluh';
+			}
+		} else if( (int)$angka < 999  ) {
+			$angka = str_split($angka);
+			if(
+				$angka[1] == '0' ||
+				$angka[1] == '1'  &&  (int)$angka[2] < 2 
+			){
+				$result[] =	$huruf;
+				$result[] =	(int) $angka[0];
+				$result[] =	'ratus';
+				$result[] =	(int) ($angka[1] . $angka[2]);
+			} else if(
+				(int)$angka[1] > 0 &&
+				$angka[2] == '0'
+			) {
+				$result[] =	$huruf;
+				$result[] =	(int) $angka[0];
+				$result[] =	'ratus';
+				$result[] =	(int) $angka[1];
+				$result[] =	'puluh';
+			} else if(
+			   	$angka[1] == '1'
+			) {
+				$result[] =	$huruf;
+				$result[] =	(int) $angka[0];
+				$result[] =	'ratus';
+				$result[] =	(int) $angka[2];
+				$result[] =	'belas';
+			} else {
+				$result[] =	$huruf;
+				$result[] =	(int) $angka[0];
+				$result[] =	'ratus';
+				$result[] =	(int) $angka[1];
+				$result[] =	'puluh';
+				$result[] =	(int) $angka[2];
+			}
+		}
+
+        $ruangans = [];
+        foreach (Ruangan::all() as $ruangan) {
+            $ruangans[] = [
+                'ruangan_id' => $ruangan->id,
+                'nomor_antrian' => $ruangan->antrian->nomor_antrian
+            ];
+        }
+        $antrians = Antrian::where('no_telp', $no_telp)
+                    ->whereRaw(
+                        "(
+                            antriable_type = 'App\\\Models\\\Antrian' or
+                            antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                            antriable_type = 'App\\\Models\\\AntrianPoli'
+                        )"
+                    )->get();
+
+        $antrian_view = view('web_registrations.nomor_antrian_container', compact(
+            'antrians'
+        ))->render();
+        return compact(
+            'antrians',
+            'antrian_view'
+        );
+    }
 }

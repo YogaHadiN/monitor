@@ -259,16 +259,17 @@ function pglPasien(sound) {
 }
 function panggilPasien(ruangan, nomor_panggilan) {
     $.get(
-        base + "/antrianperiksa/monitor/convert_sound_to_array",
+        base + "/antrianperiksa/monitor/convert_sound_to_array/mobile",
         {
             nomor_antrian: nomor_panggilan,
             ruangan: ruangan,
         },
         function (data, textStatus, jqXHR) {
-            console.log("========================");
-            console.log("data sound panggilan");
-            console.log(data);
-            console.log("========================");
+            if (data.antrians.length > 0) {
+                $("#container_antrian").html(data.antrian_view);
+            } else {
+                view();
+            }
             pglPasien(data);
         }
     );
