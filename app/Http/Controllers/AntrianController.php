@@ -458,6 +458,7 @@ class AntrianController extends Controller
 
 		$result[] =	'silahkanmenuju';
 		$result[] = $ruangan['file_panggilan'];
+        $panggilan = $result;
         return compact(
             'antrians',
             'panggilan',
