@@ -323,7 +323,7 @@ td {
     var status_gawat_darurat_saat_ini = {{ $menangani_gawat_darurat }};
 
 </script>
-<script src="{!! url("js/antrian.js?ver=23") !!}"></script>
+<script src="{!! url("js/antrian_mobile.js?ver=23") !!}"></script>
 
 </body>
 </html>

@@ -32,6 +32,7 @@
     <div class="text-left">
         <h4>Anda memiliki {{ $antrians->count() }} Antrian : </h4>
     </div>
+    <h2 id="nomor_panggilan_mobile"></h2>
 
         @foreach ($antrians as $antrian)
             <div class="alert alert-info">
