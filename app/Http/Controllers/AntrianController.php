@@ -455,8 +455,12 @@ class AntrianController extends Controller
         $antrian_view = view('web_registrations.nomor_antrian_container', compact(
             'antrians'
         ))->render();
+
+		$result[] =	'silahkanmenuju';
+		$result[] = $ruangan['file_panggilan'];
         return compact(
             'antrians',
+            'panggilan',
             'antrian_view'
         );
     }

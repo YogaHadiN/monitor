@@ -271,7 +271,7 @@ function panggilPasien(ruangan, nomor_panggilan) {
             } else {
                 view();
             }
-            pglPasien(data);
+            pglPasien(data.panggilan);
         }
     );
 }
