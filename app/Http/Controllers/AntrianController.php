@@ -437,10 +437,10 @@ class AntrianController extends Controller
 		}
 
         $ruangans = [];
-        foreach (Ruangan::all() as $ruangan) {
+        foreach (Ruangan::all() as $rgn) {
             $ruangans[] = [
-                'ruangan_id' => $ruangan->id,
-                'nomor_antrian' => $ruangan->antrian?->nomor_antrian
+                'ruangan_id' => $rgn->id,
+                'nomor_antrian' => $rgn->antrian?->nomor_antrian
             ];
         }
         $antrians = Antrian::where('no_telp', $no_telp)
