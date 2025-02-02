@@ -3528,9 +3528,9 @@ class WablasController extends Controller
 
                         echo $this->getQrCodeMessage( $antrian );
 
-                        $response = $this->pesanBalasanBilaTerdaftar( $antrian, true );
-                        $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
-                        $this->sendWhatsappImage( $this->no_telp, $urlFile, $response );
+                        /* $response = $this->pesanBalasanBilaTerdaftar( $antrian, true ); */
+                        /* $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ; */
+                        /* $this->sendWhatsappImage( $this->no_telp, $urlFile, $response ); */
                         WhatsappBot::where('no_telp', $this->no_telp)->delete();
                         ReservasiOnline::where('no_telp', $this->no_telp)->delete();
 
@@ -5376,17 +5376,17 @@ class WablasController extends Controller
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
-        $message = 'Mohon ditunggu sesaat lagi sistem akan mengirim qr code anda mungkin membutuhkan waktu 2-5 menit.';
+        $message = 'Anda sudah terdaftar dengan nomor antrian <strong>' . $antrian->nomor_antrian. '</strong>';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Apabila code QR tidak terkirim ';
+        $message .= 'Untuk mengakses QR CODE dan Cek Antrian, klik link berikut ini :';
         $message .= PHP_EOL;
         $message .= 'Klik link berikut :';
         $message .= PHP_EOL;
-        $message .= 'https://www.klinikjatielok.com/antrians/get/qrcode/' . $antrian->id;
+        $message .= 'https://www.klinikjatielok.com/daftar_online/' . $this->no_telp;
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Mohon untuk menyimpan nomor ini agar dapat mengaktifkan link diatas';
+        $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
         return $message;
     }
 }
