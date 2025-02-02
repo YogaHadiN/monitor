@@ -268,10 +268,10 @@ function panggilPasien(ruangan, nomor_panggilan) {
         function (data, textStatus, jqXHR) {
             if (data.antrians.length > 0) {
                 $("#container_antrian").html(data.antrian_view);
+                pglPasien(data.panggilan);
             } else {
                 view();
             }
-            pglPasien(data.panggilan);
         }
     );
 }

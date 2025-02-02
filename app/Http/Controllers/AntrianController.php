@@ -450,7 +450,9 @@ class AntrianController extends Controller
                             antriable_type = 'App\\\Models\\\AntrianPeriksa' or
                             antriable_type = 'App\\\Models\\\AntrianPoli'
                         )"
-                    )->get();
+                    )
+                    ->whereDate('created_at', date('Y-m-d'))
+                    ->get();
 
         $antrian_view = view('web_registrations.nomor_antrian_container', compact(
             'antrians'
