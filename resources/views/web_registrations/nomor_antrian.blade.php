@@ -1,11 +1,3 @@
-    <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <button onclick="pglPasien([]); return false" class="btn btn-success btn-sm">
-                Aktifkan Notifikasi
-            </button>
-            
-        </div>
-    </div>
 <div class="text-center">
     <div class="row mb-10">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">

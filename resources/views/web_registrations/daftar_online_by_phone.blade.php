@@ -15,6 +15,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 <script src="https://kit.fontawesome.com/888ab79ab3.js" crossorigin="anonymous"></script>
 <style type="text/css" media="all">
+.float-right {
+    float: right;
+}
 .text-center {
     text-align: center;
 }
@@ -71,6 +74,8 @@ td {
     to { -webkit-transform: rotate(360deg); }
 }
 
+
+
 </style>
 
 
@@ -79,7 +84,16 @@ td {
 <body>
     <input type="text" value="{{ $no_telp }}" name="no_telp" class="hide" id="no_telp"/>
     <div class="container">
-        <h4>Klinik Jati Elok</h4>
+    <div class="row">
+        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            <h4>Klinik Jati Elok</h4>
+        </div>
+        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 float-right mt-10 text-right">
+            <button onclick="pglPasien([]); return false" class="btn btn-success btn-sm">
+                Aktifkan Notifikasi
+            </button>
+        </div>
+    </div>
         <hr>
         <div id="message">
 
