@@ -73,7 +73,16 @@ class WebRegistrationController extends Controller
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();
 
-        $antrians = Antrian::where('no_telp', $no_telp)->whereDate('created_at', date('Y-m-d'))->get();
+        $antrians = Antrian::where('no_telp', $no_telp)
+                                ->whereDate('created_at', date('Y-m-d'))
+                                ->whereRaw(
+                                    "(
+                                        antriable_type = 'App\\\Models\\\Antrian' or
+                                        antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                        antriable_type = 'App\\\Models\\\AntrianPoli'
+                                    )"
+                                )
+                                ->get();
         if (
             count( $antrians ) &&
             is_null( $web_registration )
@@ -626,6 +635,13 @@ class WebRegistrationController extends Controller
         $no_telp = Input::get('no_telp');
         $antrian = Antrian::where('no_telp',  $no_telp )
                             ->whereDate('created_at', date('Y-m-d'))
+                            ->whereRaw(
+                                "(
+                                    antriable_type = 'App\\\Models\\\Antrian' or
+                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                    antriable_type = 'App\\\Models\\\AntrianPoli'
+                                )"
+                            )
                             ->delete();
     }
 
