@@ -5358,8 +5358,8 @@ class WablasController extends Controller
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->latest()->first();
         $antrian = $ant->ruangan->antrian;
-        Log::info('ruangan_id');
-        Log::info($ant->ruangan->id);
+        Log::info('ruangan_id antrian_id');
+        Log::info($ant->ruangan->antrian_id);
         if (!is_null($antrian)) {
             Log::info(5362);
             $ant = Antrian::where('no_telp', $this->no_telp)
