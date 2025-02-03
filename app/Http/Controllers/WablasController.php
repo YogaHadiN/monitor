@@ -5415,6 +5415,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= $this->templateFooter();
             }
+            return $message;
         }
     }
     
