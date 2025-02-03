@@ -1029,11 +1029,8 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= 'Balas *cek antrian* untuk melihat antrian terakhir';
         $response .= PHP_EOL;
-        $response .= 'Balas *qr code* untuk mendapatkan link qr code terbaru';
-        $response .= PHP_EOL;
-        $response .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
-        $response .= PHP_EOL;
         $response .= 'Ketik *batalkan* untuk membatalkan';
+
         $response .= " reservasi";
         return $response;
     }
@@ -5338,21 +5335,20 @@ class WablasController extends Controller
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
-        $message = 'Anda terdaftar dengan nomor antrian _' . $antrian->nomor_antrian . '_';
+        $message = 'Nomor antrian Anda :';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '_' . $antrian->nomor_antrian . '_';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Untuk mengakses QR CODE dan Cek Antrian, klik link berikut ini :';
+        $message .= '_Untuk mengakses QR CODE_';
         $message .= PHP_EOL;
-        $message .= 'Klik link berikut :';
+        $message .= '_Untuk mendaftarkan pasien selanjutnya_';
         $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
+        $message .= $this->aktifkan_notifikasi_otomatis_text();
         $message .= $this->footerAntrian();
         return $message;
     }
@@ -5389,6 +5385,16 @@ class WablasController extends Controller
                     $message .= PHP_EOL;
                     $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian );
                     $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= '_Untuk mengaktifkan notifikasi otomatis_';
+                    $message .= PHP_EOL;
+                    $message .= 'Klik link berikut :';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
+                    $response .= PHP_EOL;
+                    $message .= PHP_EOL;
                     if (
                         $ant->reservasi_online && 
                         $sisa_antrian < 11 &&
@@ -5418,5 +5424,18 @@ class WablasController extends Controller
             return $message;
         }
     }
+    public function aktifkan_notifikasi_otomatis_text(){
+        $message = '_Untuk mengaktifkan notifikasi otomatis_';
+        $message .= PHP_EOL;
+        $message .= 'Klik link berikut :';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
+        return $message;
+    }
+    
     
 }
