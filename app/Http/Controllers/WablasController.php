@@ -5396,7 +5396,7 @@ class WablasController extends Controller
                         $message .= PHP_EOL;
                         $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
                         $message .= PHP_EOL;
-                        $message .= 'Apabila antrian Anda terlewat, *Sebelum melakukan Scab QR CODE*, secara otomatis antrian akan terapus oleh sistem';
+                        $message .= 'Apabila antrian Anda terlewat secara otomatis antrian akan terapus oleh sistem';
                         $message .= PHP_EOL;
 
                     } else if (
