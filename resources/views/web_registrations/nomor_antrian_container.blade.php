@@ -1,7 +1,5 @@
 @foreach ($antrians as $antrian)
     <div class="alert alert-info">
-        <p>Antrian Terpanggil</p>
-        <h4 class="nomor_antrian">{{ $antrian->ruangan->antrian?->nomor_antrian }}</h4>
         <p>Nomor Antrian Anda</p>
         <h4 class="nomor_antrian">{{ $antrian->nomor_antrian }}  ( {{ ucwords( $antrian->nama ) }} )</h4>
         <div class="mb-10">

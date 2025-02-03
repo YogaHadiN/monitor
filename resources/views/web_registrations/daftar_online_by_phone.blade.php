@@ -293,51 +293,50 @@ td {
       var base = '{{ url("") }}';
   </script>
 <script src="{!!asset("js/daftar_online_by_phone.js") !!}"></script>
-<script>
-    $('#carousel1').carousel({
-      interval: 7000,
-      cycle: true
-    }); 
-    moment.locale('id')
-    window.setInterval(function () {
-        $('#hari').html(moment().format('dddd, DD MMMM YYYY'))
-        $('#jam').html(moment().format('HH:mm:ss'))
-    }, 1000);
+{{-- <script> --}}
+{{--     $('#carousel1').carousel({ --}}
+{{--       interval: 7000, --}}
+{{--       cycle: true --}}
+{{--     }); --}} 
+{{--     moment.locale('id') --}}
+{{--     window.setInterval(function () { --}}
+{{--         $('#hari').html(moment().format('dddd, DD MMMM YYYY')) --}}
+{{--         $('#jam').html(moment().format('HH:mm:ss')) --}}
+{{--     }, 1000); --}}
 
-    if (location.protocol !== 'https:') {
-        var base = "{{ url('/') }}";
-    } else {
-        var base = "{{ url('/') }}";
-    }
-	var hitung = 0
+{{--     if (location.protocol !== 'https:') { --}}
+{{--         var base = "{{ url('/') }}"; --}}
+{{--     } else { --}}
+{{--         var base = "{{ url('/') }}"; --}}
+{{--     } --}}
+{{-- 	var hitung = 0 --}}
 
-	var channel_name = 'my-channel';
-	var event_name   = 'form-submitted';
+{{-- 	var channel_name = 'my-channel'; --}}
+{{-- 	var event_name   = 'form-submitted'; --}}
 
-	Pusher.logToConsole = true;
+{{-- 	Pusher.logToConsole = true; --}}
 
-	var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-	  cluster:"{{ env('PUSHER_APP_CLUSTER') }}",
-	  forceTLS: true
-	});
+{{-- 	var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", { --}}
+{{-- 	  cluster:"{{ env('PUSHER_APP_CLUSTER') }}", --}}
+{{-- 	  forceTLS: true --}}
+{{-- 	}); --}}
 
-	var channel = pusher.subscribe(channel_name);
-	var nomor_antrian = '';
+{{-- 	var channel = pusher.subscribe(channel_name); --}}
+{{-- 	var nomor_antrian = ''; --}}
 
-	function getChannelName(){
-		@if( gethostname() == 'Yogas-Mac.local' )
-			var channel_name = 'my-channel2';
-		@else
-			var channel_name = 'my-channel';
-		@endif
-		return channel_name;
-	}
+{{-- 	function getChannelName(){ --}}
+{{-- 		@if( gethostname() == 'Yogas-Mac.local' ) --}}
+{{-- 			var channel_name = 'my-channel2'; --}}
+{{-- 		@else --}}
+{{-- 			var channel_name = 'my-channel'; --}}
+{{-- 		@endif --}}
+{{-- 		return channel_name; --}}
+{{-- 	} --}}
 
-    var menangani_gawat_darurat = {{ $menangani_gawat_darurat }};
-    var status_gawat_darurat_saat_ini = {{ $menangani_gawat_darurat }};
+{{--     var menangani_gawat_darurat = {{ $menangani_gawat_darurat }}; --}}
+{{--     var status_gawat_darurat_saat_ini = {{ $menangani_gawat_darurat }}; --}}
 
-</script>
-<script src="{!! url("js/antrian_mobile.js?ver=23") !!}"></script>
-
+{{-- </script> --}}
+{{-- <script src="{!! url("js/antrian_mobile.js?ver=23") !!}"></script> --}}
 </body>
 </html>

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Input;
 use App\Models\WebRegistration;
+use App\Models\NoTelp;
 use App\Models\Antrian;
 use App\Models\Pasien;
 use App\Models\Tenant;
@@ -33,7 +34,13 @@ class WebRegistrationController extends Controller
     }
     public function daftar_online_by_phone($no_telp){
         $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
-        $no_telp = decrypt_string( $no_telp );
+        $no_telp                 = decrypt_string( $no_telp );
+        $telp                    = NoTelp::where('no_telp', $no_telp)->firstOrCreate([
+            'no_telp' => $no_telp
+        ]);
+        $telp->saved_by_other = 1;
+        $telp->save();
+
         return view('web_registrations.daftar_online_by_phone', compact(
             'no_telp',
             'menangani_gawat_darurat'

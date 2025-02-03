@@ -16,11 +16,6 @@
     <div class="alert alert-danger">
         Mohon ambil antrian kembali apabila antrian terlewat
     </div>
-    <div class="alert alert-warning">
-        Update terakhir : {{ date('Y-m-d H:i:s')}}
-        <button class="btn btn-sm btn-success" onclick="view();">Refresh Antrian</button>
-    </div>
-
     <div class="text-left">
         <h4>Anda memiliki {{ $antrians->count() }} Antrian : </h4>
     </div>
