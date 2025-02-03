@@ -5353,11 +5353,13 @@ class WablasController extends Controller
         return $message;
     }
     public function cekAntrian(){
+        Log::info(5356);
         $ant = Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->latest()->first();
         $antrian = $ant->ruangan->antrian;
         if (!is_null($antrian)) {
+            Log::info(5362);
             $ant = Antrian::where('no_telp', $this->no_telp)
                 ->where('created_at', 'like', date('Y-m-d') . '%')
                 ->latest()->first();
@@ -5418,9 +5420,12 @@ class WablasController extends Controller
                     }
                 }
 
+                Log::info(5423);
                 $message .= PHP_EOL;
                 $message .= $this->templateFooter();
             }
+            Log::info('message');
+            Log::info($message);
             return $message;
         }
     }
