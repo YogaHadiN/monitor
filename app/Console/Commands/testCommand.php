@@ -44,7 +44,10 @@ class testCommand extends Command
      */
     public function handle()
     {
-        resetWhatsappRegistration('6281381912803');
+        $nomor = '6281381912803';
+        $message = 'hits the test';
+        $wa = new WablasController;
+        dd( $wa->sendSingle($nomor, $message) );
     }
     public function refreshAntrianOnline(){
         WhatsappBot::where('no_telp', '6281381912803')->delete();
