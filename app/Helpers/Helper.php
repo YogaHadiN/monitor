@@ -163,12 +163,13 @@ if (!function_exists('encrypt_string')) {
         $encryption = openssl_encrypt($simple_string, $ciphering,
                     $encryption_key, $options, $encryption_iv);
         // return encrypt
-        return $encryption ;
+        return base64_encode($encryption) ;
     }
 }
 
 if (!function_exists('decrypt_string')) {
     function decrypt_string($encryption){
+        $encryption = base64_decode( $encryption );
 
         // Non-NULL Initialization Vector for decryption
         $decryption_iv = env('ENCRYPTION_IV');
