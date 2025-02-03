@@ -1027,11 +1027,15 @@ class WablasController extends Controller
         $response = PHP_EOL;
         $response .= $this->samaDengan();
         $response .= PHP_EOL;
+        $response .= '_Untuk mengakses QR CODE_';
+        $response .= PHP_EOL;
+        $response .= '_Untuk mendaftarkan pasien selanjutnya_';
+        $response .= PHP_EOL;
         $response .= 'Balas *cek antrian* untuk melihat antrian terakhir';
         $response .= PHP_EOL;
         $response .= 'Ketik *batalkan* untuk membatalkan';
-
         $response .= " reservasi";
+
         return $response;
     }
 
@@ -5343,10 +5347,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
         $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= '_Untuk mengakses QR CODE_';
-        $message .= PHP_EOL;
-        $message .= '_Untuk mendaftarkan pasien selanjutnya_';
         $message .= PHP_EOL;
         $message .= $this->aktifkan_notifikasi_otomatis_text();
         $message .= $this->footerAntrian();
