@@ -1027,10 +1027,6 @@ class WablasController extends Controller
         $response = PHP_EOL;
         $response .= $this->samaDengan();
         $response .= PHP_EOL;
-        $response .= '_Untuk mengakses QR CODE_';
-        $response .= PHP_EOL;
-        $response .= '_Untuk mendaftarkan pasien selanjutnya_';
-        $response .= PHP_EOL;
         $response .= 'Balas *cek antrian* untuk melihat antrian terakhir';
         $response .= PHP_EOL;
         $response .= 'Ketik *batalkan* untuk membatalkan';
@@ -5388,14 +5384,7 @@ class WablasController extends Controller
                     $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
-                    $message .= '_Untuk mengaktifkan notifikasi otomatis_';
-                    $message .= PHP_EOL;
-                    $message .= 'Klik link berikut :';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
+                    $message .= $this->aktifkan_notifikasi_otomatis_text();
                     if (
                         $ant->reservasi_online && 
                         $sisa_antrian < 11 &&
@@ -5425,7 +5414,12 @@ class WablasController extends Controller
         }
     }
     public function aktifkan_notifikasi_otomatis_text(){
-        $message = '_Untuk mengaktifkan notifikasi otomatis_';
+        $message = PHP_EOL;
+        $message .= '_Untuk mengakses QR CODE_';
+        $message .= PHP_EOL;
+        $message .= '_Untuk mendaftarkan pasien selanjutnya_';
+        $message .= PHP_EOL;
+        $message .= '_Untuk mengaktifkan notifikasi otomatis_';
         $message .= PHP_EOL;
         $message .= 'Klik link berikut :';
         $message .= PHP_EOL;
