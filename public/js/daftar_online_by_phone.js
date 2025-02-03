@@ -193,6 +193,7 @@ function hapusAntrian(antrian_id, control) {
         cancelButtonText: "Kembali",
     }).then((result) => {
         if (result.isConfirmed) {
+            console.log(antrian_id);
             $(control).html(
                 '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
             );

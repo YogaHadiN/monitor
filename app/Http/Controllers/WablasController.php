@@ -5383,7 +5383,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= 'Klik link berikut :';
         $message .= PHP_EOL;
-        $message .= 'https://www.klinikjatielok.com/daftar_online/' . $this->no_telp;
+        $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';

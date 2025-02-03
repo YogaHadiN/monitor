@@ -33,6 +33,7 @@ class WebRegistrationController extends Controller
     }
     public function daftar_online_by_phone($no_telp){
         $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
+        $no_telp = decrypt_string( $no_telp );
         return view('web_registrations.daftar_online_by_phone', compact(
             'no_telp',
             'menangani_gawat_darurat'
@@ -730,7 +731,7 @@ class WebRegistrationController extends Controller
         );
     }
     public function hapus_antrian(){
-        $antrian_id = Input::get('value');
+        $antrian_id = Input::get('antrian_id');
         $antrian = Antrian::find( $antrian_id );
         $antrian->delete();
     }

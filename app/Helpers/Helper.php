@@ -144,3 +144,45 @@ if (!function_exists('tambahkanGelar')) {
         }
     }
 }
+if (!function_exists('encrypt_string')) {
+    function encrypt_string($simple_string){
+        // Store the cipher method
+        $ciphering = env('CIPHERING');
+          
+        // Use OpenSSl Encryption method
+        $iv_length = openssl_cipher_iv_length($ciphering);
+        $options = 0;
+          
+        // Non-NULL Initialization Vector for encryption
+        $encryption_iv = env('ENCRYPTION_IV');
+          
+        // Store the encryption key
+        $encryption_key = env('ENCRYPTION_KEY');
+          
+        // Use openssl_encrypt() function to encrypt the data
+        $encryption = openssl_encrypt($simple_string, $ciphering,
+                    $encryption_key, $options, $encryption_iv);
+        // return encrypt
+        return $encryption ;
+    }
+}
+
+if (!function_exists('decrypt_string')) {
+    function decrypt_string($encryption){
+
+        // Non-NULL Initialization Vector for decryption
+        $decryption_iv = env('ENCRYPTION_IV');
+          
+        $options = 0;
+        $ciphering = "AES-128-CTR";
+        // Store the decryption key
+        $decryption_key = env('ENCRYPTION_KEY');
+          
+        // Use openssl_decrypt() function to decrypt the data
+        $decryption=openssl_decrypt ($encryption, $ciphering, 
+                $decryption_key, $options, $decryption_iv);
+          
+        // return decrypt
+        return $decryption;
+    }
+}
