@@ -5338,7 +5338,7 @@ class WablasController extends Controller
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
-        $message = $this->cekAntrian();
+        $message = 'Anda terdaftar dengan nomor antrian _' . $antrian->nomor_antrian . '_';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
