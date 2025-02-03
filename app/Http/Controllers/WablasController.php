@@ -4316,11 +4316,8 @@ class WablasController extends Controller
         /* return $message; */
 
         if (
-            (
-                date('G') <= 21 && // pendaftaran online tutup jam 21.59
-                date('G') >= 7 // 
-            ) ||
-            $this->no_telp = '6281381912803'
+            date('G') <= 21 && // pendaftaran online tutup jam 21.59
+            date('G') >= 7 // 
         ) {
             $whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
