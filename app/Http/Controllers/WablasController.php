@@ -3553,7 +3553,7 @@ class WablasController extends Controller
                     $input_tidak_tepat = true;
                 }
             } else {
-                echo 'Antrian Anda sudah diproses. Mohon ditunggu Sistem mengirimkan QrCode';
+
             }
         }
 
@@ -5385,6 +5385,7 @@ class WablasController extends Controller
         $message .= 'Untuk mengakses QR CODE dan Cek Antrian, klik link berikut ini :';
         $message .= PHP_EOL;
         $message .= 'Klik link berikut :';
+        $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
         $message .= PHP_EOL;
