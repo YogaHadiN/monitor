@@ -5381,6 +5381,9 @@ class WablasController extends Controller
         $message = 'Anda sudah terdaftar dengan nomor antrian <strong>' . $antrian->nomor_antrian. '</strong>';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
+        $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
         $message .= 'Untuk mengakses QR CODE dan Cek Antrian, klik link berikut ini :';
         $message .= PHP_EOL;
         $message .= 'Klik link berikut :';
