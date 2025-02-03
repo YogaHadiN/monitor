@@ -5355,7 +5355,6 @@ class WablasController extends Controller
             }
         }
 
-
         if ( $petugas_pemeriksas->count() > 1 ) {
             // populate ulang petugas pemeriksa
             $repopulate = [];
@@ -5378,7 +5377,7 @@ class WablasController extends Controller
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
-        $message = 'Anda sudah terdaftar dengan nomor antrian <strong>' . $antrian->nomor_antrian. '</strong>';
+        $message = 'Anda sudah terdaftar dengan nomor antrian _' . $antrian->nomor_antrian. '_';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
