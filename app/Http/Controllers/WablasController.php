@@ -1011,10 +1011,17 @@ class WablasController extends Controller
             $response .= PHP_EOL;
             $response .= "Silahkan menunggu untuk dilayani";
         }
-        $response .= PHP_EOL;
+        $response .= $this->footerAntrian();
+        return $response;
+    }
+
+    public function footerAntrian(){
+        $response = PHP_EOL;
         $response .= $this->samaDengan();
         $response .= PHP_EOL;
         $response .= 'Balas *cek antrian* untuk melihat antrian terakhir';
+        $response .= PHP_EOL;
+        $response .= 'Balas *qr code* untuk mendapatkan link qr code terbaru';
         $response .= PHP_EOL;
         $response .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
         $response .= PHP_EOL;
@@ -1022,6 +1029,8 @@ class WablasController extends Controller
         $response .= " reservasi";
         return $response;
     }
+
+
     /**
      * undocumented function
      *
@@ -1070,7 +1079,7 @@ class WablasController extends Controller
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($payload) );
-        curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/v2/send-button");
+        curl_setopt($curl, CURLOPT_URL,  "https://tegal.wablas.com/api/v2/send-button");
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
@@ -4059,7 +4068,7 @@ class WablasController extends Controller
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/send-image");
+        curl_setopt($curl, CURLOPT_URL,  "https://tegal.wablas.com/api/send-image");
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
@@ -4563,7 +4572,7 @@ class WablasController extends Controller
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/send-message");
+        curl_setopt($curl, CURLOPT_URL,  "https://tegal.wablas.com/api/send-message");
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
         $result = curl_exec($curl);
@@ -5391,6 +5400,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
+        $message .= $this->footerAntrian();
         return $message;
     }
 }
