@@ -3819,7 +3819,7 @@ class WablasController extends Controller
     public function pertanyaanPoliYangDituju(){
         $message = 'Mohon jawab pertanyaan berikut untuk mendaftar ONLINE';
         $message .= PHP_EOL;
-        $message .= '===========================';
+        $message .= $this->samaDengan();
         $message .= PHP_EOL;
         $message .= 'Bisa dibantu poli yang dituju?';
         $message .= PHP_EOL;
