@@ -5360,6 +5360,7 @@ class WablasController extends Controller
         $antrian = $ant->ruangan->antrian;
         Log::info('ruangan_id antrian_id');
         Log::info($ant->ruangan->antrian_id);
+        Log::info($ant->ruangan->antrian);
         if (!is_null($antrian)) {
             Log::info(5362);
             $ant = Antrian::where('no_telp', $this->no_telp)
