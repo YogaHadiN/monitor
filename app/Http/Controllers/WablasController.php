@@ -2428,8 +2428,8 @@ class WablasController extends Controller
         $query .= "FROM petugas_pemeriksas as ptp ";
         $query .= "JOIN stafs as stf on stf.id = ptp.staf_id ";
         $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
-        $hari_ini = Carbon::now()->format('Y-m-d H:i:s');
-        $query .= "AND tanggal = " . $hari_ini . ';';
+        $hari_ini = Carbon::now()->format('Y-m-d');
+        $query .= "AND tanggal = " . $hari_ini . ' ';
         $query .= "AND stf.titel_id = 4 ";
         $data = DB::select($query);
 
