@@ -2430,7 +2430,7 @@ class WablasController extends Controller
         $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
         $hari_ini = Carbon::now()->format('Y-m-d H:i:s');
         $query .= "AND tanggal = " . $hari_ini . ';';
-        $query .= "AND stf.titel_id = 4 "
+        $query .= "AND stf.titel_id = 4 ";
         $data = DB::select($query);
 
         $message = '*Jadwal Bidan Hari ini';
