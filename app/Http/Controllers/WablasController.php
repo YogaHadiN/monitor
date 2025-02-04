@@ -5054,7 +5054,7 @@ class WablasController extends Controller
         if (
             (
                 date('G') < 23 &&
-                date('G') >= 6 
+                date('G') >= 7
             ) ||
             $this->no_telp == '6281381912803'
         ) {
@@ -5072,7 +5072,7 @@ class WablasController extends Controller
             return $message;
         } else {
 
-            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 6 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 6 pagi. Mohon maaf atas ketidaknyamanannya';
+            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 7 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 7 pagi. Mohon maaf atas ketidaknyamanannya';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
