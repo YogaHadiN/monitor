@@ -2424,7 +2424,28 @@ class WablasController extends Controller
         echo $this->queryJadwalKonsultasiByTipeKonsultasi(2);
     }
     public function balasJadwalDokterBidan(){
-        echo $this->queryJadwalKonsultasiByTipeKonsultasi(3);
+        $query  = "SELECT * ";
+        $query .= "FROM petugas_pemeriksas as ptp ";
+        $query .= "JOIN stafs as stf on stf.id = ptp.staf_id ";
+        $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
+        $hari_ini = Carbon::now()->format('Y-m-d H:i:s');
+        $query .= "AND tanggal = " . $hari_ini . ';';
+        $query .= "AND stf.titel_id = 4 "
+        $data = DB::select($query);
+
+        $message = '*Jadwal Bidan Hari ini';
+        $message .= PHP_EOL;
+        $message .= "Klinik Jati Elok";
+        $message .= PHP_EOL;
+
+        foreach ($data as $k => $r) {
+            $message .=  $this->tambahkanGelar($r->titel,ucwords($r->nama));
+            $message .= PHP_EOL;
+            $message .= ' ( ' . $r->jam_mulai . '-' . $r->jam_akhir.  ' )' ;
+            $message .= PHP_EOL;
+        }
+
+        echo $message;
     }
     public function balasJadwalDokterUsg(){
         echo $this->queryJadwalKonsultasiByTipeKonsultasi(4);
