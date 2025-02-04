@@ -2438,6 +2438,8 @@ class WablasController extends Controller
         $message .= "Klinik Jati Elok";
         $message .= PHP_EOL;
 
+        Log::info('query');
+        Log::info($query);
         Log::info('data');
         Log::info($data);
 
