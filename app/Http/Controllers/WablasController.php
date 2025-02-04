@@ -2434,7 +2434,7 @@ class WablasController extends Controller
         $query .= "AND stf.titel_id = 4 ";
         $data = DB::select($query);
 
-        $message = '*Jadwal Bidan Hari ini';
+        $message = 'Jadwal Bidan Hari ini';
         $message .= PHP_EOL;
         $message .= "Klinik Jati Elok";
         $message .= PHP_EOL;
