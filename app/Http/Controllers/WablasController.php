@@ -5374,13 +5374,13 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 if ( $antrian->tipe_konsultasi_id == 1 ) {
                     $message .= PHP_EOL;
-                    $sisa_antrian =$ant->sisa_antrian;
-                    $message .= "masih ada *{$sisa_antrian} antrian* lagi";
-                    $message .= PHP_EOL;
-                    $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian );
-                    $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
+                    /* $sisa_antrian =$ant->sisa_antrian; */
+                    /* $message .= "masih ada *{$sisa_antrian} antrian* lagi"; */
+                    /* $message .= PHP_EOL; */
+                    /* $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian ); */
+                    /* $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*"; */
+                    /* $message .= PHP_EOL; */
+                    /* $message .= PHP_EOL; */
                     $message .= $this->aktifkan_notifikasi_otomatis_text();
                     if (
                         $ant->reservasi_online && 
