@@ -32,6 +32,13 @@ class WebRegistrationController extends Controller
     public function daftar_online(){
         return view('web_registrations.daftar_online');
     }
+
+    public function daftar_online_post(){
+        $no_telp = Input::get('no_telp');
+        $no_telp = encrypt_string( $no_telp );
+        return redirect('daftar_online/' . $no_telp);
+    }
+
     public function daftar_online_by_phone($no_telp){
         $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
         $no_telp                 = decrypt_string( $no_telp );

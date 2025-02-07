@@ -37,6 +37,7 @@ Route::get('antrianperiksa/monitor/getDataBaru/{panggil_pasien}', [AntrianContro
 Route::get('antrians/get/qrcode/{id}', [AntrianController::class, 'getQr']);
 
 Route::get('daftar_online', [WebRegistrationController::class, 'daftar_online']);
+Route::post('daftar_online', [WebRegistrationController::class, 'daftar_online_post']);
 Route::get('daftar_online/{no_telp}', [WebRegistrationController::class, 'daftar_online_by_phone']);
 Route::get('daftar_online_by_phone/view/refresh', [WebRegistrationController::class, 'view_refresh']);
 Route::post('daftar_online_by_phone/submit/tipe_konsultasi', [WebRegistrationController::class, 'submit_tipe_konsultasi']);

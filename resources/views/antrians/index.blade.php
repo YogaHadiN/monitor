@@ -18,7 +18,8 @@
     </style>
 </head>
 <body class="text-center">
-    <h1>Hi Sparta</h1>
-    <a href='finspot:FingerspotReg;{{ $url_register }}' class='btn btn-sm btn-primary'>Register</a> 
+    <h1>Daftar Online</h1>
+    <button>Daftar Online</button>
+    {{-- <a href='finspot:FingerspotReg;{{ $url_register }}' class='btn btn-sm btn-primary'>Register</a> --}} 
 </body>
 </html>
