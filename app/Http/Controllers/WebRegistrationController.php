@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use Illuminate\Http\Request;
 use Input;
 use App\Models\WebRegistration;
@@ -36,6 +35,7 @@ class WebRegistrationController extends Controller
 
     public function daftar_online_post(){
         $no_telp = Input::get('no_telp');
+        $no_telp = $this->convertToWablasFriendlyFormat( $no_telp );
         $no_telp = encrypt_string( $no_telp );
         return redirect('daftar_online/' . $no_telp);
     }
@@ -766,4 +766,15 @@ class WebRegistrationController extends Controller
         }
         return view('web_registrations.cek_antrian_container', compact('data'))->render();
     }
+    public function convertToWablasFriendlyFormat($no_telp) {
+         if (
+             !empty($no_telp) &&
+              $no_telp[0] == 0
+         ) {
+             $no_telp = '62' . substr($no_telp, 1);
+         }
+         return $no_telp;
+    }
+
+    
 }
