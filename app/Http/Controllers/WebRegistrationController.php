@@ -46,8 +46,8 @@ class WebRegistrationController extends Controller
         $telp                    = NoTelp::where('no_telp', $no_telp)->firstOrCreate([
             'no_telp' => $no_telp
         ]);
-        $telp->saved_by_other = 1;
-        $telp->save();
+        /* $telp->saved_by_other = 1; */
+        /* $telp->save(); */
 
         return view('web_registrations.daftar_online_by_phone', compact(
             'no_telp',
