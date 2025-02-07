@@ -100,6 +100,7 @@ td {
                 {!! Form::text('no_telp' , null, [
                     'onkeyup' => "if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" ,
                     'class' => 'form-control',
+                    'placeholder' => 'klik disini untuk mulai mengisi',
                     'id' => 'no_telp',
                 ]) !!}
                 @if($errors->has('no_telp'))<code>{!! $errors->first('no_telp') !!}</code>@endif
