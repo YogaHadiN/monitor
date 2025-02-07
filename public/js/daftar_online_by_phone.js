@@ -28,7 +28,9 @@ function submit(control, route_parameter) {
             no_telp: $("#no_telp").val(),
             value: value,
         },
-        function (data, textStatus, jqXHR) {}
+        function (data, textStatus, jqXHR) {
+            view(data.message, data.web_registration);
+        }
     );
 }
 
