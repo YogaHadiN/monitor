@@ -759,7 +759,7 @@ class WebRegistrationController extends Controller
 
         foreach ($antrians as $antrian) {
             $data[] = [
-                'nomor_antrian_terakhir' => $antrian->ruangan->antrian->nomor_antrian,
+                'nomor_antrian_terakhir' => $antrian->antrian_dipanggil->nomor_antrian,
                 'nama_ruangan'           => $antrian->ruangan->nama,
                 'nomor_antrian_anda'     => $antrian->nomor_antrian
             ];

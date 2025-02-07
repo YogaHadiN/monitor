@@ -181,6 +181,22 @@ class Antrian extends Model
                                             ->first();
         return $petugas_pemeriksa->sisa_antrian;
     }
+
+    public function getAntrianDipanggilAttribute(){
+        return Antrian::whereDate('tanggal', date('Y-m-d'))
+                                            ->where('ruangan_id', $this->ruangan_id)
+                                            ->whereRaw
+                                            (
+                                                "(
+                                                    antriable_type = 'App\\\Models\\\Antrian' or
+                                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                                    antriable_type = 'App\\\Models\\\AntrianPoli'
+                                                )"
+                                            )
+                                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+                                            ->orderBy('id', 'asc')
+                                            ->first();
+    }
     public function ruangan(){
         return $this->belongsTo(Ruangan::class);
     }
