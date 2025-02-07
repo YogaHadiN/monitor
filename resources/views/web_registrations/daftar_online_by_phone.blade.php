@@ -292,7 +292,7 @@ td {
 		});
       var base = '{{ url("") }}';
   </script>
-<script src="{!! url("js/daftar_online_by_phone.js") !!}"></script>
+<script src="{!! url("js/daftar_online_by_phone.js?ver=3") !!}"></script>
 {{-- <script> --}}
 {{--     $('#carousel1').carousel({ --}}
 {{--       interval: 7000, --}}
