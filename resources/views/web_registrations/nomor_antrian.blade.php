@@ -16,6 +16,16 @@
     <div class="alert alert-danger">
         Mohon ambil antrian kembali apabila antrian terlewat
     </div>
+    <div class="row mb-10">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="alert alert-info">
+                <h5>Lihat Antrian Terakhir</h5>
+                <button class="btn btn-warning btn-block" onclick="cekAntrian(this);return false;">
+                    Klik Disini
+                </button>
+            </div>
+        </div>
+    </div>
     <div class="text-left">
         <h4>Anda memiliki {{ $antrians->count() }} Antrian : </h4>
     </div>

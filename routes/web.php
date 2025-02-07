@@ -54,6 +54,8 @@ Route::post('/daftar_online_by_phone/submit/validasi_bpjs', [WebRegistrationCont
 Route::post('/daftar_online_by_phone/submit/batalkan', [WebRegistrationController::class, 'batalkan']);
 Route::post('/daftar_online_by_phone/submit/daftar_lagi', [WebRegistrationController::class, 'daftar_lagi']);
 Route::post('/daftar_online_by_phone/submit/hapus_antrian', [WebRegistrationController::class, 'hapus_antrian']);
+Route::post('/daftar_online_by_phone/submit/cek_antrian', [WebRegistrationController::class, 'cek_antrian']);
+
 
 
 

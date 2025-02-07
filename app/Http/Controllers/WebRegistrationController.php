@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Input;
 use App\Models\WebRegistration;
 use App\Models\NoTelp;
+use App\Models\Ruangan;
 use App\Models\Antrian;
 use App\Models\Pasien;
 use App\Models\Tenant;
@@ -748,5 +749,21 @@ class WebRegistrationController extends Controller
         $antrian_id = Input::get('antrian_id');
         $antrian = Antrian::find( $antrian_id );
         $antrian->delete();
+    }
+    public function cek_antrian(){
+        $data = [];
+        $no_telp = Input::get('no_telp');
+        $antrians = Antrian::whereDate('created_at', date('Y-m-d'))
+                            ->where('no_telp', $no_telp)
+                            ->get();
+
+        foreach ($antrians as $antrian) {
+            $data[] = [
+                'nomor_antrian_terakhir' => $antrian->ruangan->antrian->nomor_antrian,
+                'nama_ruangan'           => $antrian->ruangan->nama,
+                'nomor_antrian_anda'     => $antrian->nomor_antrian
+            ];
+        }
+        return view('web_registrations.cek_antrian_container', compact('data'))->render();
     }
 }

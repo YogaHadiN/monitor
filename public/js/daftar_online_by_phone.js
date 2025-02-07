@@ -28,9 +28,7 @@ function submit(control, route_parameter) {
             no_telp: $("#no_telp").val(),
             value: value,
         },
-        function (data, textStatus, jqXHR) {
-            view(data.message, data.web_registration);
-        }
+        function (data, textStatus, jqXHR) {}
     );
 }
 
@@ -209,4 +207,25 @@ function hapusAntrian(antrian_id, control) {
             );
         }
     });
+}
+function cekAntrian(control) {
+    var textButton = $(control).html();
+    $(control).html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
+    $.post(
+        base + "/daftar_online_by_phone/submit/cek_antrian",
+        {
+            no_telp: $("#no_telp").val(),
+        },
+        function (data, textStatus, jqXHR) {
+            $(control).html(textButton);
+            Swal.fire({
+                title: "Antrian Terakhir",
+                html: data,
+                icon: "warning",
+                confirmButtonText: "OK",
+            });
+        }
+    );
 }
