@@ -195,12 +195,7 @@ class Antrian extends Model
             $ruangan_id = $this->antriable->ruangan_id;
             return Antrian::whereDate('created_at', date('Y-m-d'))
                             ->where('ruangan_id', $ruangan_id)
-                            ->whereRaw
-                            (
-                                "(
-                                    antriable_type = 'App\\\Models\\\AntrianPeriksa'
-                                )"
-                            )
+                            ->where('antriable_type', 'App\Models\AntrianPeriksa')
                             ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
                             ->orderBy('id', 'asc')
                             ->first()->nomor_antrian;
