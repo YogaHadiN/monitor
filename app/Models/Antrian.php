@@ -183,7 +183,7 @@ class Antrian extends Model
     }
 
     public function getAntrianDipanggilAttribute(){
-        return Antrian::whereDate('tanggal', date('Y-m-d'))
+        return Antrian::whereDate('created_at', date('Y-m-d'))
                                             ->where('ruangan_id', $this->ruangan_id)
                                             ->whereRaw
                                             (
