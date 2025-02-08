@@ -2936,6 +2936,8 @@ class WablasController extends Controller
                     $jam_akhir = $petugas_pemeriksa->jam_akhir;
                     $message .= " hari ini dimulai jam $jam_mulai sampai dengan $jam_akhir ";
                     $message .= PHP_EOL;
+                    $message .= "Pendaftaran dimulai jam $jam_mulai";
+                    $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= "Mohon maaf atas ketidaknyamanannya";
                     $message .= PHP_EOL;
