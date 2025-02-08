@@ -2907,7 +2907,7 @@ class WablasController extends Controller
 
                 $petugas_pemeriksa_hari_ini = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
                                     ->where('tanggal', date('Y-m-d'))
-                                    ->orderBy('jam_mulai', 'asc');
+                                    ->orderBy('jam_mulai', 'asc')
                                     ->get();
 
                  $petugas_pemeriksa_sekarang = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
