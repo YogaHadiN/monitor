@@ -160,13 +160,6 @@ class WablasController extends Controller
 	
 	public function webhook(){
 
-        if ( 
-            $this->no_telp == '6281381912803'
-        ) {
-            Log::info(
-                Input::all() 
-            );
-        }
         $date_now = date('Y-m-d H:i:s');
         if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
             echo $this->libur();
@@ -5395,7 +5388,7 @@ class WablasController extends Controller
             $message  = 'Nomor Antrian ';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= '*' . $antrian->nomor_antrian . '*';
+            $message .= '*' . $antrian->nomor_antrian_dipanggil . '*';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             if ( !is_null( $ant ) && $ant->id == $antrian->id ) {

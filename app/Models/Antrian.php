@@ -182,20 +182,44 @@ class Antrian extends Model
         return $petugas_pemeriksa->sisa_antrian;
     }
 
-    public function getAntrianDipanggilAttribute(){
-        return Antrian::whereDate('created_at', date('Y-m-d'))
-                                            ->where('ruangan_id', $this->ruangan_id)
-                                            ->whereRaw
-                                            (
-                                                "(
-                                                    antriable_type = 'App\\\Models\\\Antrian' or
-                                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                                                    antriable_type = 'App\\\Models\\\AntrianPoli'
-                                                )"
-                                            )
-                                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
-                                            ->orderBy('id', 'asc')
-                                            ->first();
+    public function getNomorAntrianDipanggilAttribute(){
+        // jika antrian sedang di antrian periksa,
+        // maka ambil antrian pertama di ruangan tersebut
+        // dengan catatan bahwa ruangan_id di antrian sama dengan ruangan_id di antrianperiksa
+        //
+
+        if (
+            $this->antriable_type == 'App\Models\AntrianPeriksa' &&
+            $this->ruangan_id != $this->antriable->ruangan_id
+        ) {
+            $ruangan_id = $this->antriable->ruangan_id;
+            return Antrian::whereDate('created_at', date('Y-m-d'))
+                            ->where('ruangan_id', $ruangan_id)
+                            ->whereRaw
+                            (
+                                "(
+                                    antriable_type = 'App\\\Models\\\AntrianPeriksa'
+                                )"
+                            )
+                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+                            ->orderBy('id', 'asc')
+                            ->first()->nomor_antrian;
+        } else {
+            return Antrian::whereDate('created_at', date('Y-m-d'))
+                            ->where('ruangan_id', $this->ruangan_id)
+                            ->whereRaw
+                            (
+                                "(
+                                    antriable_type = 'App\\\Models\\\Antrian' or
+                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                                    antriable_type = 'App\\\Models\\\AntrianPoli'
+                                )"
+                            )
+                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+                            ->orderBy('id', 'asc')
+                            ->first()->nomor_antrian;
+
+        }
     }
     public function ruangan(){
         return $this->belongsTo(Ruangan::class);

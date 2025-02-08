@@ -212,7 +212,6 @@ class WebRegistrationController extends Controller
 
                 $jumlah_petugas_pemeriksas_saat_ini = $petugas_pemeriksas->count();
 
-
                 //
                 // ANTRIKAN PASIEN UNTUK DOKTER KEDUA
                 //
@@ -333,8 +332,7 @@ class WebRegistrationController extends Controller
                 !is_null( $message ) && 
                 $message['aktif'] &&
                 isset( $message['kdProviderPst'] ) &&
-                $message['kdProviderPst']['kdProvider'] == '0221B119' &&
-                $reservasi_online->data_bpjs_cocok
+                $message['kdProviderPst']['kdProvider'] == '0221B119'
             ) { // jika aktig
                 $web_registration->nama                = $message['nama'];
                 $web_registration->tanggal_lahir       = Carbon::createFromFormat("d-m-Y", $message['tglLahir'])->format("Y-m-d");
@@ -759,7 +757,7 @@ class WebRegistrationController extends Controller
 
         foreach ($antrians as $antrian) {
             $data[] = [
-                'nomor_antrian_terakhir' => $antrian->antrian_dipanggil->nomor_antrian,
+                'nomor_antrian_terakhir' => $antrian->nomor_antrian_dipanggil,
                 'nama_ruangan'           => $antrian->ruangan->nama,
                 'nomor_antrian_anda'     => $antrian->nomor_antrian
             ];
