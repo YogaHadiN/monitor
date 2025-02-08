@@ -2905,16 +2905,36 @@ class WablasController extends Controller
                 }
                 $tipe_konsultasi_id = TipeKonsultasi::find( $this->message );
 
-                $petugas_pemeriksa = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
+                $petugas_pemeriksa_hari_ini = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
+                                    ->where('tanggal', date('Y-m-d'))
+                                    ->orderBy('jam_mulai', 'asc');
+                                    ->get();
+
+                 $petugas_pemeriksa_sekarang = PetugasPemeriksa::where('tipe_konsultasi_id', $this->message)
                                     ->where('tanggal', date('Y-m-d'))
                                     ->where('jam_mulai', '<=', $reservasi_online->created_at->format('H:i:s'))
                                     ->where('jam_akhir', '>=', $reservasi_online->created_at->format('H:i:s'))
                                     ->get();
-
                 // cek apakah ada pelayanan yang dimaksud
-                if (!count( $petugas_pemeriksa )) {
+                if (!count( $petugas_pemeriksa_hari_ini )) {
                     $tipe_konsultasi = TipeKonsultasi::find( $this->message );
                     $message = 'Hari ini tidak ada pelayanan ' . $tipe_konsultasi->tipe_konsultasi;
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= "Mohon maaf atas ketidaknyamanannya";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    echo $message;
+                    return false;
+                } else if(
+                    !count( $petugas_pemeriksa_sekarang )
+                ) {
+                    $message = 'Pelayanan ' . $tipe_konsultasi->tipe_konsultasi;
+                    $petugas_pemeriksa = $petugas_pemeriksa_hari_ini->first();
+                    $jam_mulai = $petugas_pemeriksa->jam_mulai;
+                    $jam_akhir = $petugas_pemeriksa->jam_akhir;
+                    $message .= " hari ini dimulai jam $jam_mulai sampai dengan $jam_akhir ";
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= "Mohon maaf atas ketidaknyamanannya";
