@@ -2916,8 +2916,8 @@ class WablasController extends Controller
                                     ->where('jam_akhir', '>=', $reservasi_online->created_at->format('H:i:s'))
                                     ->get();
                 // cek apakah ada pelayanan yang dimaksud
+                $tipe_konsultasi = TipeKonsultasi::find( $this->message );
                 if (!count( $petugas_pemeriksa_hari_ini )) {
-                    $tipe_konsultasi = TipeKonsultasi::find( $this->message );
                     $message = 'Hari ini tidak ada pelayanan ' . $tipe_konsultasi->tipe_konsultasi;
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
