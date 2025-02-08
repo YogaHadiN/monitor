@@ -90,6 +90,8 @@ class WablasController extends Controller
             !Input::get('isFromMe') 
 		 /* !is_null(Input::get('message')) */
 		) {
+
+
 			$this->message = $this->clean(Input::get('message'));
             $this->no_telp = Input::get('phone');
 
@@ -125,6 +127,10 @@ class WablasController extends Controller
 			if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
 				$this->estetika_buka = false;
 			}
+
+
+
+
 		}
         /* $this->middleware('bukan_blokir', ['only' => ['webhook']]); */
         session()->put('tenant_id', 1);
@@ -153,6 +159,14 @@ class WablasController extends Controller
     }
 	
 	public function webhook(){
+
+        if ( 
+            $this->no_telp == '6281381912803'
+        ) {
+            Log::info(
+                Input::all() 
+            );
+        }
         $date_now = date('Y-m-d H:i:s');
         if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
             echo $this->libur();
@@ -161,6 +175,9 @@ class WablasController extends Controller
                 $this->message == 'daftar' ||
                 $this->message == 'daptar' ||
                 $this->message == 'mau berobat' ||
+                $this->message == 'berobat' ||
+                $this->message == 'brobat' ||
+                $this->message == 'mau brobat' ||
                 $this->message == 'mau berobat sus'
             ) {
                 echo $this->registrasiAntrianOnline();
@@ -1081,7 +1098,7 @@ class WablasController extends Controller
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($payload) );
-        curl_setopt($curl, CURLOPT_URL,  "https://tegal.wablas.com/api/v2/send-button");
+        curl_setopt($curl, CURLOPT_URL,  "https://solo.wablas.com/api/v2/send-button");
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
@@ -4034,7 +4051,7 @@ class WablasController extends Controller
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($curl, CURLOPT_URL,  "https://tegal.wablas.com/api/send-image");
+        curl_setopt($curl, CURLOPT_URL,  "https://solo.wablas.com/api/send-image");
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
@@ -4538,7 +4555,7 @@ class WablasController extends Controller
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($curl, CURLOPT_URL,  "https://tegal.wablas.com/api/send-message");
+        curl_setopt($curl, CURLOPT_URL,  "https://solo.wablas.com/api/send-message");
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
         $result = curl_exec($curl);
