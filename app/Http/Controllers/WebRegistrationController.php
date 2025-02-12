@@ -15,6 +15,7 @@ use App\Models\PetugasPemeriksa;
 use App\Http\Controllers\WablasController;
 use App\Http\Controllers\BpjsApiController;
 use Carbon\Carbon;
+use Log;
 
 class WebRegistrationController extends Controller
 {
@@ -27,6 +28,8 @@ class WebRegistrationController extends Controller
         header("Access-Control-Allow-Credentials: true ");
         header("Access-Control-Allow-Methods: OPTIONS, GET, POST");
         header("Access-Control-Allow-Headers: Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, If-Modified-Since, X-File-Name, Cache-Control");
+
+        Log::info('construc');
     }
     
     public function daftar_online(){
@@ -194,6 +197,7 @@ class WebRegistrationController extends Controller
             $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                                                     ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                                                     ->get();
+            /* dd( $tipe_konsultasi_id ); */
             $message = null;
 
             //
@@ -284,10 +288,14 @@ class WebRegistrationController extends Controller
     }
     public function submit_tipe_konsultasi(){
         $tipe_konsultasi_id = Input::get('value');
+
+        Log::info('tipe_konsultasi_id');
+        Log::info($tipe_konsultasi_id);
+
         $no_telp            = Input::get('no_telp');
         $cek                = $this->cek( $tipe_konsultasi_id );
         $message            = $cek['message'];
-        $web_registration = null;
+        $web_registration   = null;
         if (empty( $message )) {
             $web_registration = WebRegistration::whereDate('created_at', date('Y-m-d'))
                                                 ->where('no_telp', $no_telp)
@@ -662,7 +670,8 @@ class WebRegistrationController extends Controller
     public function daftar_lagi(){
         $no_telp = Input::get('no_telp');
         WebRegistration::create([
-            'no_telp' => $no_telp
+            'no_telp' => $no_telp,
+            'tipe_konsultasi_id' => null
         ]);
     }
     public function cekBpjsApi($nomor_asuransi_bpjs){
@@ -773,6 +782,4 @@ class WebRegistrationController extends Controller
          }
          return $no_telp;
     }
-
-    
 }
