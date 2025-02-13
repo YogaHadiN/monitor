@@ -9,16 +9,16 @@ use Input;
 class FonnteController extends Controller
 {
     public function getWebhook(){
-        Log::info( env('FONNTE_TOKEN') );
+        /* Log::info( env('FONNTE_TOKEN') ); */
         Log::info('fonnte');
         Log::info('getWebhook');
         Log::info('yogggaaaa');
-        $this->webhook();
+        /* $this->webhook(); */
     }
     public function postWebhook(){
         Log::info('fonnte');
         Log::info('postWebhook');
-        $this->webhook();
+        /* $this->webhook(); */
     }
     public function getChaning(){
         Log::info('fonnte');
