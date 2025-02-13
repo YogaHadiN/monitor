@@ -58,6 +58,8 @@ class FonnteController extends Controller
         Log::info("===============================");
         Log::info("DATA");
         Log::info($data);
+        Log::info("JSON");
+        Log::info($json);
         Log::info("===============================");
         $device    = $data['device'];
         $sender    = $data['sender'];
