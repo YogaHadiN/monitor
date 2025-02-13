@@ -36,6 +36,14 @@ class FonnteController extends Controller
         Log::info('fonnte');
         Log::info('postStatus');
     }
+    public function getConnect
+        Log::info('fonnte');
+        Log::info('getStatus');
+    }
+    public function postConnect(){
+        Log::info('fonnte');
+        Log::info('postStatus');
+    }
 
     /**
      * undocumented function

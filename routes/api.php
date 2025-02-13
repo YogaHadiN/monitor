@@ -20,9 +20,11 @@ Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'web
 
 Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']);
 Route::get('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'getStatus']);
+Route::get('fonnte/webhook/connect', [\App\Http\Controllers\FonnteController::class, 'getConnect']);
 Route::get('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'getChaning']);
 Route::post('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'postWebhook']);
 Route::post('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'postStatus']);
+Route::post('fonnte/webhook/connect', [\App\Http\Controllers\FonnteController::class, 'postConnect']);
 Route::post('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'postChaining']);
 
 Route::get('antrian_online/bpjs/auth', [\App\Http\Controllers\AntrianOnlineController::class, 'token']);

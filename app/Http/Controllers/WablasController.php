@@ -168,6 +168,7 @@ class WablasController extends Controller
                 $this->message == 'daftar' ||
                 $this->message == 'daptar' ||
                 $this->message == 'mau berobat' ||
+                $this->message == 'mau daftar' ||
                 $this->message == 'berobat' ||
                 $this->message == 'brobat' ||
                 $this->message == 'mau brobat' ||
