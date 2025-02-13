@@ -13,12 +13,12 @@ class FonnteController extends Controller
         Log::info('fonnte');
         Log::info('getWebhook');
         Log::info('yogggaaaa');
-        /* $this->webhook(); */
+        $this->webhook();
     }
     public function postWebhook(){
         Log::info('fonnte');
         Log::info('postWebhook');
-        /* $this->webhook(); */
+        $this->webhook();
     }
     public function getChaning(){
         Log::info('fonnte');
@@ -62,6 +62,7 @@ class FonnteController extends Controller
         $member    = $data['member']; //group member who send the message
         $name      = $data['name'];
         $location  = $data['location'];
+
         //data below will only received by device with all feature package
         //start
         $url       = $data['url'];
