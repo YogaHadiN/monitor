@@ -182,40 +182,6 @@ class Antrian extends Model
         return $petugas_pemeriksa->sisa_antrian;
     }
 
-    public function getNomorAntrianDipanggilAttribute(){
-        // jika antrian sedang di antrian periksa,
-        // maka ambil antrian pertama di ruangan tersebut
-        // dengan catatan bahwa ruangan_id di antrian sama dengan ruangan_id di antrianperiksa
-        //
-
-        if (
-            $this->antriable_type == 'App\Models\AntrianPeriksa' &&
-            $this->ruangan_id != $this->antriable->ruangan_id
-        ) {
-            $ruangan_id = $this->antriable->ruangan_id;
-            return Antrian::whereDate('created_at', date('Y-m-d'))
-                            ->where('ruangan_id', $ruangan_id)
-                            ->where('antriable_type', 'App\Models\AntrianPeriksa')
-                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
-                            ->orderBy('id', 'asc')
-                            ->first()->nomor_antrian;
-        } else {
-            return Antrian::whereDate('created_at', date('Y-m-d'))
-                            ->where('ruangan_id', $this->ruangan_id)
-                            ->whereRaw
-                            (
-                                "(
-                                    antriable_type = 'App\\\Models\\\Antrian' or
-                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                                    antriable_type = 'App\\\Models\\\AntrianPoli'
-                                )"
-                            )
-                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
-                            ->orderBy('id', 'asc')
-                            ->first()->nomor_antrian;
-
-        }
-    }
     public function ruangan(){
         return $this->belongsTo(Ruangan::class);
     }
@@ -227,5 +193,32 @@ class Antrian extends Model
     }
     public function staf(){
         return $this->belongsTo(Staf::class);
+    }
+
+    public function getNomorAntrianDipanggilAttribute(){
+        if (
+            $this->antriable_type == 'App\Models\Antrian' ||
+            $this->antriable_type == 'App\Models\AntrianPoli' ||
+            $this->antriable_type == 'App\Models\AntrianPeriksa'
+        ) {
+            $ruangan_id = $this->ruangan_id;
+            $antriable_type = $this->antriable_type;
+            $antriable_id = $this->antriable_id;
+            if ( $antriable_type == 'App\Models\AntrianPeriksa' ) {
+                $antrian_periksa = AntrianPeriksa::find( $antriable_id );
+                $ruangan_id = $antrian_periksa->ruangan_id;
+            }
+            $query  = "SELECT ant.id as antrian_id ";
+            $query .= "FROM antrian_periksas as apx ";
+            $query .= "JOIN antrians as ant on ant.antriable_id = apx.id and ant.antriable_type = 'App\\\Models\\\AntrianPeriksa' ";
+            $query .= "WHERE apx.tenant_id=". session()->get('tenant_id') . " ";
+            $query .= "AND apx.ruangan_id = $ruangan_id ";
+            $query .= "ORDER BY ant.id asc ";
+            $query .= "limit 1";
+            $data = DB::select($query);
+            $antrian_id_terpanggil = $data[0]->antrian_id;
+
+            return Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
+        }
     }
 }
