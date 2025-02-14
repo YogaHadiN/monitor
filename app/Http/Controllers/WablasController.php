@@ -5398,69 +5398,62 @@ class WablasController extends Controller
         return $message;
     }
     public function cekAntrian(){
-        Log::info(5356);
         $ant = Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->latest()->first();
-        $antrian = $ant->ruangan->antrian;
-        if (!is_null($antrian)) {
-            $ant = Antrian::where('no_telp', $this->no_telp)
-                ->where('created_at', 'like', date('Y-m-d') . '%')
-                ->latest()->first();
 
-            $message  = 'Nomor Antrian ';
+        $message  = 'Nomor Antrian ';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '*' . $ant->nomor_antrian_dipanggil . '*';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        if ( !is_null( $ant ) && $ant->id == $ant->antrian_dipanggil->id ) {
+            $message .= 'Dipanggil. Silahkan menuju ruang periksa';
+        } else {
+            $message .= 'Dipanggil ke ruang periksa.';
+            $message .= PHP_EOL;
+            $message .= 'Nomor antrian Anda adalah';
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= '*' . $antrian->nomor_antrian_dipanggil . '*';
+            $message .= '*'.$ant->nomor_antrian.'*';
             $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            if ( !is_null( $ant ) && $ant->id == $antrian->id ) {
-                $message .= 'Dipanggil. Silahkan menuju ruang periksa';
-            } else {
-                $message .= 'Dipanggil ke ruang periksa.';
+            if ( $ant->tipe_konsultasi_id == 1 ) {
                 $message .= PHP_EOL;
-                $message .= 'Nomor antrian Anda adalah';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= '*'.$ant->nomor_antrian.'*';
-                $message .= PHP_EOL;
-                if ( $antrian->tipe_konsultasi_id == 1 ) {
+                $sisa_antrian =$ant->sisa_antrian;
+                /* $message .= "masih ada *{$sisa_antrian} antrian* lagi"; */
+                /* $message .= PHP_EOL; */
+                /* $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian ); */
+                /* $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*"; */
+                /* $message .= PHP_EOL; */
+                /* $message .= PHP_EOL; */
+                $message .= $this->aktifkan_notifikasi_otomatis_text();
+                if (
+                    $ant->reservasi_online && 
+                    $sisa_antrian < 11 &&
+                    $ant->sudah_hadir_di_klinik == 0
+                ) {
                     $message .= PHP_EOL;
-                    $sisa_antrian =$ant->sisa_antrian;
-                    /* $message .= "masih ada *{$sisa_antrian} antrian* lagi"; */
-                    /* $message .= PHP_EOL; */
-                    /* $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian ); */
-                    /* $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*"; */
-                    /* $message .= PHP_EOL; */
-                    /* $message .= PHP_EOL; */
-                    $message .= $this->aktifkan_notifikasi_otomatis_text();
-                    if (
-                        $ant->reservasi_online && 
-                        $sisa_antrian < 11 &&
-                        $ant->sudah_hadir_di_klinik == 0
-                    ) {
-                        $message .= PHP_EOL;
-                        $message .= 'Mohon kehadirannya di klinik 30 menit sebelum perkiraan panggilan';
-                        $message .= PHP_EOL;
-                        $message .= PHP_EOL;
-                        $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
-                        $message .= PHP_EOL;
-                        $message .= 'Apabila antrian Anda terlewat secara otomatis antrian akan terapus oleh sistem';
-                        $message .= PHP_EOL;
+                    $message .= 'Mohon kehadirannya di klinik 30 menit sebelum perkiraan panggilan';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
+                    $message .= PHP_EOL;
+                    $message .= 'Apabila antrian Anda terlewat secara otomatis antrian akan terapus oleh sistem';
+                    $message .= PHP_EOL;
 
-                    } else if (
-                        $ant->reservasi_online && 
-                        $ant->sudah_hadir_di_klinik == 0
-                    ) {
-                        $message .= PHP_EOL;
-                        $message .= 'Balas *stop* untuk berhenti menerima notifikasi ini';
-                    }
+                } else if (
+                    $ant->reservasi_online && 
+                    $ant->sudah_hadir_di_klinik == 0
+                ) {
+                    $message .= PHP_EOL;
+                    $message .= 'Balas *stop* untuk berhenti menerima notifikasi ini';
                 }
-                $message .= PHP_EOL;
-                $message .= $this->footerAntrian();
             }
-            return $message;
+            $message .= PHP_EOL;
+            $message .= $this->footerAntrian();
         }
+        return $message;
     }
     public function aktifkan_notifikasi_otomatis_text(){
         $message = PHP_EOL;

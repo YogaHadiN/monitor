@@ -4,6 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\BelongsToTenant; 
 use App\Models\Asuransi;
+use App\Models\Ruangan;
 use App\Models\DeletedAntrian;
 use App\Models\PetugasPemeriksa;
 use App\Models\WhatsappRegistration;
@@ -196,6 +197,10 @@ class Antrian extends Model
     }
 
     public function getNomorAntrianDipanggilAttribute(){
+        $this->antrian_dipanggil->nomor_antrian;
+    }
+
+    public function getAntrianDipanggilAttribute(){
         if (
             $this->antriable_type == 'App\Models\Antrian' ||
             $this->antriable_type == 'App\Models\AntrianPoli' ||
@@ -216,9 +221,12 @@ class Antrian extends Model
             $query .= "ORDER BY ant.id asc ";
             $query .= "limit 1";
             $data = DB::select($query);
-            $antrian_id_terpanggil = $data[0]->antrian_id;
-
-            return Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
+            if (count( $data )) {
+                $antrian_id_terpanggil = $data[0]->antrian_id;
+                return Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
+            } else {
+                return Ruangan::find( $ruangan_id )->antrian->nomor_antrian;
+            }
         }
     }
 }
