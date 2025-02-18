@@ -16,9 +16,6 @@ use App\Http\Controllers\WebRegistrationController;
 |
 */
 
-Route::get('phpinfo', function(){
-    phpinfo();
-});
 Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
 Route::get('antrianperiksa/monitor_baru', [AntrianController::class, 'monitor_baru']);
