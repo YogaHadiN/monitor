@@ -16,7 +16,6 @@ class BotCakeController extends Controller
     }
 
     public function webhook(){
-        return 'a';
         Log::info( Input::all() );
     }
     
