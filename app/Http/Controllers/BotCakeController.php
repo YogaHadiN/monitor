@@ -13,7 +13,11 @@ class BotCakeController extends Controller
      */
     public function __construct()
     {
+    }
+
+    public function webhook(){
         Log::info( Input::all() );
     }
+    
     
 }
