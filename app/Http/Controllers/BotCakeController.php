@@ -21,7 +21,7 @@ class BotCakeController extends Controller
     }
 
     public function webhookPost(){
-        $messages = Input::get('entry')['changes'][0]['value']['messages'][0]['from'];
+        $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
         Log::info($messages);
     }
     
