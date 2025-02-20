@@ -23,7 +23,7 @@ class BotCakeController extends Controller
     public function webhookPost(){
         Log::info('Post Request Botcake Berhasil');
         $no_telp =  Input::get('entry')['changes'][0]['value']['contacts'][0]['wa_id'];
-        Log::info(Input::get('entry')['changes'][0]['value']['messages']);
+        Log::info(Input::get('entry')['changes'][0]['value']['messages'][0]['from']);
     }
     
     
