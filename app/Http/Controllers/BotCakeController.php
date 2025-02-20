@@ -19,6 +19,12 @@ class BotCakeController extends Controller
         Log::info('Input Botcake Berhasil');
         Log::info( Input::all() );
     }
+
+    public function webhookPost(){
+        Log::info('Post Request Botcake Berhasil');
+        Log::info( Input::all() );
+    }
+    
     
     
 }
