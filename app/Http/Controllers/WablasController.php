@@ -85,63 +85,56 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-		if (
-            !is_null(Input::get('phone')) &&
-            !Input::get('isFromMe') 
-		 /* !is_null(Input::get('message')) */
-		) {
+
+        $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
+        $no_telp = $messages['from'];
+        $message_type = $messages['type'];
+        if (
+            $message_type == 'image'
+        ) {
+            $message = $messages['image'];
+        } else if (
+            $message_type == 'text'
+        ) {
+            $message = $messages['text']['body'];
+        }
 
 
-            $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
-            $no_telp = $messages['from'];
-            $message_type = $messages['type'];
-            if (
-                $message_type == 'image'
-            ) {
-                $message = $messages['image'];
-            } else if (
-                $message_type == 'text'
-            ) {
-                $message = $messages['text']['body'];
-            }
+        $this->message = $this->clean( $message );
+        $this->no_telp = $no_telp;
 
+        $no_telp = NoTelp::firstOrCreate([
+            'no_telp' => $this->no_telp,
+            'tenant_id' => 1
+        ]);
 
-			$this->message = $this->clean( $message );
-            $this->no_telp = $no_telp;
+        $no_telp->touch();
 
-            $no_telp = NoTelp::firstOrCreate([
-                'no_telp' => $this->no_telp,
-                'tenant_id' => 1
-            ]);
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                             ->first();
 
-            $no_telp->touch();
+        // gigi buka
+        if ( 
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->gigi_buka = false;
+        }
 
-            $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                 ->first();
+        if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
+            $this->gigi_buka = false;
+        }
 
-			// gigi buka
-			if ( 
-				( date('w') < 1 ||  date('w') > 5)
-			) {
-				$this->gigi_buka = false;
-			}
+        //estetika_buka
+        if ( 
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->estetika_buka = false;
+        }
 
-			if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
-				$this->gigi_buka = false;
-			}
-
-			//estetika_buka
-			if ( 
-				( date('w') < 1 ||  date('w') > 5)
-			) {
-				$this->estetika_buka = false;
-			}
-
-			if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
-				$this->estetika_buka = false;
-			}
-		}
+        if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
+            $this->estetika_buka = false;
+        }
 
 
         Log::info([
