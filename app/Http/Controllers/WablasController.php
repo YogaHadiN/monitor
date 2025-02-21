@@ -149,6 +149,10 @@ class WablasController extends Controller
         /* $this->middleware('bukan_blokir', ['only' => ['webhook']]); */
         session()->put('tenant_id', 1);
 	}
+    public function wablasGet(){
+        return 'ok';
+    }
+    
     public function libur(){
         $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
         $message .= PHP_EOL;
