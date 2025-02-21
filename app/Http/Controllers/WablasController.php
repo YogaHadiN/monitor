@@ -87,7 +87,16 @@ class WablasController extends Controller
 
 	public function __construct(){
 
-        $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
+        if (
+            !isset( Input::get('entry')['changes'][0]['value']['messages'] )
+        ) {
+            Log::info("===========================");
+            Log::info("ERROR");
+            Log::info("===========================");
+            Log::info(Input::all());
+        } else {
+            $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
+        }
         $no_telp = $messages['from'];
         $message_type = $messages['type'];
         if (
