@@ -87,72 +87,69 @@ class WablasController extends Controller
 
 	public function __construct(){
 
-        if (
-            !isset( Input::get('entry')['changes'][0]['value']['messages'] )
-        ) {
-            Log::info("===========================");
-            Log::info("ERROR");
-            Log::info("===========================");
-            Log::info(Input::all());
-        } else {
-            $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
-        }
-        $no_telp = $messages['from'];
-        $message_type = $messages['type'];
-        if (
-            $message_type == 'image'
-        ) {
-            $message = $messages['image'];
-        } else if (
-            $message_type == 'text'
-        ) {
-            $message = $messages['text']['body'];
-        }
+        /* if ( */
+        /*     !isset( Input::get('entry')['changes'][0]['value']['messages'] ) */
+        /* ) { */
+        /*     Log::info("==========================="); */
+        /*     Log::info("ERROR"); */
+        /*     Log::info("==========================="); */
+        /*     Log::info(Input::all()); */
+        /* } else { */
+        /*     $messages = Input::get('entry')['changes'][0]['value']['messages'][0]; */
+        /* } */
+        /* $no_telp = $messages['from']; */
+        /* $message_type = $messages['type']; */
+        /* if ( */
+        /*     $message_type == 'image' */
+        /* ) { */
+        /*     $message = $messages['image']; */
+        /* } else if ( */
+        /*     $message_type == 'text' */
+        /* ) { */
+        /*     $message = $messages['text']['body']; */
+        /* } */
 
 
-        $this->message = $this->clean( $message );
-        $this->no_telp = $no_telp;
+        /* $this->message = $this->clean( $message ); */
+        /* $this->no_telp = $no_telp; */
 
-        $no_telp = NoTelp::firstOrCreate([
-            'no_telp' => $this->no_telp,
-            'tenant_id' => 1
-        ]);
+        /* $no_telp = NoTelp::firstOrCreate([ */
+        /*     'no_telp' => $this->no_telp, */
+        /*     'tenant_id' => 1 */
+        /* ]); */
 
-        $no_telp->touch();
+        /* $no_telp->touch(); */
 
-        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                             ->first();
+        /* $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp) */
+        /*                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
+        /*                      ->first(); */
 
-        // gigi buka
-        if ( 
-            ( date('w') < 1 ||  date('w') > 5)
-        ) {
-            $this->gigi_buka = false;
-        }
+        /* if ( */ 
+        /*     ( date('w') < 1 ||  date('w') > 5) */
+        /* ) { */
+        /*     $this->gigi_buka = false; */
+        /* } */
 
-        if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
-            $this->gigi_buka = false;
-        }
+        /* if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam */ 
+        /*     $this->gigi_buka = false; */
+        /* } */
 
-        //estetika_buka
-        if ( 
-            ( date('w') < 1 ||  date('w') > 5)
-        ) {
-            $this->estetika_buka = false;
-        }
+        /* if ( */ 
+        /*     ( date('w') < 1 ||  date('w') > 5) */
+        /* ) { */
+        /*     $this->estetika_buka = false; */
+        /* } */
 
-        if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
-            $this->estetika_buka = false;
-        }
+        /* if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore */ 
+        /*     $this->estetika_buka = false; */
+        /* } */
 
 
-        Log::info([
-            $this->no_telp,
-            $this->message
-        ]);
-        /* $this->middleware('bukan_blokir', ['only' => ['webhook']]); */
-        session()->put('tenant_id', 1);
+        /* Log::info([ */
+        /*     $this->no_telp, */
+        /*     $this->message */
+        /* ]); */
+        /* session()->put('tenant_id', 1); */
 	}
     public function wablasGet(){
         return 'ok';
