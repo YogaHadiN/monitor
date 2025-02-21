@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Input;
 use Log;
+use Http;
 
 class BotCakeController extends Controller
 {
@@ -39,8 +40,13 @@ class BotCakeController extends Controller
             $no_telp,
             $message
         ]);
+
+        $response = Http::withHeaders([
+            'X-First' => 'foo',
+            'X-Second' => 'bar'
+        ])->post('http://example.com/users', [
+            'name' => 'Taylor',
+        ]);
+
     }
-    
-    
-    
 }

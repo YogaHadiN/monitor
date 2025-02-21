@@ -197,7 +197,7 @@ class Antrian extends Model
     }
 
     public function getNomorAntrianDipanggilAttribute(){
-        $this->antrian_dipanggil->nomor_antrian;
+        $this->antrian_dipanggil;
     }
 
     public function getAntrianDipanggilAttribute(){
