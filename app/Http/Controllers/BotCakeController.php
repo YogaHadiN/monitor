@@ -42,12 +42,6 @@ class BotCakeController extends Controller
             $message
         ]);
 
-        $response = Http::withHeaders([
-            'X-First' => 'foo',
-            'X-Second' => 'bar'
-        ])->post('http://example.com/users', [
-            'name' => 'Taylor',
-        ]);
 
     }
 }

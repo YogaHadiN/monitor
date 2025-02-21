@@ -92,8 +92,22 @@ class WablasController extends Controller
 		) {
 
 
-			$this->message = $this->clean(Input::get('message'));
-            $this->no_telp = Input::get('phone');
+            $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
+            $no_telp = $messages['from'];
+            $message_type = $messages['type'];
+            if (
+                $message_type == 'image'
+            ) {
+                $message = $messages['image'];
+            } else if (
+                $message_type == 'text'
+            ) {
+                $message = $messages['text']['body'];
+            }
+
+
+			$this->message = $this->clean( $message );
+            $this->no_telp = $no_telp;
 
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
@@ -162,7 +176,7 @@ class WablasController extends Controller
 
         $date_now = date('Y-m-d H:i:s');
         if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
-            echo $this->libur();
+            sendBotCake($message);
         } else {
             if (
                 $this->message == 'daftar' ||
@@ -2874,6 +2888,7 @@ class WablasController extends Controller
     public function prosesAntrianOnline(){
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
+             ->where('kartu_asuransi_image', '')
              ->first();
 
         $message           = '';
@@ -3430,26 +3445,29 @@ class WablasController extends Controller
         ) {
             $reservasi_online->alamat  = $this->message;
             $reservasi_online->save();
-        } else if ( 
-            !is_null( $reservasi_online ) &&
-            $reservasi_online->konfirmasi_sdk &&
-            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
-            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
-            !is_null( $reservasi_online->register_previously_saved_patient ) &&
-            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
-            !is_null( $reservasi_online->nama ) &&
-            !is_null( $reservasi_online->tanggal_lahir ) &&
-            !is_null( $reservasi_online->alamat ) &&
-            is_null( $reservasi_online->kartu_asuransi_image )
-        ) {
-            if (
-                $this->isPicture()
-            ) {
-                $reservasi_online->kartu_asuransi_image = $this->uploadImage(); 
-                $reservasi_online->save();
-            } else {
-                $input_tidak_tepat = true;
-            }
+            //=========================================
+            // INPUT KARTU ASURANSI
+            //=========================================
+        /* } else if ( */ 
+        /*     !is_null( $reservasi_online ) && */
+        /*     $reservasi_online->konfirmasi_sdk && */
+        /*     !is_null( $reservasi_online->tipe_konsultasi_id ) && */
+        /*     !is_null( $reservasi_online->registrasi_pembayaran_id )&& */
+        /*     !is_null( $reservasi_online->register_previously_saved_patient ) && */
+        /*     !is_null( $reservasi_online->nomor_asuransi_bpjs ) && */
+        /*     !is_null( $reservasi_online->nama ) && */
+        /*     !is_null( $reservasi_online->tanggal_lahir ) && */
+        /*     !is_null( $reservasi_online->alamat ) && */
+        /*     is_null( $reservasi_online->kartu_asuransi_image ) */
+        /* ) { */
+        /*     if ( */
+        /*         $this->isPicture() */
+        /*     ) { */
+        /*         $reservasi_online->kartu_asuransi_image = $this->uploadImage(); */ 
+        /*         $reservasi_online->save(); */
+        /*     } else { */
+        /*         $input_tidak_tepat = true; */
+        /*     } */
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -5474,6 +5492,27 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         return $message;
     }
+    public function sendBotCake($message){
+        $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
+        $data = [
+               "psid" => "wa_" . $this->no_telp, 
+               "payload" => [], 
+               "data" => [
+                        "version" => "v2", 
+                        "content" => [
+                           "messages" => [
+                              [
+                                 "type" => "text", 
+                                 "buttons" => [], 
+                                 "text" => $this->message
+                              ] 
+                           ] 
+                        ] 
+                     ] 
+            ]; 
+        $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
+    }
+    
     
     
 }

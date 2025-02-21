@@ -10,6 +10,7 @@ use App\Models\WhatsappMainMenu;
 use App\Models\CekListDikerjakan;
 use App\Models\WhatsappBot;
 use App\Models\ReservasiOnline;
+use Http;
 
 class testCommand extends Command
 {
@@ -44,10 +45,25 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $nomor = '6281381912803';
-        $message = 'hits the test';
-        $wa = new WablasController;
-        dd( $wa->sendSingle($nomor, $message) );
+        $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
+        $data = [
+               "psid" => "wa_6281381912803", 
+               "payload" => [], 
+               "data" => [
+                        "version" => "v2", 
+                        "content" => [
+                           "messages" => [
+                              [
+                                 "type" => "text", 
+                                 "buttons" => [], 
+                                 "text" => "Yoga Hadi NNNNNN" 
+                              ] 
+                           ] 
+                        ] 
+                     ] 
+            ]; 
+        $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
+        dd( $response->body() );
     }
     public function refreshAntrianOnline(){
         WhatsappBot::where('no_telp', '6281381912803')->delete();
