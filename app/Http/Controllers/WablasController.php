@@ -85,7 +85,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info('MASUUUUUUUk');
 		if (
             !is_null(Input::get('phone')) &&
             !Input::get('isFromMe') 
@@ -142,11 +141,13 @@ class WablasController extends Controller
 			if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
 				$this->estetika_buka = false;
 			}
-
-
-
-
 		}
+
+
+        Log::info([
+            $this->no_telp,
+            $this->message
+        ]);
         /* $this->middleware('bukan_blokir', ['only' => ['webhook']]); */
         session()->put('tenant_id', 1);
 	}
