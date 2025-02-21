@@ -14,14 +14,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']);
-Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
+/* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
+/* Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
+
+Route::get('botcake/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']);
+Route::post('botcake/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
 
 Route::post('wablas/webhookcs', [\App\Http\Controllers\WablasEstetikController::class, 'webhook']);
 Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'webhook']);
 
-Route::get('botcake/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhook']);
-Route::post('botcake/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookPost']);
 
 Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']);
 Route::get('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'getStatus']);
