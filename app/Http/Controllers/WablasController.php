@@ -5505,7 +5505,7 @@ class WablasController extends Controller
                               [
                                  "type" => "text", 
                                  "buttons" => [], 
-                                 "text" => $this->message
+                                 "text" => $message
                               ] 
                            ] 
                         ] 
