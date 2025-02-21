@@ -36,6 +36,7 @@ class BotCakeController extends Controller
         }
 
         Log::info([
+            Input::all(),
             $message_type,
             $no_telp,
             $message
