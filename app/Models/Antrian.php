@@ -222,9 +222,11 @@ class Antrian extends Model
             $query .= "limit 1";
             $data = DB::select($query);
             if (count( $data )) {
+                Log::info(225);
                 $antrian_id_terpanggil = $data[0]->antrian_id;
                 return Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
             } else {
+                Log::info(229);
                 return Ruangan::find( $ruangan_id )->antrian->nomor_antrian;
             }
         }
