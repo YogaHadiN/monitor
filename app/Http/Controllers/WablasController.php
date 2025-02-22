@@ -98,13 +98,13 @@ class WablasController extends Controller
 
         if (!is_null( $messages )) {
             $no_telp = $messages['from'];
-            $message_type = $messages['type'];
+            $this->message_type = $messages['type'];
             if (
-                $message_type == 'image'
+                $this->message_type == 'image'
             ) {
                 $message = $messages['image'];
             } else if (
-                $message_type == 'text'
+                $this->message_type == 'text'
             ) {
                 $message = $messages['text']['body'];
             }
@@ -280,7 +280,7 @@ class WablasController extends Controller
                 ) {
                     $this->sendBotCake($this->hapusAntrianWhatsappBotReservasiOnline() );
                 } else {
-                    if (Input::get('messageType') == 'text') {
+                    if ($this->message_type == 'text') {
                         if ( !is_null(  $this->message  ) ) {
                             WhatsappInbox::create([
                                 'message' => $this->message,
@@ -524,7 +524,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
             is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
-            if ( Input::get('messageType') == 'image' ) {
+            if ( $this->message_type == 'image' ) {
                 $this->whatsapp_registration->antrian->kartu_asuransi_image = $this->uploadImage(); 
                 $this->whatsapp_registration->antrian->save();
             } else {
@@ -589,7 +589,7 @@ class WablasController extends Controller
                     /* $response .=  "Balas *ulang* apa bila ada kesalahan dan Anda akan mengulangi pertanyaan dari awal"; */
                 }
                 if ( $input_tidak_tepat ) {
-                    if (Input::get('messageType') == 'text') {
+                    if ($this->message_type == 'text') {
                         WhatsappInbox::create([
                             'message' => 'ERROR :' .$this->message,
                             'no_telp' => $this->no_telp
@@ -1198,13 +1198,13 @@ class WablasController extends Controller
         Log::info( $this->message );
         Log::info([
             !empty( $this->message ) ,
-            /* ( Input::get('messageType') == 'text' ), */
+            /* ( $this->message_type == 'text' ), */
             ( !empty( $number ) ),
             ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding)
         ]);
         Log::info("=================");
         return !empty( $this->message ) 
-            /* && ( Input::get('messageType') == 'text' ) */
+            /* && ( $this->message_type == 'text' ) */
             && ( !empty( $number ) )
             && ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
     }
@@ -2817,7 +2817,7 @@ class WablasController extends Controller
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
             ) {
-                if ( Input::get('messageType') == 'image' ) {
+                if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
                 }
@@ -3964,7 +3964,7 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5);
     }
     public function isPicture(){
-        if ( Input::get('messageType') == 'image' ) {
+        if ( $this->message_type == 'image' ) {
             return true;
         }
         return false;
