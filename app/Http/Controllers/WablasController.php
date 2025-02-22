@@ -327,78 +327,78 @@ class WablasController extends Controller
                         !Input::get('isFromMe') 
                     ) {
                         if ( !is_null( $this->whatsapp_registration ) ) {
-                            /* Log::info(278); */
+                            Log::info(278);
                             return $this->proceedRegistering(); //register untuk pendaftaran pasien
                         } else if (!is_null( $this->whatsapp_complaint )){
-                            /* Log::info(281); */
+                            Log::info(281);
                             return $this->registerWhatsappComplaint(); //register untuk pendataan complain pasien
                         } else if (!is_null( $this->failed_therapy  )) {
-                            /* Log::info(284); */
+                            Log::info(284);
                             return $this->registerFailedTherapy(); //register untuk pendataan kegagalan terapi
                         } else if (!is_null( $this->whatsapp_satisfaction_survey  )) {
-                            /* Log::info(287); */
+                            Log::info(287);
                             return $this->registerWhatsappSatisfactionSurvey(); //register untuk survey kepuasan pasien
                         } else if (!is_null( $this->whatsapp_recovery_index  )) {
-                            /* Log::info(290); */
+                            Log::info(290);
                             return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
-                            /* Log::info(293); */
+                            Log::info(293);
                             return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
-                            /* Log::info(296); */
+                            Log::info(296);
                             return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
                         } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
-                            /* Log::info(299); */
+                            Log::info(299);
                             return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
                         } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(302); */
+                            Log::info(302);
                             return $this->prosesCekListBulanan(); // proses cek list bulanan
                         } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(305); */
+                            Log::info(305);
                             return $this->prosesCekListBulananInput(); // proses cek list bulanan
                         } else if ( $this->cekListMingguanExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(308); */
+                            Log::info(308);
                             return $this->prosesCekListMingguan(); // proses cek list bulanan
                         } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(311); */
+                            Log::info(311);
                             return $this->prosesCekListMingguanInput(); // proses cek list bulanan
                         } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
-                            /* Log::info(314); */
+                            Log::info(314);
                             return $this->prosesCekListHarian(); // proses cek list harian
                         } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
-                            /* Log::info(317); */
+                            Log::info(317);
                             return $this->prosesCekListHarianInput(); // proses cek list harian
                         } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
-                            /* Log::info(320); */
+                            Log::info(320);
                             return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
                         } else if ( $this->whatsappKonsultasiEstetikExists() ) {
-                            /* Log::info(323); */
+                            Log::info(323);
                             return $this->prosesKonsultasiEstetik(); // buat main menu
                         /* } else if ( $this->batalkanAntrianExists() ) { */
                         /*     return $this->batalkanAntrian(); // buat main menu */
                         } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
-                            /* Log::info(328); */
+                            Log::info(328);
                             return $this->prosesBpjsNumberInquiry(); // buat main menu
                         } else if ( $this->whatsappAntrianOnlineExists() ) {
-                            /* Log::info(331); */
+                            Log::info(331);
                             return $this->prosesAntrianOnline(); // buat main menu
                         } else if ( $this->whatsappGambarPeriksaExists() ) {
-                            /* Log::info(334); */
+                            Log::info(334);
                             return $this->prosesGambarPeriksa(); // buat main menu
                         } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
-                            /* Log::info(337); */
+                            Log::info(337);
                             return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
                         } else if( $this->validasiTanggalDanNamaPasienKeluhan() ) {
-                            /* Log::info(340); */
+                            Log::info(340);
                             return $this->balasanValidasiTanggalDanNamaPasienKeluhan();
                         } else if( $this->validasiWaktuPelayanan() ) {
-                            /* Log::info(343); */
+                            Log::info(343);
                             return $this->balasanKonfirmasiWaktuPelayanan();
                         } else if( $this->noTelpDalamChatWithAdmin() ) {
-                            /* Log::info(346); */
+                            Log::info(346);
                             $this->createWhatsappChat(); // buat main menu
                         } else if( $this->pasienTidakDalamAntrian() ) {
-                            /* Log::info(349); */
+                            Log::info(349);
                             return $this->createWhatsappMainMenu(); // buat main menu
                         }
                     }
@@ -2905,6 +2905,7 @@ class WablasController extends Controller
     /* } */
     
     public function prosesAntrianOnline(){
+        Log::info(2908);
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->where('kartu_asuransi_image', '')
