@@ -2917,6 +2917,12 @@ class WablasController extends Controller
             !is_null( $reservasi_online ) &&
             is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
+            Log::info("============================");
+            Log::info("TIPE KONSULTASI");
+            Log::info( $this->message );
+            Log::info( $this->no_telp );
+            Log::info("============================");
+
             if ( 
                 $this->message == '1' || 
                 $this->message == '2' || 
