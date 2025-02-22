@@ -179,7 +179,18 @@ class WablasController extends Controller
     }
 	
 	public function webhook(){
-        if (!is_null( $this->message )) {
+        if (
+            !is_null( $this->message ) 
+            && $this->no_telp == '6281381912803'
+        ) {
+
+            Log::info("===================");
+            Log::info("WEBHOOK MASUK");
+            Log::info('message');
+            Log::info( $this->message );
+            Log::info("===================");
+
+
             $date_now = date('Y-m-d H:i:s');
             if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
                 sendBotCake( $this->libur() );
@@ -2917,11 +2928,13 @@ class WablasController extends Controller
             !is_null( $reservasi_online ) &&
             is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
-            Log::info("============================");
-            Log::info("TIPE KONSULTASI");
-            Log::info( $this->message );
-            Log::info( $this->no_telp );
-            Log::info("============================");
+
+            if ( $this->no_telp == '6281381912803' ) {
+                Log::info("============================");
+                Log::info("TIPE KONSULTASI");
+                Log::info( $this->message );
+                Log::info("============================");
+            }
 
             if ( 
                 $this->message == '1' || 
