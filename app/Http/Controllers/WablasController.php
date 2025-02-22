@@ -87,7 +87,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info(Input::all()); 
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
         ) {
