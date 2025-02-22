@@ -5502,8 +5502,6 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= '_Untuk mendaftarkan pasien selanjutnya_';
         $message .= PHP_EOL;
-        $message .= '_Untuk mengaktifkan notifikasi otomatis_';
-        $message .= PHP_EOL;
         $message .= 'Klik link berikut :';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
