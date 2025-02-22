@@ -5435,7 +5435,7 @@ class WablasController extends Controller
         Log::info("ANTRIAN ERROR");
         Log::info( $ant );
         Log::info( $ant->id );
-        og::info("=========================");
+        Log::info("=========================");
         $message  = 'Nomor Antrian ';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
