@@ -82,11 +82,13 @@ class WablasController extends Controller
 	public $no_telp;
 	public $message;
 	public $message_type;
+	public $image_url;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
     public $jadwalGigi;
 
 	public function __construct(){
+        $this->image_url = null;
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
         ) {
@@ -322,8 +324,7 @@ class WablasController extends Controller
                     $this->tenant = Tenant::find(1);
 
                     if (
-                        !is_null( $this->no_telp ) &&
-                        !Input::get('isFromMe') 
+                        !is_null( $this->no_telp )
                     ) {
                         if ( !is_null( $this->whatsapp_registration ) ) {
                             /* Log::info(278); */
@@ -1211,7 +1212,7 @@ class WablasController extends Controller
     
     private function uploadImage()
     {
-        $url      = Input::get('url');
+        $url      = $this->image_url;
         $contents = file_get_contents($url);
         $name     = substr($url, strrpos($url, '/') + 1);
         $destination_path = 'image/whatsapp/';
