@@ -87,69 +87,69 @@ class WablasController extends Controller
 
 	public function __construct(){
 
-        /* if ( */
-        /*     !isset( Input::get('entry')['changes'][0]['value']['messages'] ) */
-        /* ) { */
-        /*     Log::info("==========================="); */
-        /*     Log::info("ERROR"); */
-        /*     Log::info("==========================="); */
-        /*     Log::info(Input::all()); */
-        /* } else { */
-        /*     $messages = Input::get('entry')['changes'][0]['value']['messages'][0]; */
-        /* } */
-        /* $no_telp = $messages['from']; */
-        /* $message_type = $messages['type']; */
-        /* if ( */
-        /*     $message_type == 'image' */
-        /* ) { */
-        /*     $message = $messages['image']; */
-        /* } else if ( */
-        /*     $message_type == 'text' */
-        /* ) { */
-        /*     $message = $messages['text']['body']; */
-        /* } */
+        if (
+            !isset( Input::get('entry')['changes'][0]['value']['messages'] )
+        ) {
+            Log::info("===========================");
+            Log::info("ERROR");
+            Log::info("===========================");
+            Log::info(Input::all());
+        } else {
+            $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
+        }
+        $no_telp = $messages['from'];
+        $message_type = $messages['type'];
+        if (
+            $message_type == 'image'
+        ) {
+            $message = $messages['image'];
+        } else if (
+            $message_type == 'text'
+        ) {
+            $message = $messages['text']['body'];
+        }
 
 
-        /* $this->message = $this->clean( $message ); */
-        /* $this->no_telp = $no_telp; */
+        $this->message = $this->clean( $message );
+        $this->no_telp = $no_telp;
 
-        /* $no_telp = NoTelp::firstOrCreate([ */
-        /*     'no_telp' => $this->no_telp, */
-        /*     'tenant_id' => 1 */
-        /* ]); */
+        $no_telp = NoTelp::firstOrCreate([
+            'no_telp' => $this->no_telp,
+            'tenant_id' => 1
+        ]);
 
-        /* $no_telp->touch(); */
+        $no_telp->touch();
 
-        /* $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp) */
-        /*                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-        /*                      ->first(); */
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                             ->first();
 
-        /* if ( */ 
-        /*     ( date('w') < 1 ||  date('w') > 5) */
-        /* ) { */
-        /*     $this->gigi_buka = false; */
-        /* } */
+        if ( 
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->gigi_buka = false;
+        }
 
-        /* if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam */ 
-        /*     $this->gigi_buka = false; */
-        /* } */
+        if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
+            $this->gigi_buka = false;
+        }
 
-        /* if ( */ 
-        /*     ( date('w') < 1 ||  date('w') > 5) */
-        /* ) { */
-        /*     $this->estetika_buka = false; */
-        /* } */
+        if ( 
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->estetika_buka = false;
+        }
 
-        /* if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore */ 
-        /*     $this->estetika_buka = false; */
-        /* } */
+        if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
+            $this->estetika_buka = false;
+        }
 
 
-        /* Log::info([ */
-        /*     $this->no_telp, */
-        /*     $this->message */
-        /* ]); */
-        /* session()->put('tenant_id', 1); */
+        Log::info([
+            $this->no_telp,
+            $this->message
+        ]);
+        session()->put('tenant_id', 1);
 	}
     public function wablasGet(){
         return 'ok';
@@ -182,222 +182,222 @@ class WablasController extends Controller
         
     }
     
-	/* public function webhook(){ */
+	public function webhook(){
 
-        /* $date_now = date('Y-m-d H:i:s'); */
-        /* if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) { */
-            /* sendBotCake( $this->libur() ); */
-        /* } else { */
-            /* if ( */
-                /* $this->message == 'daftar' || */
-                /* $this->message == 'daptar' || */
-                /* $this->message == 'mau berobat' || */
-                /* $this->message == 'mau daftar' || */
-                /* $this->message == 'berobat' || */
-                /* $this->message == 'brobat' || */
-                /* $this->message == 'mau brobat' || */
-                /* $this->message == 'mau berobat sus' */
-            /* ) { */
-                /* $this->sendBotCake($this->registrasiAntrianOnline() ); */
-                /* return false; */
-            /* } else if ( */
-                 /* str_contains($this->message ,'akhiri') */
-            /* ) { */
-                /* $this->sendBotCake($this->akhiriChatWithAdmin() ); */
-                /* return false; */
-            /* } else if (str_contains( $this->message ,'jadwal usg' )) { */
-                /* Message::create([ */
-                    /* 'no_telp'       => $this->no_telp, */
-                    /* 'message'       => $this->message, */
-                    /* 'tanggal'       => date("Y-m-d H:i:s"), */
-                    /* 'sending'       => 0, */
-                    /* 'sudah_dibalas' => 1, */
-                    /* 'tenant_id'     => 1, */
-                    /* 'touched'       => 0 */
-                /* ]); */
+        $date_now = date('Y-m-d H:i:s');
+        if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
+            sendBotCake( $this->libur() );
+        } else {
+            if (
+                $this->message == 'daftar' ||
+                $this->message == 'daptar' ||
+                $this->message == 'mau berobat' ||
+                $this->message == 'mau daftar' ||
+                $this->message == 'berobat' ||
+                $this->message == 'brobat' ||
+                $this->message == 'mau brobat' ||
+                $this->message == 'mau berobat sus'
+            ) {
+                $this->sendBotCake($this->registrasiAntrianOnline() );
+                return false;
+            } else if (
+                 str_contains($this->message ,'akhiri')
+            ) {
+                $this->sendBotCake($this->akhiriChatWithAdmin() );
+                return false;
+            } else if (str_contains( $this->message ,'jadwal usg' )) {
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $this->message,
+                    'tanggal'       => date("Y-m-d H:i:s"),
+                    'sending'       => 0,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0
+                ]);
 
-                /* $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(4); */
-                /* Message::create([ */
-                    /* 'no_telp'       => $this->no_telp, */
-                    /* 'message'       => $pesan, */
-                    /* 'tanggal'       => date("Y-m-d H:i:s"), */
-                    /* 'sending'       => 1, */
-                    /* 'sudah_dibalas' => 1, */
-                    /* 'tenant_id'     => 1, */
-                    /* 'touched'       => 0 */
-                /* ]); */
-                /* Message::where('no_telp', $this->no_telp)->update([ */
-                    /* 'sudah_dibalas' => 1 */
-                /* ]); */
-                /* $this->sendBotCake($pesan ); */
-                /* return false; */
-            /* } else if (str_contains( $this->message ,'jadwal dokter gigi' )) { */
+                $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(4);
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $pesan,
+                    'tanggal'       => date("Y-m-d H:i:s"),
+                    'sending'       => 1,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0
+                ]);
+                Message::where('no_telp', $this->no_telp)->update([
+                    'sudah_dibalas' => 1
+                ]);
+                $this->sendBotCake($pesan );
+                return false;
+            } else if (str_contains( $this->message ,'jadwal dokter gigi' )) {
 
-                /* Message::create([ */
-                    /* 'no_telp'       => $this->no_telp, */
-                    /* 'message'       => $this->message, */
-                    /* 'tanggal'       => date("Y-m-d H:i:s"), */
-                    /* 'sending'       => 0, */
-                    /* 'sudah_dibalas' => 1, */
-                    /* 'tenant_id'     => 1, */
-                    /* 'touched'       => 0 */
-                /* ]); */
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $this->message,
+                    'tanggal'       => date("Y-m-d H:i:s"),
+                    'sending'       => 0,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0
+                ]);
 
-                /* $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(2); */
-                /* Message::create([ */
-                    /* 'no_telp'       => $this->no_telp, */
-                    /* 'message'       => $pesan, */
-                    /* 'tanggal'       => date("Y-m-d H:i:s"), */
-                    /* 'sending'       => 1, */
-                    /* 'sudah_dibalas' => 1, */
-                    /* 'tenant_id'     => 1, */
-                    /* 'touched'       => 0 */
-                /* ]); */
+                $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(2);
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $pesan,
+                    'tanggal'       => date("Y-m-d H:i:s"),
+                    'sending'       => 1,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0
+                ]);
 
-                /* Message::where('no_telp', $this->no_telp)->update([ */
-                    /* 'sudah_dibalas' => 1 */
-                /* ]); */
+                Message::where('no_telp', $this->no_telp)->update([
+                    'sudah_dibalas' => 1
+                ]);
 
-                /* $this->sendBotCake($pesan ); */
+                $this->sendBotCake($pesan );
 
-                /* return false; */
-            /* } else if ( $this->message == 'komplain' ) { */
-                /* $this->sendBotCake($this->autoReplyComplainMessage() ); */
-                /* return false; */
-            /* } else if ( $this->message == 'chat admin' ) { */
-                /* resetWhatsappRegistration($this->no_telp); */
-                /* $this->sendBotCake($this->chatAdmin() ); */
-                /* return false; */
-            /* } else if ( */
-                /* $this->message == 'batalkan' */
-            /* ) { */
-                /* $this->sendBotCake($this->hapusAntrianWhatsappBotReservasiOnline() ); */
-            /* } else { */
-                /* if (Input::get('messageType') == 'text') { */
-                    /* if ( !is_null(  $this->message  ) ) { */
-                        /* WhatsappInbox::create([ */
-                            /* 'message' => $this->message, */
-                            /* 'no_telp' => $this->no_telp */
-                        /* ]); */
-                    /* } */
-                /* } */
-                /* $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                return false;
+            } else if ( $this->message == 'komplain' ) {
+                $this->sendBotCake($this->autoReplyComplainMessage() );
+                return false;
+            } else if ( $this->message == 'chat admin' ) {
+                resetWhatsappRegistration($this->no_telp);
+                $this->sendBotCake($this->chatAdmin() );
+                return false;
+            } else if (
+                $this->message == 'batalkan'
+            ) {
+                $this->sendBotCake($this->hapusAntrianWhatsappBotReservasiOnline() );
+            } else {
+                if (Input::get('messageType') == 'text') {
+                    if ( !is_null(  $this->message  ) ) {
+                        WhatsappInbox::create([
+                            'message' => $this->message,
+                            'no_telp' => $this->no_telp
+                        ]);
+                    }
+                }
+                $this->whatsapp_registration = WhatsappRegistration::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->whatsapp_complaint = WhatsappComplaint::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                $this->whatsapp_complaint = WhatsappComplaint::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->failed_therapy = FailedTherapy::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                $this->failed_therapy = FailedTherapy::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->whatsapp_satisfaction_survey = WhatsappSatisfactionSurvey::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                $this->whatsapp_satisfaction_survey = WhatsappSatisfactionSurvey::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->whatsapp_recovery_index = WhatsappRecoveryIndex::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                $this->whatsapp_recovery_index = WhatsappRecoveryIndex::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->kuesioner_menunggu_obat = KuesionerMenungguObat::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                $this->kuesioner_menunggu_obat = KuesionerMenungguObat::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->whatsapp_main_menu = WhatsappMainMenu::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                $this->whatsapp_main_menu = WhatsappMainMenu::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->whatsapp_bpjs_dentist_registrations = WhatsappBpjsDentistRegistration::where('no_telp', $this->no_telp) */
-                     /* ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'") */
-                     /* ->first(); */
+                $this->whatsapp_bpjs_dentist_registrations = WhatsappBpjsDentistRegistration::where('no_telp', $this->no_telp)
+                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                     ->first();
 
-                /* $this->tenant = Tenant::find(1); */
+                $this->tenant = Tenant::find(1);
 
-                /* if ( */
-                    /* !is_null( $this->no_telp ) && */
-                    /* !Input::get('isFromMe') */ 
-                /* ) { */
-                    /* if ( !is_null( $this->whatsapp_registration ) ) { */
-                        /* /1* Log::info(278); *1/ */
-                        /* return $this->proceedRegistering(); //register untuk pendaftaran pasien */
-                    /* } else if (!is_null( $this->whatsapp_complaint )){ */
-                        /* /1* Log::info(281); *1/ */
-                        /* return $this->registerWhatsappComplaint(); //register untuk pendataan complain pasien */
-                    /* } else if (!is_null( $this->failed_therapy  )) { */
-                        /* /1* Log::info(284); *1/ */
-                        /* return $this->registerFailedTherapy(); //register untuk pendataan kegagalan terapi */
-                    /* } else if (!is_null( $this->whatsapp_satisfaction_survey  )) { */
-                        /* /1* Log::info(287); *1/ */
-                        /* return $this->registerWhatsappSatisfactionSurvey(); //register untuk survey kepuasan pasien */
-                    /* } else if (!is_null( $this->whatsapp_recovery_index  )) { */
-                        /* /1* Log::info(290); *1/ */
-                        /* return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien */
-                    /* } else if (!is_null( $this->kuesioner_menunggu_obat  )) { */
-                        /* /1* Log::info(293); *1/ */
-                        /* return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien */
-                    /* } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) { */
-                        /* /1* Log::info(296); *1/ */
-                        /* return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien */
-                    /* } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada */
-                        /* /1* Log::info(299); *1/ */
-                        /* return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu */
-                    /* } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan */
-                        /* /1* Log::info(302); *1/ */
-                        /* return $this->prosesCekListBulanan(); // proses cek list bulanan */
-                    /* } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan */
-                        /* /1* Log::info(305); *1/ */
-                        /* return $this->prosesCekListBulananInput(); // proses cek list bulanan */
-                    /* } else if ( $this->cekListMingguanExists() ) { // Jika ada cek list bulanan */
-                        /* /1* Log::info(308); *1/ */
-                        /* return $this->prosesCekListMingguan(); // proses cek list bulanan */
-                    /* } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan */
-                        /* /1* Log::info(311); *1/ */
-                        /* return $this->prosesCekListMingguanInput(); // proses cek list bulanan */
-                    /* } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian */
-                        /* /1* Log::info(314); *1/ */
-                        /* return $this->prosesCekListHarian(); // proses cek list harian */
-                    /* } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian */
-                        /* /1* Log::info(317); *1/ */
-                        /* return $this->prosesCekListHarianInput(); // proses cek list harian */
-                    /* } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { // */
-                        /* /1* Log::info(320); *1/ */
-                        /* return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi */
-                    /* } else if ( $this->whatsappKonsultasiEstetikExists() ) { */
-                        /* /1* Log::info(323); *1/ */
-                        /* return $this->prosesKonsultasiEstetik(); // buat main menu */
-                    /* /1* } else if ( $this->batalkanAntrianExists() ) { *1/ */
-                    /* /1*     return $this->batalkanAntrian(); // buat main menu *1/ */
-                    /* } else if ( $this->bpjsNumberInfomationInquiryExists() ) { */
-                        /* /1* Log::info(328); *1/ */
-                        /* return $this->prosesBpjsNumberInquiry(); // buat main menu */
-                    /* } else if ( $this->whatsappAntrianOnlineExists() ) { */
-                        /* /1* Log::info(331); *1/ */
-                        /* return $this->prosesAntrianOnline(); // buat main menu */
-                    /* } else if ( $this->whatsappGambarPeriksaExists() ) { */
-                        /* /1* Log::info(334); *1/ */
-                        /* return $this->prosesGambarPeriksa(); // buat main menu */
-                    /* } else if ( $this->noTelpAdaDiAntrianPeriksa() ) { */
-                        /* /1* Log::info(337); *1/ */
-                        /* return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan */
-                    /* } else if( $this->validasiTanggalDanNamaPasienKeluhan() ) { */
-                        /* /1* Log::info(340); *1/ */
-                        /* return $this->balasanValidasiTanggalDanNamaPasienKeluhan(); */
-                    /* } else if( $this->validasiWaktuPelayanan() ) { */
-                        /* /1* Log::info(343); *1/ */
-                        /* return $this->balasanKonfirmasiWaktuPelayanan(); */
-                    /* } else if( $this->noTelpDalamChatWithAdmin() ) { */
-                        /* /1* Log::info(346); *1/ */
-                        /* $this->createWhatsappChat(); // buat main menu */
-                    /* } else if( $this->pasienTidakDalamAntrian() ) { */
-                        /* /1* Log::info(349); *1/ */
-                        /* return $this->createWhatsappMainMenu(); // buat main menu */
-                    /* } */
-                /* } */
-            /* } */
-        /* } */
-	/* } */
+                if (
+                    !is_null( $this->no_telp ) &&
+                    !Input::get('isFromMe') 
+                ) {
+                    if ( !is_null( $this->whatsapp_registration ) ) {
+                        /* Log::info(278); */
+                        return $this->proceedRegistering(); //register untuk pendaftaran pasien
+                    } else if (!is_null( $this->whatsapp_complaint )){
+                        /* Log::info(281); */
+                        return $this->registerWhatsappComplaint(); //register untuk pendataan complain pasien
+                    } else if (!is_null( $this->failed_therapy  )) {
+                        /* Log::info(284); */
+                        return $this->registerFailedTherapy(); //register untuk pendataan kegagalan terapi
+                    } else if (!is_null( $this->whatsapp_satisfaction_survey  )) {
+                        /* Log::info(287); */
+                        return $this->registerWhatsappSatisfactionSurvey(); //register untuk survey kepuasan pasien
+                    } else if (!is_null( $this->whatsapp_recovery_index  )) {
+                        /* Log::info(290); */
+                        return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
+                    } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
+                        /* Log::info(293); */
+                        return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
+                    } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
+                        /* Log::info(296); */
+                        return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
+                    } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
+                        /* Log::info(299); */
+                        return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
+                    } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
+                        /* Log::info(302); */
+                        return $this->prosesCekListBulanan(); // proses cek list bulanan
+                    } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
+                        /* Log::info(305); */
+                        return $this->prosesCekListBulananInput(); // proses cek list bulanan
+                    } else if ( $this->cekListMingguanExists() ) { // Jika ada cek list bulanan
+                        /* Log::info(308); */
+                        return $this->prosesCekListMingguan(); // proses cek list bulanan
+                    } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan
+                        /* Log::info(311); */
+                        return $this->prosesCekListMingguanInput(); // proses cek list bulanan
+                    } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
+                        /* Log::info(314); */
+                        return $this->prosesCekListHarian(); // proses cek list harian
+                    } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
+                        /* Log::info(317); */
+                        return $this->prosesCekListHarianInput(); // proses cek list harian
+                    } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
+                        /* Log::info(320); */
+                        return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
+                    } else if ( $this->whatsappKonsultasiEstetikExists() ) {
+                        /* Log::info(323); */
+                        return $this->prosesKonsultasiEstetik(); // buat main menu
+                    /* } else if ( $this->batalkanAntrianExists() ) { */
+                    /*     return $this->batalkanAntrian(); // buat main menu */
+                    } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
+                        /* Log::info(328); */
+                        return $this->prosesBpjsNumberInquiry(); // buat main menu
+                    } else if ( $this->whatsappAntrianOnlineExists() ) {
+                        /* Log::info(331); */
+                        return $this->prosesAntrianOnline(); // buat main menu
+                    } else if ( $this->whatsappGambarPeriksaExists() ) {
+                        /* Log::info(334); */
+                        return $this->prosesGambarPeriksa(); // buat main menu
+                    } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
+                        /* Log::info(337); */
+                        return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
+                    } else if( $this->validasiTanggalDanNamaPasienKeluhan() ) {
+                        /* Log::info(340); */
+                        return $this->balasanValidasiTanggalDanNamaPasienKeluhan();
+                    } else if( $this->validasiWaktuPelayanan() ) {
+                        /* Log::info(343); */
+                        return $this->balasanKonfirmasiWaktuPelayanan();
+                    } else if( $this->noTelpDalamChatWithAdmin() ) {
+                        /* Log::info(346); */
+                        $this->createWhatsappChat(); // buat main menu
+                    } else if( $this->pasienTidakDalamAntrian() ) {
+                        /* Log::info(349); */
+                        return $this->createWhatsappMainMenu(); // buat main menu
+                    }
+                }
+            }
+        }
+	}
     private function proceedRegistering()
     {
         if ( !is_null($this->whatsapp_registration) ) {
