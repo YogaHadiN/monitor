@@ -81,12 +81,13 @@ class WablasController extends Controller
 	public $whatsapp_bot;
 	public $no_telp;
 	public $message;
+	public $message_type;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
     public $jadwalGigi;
 
 	public function __construct(){
-
+        Log::info(Input::all()); 
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
         ) {
