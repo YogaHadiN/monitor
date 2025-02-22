@@ -2917,25 +2917,21 @@ class WablasController extends Controller
         $this->jadwalGigi = $jadwalGigi;
 
         if( is_null( $reservasi_online ) ){
+            Log::info(2920);
             $this->whatsapp_bot->delete();
         }
         if (
             !is_null( $reservasi_online ) &&
             $this->message == 'batalkan'
         ) {
+            Log::info(2927);
             $this->sendBotCake($this->konfirmasiPembatalan() );
             return false;
         } else if (
             !is_null( $reservasi_online ) &&
             is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
-
-            if ( $this->no_telp == '6281381912803' ) {
-                Log::info("============================");
-                Log::info("TIPE KONSULTASI");
-                Log::info( $this->message );
-                Log::info("============================");
-            }
+            Log::info(2934);
 
             if ( 
                 $this->message == '1' || 
