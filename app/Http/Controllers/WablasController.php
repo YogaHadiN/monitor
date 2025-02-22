@@ -178,10 +178,6 @@ class WablasController extends Controller
         return $message;
     }
 	
-    public function webhook(){
-        
-    }
-    
 	public function webhook(){
 
         $date_now = date('Y-m-d H:i:s');
