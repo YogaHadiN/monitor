@@ -181,7 +181,7 @@ class WablasController extends Controller
 	public function webhook(){
         if (
             !is_null( $this->message ) 
-            && $this->no_telp == '6281381912803'
+            /* && $this->no_telp == '6281381912803' */
         ) {
 
             Log::info("===================");
