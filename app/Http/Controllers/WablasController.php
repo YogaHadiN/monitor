@@ -1191,6 +1191,7 @@ class WablasController extends Controller
      * @return void
      */
     private function angkaPertama($pembanding) {
+        $number = preg_replace("/[^0-9]/", "", $this->message);
         Log::info("=================");
         Log::info("Angka Pertama");
         Log::info( $this->message );
@@ -1201,7 +1202,6 @@ class WablasController extends Controller
             ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding)
         ]);
         Log::info("=================");
-        $number = preg_replace("/[^0-9]/", "", $this->message);
         return !empty( $this->message ) 
             && ( Input::get('messageType') == 'text' )
             && ( !empty( $number ) )
