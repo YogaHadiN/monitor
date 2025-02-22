@@ -5545,10 +5545,10 @@ class WablasController extends Controller
     }
     public function createReservasiOnline($konfirmasi_sdk = false){
         return ReservasiOnline::create([
-            'no_telp'         => $this->no_telp,
-            'kartu_asuransi_image'         => '',
-            'whatsapp_bot_id' => $this->whatsapp_bot->id
-            'konfirmasi_sdk' => $konfirmasi_sdk? 1 : null
+            'no_telp'              => $this->no_telp,
+            'kartu_asuransi_image' => '',
+            'whatsapp_bot_id'      => $this->whatsapp_bot->id,
+            'konfirmasi_sdk'       => $konfirmasi_sdk? 1 : null
         ]);
 
     }
