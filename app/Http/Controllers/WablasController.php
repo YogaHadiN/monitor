@@ -1191,6 +1191,10 @@ class WablasController extends Controller
      * @return void
      */
     private function angkaPertama($pembanding) {
+        Log::info("=================");
+        Log::info("Angka Pertama");
+        Log::info( $this->message );
+        Log::info("=================");
         $number = preg_replace("/[^0-9]/", "", $this->message);
         return !empty( $this->message ) 
             && ( Input::get('messageType') == 'text' )
@@ -1341,6 +1345,16 @@ class WablasController extends Controller
      * @return void
      */
     private function registerWhatsappSatisfactionSurvey(){
+        Log::info(1348);
+        Log::info([
+            $this->angkaPertama("1"),
+            $this->message == 'puas',
+            $this->angkaPertama("2"),
+            $this->message == 'biasa',
+            $this->angkaPertama("3"),
+            $this->message == 'tidak puas'
+        ]);
+
         if (
             $this->angkaPertama("1") ||
             $this->message == 'puas' ||
@@ -3588,13 +3602,8 @@ class WablasController extends Controller
                         ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
                         ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                     ) {
-                        $whatsapp_bot_id = $reservasi_online->whatsapp_bot_id;
-                        $reservasi_online = ReservasiOnline::create([
-                            'no_telp'         => $this->no_telp,
-                            'whatsapp_bot_id' => $whatsapp_bot_id,
-                            'kartu_asuransi_image' => '',
-                            'konfirmasi_sdk'  => 1,
-                        ]);
+                        $this->whatsapp_bot = $reservasi_online->whatsappBot;
+                        $reservasi_online = $this->createReservasiOnline(true);
                     }
                 } else {
                     $input_tidak_tepat = true;
@@ -4407,15 +4416,12 @@ class WablasController extends Controller
             date('G') <= 21 && // pendaftaran online tutup jam 21.59
             date('G') >= 7 // 
         ) {
-            $whatsapp_bot = WhatsappBot::create([
+            $this->whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 6 //registrasi online
             ]);
-            $reservasi_online = ReservasiOnline::create([
-                'no_telp'         => $this->no_telp,
-                'kartu_asuransi_image'         => '',
-                'whatsapp_bot_id' => $whatsapp_bot->id
-            ]);
+            $reservasi_online = $this->createReservasiOnline();
+
             return $this->pertanyaanPoliYangDituju();
         } else {
             $message =  'Pendaftaran secara online sudah ditutup dan akan dibuka kembali jam 7 pagi.';
@@ -5047,13 +5053,13 @@ class WablasController extends Controller
     }
 
     public function konsultasiEstetikOnlineStart(){
-        $whatsapp_bot = WhatsappBot::create([
+        $this->whatsapp_bot = WhatsappBot::create([
             'no_telp' => $this->no_telp,
             'whatsapp_bot_service_id' => 5
         ]);
         KonsultasiEstetikOnline::create([
             'no_telp'         => $this->no_telp,
-            'whatsapp_bot_id' => $whatsapp_bot->id
+            'whatsapp_bot_id' => $this->whatsapp_bot->id
         ]);
         $message = 'Kakak akan melakukan registrasi untuk konsultasi kulit dan kecantikan secara online';
         $message .= PHP_EOL;
@@ -5510,23 +5516,41 @@ class WablasController extends Controller
         return $message;
     }
     public function sendBotCake($message){
-        $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
-        $data = [
-               "psid" => "wa_" . $this->no_telp, 
-               "payload" => [], 
-               "data" => [
-                        "version" => "v2", 
-                        "content" => [
-                           "messages" => [
-                              [
-                                 "type" => "text", 
-                                 "buttons" => [], 
-                                 "text" => $message
-                              ] 
-                           ] 
-                        ] 
-                     ] 
-            ]; 
-        $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
+        if (
+            NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
+                ->where('no_telp', $this->no_telp)
+                ->exists()
+        ) {
+            $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
+            $data = [
+                   "psid" => "wa_" . $this->no_telp, 
+                   "payload" => [], 
+                   "data" => [
+                            "version" => "v2", 
+                            "content" => [
+                               "messages" => [
+                                  [
+                                     "type" => "text", 
+                                     "buttons" => [], 
+                                     "text" => $message
+                                  ] 
+                               ] 
+                            ] 
+                         ] 
+                ]; 
+            $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
+        } else {
+            Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $this->no_telp);
+        }
     }
+    public function createReservasiOnline($konfirmasi_sdk = false){
+        return ReservasiOnline::create([
+            'no_telp'         => $this->no_telp,
+            'kartu_asuransi_image'         => '',
+            'whatsapp_bot_id' => $this->whatsapp_bot->id
+            'konfirmasi_sdk' => $konfirmasi_sdk? 1 : null
+        ]);
+
+    }
+    
 }
