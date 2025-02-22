@@ -90,10 +90,6 @@ class WablasController extends Controller
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
         ) {
-            Log::info("===========================");
-            Log::info("ERROR");
-            Log::info("===========================");
-            Log::info(Input::all());
             $messages = null;
         } else {
             $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
