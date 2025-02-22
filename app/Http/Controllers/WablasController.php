@@ -1194,6 +1194,12 @@ class WablasController extends Controller
         Log::info("=================");
         Log::info("Angka Pertama");
         Log::info( $this->message );
+        Log::info([
+            !empty( $this->message ) ,
+            ( Input::get('messageType') == 'text' ),
+            ( !empty( $number ) ),
+            ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
+        ]);
         Log::info("=================");
         $number = preg_replace("/[^0-9]/", "", $this->message);
         return !empty( $this->message ) 
