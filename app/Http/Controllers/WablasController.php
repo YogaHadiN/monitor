@@ -3595,6 +3595,7 @@ class WablasController extends Controller
                         $reservasi_online = ReservasiOnline::create([
                             'no_telp'         => $this->no_telp,
                             'whatsapp_bot_id' => $whatsapp_bot_id,
+                            'kartu_asuransi_image' => '',
                             'konfirmasi_sdk'  => 1,
                         ]);
                     }
@@ -4418,6 +4419,7 @@ class WablasController extends Controller
             ]);
             $reservasi_online = ReservasiOnline::create([
                 'no_telp'         => $this->no_telp,
+                'kartu_asuransi_image'         => '',
                 'whatsapp_bot_id' => $whatsapp_bot->id
             ]);
             return $this->pertanyaanPoliYangDituju();
