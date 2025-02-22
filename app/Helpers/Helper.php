@@ -187,3 +187,12 @@ if (!function_exists('decrypt_string')) {
         return $decryption;
     }
 }
+if (!function_exists('endsWith')) {
+    function endsWith( $haystack, $needle ) {
+        $length = strlen( $needle );
+        if( !$length ) {
+            return true;
+        }
+        return substr( $haystack, -$length ) === $needle;
+    }
+}

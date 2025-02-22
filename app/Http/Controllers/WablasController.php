@@ -262,7 +262,15 @@ class WablasController extends Controller
                 } else if ( $this->message == 'komplain' ) {
                     $this->sendBotCake($this->autoReplyComplainMessage() );
                     return false;
-                } else if ( $this->message == 'chat admin' ) {
+                } else if (
+                    !$this->noTelpDalamChatWithAdmin() && 
+                    (
+                        $this->message == 'chat admin' ||
+                        str_contains($this->message, 'mau nanya') ||
+                        str_contains($this->message, 'mau tanya') ||
+                        endsWith($this->message, '?')
+                    )
+                ) {
                     resetWhatsappRegistration($this->no_telp);
                     $this->sendBotCake($this->chatAdmin() );
                     return false;
@@ -5431,11 +5439,6 @@ class WablasController extends Controller
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->latest()->first();
 
-        Log::info("=========================");
-        Log::info("ANTRIAN ERROR");
-        Log::info( $ant );
-        Log::info( $ant->nomor_antrian );
-        Log::info("=========================");
         $message  = 'Nomor Antrian ';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
@@ -5526,7 +5529,4 @@ class WablasController extends Controller
             ]; 
         $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
     }
-    
-    
-    
 }
