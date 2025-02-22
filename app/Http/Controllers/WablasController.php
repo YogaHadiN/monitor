@@ -144,10 +144,10 @@ class WablasController extends Controller
             }
 
 
-            Log::info([
-                $this->no_telp,
-                $this->message
-            ]);
+            /* Log::info([ */
+            /*     $this->no_telp, */
+            /*     $this->message */
+            /* ]); */
             session()->put('tenant_id', 1);
         }
 	}
