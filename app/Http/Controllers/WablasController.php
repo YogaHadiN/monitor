@@ -120,8 +120,8 @@ class WablasController extends Controller
             $no_telp->touch();
 
             $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                 ->first();
+                                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                     ->first();
 
             if ( 
                 ( date('w') < 1 ||  date('w') > 5)
@@ -193,7 +193,7 @@ class WablasController extends Controller
 
             $date_now = date('Y-m-d H:i:s');
             if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
-                sendBotCake( $this->libur() );
+                $this->sendBotCake( $this->libur() );
             } else {
                 if (
                     $this->message == 'daftar' ||
@@ -2908,7 +2908,6 @@ class WablasController extends Controller
         Log::info(2908);
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
-             ->where('kartu_asuransi_image', '')
              ->first();
 
         $message           = '';
