@@ -1197,13 +1197,13 @@ class WablasController extends Controller
         Log::info( $this->message );
         Log::info([
             !empty( $this->message ) ,
-            ( Input::get('messageType') == 'text' ),
+            /* ( Input::get('messageType') == 'text' ), */
             ( !empty( $number ) ),
             ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding)
         ]);
         Log::info("=================");
         return !empty( $this->message ) 
-            && ( Input::get('messageType') == 'text' )
+            /* && ( Input::get('messageType') == 'text' ) */
             && ( !empty( $number ) )
             && ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
     }
