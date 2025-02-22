@@ -225,8 +225,9 @@ class Antrian extends Model
                 Log::info(225);
                 $antrian_id_terpanggil = $data[0]->antrian_id;
                 Log::info( $antrian_id_terpanggil );
-                return Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
-                return Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
+                $nomor_antrian = Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
+                Log::info($nomor_antrian);
+                return $nomor_antrian;
             } else {
                 Log::info(229);
                 return Ruangan::find( $ruangan_id )->antrian->nomor_antrian;
