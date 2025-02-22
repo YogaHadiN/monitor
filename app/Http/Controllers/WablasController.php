@@ -1198,7 +1198,7 @@ class WablasController extends Controller
             !empty( $this->message ) ,
             ( Input::get('messageType') == 'text' ),
             ( !empty( $number ) ),
-            ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
+            ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding)
         ]);
         Log::info("=================");
         $number = preg_replace("/[^0-9]/", "", $this->message);
