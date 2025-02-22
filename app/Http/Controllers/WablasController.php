@@ -5437,7 +5437,7 @@ class WablasController extends Controller
         $message .= '*' . $ant->nomor_antrian_dipanggil . '*';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        if ( !is_null( $ant ) && $ant->nomor_antrian == $ant->antrian_dipanggil ) {
+        if ( !is_null( $ant ) && $ant->id == $ant->antrian_dipanggil->id ) {
             $message .= 'Dipanggil. Silahkan menuju ruang periksa';
         } else {
             $message .= 'Dipanggil ke ruang periksa.';

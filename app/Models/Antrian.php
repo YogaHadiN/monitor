@@ -197,7 +197,7 @@ class Antrian extends Model
     }
 
     public function getNomorAntrianDipanggilAttribute(){
-        $this->antrian_dipanggil;
+        $this->antrian_dipanggil->nomor_antrian;
     }
 
     public function getAntrianDipanggilAttribute(){
@@ -222,15 +222,12 @@ class Antrian extends Model
             $query .= "limit 1";
             $data = DB::select($query);
             if (count( $data )) {
-                Log::info(225);
                 $antrian_id_terpanggil = $data[0]->antrian_id;
-                Log::info( $antrian_id_terpanggil );
-                $nomor_antrian = Antrian::find( $antrian_id_terpanggil )->nomor_antrian;
-                Log::info($nomor_antrian);
+                $nomor_antrian = Antrian::find( $antrian_id_terpanggil );
                 return $nomor_antrian;
             } else {
                 Log::info(229);
-                return Ruangan::find( $ruangan_id )->antrian->nomor_antrian;
+                return Ruangan::find( $ruangan_id )->antrian;
             }
         }
     }
