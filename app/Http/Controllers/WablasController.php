@@ -5431,7 +5431,11 @@ class WablasController extends Controller
             ->where('created_at', 'like', date('Y-m-d') . '%')
             ->latest()->first();
 
+        Log::info("=========================");
+        Log::info("ANTRIAN ERROR");
+        Log::info( $ant );
         Log::info( $ant->id );
+        og::info("=========================");
         $message  = 'Nomor Antrian ';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
