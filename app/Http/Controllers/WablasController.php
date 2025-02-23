@@ -709,6 +709,14 @@ class WablasController extends Controller
 	private function clean($param)
 	{
         if (
+            is_array( $param )
+        ) {
+            Log::info("===================================");
+            Log::info("ISI LOG ERROR ARRAY");
+            Log::info("===================================");
+            Log::info($param);
+        }
+        if (
             !is_array( $param ) &&
             empty( trim($param) ) &&
             trim($param) != '0'
