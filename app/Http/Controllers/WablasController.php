@@ -839,23 +839,23 @@ class WablasController extends Controller
 			return $payload;
 		}
 
-		/* if ( */
-            /* !is_null($this->whatsapp_registration) && */
-            /* !$this->whatsapp_registration_deleted && */
-            /* !is_null($this->whatsapp_registration->antrian) && */
-            /* !is_null($this->whatsapp_registration->antrian->tanggal_lahir) && */
-            /* is_null($this->whatsapp_registration->antrian->kartu_asuransi_image) */
-        /* ) { */
-            /* $message = $this->tanyaKartuAsuransiImage($this->whatsapp_registration->antrian); */
-            /* $message .=  PHP_EOL; */
-            /* $message .= 'Untuk nomor antrian *' .  $this->whatsapp_registration->antrian->nomor_antrian . '* ?'; */
-            /* $message .=  PHP_EOL; */
-            /* $payload[] = [ */
-                /* 'category' => 'text', */
-                /* 'message'  => $message */
-            /* ]; */
-		/* 	return $payload; */
-		/* } */
+		if (
+            !is_null($this->whatsapp_registration) &&
+            !$this->whatsapp_registration_deleted &&
+            !is_null($this->whatsapp_registration->antrian) &&
+            !is_null($this->whatsapp_registration->antrian->tanggal_lahir) &&
+            is_null($this->whatsapp_registration->antrian->kartu_asuransi_image)
+        ) {
+            $message = $this->tanyaKartuAsuransiImage($this->whatsapp_registration->antrian);
+            $message .=  PHP_EOL;
+            $message .= 'Untuk nomor antrian *' .  $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
+            $message .=  PHP_EOL;
+            $payload[] = [
+                'category' => 'text',
+                'message'  => $message
+            ];
+			return $payload;
+		}
 		if (
             !is_null($this->whatsapp_registration) &&
             !$this->whatsapp_registration_deleted &&
@@ -1212,14 +1212,20 @@ class WablasController extends Controller
     
     private function uploadImage()
     {
-        $url      = $this->image_url;
-        $contents = file_get_contents($url);
-        $name     = substr($url, strrpos($url, '/') + 1);
-        $destination_path = 'image/whatsapp/';
-        $name = $destination_path . $name;
+        if (
+            $tenant->image_bot_enabled
+        ) {
+            $url      = $this->image_url;
+            $contents = file_get_contents($url);
+            $name     = substr($url, strrpos($url, '/') + 1);
+            $destination_path = 'image/whatsapp/';
+            $name = $destination_path . $name;
 
-        \Storage::disk('s3')->put($name, $contents);
-        return $name;
+            \Storage::disk('s3')->put($name, $contents);
+            return $name;
+        } else {
+            return '';
+        }
     }
     /**
      * undocumented function
@@ -3280,7 +3286,7 @@ class WablasController extends Controller
                                 $reservasi_online->register_previously_saved_patient = $this->message;
                                 if (
                                      !is_null( $pasien->bpjs_image ) &&
-                                     !empty( $pasien->bpjs_image )
+                                     !empty( $pasien->bpjs_image ) &&
                                 ) {
                                     $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
                                 }
@@ -3391,7 +3397,13 @@ class WablasController extends Controller
                             $reservasi_online->nama                 = $pasien->nama;
                             $reservasi_online->alamat               = $pasien->alamat;
                             $reservasi_online->tanggal_lahir        = $pasien->tanggal_lahir;
-                            $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                            $tenant_id = session()->get('tenant_id');
+                            $tenant = Tenant::find( $tenant_id );
+                            if (
+                                $tenant->image_bot_enabled
+                            ) {
+                                $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                            }
                             $reservasi_online->verifikasi_bpjs = 1;
                         } else {
                             $reservasi_online->nama            = $message['nama'];
@@ -3433,7 +3445,13 @@ class WablasController extends Controller
                         $reservasi_online->nama                 = $pasien->nama;
                         $reservasi_online->alamat               = $pasien->alamat;
                         $reservasi_online->tanggal_lahir        = $pasien->tanggal_lahir;
-                        $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                        $tenant_id = session()->get('tenant_id');
+                        $tenant = Tenant::find( $tenant_id );
+                        if (
+                            $tenant->image_bot_enabled
+                        ) {
+                            $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
+                        }
                         $reservasi_online->verifikasi_bpjs      = 0;
                     }
                 }
@@ -3489,26 +3507,26 @@ class WablasController extends Controller
             //=========================================
             // INPUT KARTU ASURANSI
             //=========================================
-        /* } else if ( */ 
-        /*     !is_null( $reservasi_online ) && */
-        /*     $reservasi_online->konfirmasi_sdk && */
-        /*     !is_null( $reservasi_online->tipe_konsultasi_id ) && */
-        /*     !is_null( $reservasi_online->registrasi_pembayaran_id )&& */
-        /*     !is_null( $reservasi_online->register_previously_saved_patient ) && */
-        /*     !is_null( $reservasi_online->nomor_asuransi_bpjs ) && */
-        /*     !is_null( $reservasi_online->nama ) && */
-        /*     !is_null( $reservasi_online->tanggal_lahir ) && */
-        /*     !is_null( $reservasi_online->alamat ) && */
-        /*     is_null( $reservasi_online->kartu_asuransi_image ) */
-        /* ) { */
-        /*     if ( */
-        /*         $this->isPicture() */
-        /*     ) { */
-        /*         $reservasi_online->kartu_asuransi_image = $this->uploadImage(); */ 
-        /*         $reservasi_online->save(); */
-        /*     } else { */
-        /*         $input_tidak_tepat = true; */
-        /*     } */
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat ) &&
+            is_null( $reservasi_online->kartu_asuransi_image )
+        ) {
+            if (
+                $this->isPicture()
+            ) {
+                $reservasi_online->kartu_asuransi_image = $this->uploadImage(); 
+                $reservasi_online->save();
+            } else {
+                $input_tidak_tepat = true;
+            }
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -3696,20 +3714,20 @@ class WablasController extends Controller
         ) {
             $message = $this->tanyaAlamatLengkapPasien();
             /* Log::info(3402); */
-        /* } else if ( */ 
-        /*     !is_null( $reservasi_online ) && */
-        /*     $reservasi_online->konfirmasi_sdk && */
-        /*     !is_null( $reservasi_online->tipe_konsultasi_id ) && */
-        /*     !is_null( $reservasi_online->registrasi_pembayaran_id )&& */
-        /*     !is_null( $reservasi_online->register_previously_saved_patient ) && */
-        /*     !is_null( $reservasi_online->nomor_asuransi_bpjs ) && */
-        /*     !is_null( $reservasi_online->nama ) && */
-        /*     !is_null( $reservasi_online->tanggal_lahir ) && */
-        /*     !is_null( $reservasi_online->alamat ) && */
-        /*     is_null( $reservasi_online->kartu_asuransi_image ) */
-        /* ) { */
-        /*     $message = $this->tanyaKartuAsuransiImage($reservasi_online); */
-            /* Log::info(3416); */
+        } else if ( 
+            !is_null( $reservasi_online ) &&
+            $reservasi_online->konfirmasi_sdk &&
+            !is_null( $reservasi_online->tipe_konsultasi_id ) &&
+            !is_null( $reservasi_online->registrasi_pembayaran_id )&&
+            !is_null( $reservasi_online->register_previously_saved_patient ) &&
+            !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
+            !is_null( $reservasi_online->nama ) &&
+            !is_null( $reservasi_online->tanggal_lahir ) &&
+            !is_null( $reservasi_online->alamat ) &&
+            is_null( $reservasi_online->kartu_asuransi_image )
+        ) {
+            $message = $this->tanyaKartuAsuransiImage($reservasi_online);
+            Log::info(3416);
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
@@ -3772,7 +3790,7 @@ class WablasController extends Controller
             ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
         ) {
             $model->registrasi_pembayaran_id = 1;
-            $model->kartu_asuransi_image     = '0';
+            $model->kartu_asuransi_image     = '';
         }
         if (
             ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
