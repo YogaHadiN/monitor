@@ -708,6 +708,9 @@ class WablasController extends Controller
     
 	private function clean($param)
 	{
+        if( is_array( $param ) ){
+            Log::info($param);
+        }
 		if (empty( trim($param) ) && trim($param) != '0') {
 			return null;
 		}
