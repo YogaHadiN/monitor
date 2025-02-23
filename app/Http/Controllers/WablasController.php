@@ -709,7 +709,7 @@ class WablasController extends Controller
 	private function clean($param)
 	{
         if (
-            !is_array( trim($param) ) &&
+            !is_array( $param ) &&
             empty( trim($param) ) &&
             trim($param) != '0'
         ) {
