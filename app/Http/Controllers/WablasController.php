@@ -273,9 +273,14 @@ class WablasController extends Controller
                         endsWith($this->message, '?')
                     )
                 ) {
-                    resetWhatsappRegistration($this->no_telp);
-                    $this->sendBotCake( $this->chatAdmin() );
-                    return false;
+                    if ( $this->message == 'chat admin' ) {
+                        resetWhatsappRegistration($this->no_telp);
+                        $this->sendBotCake( $this->chatAdmin() );
+                        return false;
+                    } else {
+                       $this->registerChatAdmin();
+                       return $this->createWhatsappChat(); // buat main menu
+                    }
                 } else if (
                     $this->message == 'batalkan'
                 ) {
@@ -5184,13 +5189,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Ada yang bisa kami bantu?';
 
-            WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 12 // chat dengan admin
-            ]);
-
-            WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
-            WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
+            $this->registerChatAdmin();
             return $message;
         } else {
 
@@ -5582,4 +5581,14 @@ class WablasController extends Controller
         ]);
 
     }
+    public function registerChatAdmin(){
+        WhatsappBot::create([
+            'no_telp' => $this->no_telp,
+            'whatsapp_bot_service_id' => 12 // chat dengan admin
+        ]);
+
+        WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
+        WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
+    }
+    
 }
