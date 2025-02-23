@@ -126,6 +126,14 @@ class WablasController extends Controller
             $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                      ->first();
+            Log::info('===========================');
+            Log::info('whatsapp_bot');
+            Log::info(
+                WhatsappBot::where('no_telp', $this->no_telp)
+                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                             ->toRawSql()
+            ); 
+            Log::info('===========================');
 
             if ( 
                 ( date('w') < 1 ||  date('w') > 5)
@@ -5584,13 +5592,11 @@ class WablasController extends Controller
 
     }
     public function registerChatAdmin(){
+        resetWhatsappRegistration( $this->no_telp );
         WhatsappBot::create([
             'no_telp' => $this->no_telp,
             'whatsapp_bot_service_id' => 12 // chat dengan admin
         ]);
-
-        WhatsappRegistration::where('no_telp', $this->no_telp)->delete();
-        WhatsappMainMenu::where('no_telp', $this->no_telp)->delete();
     }
     
 }
