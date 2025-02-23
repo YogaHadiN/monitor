@@ -5572,9 +5572,10 @@ class WablasController extends Controller
         }
     }
     public function createReservasiOnline($konfirmasi_sdk = false){
+        $tenant = Tenant::find( session()->get('tenant_id') );
         return ReservasiOnline::create([
             'no_telp'              => $this->no_telp,
-            'kartu_asuransi_image' => '',
+            'kartu_asuransi_image' => $tenant->image_bot_enabled ? null : '',
             'whatsapp_bot_id'      => $this->whatsapp_bot->id,
             'konfirmasi_sdk'       => $konfirmasi_sdk? 1 : 0
         ]);
