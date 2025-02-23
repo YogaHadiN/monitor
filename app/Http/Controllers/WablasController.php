@@ -108,6 +108,8 @@ class WablasController extends Controller
                 $this->message_type == 'text'
             ) {
                 $message = $messages['text']['body'];
+            } else {
+                $message = null;
             }
 
 
