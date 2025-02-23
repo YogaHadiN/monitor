@@ -128,11 +128,10 @@ class WablasController extends Controller
                                      ->first();
             Log::info('===========================');
             Log::info('whatsapp_bot');
-            Log::info(
-                WhatsappBot::where('no_telp', $this->no_telp)
+            $raw_sql = WhatsappBot::where('no_telp', $this->no_telp)
                              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                             ->toRawSql()
-            ); 
+                             ->toSql();
+            Log::info($raw_sql); 
             Log::info('===========================');
 
             if ( 
