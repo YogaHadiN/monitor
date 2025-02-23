@@ -1205,16 +1205,6 @@ class WablasController extends Controller
      */
     private function angkaPertama($pembanding) {
         $number = preg_replace("/[^0-9]/", "", $this->message);
-        Log::info("=================");
-        Log::info("Angka Pertama");
-        Log::info( $this->message );
-        Log::info([
-            !empty( $this->message ) ,
-            /* ( $this->message_type == 'text' ), */
-            ( !empty( $number ) ),
-            ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding)
-        ]);
-        Log::info("=================");
         return !empty( $this->message ) 
             /* && ( $this->message_type == 'text' ) */
             && ( !empty( $number ) )
