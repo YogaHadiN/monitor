@@ -288,9 +288,6 @@ class WebRegistrationController extends Controller
     public function submit_tipe_konsultasi(){
         $tipe_konsultasi_id = Input::get('value');
 
-        Log::info('tipe_konsultasi_id');
-        Log::info($tipe_konsultasi_id);
-
         $no_telp            = Input::get('no_telp');
         $cek                = $this->cek( $tipe_konsultasi_id );
         $message            = $cek['message'];
