@@ -5555,7 +5555,7 @@ class WablasController extends Controller
             'no_telp'              => $this->no_telp,
             'kartu_asuransi_image' => '',
             'whatsapp_bot_id'      => $this->whatsapp_bot->id,
-            'konfirmasi_sdk'       => $konfirmasi_sdk? 1 : null
+            'konfirmasi_sdk'       => $konfirmasi_sdk? 1 : 0
         ]);
 
     }
