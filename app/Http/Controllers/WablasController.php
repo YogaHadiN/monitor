@@ -4700,6 +4700,10 @@ class WablasController extends Controller
     }
     public function akhiriChatWithAdmin(){
         resetWhatsappRegistration( $this->no_telp );
+        Message::where('no_telp', $this->no_telp)
+            ->update([
+                'sudah_dibalas' => 1
+            ]);
         return 'Fitur dihentikan. Silahkan ulangi apabila ada yang ingin disampaikan';
     }
     public function prosesKonsultasiEstetik(){
