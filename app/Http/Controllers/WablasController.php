@@ -715,19 +715,19 @@ class WablasController extends Controller
             Log::info("ISI LOG ERROR ARRAY");
             Log::info("===================================");
             Log::info($param);
-        }
-        if (
-            !is_array( $param ) &&
-            empty( trim($param) ) &&
-            trim($param) != '0'
-        ) {
-			return null;
-		}
+        } else {
+            if (
+                empty( trim($param) ) &&
+                trim($param) != '0'
+            ) {
+                return null;
+            }
 
-        if ( str_contains($param, "<~ ") ) {
-            $param = explode( "<~ ", $param)[1];
+            if ( str_contains($param, "<~ ") ) {
+                $param = explode( "<~ ", $param)[1];
+            }
+            return strtolower( trim($param) );
         }
-		return strtolower( trim($param) );
 	}
 
 	private function botKirim()
