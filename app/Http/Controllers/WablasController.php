@@ -3286,7 +3286,7 @@ class WablasController extends Controller
                                 $reservasi_online->register_previously_saved_patient = $this->message;
                                 if (
                                      !is_null( $pasien->bpjs_image ) &&
-                                     !empty( $pasien->bpjs_image ) &&
+                                     !empty( $pasien->bpjs_image )
                                 ) {
                                     $reservasi_online->kartu_asuransi_image = $pasien->bpjs_image;
                                 }
