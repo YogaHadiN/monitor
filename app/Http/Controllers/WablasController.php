@@ -274,7 +274,7 @@ class WablasController extends Controller
                     )
                 ) {
                     resetWhatsappRegistration($this->no_telp);
-                    $this->sendBotCake($this->chatAdmin() );
+                    $this->sendBotCake( $this->chatAdmin() );
                     return false;
                 } else if (
                     $this->message == 'batalkan'
@@ -5468,6 +5468,8 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '_' . $antrian->nomor_antrian . '_';
+        $message .= PHP_EOL;
+        $message .= "Saat ini nomor antrian terpanggil = " . $antrian->nomor_antrian_dipanggil;
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
