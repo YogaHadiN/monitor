@@ -179,25 +179,25 @@ class WablasController extends Controller
     }
 	
 	public function webhook(){
-        if (
-            $this->no_telp == '6281381912803'
-        ) {
-             $request = [
-               "version" => "v2", 
-               "content" => [
-                     "messages" => [
-                        [
-                           "type" => "text", 
-                           "text" => "Moga2 bisa webhoooooookkkkkkkk", 
-                           "buttons" => [] 
-                        ] 
-                     ], 
-                     "actions" => [], 
-                     "quick_replies" => [] 
-                  ] 
-            ]; 
-             echo json_encode( $request );
-        }
+        /* if ( */
+        /*     $this->no_telp == '6281381912803' */
+        /* ) { */
+        /*      $request = [ */
+        /*        "version" => "v2", */ 
+        /*        "content" => [ */
+        /*              "messages" => [ */
+        /*                 [ */
+        /*                    "type" => "text", */ 
+        /*                    "text" => "Moga2 bisa webhoooooookkkkkkkk", */ 
+        /*                    "buttons" => [] */ 
+        /*                 ] */ 
+        /*              ], */ 
+        /*              "actions" => [], */ 
+        /*              "quick_replies" => [] */ 
+        /*           ] */ 
+        /*     ]; */ 
+        /*      echo json_encode( $request ); */
+        /* } */
 
 
 
@@ -4656,6 +4656,35 @@ class WablasController extends Controller
     }
 
     public function sendSingle($phone, $message){
+        if (
+            NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
+                ->where('no_telp', $phone)
+                ->exists()
+        ) {
+            $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
+            $data = [
+                   "psid" => "wa_" . $phone, 
+                   "payload" => [], 
+                   "data" => [
+                            "version" => "v2", 
+                            "content" => [
+                               "messages" => [
+                                  [
+                                     "type" => "text", 
+                                     "buttons" => [], 
+                                     "text" => $message
+                                  ] 
+                               ] 
+                            ] 
+                         ] 
+                ]; 
+            $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
+        } else {
+            Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $phone);
+        }
+    }
+    
+    public function sendSingleWablas($phone, $message){
         $curl = curl_init();
         $token = env('WABLAS_TOKEN');
         $data = [
