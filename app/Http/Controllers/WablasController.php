@@ -684,6 +684,12 @@ class WablasController extends Controller
                     //
                 // Jika pasien memilih mengalami perbaikan, ucapkan terima kasih
                 //
+                } else if (
+                    $recovery_index_id == 2  ||
+                    $recovery_index_id == 3
+                ) {
+                    $message = "Baik kak, terima kasih atas responnya. Kami turut senang apabila kondisi kakak baik dan pengobatan berjalan dengan lancar";
+                    $this->sendBotCake($message );
                 } else {
                     $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                     $message .= PHP_EOL;
