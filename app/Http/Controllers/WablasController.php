@@ -288,8 +288,11 @@ class WablasController extends Controller
                         $this->sendBotCake( $this->chatAdmin() );
                         return false;
                     } else {
-                       $this->registerChatAdmin();
-                       return $this->createWhatsappChat(); // buat main menu
+                       $message = $this->registerChatAdmin();
+                       if (!is_null( $message )) {
+                           return $message;
+                       }
+                       return $this->createWhatsappChat(); // buat pesan message
                     }
                 } else if (
                     $this->message == 'batalkan'
@@ -5596,11 +5599,22 @@ class WablasController extends Controller
 
     }
     public function registerChatAdmin(){
-        resetWhatsappRegistration( $this->no_telp );
-        $this->whatsapp_bot = WhatsappBot::create([
-            'no_telp' => $this->no_telp,
-            'whatsapp_bot_service_id' => 12 // chat dengan admin
-        ]);
+        if (
+            (
+                date('G') < 23 &&
+                date('G') >= 7
+            ) ||
+            $this->no_telp == '6281381912803'
+        ) {
+            resetWhatsappRegistration( $this->no_telp );
+            $this->whatsapp_bot = WhatsappBot::create([
+                'no_telp' => $this->no_telp,
+                'whatsapp_bot_service_id' => 12 // chat dengan admin
+            ]);
+        } else {
+
+            return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 7 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 7 pagi. Mohon maaf atas ketidaknyamanannya';
+        }
     }
     
 }
