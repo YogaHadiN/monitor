@@ -126,14 +126,6 @@ class WablasController extends Controller
             $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                      ->first();
-            Log::info('===========================');
-            Log::info('whatsapp_bot');
-            $raw_sql = WhatsappBot::where('no_telp', $this->no_telp)
-                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                             ->toSql();
-            Log::info($raw_sql); 
-            Log::info( $this->whatsapp_bot ); 
-            Log::info('===========================');
 
             if ( 
                 ( date('w') < 1 ||  date('w') > 5)
@@ -1378,15 +1370,6 @@ class WablasController extends Controller
      * @return void
      */
     private function registerWhatsappSatisfactionSurvey(){
-        Log::info(1348);
-        Log::info([
-            $this->angkaPertama("1"),
-            $this->message == 'puas',
-            $this->angkaPertama("2"),
-            $this->message == 'biasa',
-            $this->angkaPertama("3"),
-            $this->message == 'tidak puas'
-        ]);
 
         if (
             $this->angkaPertama("1") ||
@@ -2949,7 +2932,7 @@ class WablasController extends Controller
     /* } */
     
     public function prosesAntrianOnline(){
-        Log::info(2908);
+        /* Log::info(2908); */
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->first();
@@ -2960,21 +2943,21 @@ class WablasController extends Controller
         $this->jadwalGigi = $jadwalGigi;
 
         if( is_null( $reservasi_online ) ){
-            Log::info(2920);
+            /* Log::info(2920); */
             $this->whatsapp_bot->delete();
         }
         if (
             !is_null( $reservasi_online ) &&
             $this->message == 'batalkan'
         ) {
-            Log::info(2927);
+            /* Log::info(2927); */
             $this->sendBotCake($this->konfirmasiPembatalan() );
             return false;
         } else if (
             !is_null( $reservasi_online ) &&
             is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
-            Log::info(2934);
+            /* Log::info(2934); */
 
             if ( 
                 $this->message == '1' || 
@@ -3747,7 +3730,7 @@ class WablasController extends Controller
             is_null( $reservasi_online->kartu_asuransi_image )
         ) {
             $message = $this->tanyaKartuAsuransiImage($reservasi_online);
-            Log::info(3416);
+            /* Log::info(3416); */
         } else if ( 
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
