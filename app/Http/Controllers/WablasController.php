@@ -180,6 +180,28 @@ class WablasController extends Controller
 	
 	public function webhook(){
         if (
+            $this->no_telp == '6281381912803'
+        ) {
+             $request = [
+               "version" => "v2", 
+               "content" => [
+                     "messages" => [
+                        [
+                           "type" => "text", 
+                           "text" => "Moga2 bisa webhoooooookkkkkkkk", 
+                           "buttons" => [] 
+                        ] 
+                     ], 
+                     "actions" => [], 
+                     "quick_replies" => [] 
+                  ] 
+            ]; 
+             return $request
+        }
+
+
+
+        if (
             !is_null( $this->message ) 
             /* && $this->no_telp == '6281381912803' */
         ) {
@@ -5463,6 +5485,7 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= '_' . $antrian->nomor_antrian . '_';
+        $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Saat ini nomor antrian terpanggil = " . $antrian->nomor_antrian_dipanggil;
         $message .= PHP_EOL;
