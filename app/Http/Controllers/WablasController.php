@@ -196,7 +196,7 @@ class WablasController extends Controller
                      "quick_replies" => [] 
                   ] 
             ]; 
-             return $request;
+             return json_encode( $request );
         }
 
 
