@@ -179,25 +179,25 @@ class WablasController extends Controller
     }
 	
 	public function webhook(){
-        /* if ( */
-        /*     $this->no_telp == '6281381912803' */
-        /* ) { */
-        /*      $request = [ */
-        /*        "version" => "v2", */ 
-        /*        "content" => [ */
-        /*              "messages" => [ */
-        /*                 [ */
-        /*                    "type" => "text", */ 
-        /*                    "text" => "Moga2 bisa webhoooooookkkkkkkk", */ 
-        /*                    "buttons" => [] */ 
-        /*                 ] */ 
-        /*              ], */ 
-        /*              "actions" => [], */ 
-        /*              "quick_replies" => [] */ 
-        /*           ] */ 
-        /*     ]; */ 
-        /*      return json_encode( $request ); */
-        /* } */
+        if (
+            $this->no_telp == '6281381912803'
+        ) {
+             $request = [
+               "version" => "v2", 
+               "content" => [
+                     "messages" => [
+                        [
+                           "type" => "text", 
+                           "text" => "Moga2 bisa webhoooooookkkkkkkk", 
+                           "buttons" => [] 
+                        ] 
+                     ], 
+                     "actions" => [], 
+                     "quick_replies" => [] 
+                  ] 
+            ]; 
+             echo json_encode( $request );
+        }
 
 
 
