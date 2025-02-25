@@ -20,8 +20,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('botcake/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']);
 Route::post('botcake/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
 
+Route::get('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhookGet']);
+Route::post('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhook']);
+
+
 Route::post('wablas/webhookcs', [\App\Http\Controllers\WablasEstetikController::class, 'webhook']);
 Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'webhook']);
+
 
 
 Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']);
