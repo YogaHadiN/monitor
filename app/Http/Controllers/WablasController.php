@@ -88,6 +88,9 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+
+
+
         $this->image_url = null;
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
@@ -115,6 +118,17 @@ class WablasController extends Controller
 
             $this->message = $this->clean( $message );
             $this->no_telp = $no_telp;
+
+
+            if (
+                $this->no_telp == '6281381912803' &&
+                $this->message_type == 'image'
+            ) {
+                Log::info("------------------------");
+                Log::info("INPUT IMAGE");
+                Log::info( Input::all()  );
+                Log::info("------------------------");
+            }
 
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
