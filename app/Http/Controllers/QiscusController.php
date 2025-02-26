@@ -10,13 +10,13 @@ class QiscusController extends Controller
 {
     public function webhookGet(){
         Log::info("===================="); 
-        Log::info("QISCUS"); 
+        Log::info("QISCUS GET REQUEST"); 
         Log::info(Input::all()); 
         Log::info("===================="); 
     }
     public function webhook(){
         Log::info("===================="); 
-        Log::info("QISCUS"); 
+        Log::info("QISCUS POST REQUEST"); 
         Log::info(Input::all()); 
         Log::info("===================="); 
     }
