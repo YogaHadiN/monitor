@@ -5623,7 +5623,7 @@ class QiscusController extends Controller
         $message .= PHP_EOL;
         return $message;
     }
-    public function sendBotCake($message, $room_id){
+    public function sendBotCake($message){
         if (
             NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
                 ->where('no_telp', $this->no_telp)
