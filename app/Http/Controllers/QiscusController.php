@@ -98,89 +98,80 @@ class QiscusController extends Controller
 
         $this->room_id = Input::get('payload')['room']['id'];
         $this->image_url = null;
+
+        $no_telp = Input::get('payload')['from']['email'];
+        $this->message_type = Input::get('payload')['message']['type'];
+        /* if ( */
+        /*     $this->message_type == 'image' */
+        /* ) { */
+        /*     $message = $messages['image']; */
+        /* } else if ( */
+        /*     $this->message_type == 'text' */
+        /* ) { */
+        /*     $message = $messages['text']['body']; */
+        /* } else { */
+        /*     $message = null; */
+        /* } */
+
+
+        $this->message = $this->clean(Input::get('payload')['message']['text']);
+        $this->no_telp = $no_telp;
+
+
         if (
-            !isset(Input::get('payload')['message']['text'])
+            $this->no_telp == '6281381912803' &&
+            $this->message_type == 'image'
         ) {
-            $messages = null;
-        } else {
-            $messages = Input::get('payload')['message']['text'];
+            Log::info("------------------------");
+            Log::info("INPUT IMAGE");
+            Log::info( Input::all()  );
+            Log::info("------------------------");
         }
 
-        if (!is_null( $messages )) {
-            $no_telp = Input::get('payload')['from']['email'];
-            $this->message_type = Input::get('payload')['message']['type'];
-            /* if ( */
-            /*     $this->message_type == 'image' */
-            /* ) { */
-            /*     $message = $messages['image']; */
-            /* } else if ( */
-            /*     $this->message_type == 'text' */
-            /* ) { */
-            /*     $message = $messages['text']['body']; */
-            /* } else { */
-            /*     $message = null; */
-            /* } */
+        $no_telp = NoTelp::firstOrCreate([
+            'no_telp' => $this->no_telp,
+            'tenant_id' => 1
+        ]);
 
+        $no_telp->touch();
 
-            $this->message = $this->clean( $message );
-            $this->no_telp = $no_telp;
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+             ->first();
 
-
-            if (
-                $this->no_telp == '6281381912803' &&
-                $this->message_type == 'image'
-            ) {
-                Log::info("------------------------");
-                Log::info("INPUT IMAGE");
-                Log::info( Input::all()  );
-                Log::info("------------------------");
-            }
-
-            $no_telp = NoTelp::firstOrCreate([
-                'no_telp' => $this->no_telp,
-                'tenant_id' => 1
-            ]);
-
-            $no_telp->touch();
-
-            $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                     ->first();
-
-            if ( 
-                ( date('w') < 1 ||  date('w') > 5)
-            ) {
-                $this->gigi_buka = false;
-            }
-
-            if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
-                $this->gigi_buka = false;
-            }
-
-            if ( 
-                ( date('w') < 1 ||  date('w') > 5)
-            ) {
-                $this->estetika_buka = false;
-            }
-
-            if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
-                $this->estetika_buka = false;
-            }
-
-            Log::info("===========================================");
-            Log::info("QISCUS NO TELP");
-            Log::info( $this->no_telp);
-            Log::info("QISCUS TEXT");
-            Log::info( $this->message);
-            Log::info("QISCUS TYPE");
-            Log::info( $this->message_type);
-            Log::info("QISCUS ROOM_ID");
-            Log::info( $this->room_id);
-            Log::info("===========================================");
-            Log::info( Input::all() );
-
-            session()->put('tenant_id', 1);
+        if ( 
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->gigi_buka = false;
         }
+
+        if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
+            $this->gigi_buka = false;
+        }
+
+        if ( 
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->estetika_buka = false;
+        }
+
+        if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
+            $this->estetika_buka = false;
+        }
+
+        Log::info("===========================================");
+        Log::info("QISCUS NO TELP");
+        Log::info( $this->no_telp);
+        Log::info("QISCUS TEXT");
+        Log::info( $this->message);
+        Log::info("QISCUS TYPE");
+        Log::info( $this->message_type);
+        Log::info("QISCUS ROOM_ID");
+        Log::info( $this->room_id);
+        Log::info("===========================================");
+        Log::info( Input::all() );
+
+        session()->put('tenant_id', 1);
 	}
     public function wablasGet(){
         return 'ok';
