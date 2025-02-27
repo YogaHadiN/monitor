@@ -5632,10 +5632,10 @@ class QiscusController extends Controller
             $app_id = env('QISCUS_APP_ID');
             $url      = "https://omnichannel.qiscus.com/$app_id/bot";
              $data = [
-               "sender_email" => "zant-u1tcs7tharqvefcg_admin@qismo.com", 
-               "message" => $message, 
-               "type" => "text", 
-               "room_id" => $room_id
+               "sender_email" => "zant-u1tcs7tharqvefcg_admin@qismo.com",
+               "message"      => $message,
+               "type"         => "text",
+               "room_id"      => $this->room_id
             ]; 
  
             $response = Http::withHeaders([
