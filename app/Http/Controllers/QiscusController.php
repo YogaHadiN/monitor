@@ -93,6 +93,10 @@ class QiscusController extends Controller
 
 	public function __construct(){
 
+        Log::info("===========================================");
+        Log::info("QISCUS TEXT");
+        Log::info(Input::get('entry')['payload']['message']['text']);
+        Log::info("===========================================");
         Log::info( Input::all() );
 
 
@@ -102,7 +106,7 @@ class QiscusController extends Controller
         ) {
             $messages = null;
         } else {
-            $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
+            $messages = Input::get('entry')['payload']['message']['text'];
         }
 
         if (!is_null( $messages )) {
@@ -5620,29 +5624,24 @@ class QiscusController extends Controller
         $message .= PHP_EOL;
         return $message;
     }
-    public function sendBotCake($message){
+    public function sendBotCake($message, $room_id){
         if (
             NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
                 ->where('no_telp', $this->no_telp)
                 ->exists()
         ) {
-            $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
-            $data = [
-                   "psid" => "wa_" . $this->no_telp, 
-                   "payload" => [], 
-                   "data" => [
-                            "version" => "v2", 
-                            "content" => [
-                               "messages" => [
-                                  [
-                                     "type" => "text", 
-                                     "buttons" => [], 
-                                     "text" => $message
-                                  ] 
-                               ] 
-                            ] 
-                         ] 
-                ]; 
+            $app_id = env('QISCUS_APP_ID');
+            $url      = "https://omnichannel.qiscus.com/$app_id/bot";
+             $data = [
+               "sender_email" => "zant-u1tcs7tharqvefcg_admin@qismo.com", 
+               "message" => $message, 
+               "type" => "text", 
+               "room_id" => $room_id
+            ]; 
+ 
+            $response = Http::withHeaders([
+                            'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
+                        ])->post( $url, $data);
             $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
         } else {
             Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $this->no_telp);
