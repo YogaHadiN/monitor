@@ -87,19 +87,16 @@ class QiscusController extends Controller
 	public $message;
 	public $message_type;
 	public $image_url;
+	public $room_id;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
     public $jadwalGigi;
 
 	public function __construct(){
 
-        Log::info("===========================================");
-        Log::info("QISCUS NO TELP");
-        Log::info(Input::get('payload')['from']['email']);
-        Log::info("===========================================");
-        Log::info( Input::all() );
 
 
+        $this->room_id = Input::get('payload')['room']['id'];
         $this->image_url = null;
         if (
             !isset(Input::get('payload')['message']['text'])
@@ -110,8 +107,8 @@ class QiscusController extends Controller
         }
 
         if (!is_null( $messages )) {
-            $no_telp = $messages['from'];
-            $this->message_type = $messages['type'];
+            $no_telp = Input::get('payload')['from']['email'];
+            $this->message_type = Input::get('payload')['message']['type'];
             if (
                 $this->message_type == 'image'
             ) {
@@ -170,6 +167,17 @@ class QiscusController extends Controller
                 $this->estetika_buka = false;
             }
 
+            Log::info("===========================================");
+            Log::info("QISCUS NO TELP");
+            Log::info( $this->no_telp);
+            Log::info("QISCUS TEXT");
+            Log::info( $this->message);
+            Log::info("QISCUS TYPE");
+            Log::info( $this->message_type);
+            Log::info("QISCUS ROOM_ID");
+            Log::info( $this->room_id);
+            Log::info("===========================================");
+            Log::info( Input::all() );
 
             session()->put('tenant_id', 1);
         }
