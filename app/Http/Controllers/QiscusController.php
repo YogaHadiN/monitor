@@ -93,6 +93,7 @@ class QiscusController extends Controller
 
 	public function __construct(){
 
+        Log::info( Input::all() );
 
 
         $this->image_url = null;
