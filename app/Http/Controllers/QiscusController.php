@@ -5612,6 +5612,7 @@ class QiscusController extends Controller
         return $message;
     }
     public function sendBotCake($message){
+        Log::info(5615);
 
         $app_id = env('QISCUS_APP_ID');
         $url      = "https://omnichannel.qiscus.com/$app_id/bot";
