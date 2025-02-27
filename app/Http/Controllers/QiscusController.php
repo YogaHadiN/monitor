@@ -104,6 +104,7 @@ class QiscusController extends Controller
 
         Log::info('message type');
         Log::info( $this->message_type);
+        Log::info( Input::all() );
         /* if ( */
         /*     $this->message_type == 'image' */
         /* ) { */
