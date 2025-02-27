@@ -101,6 +101,9 @@ class QiscusController extends Controller
 
         $no_telp = Input::get('payload')['from']['email'];
         $this->message_type = Input::get('payload')['message']['type'];
+
+        Log::info('message type');
+        Log::info( $this->message_type);
         /* if ( */
         /*     $this->message_type == 'image' */
         /* ) { */
