@@ -95,7 +95,7 @@ class QiscusController extends Controller
 
         Log::info("===========================================");
         Log::info("QISCUS TEXT");
-        Log::info(Input::get('payload'));
+        Log::info(Input::get('payload')['message']['text']);
         Log::info("===========================================");
         Log::info( Input::all() );
 
