@@ -118,15 +118,6 @@ class QiscusController extends Controller
         $this->no_telp = $no_telp;
 
 
-        if (
-            $this->no_telp == '6281381912803' &&
-            $this->message_type == 'image'
-        ) {
-            Log::info("------------------------");
-            Log::info("INPUT IMAGE");
-            Log::info( Input::all()  );
-            Log::info("------------------------");
-        }
 
         $no_telp = NoTelp::firstOrCreate([
             'no_telp' => $this->no_telp,
@@ -159,6 +150,15 @@ class QiscusController extends Controller
             $this->estetika_buka = false;
         }
 
+        if (
+            $this->no_telp == '6281381912803' &&
+            $this->message_type == 'image'
+        ) {
+            Log::info("------------------------");
+            Log::info("INPUT IMAGE");
+            Log::info( Input::all()  );
+            Log::info("------------------------");
+        }
         session()->put('tenant_id', 1);
 	}
     public function wablasGet(){
