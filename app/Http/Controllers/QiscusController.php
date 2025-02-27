@@ -109,17 +109,17 @@ class QiscusController extends Controller
         if (!is_null( $messages )) {
             $no_telp = Input::get('payload')['from']['email'];
             $this->message_type = Input::get('payload')['message']['type'];
-            if (
-                $this->message_type == 'image'
-            ) {
-                $message = $messages['image'];
-            } else if (
-                $this->message_type == 'text'
-            ) {
-                $message = $messages['text']['body'];
-            } else {
-                $message = null;
-            }
+            /* if ( */
+            /*     $this->message_type == 'image' */
+            /* ) { */
+            /*     $message = $messages['image']; */
+            /* } else if ( */
+            /*     $this->message_type == 'text' */
+            /* ) { */
+            /*     $message = $messages['text']['body']; */
+            /* } else { */
+            /*     $message = null; */
+            /* } */
 
 
             $this->message = $this->clean( $message );
