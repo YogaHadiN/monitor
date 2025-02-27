@@ -159,18 +159,6 @@ class QiscusController extends Controller
             $this->estetika_buka = false;
         }
 
-        Log::info("===========================================");
-        Log::info("QISCUS NO TELP");
-        Log::info( $this->no_telp);
-        Log::info("QISCUS TEXT");
-        Log::info( $this->message);
-        Log::info("QISCUS TYPE");
-        Log::info( $this->message_type);
-        Log::info("QISCUS ROOM_ID");
-        Log::info( $this->room_id);
-        Log::info("===========================================");
-        Log::info( Input::all() );
-
         session()->put('tenant_id', 1);
 	}
     public function wablasGet(){
@@ -5624,27 +5612,19 @@ class QiscusController extends Controller
         return $message;
     }
     public function sendBotCake($message){
-        if (
-            NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
-                ->where('no_telp', $this->no_telp)
-                ->exists()
-        ) {
-            $app_id = env('QISCUS_APP_ID');
-            $url      = "https://omnichannel.qiscus.com/$app_id/bot";
-             $data = [
-               "sender_email" => "zant-u1tcs7tharqvefcg_admin@qismo.com",
-               "message"      => $message,
-               "type"         => "text",
-               "room_id"      => $this->room_id
-            ]; 
- 
-            $response = Http::withHeaders([
-                            'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
-                        ])->post( $url, $data);
-            $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
-        } else {
-            Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $this->no_telp);
-        }
+
+        $app_id = env('QISCUS_APP_ID');
+        $url      = "https://omnichannel.qiscus.com/$app_id/bot";
+         $data = [
+           "sender_email" => "zant-u1tcs7tharqvefcg_admin@qismo.com",
+           "message"      => $message,
+           "type"         => "text",
+           "room_id"      => $this->room_id
+        ]; 
+
+        $response = Http::withHeaders([
+                        'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
+                    ])->post( $url, $data);
     }
     public function createReservasiOnline($konfirmasi_sdk = false){
         $tenant = Tenant::find( session()->get('tenant_id') );
