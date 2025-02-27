@@ -94,19 +94,19 @@ class QiscusController extends Controller
 	public function __construct(){
 
         Log::info("===========================================");
-        Log::info("QISCUS TEXT");
-        Log::info(Input::get('payload')['message']['text']);
+        Log::info("QISCUS NO TELP");
+        Log::info(Input::get('payload')['from']['email']);
         Log::info("===========================================");
         Log::info( Input::all() );
 
 
         $this->image_url = null;
         if (
-            !isset( Input::get('entry')['changes'][0]['value']['messages'] )
+            !isset(Input::get('payload')['message']['text'])
         ) {
             $messages = null;
         } else {
-            $messages = Input::get('entry')['payload']['message']['text'];
+            $messages = Input::get('payload')['message']['text'];
         }
 
         if (!is_null( $messages )) {
