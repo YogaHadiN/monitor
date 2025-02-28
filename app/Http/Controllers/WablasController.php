@@ -90,9 +90,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-
-
-
         $this->image_url = null;
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
@@ -119,21 +116,36 @@ class WablasController extends Controller
                 $message = null;
             }
 
-
             $this->message = $this->clean( $message );
             $this->no_telp = $no_telp;
 
 
             if (
-                $this->no_telp == '6281381912803' &&
                 $this->message_type == 'image'
             ) {
-                Log::info("------------------------");
-                Log::info("INPUT IMAGE");
-                Log::info( $this->mime_type );
-                Log::info( $this->attachment_id );
-                Log::info( $this->uploadImage() );
-                Log::info("------------------------");
+                $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
+                $data = [
+                            'media_id' => $this->attachment_id,
+                            'mime_type' => $this->mime_type
+                        ]; 
+
+                $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
+
+                if (!is_array( $response )) {
+                    $response = json_decode($response, true);
+                }
+                $this->image_url = $response['data']['url'];
+
+                Log::info('=========================');
+                Log::info('INI IMAGE NIH');
+
+                Log::info([
+                    'image_url' ,
+                    $this->image_url,
+                    'payload',
+                    Input::all()
+                ]);
+                Log::info('=========================');
             }
 
             $no_telp = NoTelp::firstOrCreate([
@@ -166,7 +178,6 @@ class WablasController extends Controller
             if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
                 $this->estetika_buka = false;
             }
-
 
             session()->put('tenant_id', 1);
         }
@@ -1273,43 +1284,20 @@ class WablasController extends Controller
     private function uploadImage()
     {
         if (
-            /* $tenant->image_bot_enabled */
-            true
+            $tenant->image_bot_enabled
         ) {
 
             
-            $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
-            $data = [
-                        'media_id' => $this->attachment_id,
-                        'mime_type' => $this->mime_type
-                    ]; 
-
-
-            $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
-
-            if (!is_array( $response )) {
-                $response = json_decode($response, true);
-            }
-
-            $url = $response['data']['url'];
-
-            Log::info(1296);
-            Log::info("URL");
-            Log::info($url);
-
-            return $response;
-            
-
-
 
             /* $url      = $this->image_url; */
-            /* $contents = file_get_contents($url); */
-            /* $name     = substr($url, strrpos($url, '/') + 1); */
-            /* $destination_path = 'image/whatsapp/'; */
-            /* $name = $destination_path . $name; */
+            $contents = file_get_contents($url);
+            $name     = substr($url, strrpos($url, '/') + 1);
+            $destination_path = 'image/whatsapp/';
+            $name = $destination_path . $name;
 
-            /* \Storage::disk('s3')->put($name, $contents); */
-            /* return $name; */
+            \Storage::disk('s3')->put($name, $contents);
+            return $name;
+
         } else {
             return '';
         }
