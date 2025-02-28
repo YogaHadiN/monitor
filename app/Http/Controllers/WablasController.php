@@ -1291,7 +1291,7 @@ class WablasController extends Controller
                 $response = json_decode($response, true);
             }
 
-            $url = $response['data']['image_data']['url'];
+            $url = $response['data']['image_data'];
 
             Log::info($url);
 
