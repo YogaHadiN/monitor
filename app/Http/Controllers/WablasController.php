@@ -81,6 +81,8 @@ class WablasController extends Controller
 	public $whatsapp_bot;
 	public $no_telp;
 	public $message;
+	public $mime_type;
+	public $attachment_id;
 	public $message_type;
 	public $image_url;
     public $whatsapp_satisfaction_survey;
@@ -107,6 +109,8 @@ class WablasController extends Controller
                 $this->message_type == 'image'
             ) {
                 $message = $messages['image'];
+                $this->mime_type = $messages['image']['mime_type'];
+                $this->attachment_id = $messages['image']['id'];
             } else if (
                 $this->message_type == 'text'
             ) {
@@ -126,7 +130,8 @@ class WablasController extends Controller
             ) {
                 Log::info("------------------------");
                 Log::info("INPUT IMAGE");
-                Log::info( $messages['image']['mime_type'] );
+                Log::info( $this->mime_type );
+                Log::info( $this->attachment_id );
                 Log::info("------------------------");
             }
 
