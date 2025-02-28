@@ -1280,7 +1280,7 @@ class WablasController extends Controller
             
             $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
             $data = [
-                        'media_id' => $this->attachment_id
+                        'media_id' => $this->attachment_id,
                         'mime_type' => $this->mime_type
                     ]; 
             $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
