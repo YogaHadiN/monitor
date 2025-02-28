@@ -1283,6 +1283,9 @@ class WablasController extends Controller
                         'media_id' => $this->attachment_id,
                         'mime_type' => $this->mime_type
                     ]; 
+
+            Log::info('data');
+            Log::info($data);
             $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
 
             return $response;
