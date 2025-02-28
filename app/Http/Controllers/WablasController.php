@@ -1285,7 +1285,7 @@ class WablasController extends Controller
                     ]; 
 
 
-            $response = Http::withToken(env('BOTCAKE_TOKEN'))->withQueryParameters($data)->get($url);
+            $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
             Log::info('data');
             Log::info($data);
             Log::info('token');
