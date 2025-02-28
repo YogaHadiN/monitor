@@ -126,7 +126,7 @@ class WablasController extends Controller
             ) {
                 Log::info("------------------------");
                 Log::info("INPUT IMAGE");
-                Log::info( $messages );
+                Log::info( $messages['image']['mime_type'] );
                 Log::info("------------------------");
             }
 
