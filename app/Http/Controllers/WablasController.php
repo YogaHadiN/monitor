@@ -1293,6 +1293,8 @@ class WablasController extends Controller
 
             $url = $response['data']['image_data'];
 
+            Log::info(1296);
+            Log::info("URL");
             Log::info($url);
 
             return $response;
