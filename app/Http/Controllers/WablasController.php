@@ -1286,14 +1286,15 @@ class WablasController extends Controller
 
 
             $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
-            Log::info('====================================');
-            Log::info('PAYLOAD');
-            Log::info( Input::all() );
-            Log::info('====================================');
-            Log::info('data');
-            Log::info($data);
-            Log::info('token');
-            Log::info( env("BOTCAKE_TOKEN") );
+
+            if (!is_array( $response )) {
+                $response = json_decode($response, true);
+            }
+
+            $url = $response['data']['image_data']['url'];
+
+            Log::info($url);
+
             return $response;
             
 
