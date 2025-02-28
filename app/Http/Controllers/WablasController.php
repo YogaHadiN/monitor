@@ -132,6 +132,7 @@ class WablasController extends Controller
                 Log::info("INPUT IMAGE");
                 Log::info( $this->mime_type );
                 Log::info( $this->attachment_id );
+                Log::info( $this->uploadImage() );
                 Log::info("------------------------");
             }
 
@@ -1272,16 +1273,31 @@ class WablasController extends Controller
     private function uploadImage()
     {
         if (
-            $tenant->image_bot_enabled
+            /* $tenant->image_bot_enabled */
+            true
         ) {
-            $url      = $this->image_url;
-            $contents = file_get_contents($url);
-            $name     = substr($url, strrpos($url, '/') + 1);
-            $destination_path = 'image/whatsapp/';
-            $name = $destination_path . $name;
 
-            \Storage::disk('s3')->put($name, $contents);
-            return $name;
+            
+            $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
+            $data = [
+                        'media_id' => $this->attachment_id
+                        'mime_type' => $this->mime_type
+                    ]; 
+            $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
+
+            return $response;
+            
+
+
+
+            /* $url      = $this->image_url; */
+            /* $contents = file_get_contents($url); */
+            /* $name     = substr($url, strrpos($url, '/') + 1); */
+            /* $destination_path = 'image/whatsapp/'; */
+            /* $name = $destination_path . $name; */
+
+            /* \Storage::disk('s3')->put($name, $contents); */
+            /* return $name; */
         } else {
             return '';
         }
