@@ -108,15 +108,15 @@ class WablasController extends Controller
                 $message = $messages['image'];
                 $this->mime_type = $messages['image']['mime_type'];
                 $this->attachment_id = $messages['image']['id'];
+                $this->message = $messages['image']['caption'];
             } else if (
                 $this->message_type == 'text'
             ) {
-                $message = $messages['text']['body'];
+                $this->message = $messages['text']['body'];
             } else {
-                $message = null;
+                $this->message = null;
             }
 
-            $this->message = $this->clean( $message );
             $this->no_telp = $no_telp;
 
 
@@ -140,6 +140,12 @@ class WablasController extends Controller
                 Log::info('INI IMAGE NIH');
 
                 Log::info([
+                    'message' ,
+                    $this->message,
+                    'message_type' ,
+                    $this->message_type,
+                    'no_telp' ,
+                    $this->no_telp,
                     'image_url' ,
                     $this->image_url,
                     'payload',
