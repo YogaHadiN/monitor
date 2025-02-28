@@ -1284,10 +1284,12 @@ class WablasController extends Controller
                         'mime_type' => $this->mime_type
                     ]; 
 
+
+            $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
             Log::info('data');
             Log::info($data);
-            $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
-
+            Log::info('token');
+            Log::info( env("BOTCAKE_TOKEN") );
             return $response;
             
 
