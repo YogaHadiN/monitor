@@ -79,10 +79,10 @@ class WablasController extends Controller
 	public $pesan_error;
 	public $failed_therapy;
 	public $whatsapp_bot;
-	public $no_telp;
-	public $message;
 	public $mime_type;
 	public $attachment_id;
+	public $no_telp;
+	public $message;
 	public $message_type;
 	public $image_url;
     public $whatsapp_satisfaction_survey;
@@ -105,24 +105,11 @@ class WablasController extends Controller
             if (
                 $this->message_type == 'image'
             ) {
-                $message = $messages['image'];
-                $this->mime_type = $messages['image']['mime_type'];
+                $message             = $messages['image'];
+                $this->mime_type     = $messages['image']['mime_type'];
                 $this->attachment_id = $messages['image']['id'];
-                $this->message = $messages['image']['caption'];
-            } else if (
-                $this->message_type == 'text'
-            ) {
-                $this->message = $messages['text']['body'];
-            } else {
-                $this->message = null;
-            }
+                $this->message       = $messages['image']['caption'];
 
-            $this->no_telp = $no_telp;
-
-
-            if (
-                $this->message_type == 'image'
-            ) {
                 $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
                 $data = [
                             'media_id' => $this->attachment_id,
@@ -136,23 +123,16 @@ class WablasController extends Controller
                 }
                 $this->image_url = $response['data']['url'];
 
-                Log::info('=========================');
-                Log::info('INI IMAGE NIH');
-
-                Log::info([
-                    'message' ,
-                    $this->message,
-                    'message_type' ,
-                    $this->message_type,
-                    'no_telp' ,
-                    $this->no_telp,
-                    'image_url' ,
-                    $this->image_url,
-                    'payload',
-                    Input::all()
-                ]);
-                Log::info('=========================');
+            } else if (
+                $this->message_type == 'text'
+            ) {
+                $this->message = $messages['text']['body'];
+            } else {
+                $this->message = null;
             }
+
+            $this->no_telp = $no_telp;
+
 
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
@@ -186,6 +166,13 @@ class WablasController extends Controller
             }
 
             session()->put('tenant_id', 1);
+
+            Log::info([
+                $this->no_telp,
+                $this->message,
+                $this->message_type,
+                $this->image_url,
+            ]);
         }
 	}
     public function wablasGet(){
@@ -348,6 +335,7 @@ class WablasController extends Controller
                 } else if (
                     $this->message == 'batalkan'
                 ) {
+                    Log::info(333);
                     $this->sendBotCake($this->hapusAntrianWhatsappBotReservasiOnline() );
                 } else {
                     if ($this->message_type == 'text') {
