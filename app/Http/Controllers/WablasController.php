@@ -2996,21 +2996,21 @@ class WablasController extends Controller
         $this->jadwalGigi = $jadwalGigi;
 
         if( is_null( $reservasi_online ) ){
-            /* Log::info(2920); */
+            Log::info(2920);
             $this->whatsapp_bot->delete();
         }
         if (
             !is_null( $reservasi_online ) &&
             $this->message == 'batalkan'
         ) {
-            /* Log::info(2927); */
+            Log::info(2927);
             $this->sendBotCake($this->konfirmasiPembatalan() );
             return false;
         } else if (
             !is_null( $reservasi_online ) &&
             is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
-            /* Log::info(2934); */
+            Log::info(2934);
 
             if ( 
                 $this->message == '1' || 
@@ -3257,12 +3257,14 @@ class WablasController extends Controller
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
+            Log::info(3260);
             if ( 
                 $this->message == 'ya' || 
                 $this->message == 'iya' || 
                 $this->message == 'iy' || 
                 $this->message == 'y'
             ) {
+                Log::info(3267);
                 $reservasi_online->konfirmasi_sdk = 1;
                 $reservasi_online->save();
             }
