@@ -4475,6 +4475,24 @@ class WablasController extends Controller
             date('G') <= 21 && // pendaftaran online tutup jam 21.59
             date('G') >= 7 // 
         ) {
+            if (
+                Antrian::where('no_telp', $this->no_telp)
+                    ->whereDate('created_at', date('Y-m-d'))
+                    ->whereRaw("
+                            ( 
+                                antriable_type = 'App\\\Models\\\Antrian' or
+                                antriable_type = 'App\\\Models\\\AntrianPoli' or
+                                antriable_type = 'App\\\Models\\\AntrianPeriksa'
+                            )
+                        ")
+                        ->exists()
+            ) {
+                $message =  'Untuk mendaftarkan pasien selanjutnya silahkan klik link di bawah ini : ';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
+                echo $message;
+            }
             $this->whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
                 'whatsapp_bot_service_id' => 6 //registrasi online
