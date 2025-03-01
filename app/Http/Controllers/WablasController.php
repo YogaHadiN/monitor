@@ -4487,6 +4487,7 @@ class WablasController extends Controller
                         ")
                         ->exists()
             ) {
+                $this->chatBotLog(__LINE__);
                 $message =  'Untuk mendaftarkan pasien selanjutnya silahkan klik link di bawah ini : ';
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
