@@ -1286,7 +1286,7 @@ class WablasController extends Controller
 
             /* $url      = $this->image_url; */
             $contents = file_get_contents($this->image_url);
-            $name     = substr($url, strrpos($this->image_url, '/') + 1);
+            $name     = substr($this->image_url, strrpos($this->image_url, '/') + 1);
             $destination_path = 'image/whatsapp/';
             $name = $destination_path . $name;
 
