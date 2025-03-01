@@ -109,6 +109,8 @@ class WablasController extends Controller
                 $this->attachment_id = $messages['image']['id'];
                 if (isset( $messages['image']['caption'] )) {
                     $this->message       = $messages['image']['caption'];
+                } else {
+                    $this->message       = "";
                 }
 
                 $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
@@ -167,13 +169,6 @@ class WablasController extends Controller
             }
 
             session()->put('tenant_id', 1);
-
-            Log::info([
-                $this->no_telp,
-                $this->message,
-                $this->message_type,
-                $this->image_url,
-            ]);
         }
 	}
     public function wablasGet(){
