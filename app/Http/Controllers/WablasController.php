@@ -4492,15 +4492,16 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
                 $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
-                echo $message;
-            }
-            $this->whatsapp_bot = WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 6 //registrasi online
-            ]);
-            $reservasi_online = $this->createReservasiOnline();
+                return $message;
+            } else {
+                $this->whatsapp_bot = WhatsappBot::create([
+                    'no_telp' => $this->no_telp,
+                    'whatsapp_bot_service_id' => 6 //registrasi online
+                ]);
+                $reservasi_online = $this->createReservasiOnline();
 
-            return $this->pertanyaanPoliYangDituju();
+                return $this->pertanyaanPoliYangDituju();
+            }
         } else {
             $message =  'Pendaftaran secara online sudah ditutup dan akan dibuka kembali jam 7 pagi.';
             $message .= PHP_EOL;
