@@ -1282,9 +1282,6 @@ class WablasController extends Controller
             $this->tenant->image_bot_enabled
         ) {
 
-            
-
-            /* $url      = $this->image_url; */
             $contents = file_get_contents($this->image_url);
             $name     = substr($this->image_url, strrpos($this->image_url, '/') + 1);
             $destination_path = 'image/whatsapp/';
