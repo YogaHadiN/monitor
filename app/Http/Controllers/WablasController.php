@@ -5692,7 +5692,10 @@ class WablasController extends Controller
     }
 
     public function chatBotLog($line){
-        if ( $this->tenant->chatbot_log_enabled ) {
+        if (
+            $this->tenant->chatbot_log_enabled &&
+            $this->no_telp == '6281381912803'
+        ) {
             Log::info( $line );
         }
     }
