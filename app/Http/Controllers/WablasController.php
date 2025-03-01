@@ -105,10 +105,11 @@ class WablasController extends Controller
             if (
                 $this->message_type == 'image'
             ) {
-                $message             = $messages['image'];
                 $this->mime_type     = $messages['image']['mime_type'];
                 $this->attachment_id = $messages['image']['id'];
-                $this->message       = $messages['image']['caption'];
+                if (isset( $messages['image']['caption'] )) {
+                    $this->message       = $messages['image']['caption'];
+                }
 
                 $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
                 $data = [
