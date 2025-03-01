@@ -167,8 +167,9 @@ class WablasController extends Controller
             if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
                 $this->estetika_buka = false;
             }
-
-            session()->put('tenant_id', 1);
+            $tenant_id = 1;
+            session()->put('tenant_id', $tenant_id);
+            $this->tenant = Tenant::find( $tenant_id );
         }
 	}
     public function wablasGet(){
@@ -225,13 +226,12 @@ class WablasController extends Controller
             !is_null( $this->message ) 
             /* && $this->no_telp == '6281381912803' */
         ) {
-
-
-
+            $this->chatBotLog(__LINE__);
             $date_now = date('Y-m-d H:i:s');
             if ( strtotime ($date_now) < strtotime( '2024-04-13 12:59:59'  )) {
                 $this->sendBotCake( $this->libur() );
             } else {
+                $this->chatBotLog(__LINE__);
                 if (
                     $this->message == 'daftar' ||
                     $this->message == 'daptar' ||
@@ -242,14 +242,17 @@ class WablasController extends Controller
                     $this->message == 'mau brobat' ||
                     $this->message == 'mau berobat sus'
                 ) {
+                    $this->chatBotLog(__LINE__);
                     $this->sendBotCake($this->registrasiAntrianOnline() );
                     return false;
                 } else if (
                      str_contains($this->message ,'akhiri')
                 ) {
+                    $this->chatBotLog(__LINE__);
                     $this->sendBotCake($this->akhiriChatWithAdmin() );
                     return false;
                 } else if (str_contains( $this->message ,'jadwal usg' )) {
+                    $this->chatBotLog(__LINE__);
                     Message::create([
                         'no_telp'       => $this->no_telp,
                         'message'       => $this->message,
@@ -276,7 +279,7 @@ class WablasController extends Controller
                     $this->sendBotCake($pesan );
                     return false;
                 } else if (str_contains( $this->message ,'jadwal dokter gigi' )) {
-
+                    $this->chatBotLog(__LINE__);
                     Message::create([
                         'no_telp'       => $this->no_telp,
                         'message'       => $this->message,
@@ -306,9 +309,11 @@ class WablasController extends Controller
 
                     return false;
                 } else if ( $this->message == 'komplain' ) {
+                    $this->chatBotLog(__LINE__);
                     $this->sendBotCake($this->autoReplyComplainMessage() );
                     return false;
                 } else if (
+                    $this->chatBotLog(__LINE__);
                     !$this->noTelpDalamChatWithAdmin() && 
                     (
                         $this->message == 'chat admin' ||
@@ -317,6 +322,7 @@ class WablasController extends Controller
                         endsWith($this->message, '?')
                     )
                 ) {
+                    $this->chatBotLog(__LINE__);
                     if ( $this->message == 'chat admin' ) {
                         resetWhatsappRegistration($this->no_telp);
                         $this->sendBotCake( $this->chatAdmin() );
@@ -331,7 +337,7 @@ class WablasController extends Controller
                 } else if (
                     $this->message == 'batalkan'
                 ) {
-                    Log::info(333);
+                    $this->chatBotLog(__LINE__);
                     $this->sendBotCake($this->hapusAntrianWhatsappBotReservasiOnline() );
                 } else {
                     if ($this->message_type == 'text') {
@@ -380,76 +386,76 @@ class WablasController extends Controller
                         !is_null( $this->no_telp )
                     ) {
                         if ( !is_null( $this->whatsapp_registration ) ) {
-                            /* Log::info(278); */
+                            $this->chatBotLog(__LINE__);
                             return $this->proceedRegistering(); //register untuk pendaftaran pasien
                         } else if (!is_null( $this->whatsapp_complaint )){
-                            /* Log::info(281); */
+                            $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappComplaint(); //register untuk pendataan complain pasien
                         } else if (!is_null( $this->failed_therapy  )) {
-                            /* Log::info(284); */
+                            $this->chatBotLog(__LINE__);
                             return $this->registerFailedTherapy(); //register untuk pendataan kegagalan terapi
                         } else if (!is_null( $this->whatsapp_satisfaction_survey  )) {
-                            /* Log::info(287); */
+                            $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappSatisfactionSurvey(); //register untuk survey kepuasan pasien
                         } else if (!is_null( $this->whatsapp_recovery_index  )) {
-                            /* Log::info(290); */
+                            $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
-                            /* Log::info(293); */
+                            $this->chatBotLog(__LINE__);
                             return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
-                            /* Log::info(296); */
+                            $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
                         } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
-                            /* Log::info(299); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
                         } else if ( $this->cekListBulananExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(302); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesCekListBulanan(); // proses cek list bulanan
                         } else if ( $this->cekListBulananInputExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(305); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesCekListBulananInput(); // proses cek list bulanan
                         } else if ( $this->cekListMingguanExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(308); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesCekListMingguan(); // proses cek list bulanan
                         } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan
-                            /* Log::info(311); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesCekListMingguanInput(); // proses cek list bulanan
                         } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
-                            /* Log::info(314); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesCekListHarian(); // proses cek list harian
                         } else if ( $this->cekListHarianInputExists() ) { // Jika ada cek list harian
-                            /* Log::info(317); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesCekListHarianInput(); // proses cek list harian
                         } else if ( $this->whatsappJadwalKonsultasiInquiryExists() ) { //
-                            /* Log::info(320); */
+                            $this->chatBotLog(__LINE__);
                             return $this->balasJadwalKonsultasi(); // proses pertanyaan jadwal konsulasi
                         } else if ( $this->whatsappKonsultasiEstetikExists() ) {
-                            /* Log::info(323); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesKonsultasiEstetik(); // buat main menu
                         } else if ( $this->bpjsNumberInfomationInquiryExists() ) {
-                            /* Log::info(328); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesBpjsNumberInquiry(); // buat main menu
                         } else if ( $this->whatsappAntrianOnlineExists() ) {
-                            /* Log::info(331); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesAntrianOnline(); // buat main menu
                         } else if ( $this->whatsappGambarPeriksaExists() ) {
-                            /* Log::info(334); */
+                            $this->chatBotLog(__LINE__);
                             return $this->prosesGambarPeriksa(); // buat main menu
                         } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
-                            /* Log::info(337); */
+                            $this->chatBotLog(__LINE__);
                             return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
                         } else if( $this->validasiTanggalDanNamaPasienKeluhan() ) {
-                            /* Log::info(340); */
+                            $this->chatBotLog(__LINE__);
                             return $this->balasanValidasiTanggalDanNamaPasienKeluhan();
                         } else if( $this->validasiWaktuPelayanan() ) {
-                            /* Log::info(343); */
+                            $this->chatBotLog(__LINE__);
                             return $this->balasanKonfirmasiWaktuPelayanan();
                         } else if( $this->noTelpDalamChatWithAdmin() ) {
-                            /* Log::info(346); */
+                            $this->chatBotLog(__LINE__);
                             $this->createWhatsappChat(); // buat main menu
                         } else if( $this->pasienTidakDalamAntrian() ) {
-                            /* Log::info(349); */
+                            $this->chatBotLog(__LINE__);
                             return $this->createWhatsappMainMenu(); // buat main menu
                         }
                     }
@@ -5684,5 +5690,12 @@ class WablasController extends Controller
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 7 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 7 pagi. Mohon maaf atas ketidaknyamanannya';
         }
     }
+
+    public function chatBotLog($line){
+        if ( $this->tenant->chatbot_log_enabled ) {
+            Log::info( $line );
+        }
+    }
+    
     
 }
