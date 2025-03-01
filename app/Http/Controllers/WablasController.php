@@ -313,7 +313,6 @@ class WablasController extends Controller
                     $this->sendBotCake($this->autoReplyComplainMessage() );
                     return false;
                 } else if (
-                    $this->chatBotLog(__LINE__);
                     !$this->noTelpDalamChatWithAdmin() && 
                     (
                         $this->message == 'chat admin' ||
