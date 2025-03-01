@@ -170,6 +170,8 @@ class WablasController extends Controller
             $tenant_id = 1;
             session()->put('tenant_id', $tenant_id);
             $this->tenant = Tenant::find( $tenant_id );
+
+            $this->message = strtolower( $this->message );
         }
 	}
     public function wablasGet(){
@@ -200,28 +202,6 @@ class WablasController extends Controller
     }
 	
 	public function webhook(){
-        /* if ( */
-        /*     $this->no_telp == '6281381912803' */
-        /* ) { */
-        /*      $request = [ */
-        /*        "version" => "v2", */ 
-        /*        "content" => [ */
-        /*              "messages" => [ */
-        /*                 [ */
-        /*                    "type" => "text", */ 
-        /*                    "text" => "Moga2 bisa webhoooooookkkkkkkk", */ 
-        /*                    "buttons" => [] */ 
-        /*                 ] */ 
-        /*              ], */ 
-        /*              "actions" => [], */ 
-        /*              "quick_replies" => [] */ 
-        /*           ] */ 
-        /*     ]; */ 
-        /*      echo json_encode( $request ); */
-        /* } */
-
-
-
         if (
             !is_null( $this->message ) 
             /* && $this->no_telp == '6281381912803' */
@@ -4491,12 +4471,6 @@ class WablasController extends Controller
                                 ->count();
     }
     public function registrasiAntrianOnline(){
-        /* $message =  'Antrian secara online dalam proses maintenance. Mohon maaf atas ketidak nyamanannya'; */
-        /* $message .= PHP_EOL; */
-        /* $message .= PHP_EOL; */
-        /* $message .= $this->hapusAntrianWhatsappBotReservasiOnline(); */
-        /* return $message; */
-
         if (
             date('G') <= 21 && // pendaftaran online tutup jam 21.59
             date('G') >= 7 // 
