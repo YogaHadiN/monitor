@@ -54,6 +54,7 @@ use App\Models\CekListHarian;
 use App\Models\CekListMingguan;
 use App\Models\FailedTherapy;
 use App\Models\Periksa;
+use App\Models\OnsiteRegistration;
 use App\Models\Pasien;
 use App\Models\User;
 use App\Http\Controllers\AntrianPoliController;
@@ -81,6 +82,7 @@ class WablasController extends Controller
 	public $whatsapp_bot;
 	public $mime_type;
 	public $attachment_id;
+	public $random_string;
 	public $no_telp;
 	public $message;
 	public $message_type;
@@ -224,6 +226,21 @@ class WablasController extends Controller
                 ) {
                     $this->chatBotLog(__LINE__);
                     $this->sendBotCake($this->registrasiAntrianOnline() );
+                    return false;
+                } else if (
+                     str_contains($this->message ,'klinik_jati_elok_registration_')
+                ) {
+                    $random_string = str_replace("klinik_jati_elok_registration_", "", $this->message);
+                    $this->random_string = $random_string;
+                    if (
+                        OnsiteRegistration::where('random_string', $random_string)->exists()
+                    ) {
+                        $this->sendBotCake($this->prosesOnsiteRegistration());
+                    } else {
+                        $this->sendBotCake("Nomor Registrasi Antrian Tidak Dikenali");
+                    }
+
+                    $this->chatBotLog(__LINE__);
                     return false;
                 } else if (
                      str_contains($this->message ,'akhiri')
@@ -4487,19 +4504,21 @@ class WablasController extends Controller
                         ")
                         ->exists()
             ) {
+                $this->chatBotLog(__LINE__);
                 $message =  'Untuk mendaftarkan pasien selanjutnya silahkan klik link di bawah ini : ';
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
                 $message .= 'https://www.klinikjatielok.com/daftar_online/' . encrypt_string( $this->no_telp );
-                echo $message;
-            }
-            $this->whatsapp_bot = WhatsappBot::create([
-                'no_telp' => $this->no_telp,
-                'whatsapp_bot_service_id' => 6 //registrasi online
-            ]);
-            $reservasi_online = $this->createReservasiOnline();
+                return $message;
+            } else {
+                $this->whatsapp_bot = WhatsappBot::create([
+                    'no_telp' => $this->no_telp,
+                    'whatsapp_bot_service_id' => 6 //registrasi online
+                ]);
+                $reservasi_online = $this->createReservasiOnline();
 
-            return $this->pertanyaanPoliYangDituju();
+                return $this->pertanyaanPoliYangDituju();
+            }
         } else {
             $message =  'Pendaftaran secara online sudah ditutup dan akan dibuka kembali jam 7 pagi.';
             $message .= PHP_EOL;
@@ -5316,7 +5335,6 @@ class WablasController extends Controller
                     $antrian->save();
                     $message = $this->endKonfirmasiWaktuPelanan();
                 }
-            } else if (
                  !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
                  is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
             ) {
@@ -5687,6 +5705,23 @@ class WablasController extends Controller
             Log::info( $line );
         }
     }
-    
-    
+    public function prosesOnsiteRegistration(){
+        $onsite_registration          = OnsiteRegistration::where('random_string', $this->random_string)->first();
+        $onsite_registration->no_telp = $this->no_telp;
+        $onsite_registration->save();
+        $antrian = $this->antrianPost( $onsite_registration->ruangan_id );
+
+        // jika ada antrian , maka tampilkan halaman kelima
+        //
+
+        //kirim kekurangan informasi yang perlu diterima
+        //
+
+        $this->whatsapp_registration = WhatsappRegistration::create([
+            'no_telp'    => $this->no_telp,
+            'antrian_id' => $antrian->id,
+            'registrasi_pembayaran_id' => $onsite_registration->registrasi_pembayaran_id
+        ]);
+        $this->proceedRegistering();
+    }
 }
