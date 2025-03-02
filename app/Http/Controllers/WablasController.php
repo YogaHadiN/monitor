@@ -5720,7 +5720,7 @@ class WablasController extends Controller
 
         Log::info("==============");
         Log::info("ANTRIAN ID");
-        Log::info($antrian_id);
+        Log::info($antrian->id);
         Log::info("==============");
 
         // jika ada antrian , maka tampilkan halaman kelima
