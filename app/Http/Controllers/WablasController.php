@@ -5740,6 +5740,7 @@ class WablasController extends Controller
         $this->whatsapp_registration = WhatsappRegistration::create([
             'no_telp'    => $this->no_telp,
             'antrian_id' => $antrian->id,
+            'registering_confirmation' => 1,
             'registrasi_pembayaran_id' => $onsite_registration->registrasi_pembayaran_id
         ]);
         $this->proceedRegistering();
