@@ -5712,10 +5712,11 @@ class WablasController extends Controller
         $onsite_registration          = OnsiteRegistration::where('random_string', $this->random_string)->first();
         $onsite_registration->no_telp = $this->no_telp;
         $onsite_registration->save();
-        $antrian                                    = $this->antrianPost( $onsite_registration->ruangan_id );
-        $antrian->tipe_konsultasi_id                = $onsite_registration->tipe_konsultasi_id;
-        $antrian->staf_id                           = $onsite_registration->staf_id;
-        $antrian->register_previously_saved_patient = $onsite_registration->register_previously_saved_patient;
+        $antrian                           = $this->antrianPost( $onsite_registration->ruangan_id );
+        $antrian->no_telp                  = $this->no_telp;
+        $antrian->tipe_konsultasi_id       = $onsite_registration->tipe_konsultasi_id;
+        $antrian->staf_id                  = $onsite_registration->staf_id;
+        $antrian->registrasi_pembayaran_id = $onsite_registration->registrasi_pembayaran_id;
         $antrian->save();
 
         Log::info("==============");
