@@ -3898,6 +3898,13 @@ class WablasController extends Controller
             $response .= PHP_EOL;
             $response .= PHP_EOL;
         }
+        if (
+            isset( $model->nomor_antrian ) &&
+            !is_null( $model->nomor_antrian ) 
+        ) {
+            $response .= 'Nomor Antrian: ' . $model->nomor_antrian  ;
+            $response .= PHP_EOL;
+        }
         if ( !is_null( $model->nama ) ) {
             $response .= 'Nama Pasien: ' . ucwords($model->nama)  ;
             $response .= PHP_EOL;
@@ -5712,10 +5719,10 @@ class WablasController extends Controller
         $onsite_registration          = OnsiteRegistration::where('random_string', $this->random_string)->first();
         $onsite_registration->no_telp = $this->no_telp;
         $onsite_registration->save();
-        $antrian                           = $this->antrianPost( $onsite_registration->ruangan_id );
-        $antrian->no_telp                  = $this->no_telp;
-        $antrian->tipe_konsultasi_id       = $onsite_registration->tipe_konsultasi_id;
-        $antrian->staf_id                  = $onsite_registration->staf_id;
+        $antrian                                    = $this->antrianPost( $onsite_registration->ruangan_id );
+        $antrian->no_telp                = $this->no_telp;
+        $antrian->tipe_konsultasi_id                = $onsite_registration->tipe_konsultasi_id;
+        $antrian->staf_id                           = $onsite_registration->staf_id;
         $antrian->registrasi_pembayaran_id = $onsite_registration->registrasi_pembayaran_id;
         $antrian->save();
 
