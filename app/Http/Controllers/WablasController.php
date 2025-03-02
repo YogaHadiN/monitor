@@ -5718,6 +5718,8 @@ class WablasController extends Controller
         $antrian->register_previously_saved_patient = $onsite_registration->register_previously_saved_patient;
         $antrian->save();
 
+
+        $this->sendBotCake( $antrian->id );
         // jika ada antrian , maka tampilkan halaman kelima
         //
 
