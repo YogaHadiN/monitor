@@ -4472,7 +4472,9 @@ class WablasController extends Controller
             foreach ($antrians as $antrian) {
                 $antrian->dibatalkan_pasien = 1;
                 $antrian->save();
-                $antrian->antriable->delete();
+                if ($antrian->antriable) {
+                    $antrian->antriable->delete();
+                }
                 $antrian->delete();
             }
         }
