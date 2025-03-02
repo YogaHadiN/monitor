@@ -5297,6 +5297,7 @@ class WablasController extends Controller
         }
     }
 
+
     public function balasanKonfirmasiWaktuPelayanan(){
         $antrian = Antrian::where('no_telp', $this->no_telp)
             ->where('created_at', 'like', date('Y-m-d') . '%')
@@ -5335,6 +5336,7 @@ class WablasController extends Controller
                     $antrian->save();
                     $message = $this->endKonfirmasiWaktuPelanan();
                 }
+            } else if (
                  !is_null(  $antrian->konfirmasi_waktu_pelayanan  ) &&
                  is_null(  $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan  )
             ) {
@@ -5358,6 +5360,7 @@ class WablasController extends Controller
             $this->sendBotCake($message );
         }
     }
+
     public function endKonfirmasiWaktuPelanan(){
         $message = 'Terima kasih atas informasi yang sudah kakak berikan';
         $message .= PHP_EOL;
