@@ -307,6 +307,7 @@ class WebRegistrationController extends Controller
             }
         }
 
+        $wb = new WablasController;
         $message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
         if (!is_null( $message_wablas )) {
             $message = $message_wablas;
