@@ -3068,11 +3068,14 @@ class WablasController extends Controller
                 // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
                 $jadwalGigi = $this->jamBukaDokterGigiHariIni();
                 if ( $this->message == '2') {
+                    $this->chatBotLog(__LINE__);
                     $message = $this->validasiDokterPengambilanAntrianDokterGigi($reservasi_online);
                     if (!is_null( $message )) {
+                        $this->chatBotLog(__LINE__);
                         $this->sendBotCake($message );
                         return false;
                     } else {
+                        $this->chatBotLog(__LINE__);
                         $reservasi_online->tipe_konsultasi_id = $this->message;
                         $reservasi_online->save();
                     }
