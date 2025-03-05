@@ -343,6 +343,23 @@ class AntrianOnlineController extends Controller
             return Response::json(json_decode( $response, true ), 202);
         };
 
+        //==========================
+        //VALIDASI ANTRIAN DOKTER GIGI NON AKTIF
+        //==========================
+        //
+        if (
+            $kodepoli == '002' &&
+            !$this->tenant->dentist_queue_enabled
+        ) {
+            $response = '{
+                "metadata": {
+                    "message": "Mohon maaf untuk sementara antrian online dokter gigi tidak dapat digunakan. Harap dapat datang secara langsung pada saat jadwal dokter gigi telah dimulai",
+                    "code": 202
+                }
+            }';
+            return Response::json([json_decode( $response, true )], 202);
+        };
+
         $poli_bpjs                         = PoliBpjs::where('kdPoli', $kodepoli)->first();
         $this->tipe_konsultasi             = $poli_bpjs->tipe_konsultasi;
         $ruangan_id                        = $this->tipe_konsultasi->ruangan_id;
