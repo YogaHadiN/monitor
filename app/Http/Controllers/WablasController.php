@@ -3010,16 +3010,35 @@ class WablasController extends Controller
             is_null( $reservasi_online->tipe_konsultasi_id )
         ) {
             $this->chatBotLog(__LINE__);
-
             if ( 
                 $this->message == '1' || 
                 $this->message == '2' || 
                 $this->message == '3'
             ) {
+                $this->chatBotLog(__LINE__);
                 if (
                     $this->message == '3'
                 ) {
                     $this->message = '4';
+                }
+
+                if (
+                    $this->message == '2' &&
+                    $this->tenant->dentist_queue_enabled == 0
+                ) {
+                    $message = "Antrian online dokter gigi untuk sementara dihentikan";
+                    $message .= PHP_EOL;
+                    $message .= "Kakak kami persilahkan untuk datang mengambil antrian";
+                    $message .= PHP_EOL;
+                    $message .= "Secara langsung";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= "Mohon maaf atas ketidaknyamanannya.";
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+                    $this->sendBotCake($message );
+                    return false;
                 }
                 $tipe_konsultasi_id = TipeKonsultasi::find( $this->message );
 
