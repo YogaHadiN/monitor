@@ -3026,14 +3026,7 @@ class WablasController extends Controller
                     $this->message == '2' &&
                     $this->tenant->dentist_queue_enabled == 0
                 ) {
-                    $message = "Antrian online dokter gigi untuk sementara dihentikan";
-                    $message .= PHP_EOL;
-                    $message .= "Kakak kami persilahkan untuk datang mengambil antrian";
-                    $message .= PHP_EOL;
-                    $message .= "Secara langsung";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= "Mohon maaf atas ketidaknyamanannya.";
+                    $message = $this->pesanAntrolDokterGigiNonAktif();
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
@@ -3091,6 +3084,9 @@ class WablasController extends Controller
                     $message = $this->validasiDokterPengambilanAntrianDokterGigi();
                     if (!is_null( $message )) {
                         $this->chatBotLog(__LINE__);
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
                         $this->sendBotCake($message );
                         return false;
                     } else {
@@ -5701,24 +5697,7 @@ class WablasController extends Controller
         if (
             $this->tenant->dentist_queue_enabled == 0
         ) {
-            $message = "Antrian online dokter gigi untuk sementara dihentikan";
-            $message .= PHP_EOL;
-            $message .= "Kakak kami persilahkan untuk datang mengambil antrian";
-            $message .= PHP_EOL;
-            $message .= "Secara langsung";
-            $message .= PHP_EOL;
-            $message .= "Pada jadwal dokter gigi mulai berpraktek";
-            $message .= PHP_EOL;
-            $message .= "Untuk jadwal praktek dokter gigi silahkan ketik";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "_Jadwal dokter gigi_";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "Mohon maaf atas ketidaknyamanannya.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
+            $message = $this->pesanAntrolDokterGigiNonAktif();
         } else if (
             !$jadwalGigi || 
             !$this->tenant->dentist_available
@@ -5732,9 +5711,6 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= "Mohon maaf atas ketidaknyamanannya";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         } else if (
             $this->tenant->dokter_gigi_stop_pelayanan_hari_ini
         ) {
@@ -5745,9 +5721,6 @@ class WablasController extends Controller
             $message .= "Untuk informasi tersebut silahkan ketik 'Jadwal Dokter Gigi'";
             $message .= PHP_EOL;
             $message .= "Mohon maaf atas ketidaknyamanannya.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         // jika tidak ada antrian di dalam poli batalkan reservasi
         } else if (
              strtotime('now') < strtotime($jadwalGigi['jam_mulai'])
@@ -5759,9 +5732,6 @@ class WablasController extends Controller
             $message .= "sampai pukul {$jam_akhir_daftar_online}.";
             $message .= PHP_EOL;
             $message .= "Mohon maaf atas ketidaknyamanannya.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         // jika tidak ada antrian di dalam poli batalkan reservasi
         } else if (
              strtotime('now') > strtotime('-3 hours', strtotime( $jadwalGigi['jam_akhir']))
@@ -5772,9 +5742,6 @@ class WablasController extends Controller
             $message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
             $message .= ". Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}";
             $message .= ". Mohon maaf atas ketidaknyamanannya.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
 
         // jika tidak ada antrian di dalam poli batalkan reservasi
         } else if (
@@ -5783,9 +5750,6 @@ class WablasController extends Controller
             $message = "Pengambilan antrian Poli Gigi hari ini telah berakhir";
             $message .= PHP_EOL;
             $message .= ". Mohon maaf atas ketidaknyamanannya.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         } else if (
             $this->tenant->dentist_queue_enabled == 0
         ) {
@@ -5797,12 +5761,24 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= "Mohon maaf atas ketidaknyamanannya.";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
         }
         return $message;
         // jika tidak ada antrian di dalam poli batalkan reservasi
     }
+    public function pesanAntrolDokterGigiNonAktif(){
+        $message = "Antrian online dokter gigi untuk sementara dihentikan";
+        $message .= PHP_EOL;
+        $message .= "Kakak kami persilahkan untuk datang mengambil antrian";
+        $message .= PHP_EOL;
+        $message .= "Secara langsung";
+        $message .= PHP_EOL;
+        $message .= "Pada jadwal dokter gigi mulai berpraktek";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Mohon maaf atas ketidaknyamanannya.";
+        return $message;
+    }
+    
     
 }
