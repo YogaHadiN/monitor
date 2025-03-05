@@ -2984,7 +2984,7 @@ class WablasController extends Controller
     /* } */
     
     public function prosesAntrianOnline(){
-        /* Log::info(2908); */
+        $this->chatBotLog(__LINE__);
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
              ->first();
@@ -5675,6 +5675,7 @@ class WablasController extends Controller
         $this->proceedRegistering();
     }
     public function validasiDokterPengambilanAntrianDokterGigi($reservasi_online){
+        $this->chatBotLog(__LINE__);
         if (
             $this->tenant->dentist_queue_enabled == 0
         ) {
