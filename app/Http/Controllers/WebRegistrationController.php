@@ -306,6 +306,14 @@ class WebRegistrationController extends Controller
                 $web_registration->save();
             }
         }
+
+        if (
+            $wb->validasiDokterPengambilanAntrianDokterGigi(  )
+        ) {
+            
+        }
+
+
         $message =  view('web_registrations.message', compact(
             'message'
         ))->render();
