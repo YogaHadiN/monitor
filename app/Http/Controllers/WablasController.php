@@ -173,7 +173,6 @@ class WablasController extends Controller
             session()->put('tenant_id', $tenant_id);
 
             $this->tenant = Tenant::find( $tenant_id );
-            $this->chatBotLog(__LINE__);
             $this->message = strtolower( $this->message );
         }
 	}
