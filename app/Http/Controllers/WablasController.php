@@ -3088,7 +3088,7 @@ class WablasController extends Controller
                 $jadwalGigi = $this->jamBukaDokterGigiHariIni();
                 if ( $this->message == '2') {
                     $this->chatBotLog(__LINE__);
-                    $message = $this->validasiDokterPengambilanAntrianDokterGigi($reservasi_online);
+                    $message = $this->validasiDokterPengambilanAntrianDokterGigi();
                     if (!is_null( $message )) {
                         $this->chatBotLog(__LINE__);
                         $this->sendBotCake($message );
@@ -5696,7 +5696,7 @@ class WablasController extends Controller
         ]);
         $this->proceedRegistering();
     }
-    public function validasiDokterPengambilanAntrianDokterGigi($reservasi_online){
+    public function validasiDokterPengambilanAntrianDokterGigi(){
         $this->chatBotLog(__LINE__);
         if (
             $this->tenant->dentist_queue_enabled == 0
