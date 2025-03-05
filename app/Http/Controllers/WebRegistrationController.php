@@ -307,12 +307,10 @@ class WebRegistrationController extends Controller
             }
         }
 
-        if (
-            $wb->validasiDokterPengambilanAntrianDokterGigi(  )
-        ) {
-            
+        $message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
+        if (!is_null( $message_wablas )) {
+            $message = $message_wablas;
         }
-
 
         $message =  view('web_registrations.message', compact(
             'message'
