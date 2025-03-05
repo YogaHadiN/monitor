@@ -22,6 +22,8 @@ class WebRegistrationController extends Controller
     /**
      * @param 
      */
+
+    public $tenant;
     public function __construct()
     {
         header("Access-Control-Allow-Origin: *");
@@ -29,6 +31,8 @@ class WebRegistrationController extends Controller
         header("Access-Control-Allow-Methods: OPTIONS, GET, POST");
         header("Access-Control-Allow-Headers: Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, If-Modified-Since, X-File-Name, Cache-Control");
         session()->put('tenant_id', 1);
+
+        $this->tenant = Tenant::find(1);
     }
     
     public function daftar_online(){
