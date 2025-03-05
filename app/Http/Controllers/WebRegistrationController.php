@@ -311,11 +311,13 @@ class WebRegistrationController extends Controller
             }
         }
 
-        $wb = new WablasController;
-        $wb->tenant = $this->tenant;
-        $message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
-        if (!is_null( $message_wablas )) {
-            $message = $message_wablas;
+        if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
+            $wb             = new WablasController;
+            $wb->tenant     = $this->tenant;
+            $message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
+            if (!is_null( $message_wablas )) {
+                $message    = $message_wablas;
+            }
         }
 
         $message =  view('web_registrations.message', compact(
