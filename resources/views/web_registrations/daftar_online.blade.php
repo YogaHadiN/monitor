@@ -5,7 +5,7 @@
   <meta charset="utf-8">
 <meta name="viewport" content= "width=device-width, user-scalable=no">
 
-    <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
   <meta name="description" content="">
   <meta name="author" content="">
   <title>Antrian Pasien</title>
@@ -87,7 +87,7 @@ td {
         <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <h4>Klinik Jati Elok</h4>
         </div>
-        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 float-right mt-10 text-right">
+        <div class="float-right mt-10 text-right col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <p>
                 Daftar Online
             </p>
