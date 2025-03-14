@@ -22,7 +22,6 @@ class WebRegistrationController extends Controller
     /**
      * @param 
      */
-
     public $tenant;
     public function __construct()
     {

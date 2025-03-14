@@ -243,7 +243,8 @@ class WablasController extends Controller
                     $this->chatBotLog(__LINE__);
                     return false;
                 } else if (
-                     str_contains($this->message ,'akhiri')
+                     str_contains($this->message ,'akhiri') ||
+                     str_contains($this->message ,'ahiri')
                 ) {
                     $this->chatBotLog(__LINE__);
                     $this->sendBotCake($this->akhiriChatWithAdmin() );
@@ -5683,14 +5684,22 @@ class WablasController extends Controller
 
         //kirim kekurangan informasi yang perlu diterima
         //
+        //
+        //
 
-        $this->whatsapp_registration = WhatsappRegistration::create([
-            'no_telp'    => $this->no_telp,
-            'antrian_id' => $antrian->id,
-            'registering_confirmation' => 1,
-            'registrasi_pembayaran_id' => $onsite_registration->registrasi_pembayaran_id
-        ]);
-        $this->proceedRegistering();
+
+        $message = 'Anda terdaftar dengan nomor antrian ';
+        $message .= $antrian->nomor_antrian;
+        $this->sendBotCake($message);
+
+
+        /* $this->whatsapp_registration = WhatsappRegistration::create([ */
+        /*     'no_telp'    => $this->no_telp, */
+        /*     'antrian_id' => $antrian->id, */
+        /*     'registering_confirmation' => 1, */
+        /*     'registrasi_pembayaran_id' => $onsite_registration->registrasi_pembayaran_id */
+        /* ]); */
+        /* $this->proceedRegistering(); */
     }
     public function validasiDokterPengambilanAntrianDokterGigi(){
         $this->chatBotLog(__LINE__);
@@ -5779,6 +5788,4 @@ class WablasController extends Controller
         $message .= "Mohon maaf atas ketidaknyamanannya.";
         return $message;
     }
-    
-    
 }
