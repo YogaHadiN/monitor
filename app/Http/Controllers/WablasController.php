@@ -121,8 +121,10 @@ class WablasController extends Controller
                             'mime_type' => $this->mime_type
                         ]; 
 
-                Log::info('data');
-                Log::info($data);
+                if ( $this->no_telp == '6281381912803' ) {
+                    Log::info('data');
+                    Log::info($data);
+                }
 
                 $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
 
