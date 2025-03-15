@@ -764,7 +764,9 @@ class WebRegistrationController extends Controller
     public function hapus_antrian(){
         $antrian_id = Input::get('antrian_id');
         $antrian = Antrian::find( $antrian_id );
-        $antrian->delete();
+        if (!is_null( $antrian )) {
+            $antrian->delete();
+        }
     }
     public function cek_antrian(){
         $data = [];

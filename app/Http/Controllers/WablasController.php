@@ -121,6 +121,9 @@ class WablasController extends Controller
                             'mime_type' => $this->mime_type
                         ]; 
 
+                Log::info('data');
+                Log::info($data);
+
                 $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
 
                 if (!is_array( $response )) {
@@ -1280,10 +1283,10 @@ class WablasController extends Controller
             $this->tenant->image_bot_enabled
         ) {
 
-            $contents = file_get_contents($this->image_url);
-            $name     = substr($this->image_url, strrpos($this->image_url, '/') + 1);
+            $contents         = file_get_contents($this->image_url);
+            $name             = substr($this->image_url, strrpos($this->image_url, '/') + 1);
             $destination_path = 'image/whatsapp/';
-            $name = $destination_path . $name;
+            $name             = $destination_path . $name;
 
             \Storage::disk('s3')->put($name, $contents);
             return $name;
