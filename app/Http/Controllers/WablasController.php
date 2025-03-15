@@ -5630,6 +5630,8 @@ class WablasController extends Controller
         }
     }
     public function createReservasiOnline($konfirmasi_sdk = false){
+        Log::info('reservasi online');
+        Log::info($this->tenant->image_bot_enabled);
         return ReservasiOnline::create([
             'no_telp'              => $this->no_telp,
             'kartu_asuransi_image' => $this->tenant->image_bot_enabled ? null : '',
