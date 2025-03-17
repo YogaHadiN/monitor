@@ -13,6 +13,7 @@ use App\Models\PetugasPemeriksa;
 use App\Models\NoTelp;
 use App\Models\DentistReservation;
 use App\Events\FormSubmitted;
+use App\Events\OnsiteRegisteredEvent;
 use App\Events\RefreshDiscussion;
 use App\Events\RefreshChat;
 use App\Events\GambarSubmitted;
@@ -5693,11 +5694,12 @@ class WablasController extends Controller
         //
         //
 
+		event(new OnsiteRegisteredEvent());
+
 
         $message = 'Anda terdaftar dengan nomor antrian ';
         $message .= $antrian->nomor_antrian;
         $this->sendBotCake($message);
-
 
         /* $this->whatsapp_registration = WhatsappRegistration::create([ */
         /*     'no_telp'    => $this->no_telp, */
