@@ -9,6 +9,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Log;
 
 class OnsiteRegisteredEvent implements ShouldBroadcast
 {
@@ -21,6 +22,7 @@ class OnsiteRegisteredEvent implements ShouldBroadcast
      */
     public function __construct()
     {
+        Log::info('onsite_registration_reached');
         //
     }
 
