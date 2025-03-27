@@ -98,10 +98,12 @@ class WablasController extends Controller
         Log::info(Input::all()); 
         $this->room_id   = Input::get('payload')['room']['id'];
         $this->image_url = null;
+        $no_telp = Input::get('payload')['from']['email'];
+        $this->message_type = Input::get('payload')['message']['type'];
+        $this->no_telp = $no_telp;
+        $this->image_url = null;
 
         if (!is_null( $this->room_id )) {
-            $no_telp = $messages['from'];
-            $this->message_type = $messages['type'];
             if (
                 $this->message_type == 'image'
             ) {
@@ -113,33 +115,15 @@ class WablasController extends Controller
                     $this->message       = "";
                 }
 
-                $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/retrieve_media_url';
-                $data = [
-                            'media_id' => $this->attachment_id,
-                            'mime_type' => $this->mime_type
-                        ]; 
-
-                if ( $this->no_telp == '6281381912803' ) {
-                    Log::info('data');
-                    Log::info($data);
-                }
-
-                $response = Http::withToken(env('BOTCAKE_TOKEN'))->get($url, $data);
-
-                if (!is_array( $response )) {
-                    $response = json_decode($response, true);
-                }
                 $this->image_url = $response['data']['url'];
 
             } else if (
                 $this->message_type == 'text'
             ) {
-                $this->message = $messages['text']['body'];
+                $this->message = $this->clean(Input::get('payload')['message']['text']);
             } else {
                 $this->message = null;
             }
-
-            $this->no_telp = $no_telp;
 
 
             $no_telp = NoTelp::firstOrCreate([
