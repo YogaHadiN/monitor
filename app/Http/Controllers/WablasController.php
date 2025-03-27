@@ -3976,7 +3976,7 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5);
     }
     public function isPicture(){
-        if ( $this->message_type == 'image' ) {
+        if ( $this->message_type == 'file_attachment' ) {
             return true;
         }
         return false;
