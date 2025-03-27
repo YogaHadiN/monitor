@@ -94,7 +94,8 @@ class WablasController extends Controller
 
 	public function __construct(){
         Log::info('Bot connected');
-        $this->room_id = Input::get('payload')['room']['id'];
+        Log::info(Input::all()); 
+        $this->room_id   = Input::get('payload')['room']['id'];
         $this->image_url = null;
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
