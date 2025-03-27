@@ -99,7 +99,7 @@ class WablasController extends Controller
         $this->room_id   = Input::get('payload')['room']['id'];
         $this->image_url = null;
 
-        if (!is_null( $room_id )) {
+        if (!is_null( $this->room_id )) {
             $no_telp = $messages['from'];
             $this->message_type = $messages['type'];
             if (
