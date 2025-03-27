@@ -92,13 +92,13 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        $this->room_id   = Input::get('payload')['room']['id'];
-        $no_telp = Input::get('payload')['from']['email'];
-        $this->message_type = Input::get('payload')['message']['type'];
-        $this->no_telp = $no_telp;
-        $this->image_url = null;
 
-        if (!is_null( $this->room_id )) {
+        if ( isset( Input::get('payload') ) ) {
+            $this->room_id      = Input::get('payload')['room']['id'];
+            $no_telp            = Input::get('payload')['from']['email'];
+            $this->message_type = Input::get('payload')['message']['type'];
+            $this->no_telp      = $no_telp;
+            $this->image_url    = null;
             if (
                 $this->message_type == 'file_attachment'
             ) {
