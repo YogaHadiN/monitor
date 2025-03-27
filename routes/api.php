@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Route;
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
 /* Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
 
-Route::get('botcake/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']);
-Route::post('botcake/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
+Route::get('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']);
+Route::post('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
 
-Route::get('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhookGet']);
-Route::post('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhook']);
+/* Route::get('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhookGet']); */
+/* Route::post('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhook']); */
 
 
 Route::post('wablas/webhookcs', [\App\Http\Controllers\WablasEstetikController::class, 'webhook']);
