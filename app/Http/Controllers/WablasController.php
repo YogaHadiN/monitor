@@ -93,7 +93,7 @@ class WablasController extends Controller
 
 	public function __construct(){
 
-        if ( isset( Input::get('payload') ) ) {
+        if ( !is_null( Input::get('payload') ) ) {
             $this->room_id      = Input::get('payload')['room']['id'];
             $no_telp            = Input::get('payload')['from']['email'];
             $this->message_type = Input::get('payload')['message']['type'];
