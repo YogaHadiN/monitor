@@ -105,17 +105,6 @@ class WablasController extends Controller
                 $this->message_type == 'file_attachment'
             ) {
                 $this->image_url = Input::get('payload')['message']['payload']['url'];
-                Log::info('123');
-                Log::info('Bot connected');
-                Log::info(Input::all()); 
-                Log::info(' $this->message ');
-                Log::info( $this->message );
-                Log::info(' $this->no_telp ');
-                Log::info( $this->no_telp );
-                Log::info(' $this->room_id ');
-                Log::info( $this->room_id );
-                Log::info(' $this->image_url ');
-                Log::info( $this->image_url );
                 if (isset(
                     Input::get('payload')['message']['payload']['caption']
                 )) {
@@ -1274,7 +1263,8 @@ class WablasController extends Controller
         if (
             $this->tenant->image_bot_enabled
         ) {
-
+            $this->chatBotLog(__LINE__);
+            Log::info('image');
             $contents         = file_get_contents($this->image_url);
             $name             = substr($this->image_url, strrpos($this->image_url, '/') + 1);
             $destination_path = 'image/whatsapp/';
