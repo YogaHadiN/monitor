@@ -185,8 +185,12 @@ class WablasController extends Controller
             $this->message = strtolower( $this->message );
 
             
+            Log::info(' $this->message ');
             Log::info( $this->message );
+            Log::info(' $this->no_telp ');
             Log::info( $this->no_telp );
+            Log::info(' $this->room_id ');
+            Log::info( $this->room_id );
         }
 	}
     public function wablasGet(){
