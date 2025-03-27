@@ -3152,16 +3152,16 @@ class WablasController extends Controller
                         $this->sendBotCake($message );
                         return false;
                     }
-                } else if (
-                    !$this->sudahAdaAntrianUntukTipeKonsultasi( $this->message )
-                ) {
-                    $tipe_konsultasi = TipeKonsultasi::find( $this->message );
-                    $message = 'Saat ini tidak ada antrian di ' . $tipe_konsultasi->tipe_konsultasi .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    $this->sendBotCake($message );
-                    return false;
+                /* } else if ( */
+                /*     !$this->sudahAdaAntrianUntukTipeKonsultasi( $this->message ) */
+                /* ) { */
+                /*     $tipe_konsultasi = TipeKonsultasi::find( $this->message ); */
+                /*     $message = 'Saat ini tidak ada antrian di ' . $tipe_konsultasi->tipe_konsultasi .'. Anda kami persilahkan untuk datang dan mengambil antrian secara langsung'; */
+                /*     $message .= PHP_EOL; */
+                /*     $message .= PHP_EOL; */
+                /*     $message .= $this->hapusAntrianWhatsappBotReservasiOnline(); */
+                /*     $this->sendBotCake($message ); */
+                /*     return false; */
                 } else if (
                     $this->sudahAdaAntrianUntukTipeKonsultasi( $this->message )
                 ) {
