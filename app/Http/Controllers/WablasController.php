@@ -98,15 +98,8 @@ class WablasController extends Controller
         Log::info(Input::all()); 
         $this->room_id   = Input::get('payload')['room']['id'];
         $this->image_url = null;
-        if (
-            !isset( Input::get('entry')['changes'][0]['value']['messages'] )
-        ) {
-            $messages = null;
-        } else {
-            $messages = Input::get('entry')['changes'][0]['value']['messages'][0];
-        }
 
-        if (!is_null( $messages )) {
+        if (!is_null( $room_id )) {
             $no_telp = $messages['from'];
             $this->message_type = $messages['type'];
             if (
