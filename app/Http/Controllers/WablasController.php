@@ -93,6 +93,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        Log::info('123');
         Log::info('Bot connected');
         Log::info(Input::all()); 
         $this->room_id   = Input::get('payload')['room']['id'];
