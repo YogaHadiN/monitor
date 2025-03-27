@@ -92,8 +92,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info('Bot connected image');
-        Log::info(Input::all()); 
         $this->room_id   = Input::get('payload')['room']['id'];
         $no_telp = Input::get('payload')['from']['email'];
         $this->message_type = Input::get('payload')['message']['type'];
@@ -1264,7 +1262,6 @@ class WablasController extends Controller
             $this->tenant->image_bot_enabled
         ) {
             $this->chatBotLog(__LINE__);
-            Log::info('image');
             $contents         = file_get_contents($this->image_url);
             $name             = substr($this->image_url, strrpos($this->image_url, '/') + 1);
             $destination_path = 'image/whatsapp/';
@@ -5619,7 +5616,6 @@ class WablasController extends Controller
 
         $app_id = env('QISCUS_APP_ID');
         $url      = "https://omnichannel.qiscus.com/$app_id/bot";
-        Log::info($url);
         $agent_id = $app_id . '_admin@qismo.com';
          $data = [
            "sender_email" => $agent_id,
@@ -5634,8 +5630,6 @@ class WablasController extends Controller
     }
 
     public function createReservasiOnline($konfirmasi_sdk = false){
-        Log::info('reservasi online');
-        Log::info($this->tenant->image_bot_enabled);
         return ReservasiOnline::create([
             'no_telp'              => $this->no_telp,
             'kartu_asuransi_image' => $this->tenant->image_bot_enabled ? null : '',
