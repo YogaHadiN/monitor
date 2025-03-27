@@ -104,6 +104,7 @@ class WablasController extends Controller
             if (
                 $this->message_type == 'file_attachment'
             ) {
+                $this->image_url = Input::get('payload')['message']['payload']['url'];
                 Log::info('123');
                 Log::info('Bot connected');
                 Log::info(Input::all()); 
@@ -115,7 +116,6 @@ class WablasController extends Controller
                 Log::info( $this->room_id );
                 Log::info(' $this->image_url ');
                 Log::info( $this->image_url );
-                $this->image_url = Input::get('payload')['message']['payload']['url'];
                 if (isset(
                     Input::get('payload')['message']['payload']['caption']
                 )) {
