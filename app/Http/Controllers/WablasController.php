@@ -96,7 +96,6 @@ class WablasController extends Controller
         Log::info('Bot connected image');
         Log::info(Input::all()); 
         $this->room_id   = Input::get('payload')['room']['id'];
-        $this->image_url = null;
         $no_telp = Input::get('payload')['from']['email'];
         $this->message_type = Input::get('payload')['message']['type'];
         $this->no_telp = $no_telp;
@@ -104,7 +103,7 @@ class WablasController extends Controller
 
         if (!is_null( $this->room_id )) {
             if (
-                $this->message_type == 'image'
+                $this->message_type == 'file_attachment'
             ) {
                 Log::info('123');
                 Log::info('Bot connected');
@@ -115,6 +114,9 @@ class WablasController extends Controller
                 Log::info( $this->no_telp );
                 Log::info(' $this->room_id ');
                 Log::info( $this->room_id );
+                Log::info(' $this->image_url ');
+                Log::info( $this->image_url );
+                $this->image_url = Input::get('payload')['message']['payload']['url'];
                 $this->mime_type     = $messages['image']['mime_type'];
                 $this->attachment_id = $messages['image']['id'];
                 if (isset( $messages['image']['caption'] )) {
@@ -122,7 +124,6 @@ class WablasController extends Controller
                 } else {
                     $this->message       = "";
                 }
-                $this->image_url = $response['data']['url'];
             } else if (
                 $this->message_type == 'text'
             ) {
