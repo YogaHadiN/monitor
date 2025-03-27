@@ -93,9 +93,6 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info('123');
-        Log::info('Bot connected');
-        Log::info(Input::all()); 
         $this->room_id   = Input::get('payload')['room']['id'];
         $this->image_url = null;
         $no_telp = Input::get('payload')['from']['email'];
@@ -107,6 +104,15 @@ class WablasController extends Controller
             if (
                 $this->message_type == 'image'
             ) {
+                Log::info('123');
+                Log::info('Bot connected');
+                Log::info(Input::all()); 
+                Log::info(' $this->message ');
+                Log::info( $this->message );
+                Log::info(' $this->no_telp ');
+                Log::info( $this->no_telp );
+                Log::info(' $this->room_id ');
+                Log::info( $this->room_id );
                 $this->mime_type     = $messages['image']['mime_type'];
                 $this->attachment_id = $messages['image']['id'];
                 if (isset( $messages['image']['caption'] )) {
@@ -163,12 +169,6 @@ class WablasController extends Controller
             $this->message = strtolower( $this->message );
 
             
-            Log::info(' $this->message ');
-            Log::info( $this->message );
-            Log::info(' $this->no_telp ');
-            Log::info( $this->no_telp );
-            Log::info(' $this->room_id ');
-            Log::info( $this->room_id );
         }
 	}
     public function wablasGet(){
