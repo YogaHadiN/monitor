@@ -81,7 +81,6 @@ class WablasController extends Controller
 	public $pesan_error;
 	public $failed_therapy;
 	public $whatsapp_bot;
-	public $mime_type;
 	public $attachment_id;
 	public $random_string;
 	public $no_telp;
@@ -117,10 +116,10 @@ class WablasController extends Controller
                 Log::info(' $this->image_url ');
                 Log::info( $this->image_url );
                 $this->image_url = Input::get('payload')['message']['payload']['url'];
-                $this->mime_type     = $messages['image']['mime_type'];
-                $this->attachment_id = $messages['image']['id'];
-                if (isset( $messages['image']['caption'] )) {
-                    $this->message       = $messages['image']['caption'];
+                if (isset(
+                    Input::get('payload')['message']['payload']['caption']
+                )) {
+                    $this->message       = Input::get('payload')['message']['payload']['caption'];
                 } else {
                     $this->message       = "";
                 }
