@@ -93,6 +93,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        $this->room_id = Input::get('payload')['room']['id'];
         $this->image_url = null;
         if (
             !isset( Input::get('entry')['changes'][0]['value']['messages'] )
@@ -5604,34 +5605,56 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         return $message;
     }
+
+    //PANCAKE
+    /* public function sendBotCake($message){ */
+    /*     if ( */
+    /*         NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)') */
+    /*             ->where('no_telp', $this->no_telp) */
+    /*             ->exists() */
+    /*     ) { */
+    /*         $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content'; */
+    /*         $data = [ */
+    /*                "psid" => "wa_" . $this->no_telp, */ 
+    /*                "payload" => [], */ 
+    /*                "data" => [ */
+    /*                         "version" => "v2", */ 
+    /*                         "content" => [ */
+    /*                            "messages" => [ */
+    /*                               [ */
+    /*                                  "type" => "text", */ 
+    /*                                  "buttons" => [], */ 
+    /*                                  "text" => $message */
+    /*                               ] */ 
+    /*                            ] */ 
+    /*                         ] */ 
+    /*                      ] */ 
+    /*             ]; */ 
+    /*         $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data); */
+    /*     } else { */
+    /*         Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $this->no_telp); */
+    /*     } */
+    /* } */
+
+    // QISCUS
     public function sendBotCake($message){
-        if (
-            NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
-                ->where('no_telp', $this->no_telp)
-                ->exists()
-        ) {
-            $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
-            $data = [
-                   "psid" => "wa_" . $this->no_telp, 
-                   "payload" => [], 
-                   "data" => [
-                            "version" => "v2", 
-                            "content" => [
-                               "messages" => [
-                                  [
-                                     "type" => "text", 
-                                     "buttons" => [], 
-                                     "text" => $message
-                                  ] 
-                               ] 
-                            ] 
-                         ] 
-                ]; 
-            $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
-        } else {
-            Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $this->no_telp);
-        }
+
+        $app_id = env('QISCUS_APP_ID');
+        $url      = "https://omnichannel.qiscus.com/$app_id/bot";
+        Log::info($url);
+        $agent_id = $app_id . '_admin@qismo.com';
+         $data = [
+           "sender_email" => $agent_id,
+           "message"      => $message,
+           "type"         => "text",
+           "room_id"      => $this->room_id
+        ]; 
+
+        $response = Http::withHeaders([
+                        'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
+                    ])->post( $url, $data);
     }
+
     public function createReservasiOnline($konfirmasi_sdk = false){
         Log::info('reservasi online');
         Log::info($this->tenant->image_bot_enabled);
@@ -5674,17 +5697,6 @@ class WablasController extends Controller
         $onsite_registration          = OnsiteRegistration::where('random_string', $this->random_string)->first();
         $onsite_registration->no_telp = $this->no_telp;
         $onsite_registration->save();
-        $antrian                                    = $this->antrianPost( $onsite_registration->ruangan_id );
-        $antrian->no_telp                = $this->no_telp;
-        $antrian->tipe_konsultasi_id                = $onsite_registration->tipe_konsultasi_id;
-        $antrian->staf_id                           = $onsite_registration->staf_id;
-        $antrian->registrasi_pembayaran_id = $onsite_registration->registrasi_pembayaran_id;
-        $antrian->save();
-
-        Log::info("==============");
-        Log::info("ANTRIAN ID");
-        Log::info($antrian->id);
-        Log::info("==============");
 
         // jika ada antrian , maka tampilkan halaman kelima
         //
@@ -5697,9 +5709,6 @@ class WablasController extends Controller
 		event(new OnsiteRegisteredEvent());
 
 
-        $message = 'Anda terdaftar dengan nomor antrian ';
-        $message .= $antrian->nomor_antrian;
-        $this->sendBotCake($message);
 
         /* $this->whatsapp_registration = WhatsappRegistration::create([ */
         /*     'no_telp'    => $this->no_telp, */
