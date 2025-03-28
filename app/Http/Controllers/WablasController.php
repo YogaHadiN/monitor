@@ -154,8 +154,6 @@ class WablasController extends Controller
 
             $this->tenant = Tenant::find( $tenant_id );
             $this->message = strtolower( $this->message );
-
-            
         }
 	}
     public function wablasGet(){
@@ -208,7 +206,8 @@ class WablasController extends Controller
                 (
                      strtotime ($date_now) > strtotime( '2025-03-28 23:59:59'  ) &&
                      strtotime ($date_now) < strtotime( '2025-04-05 00:00:00'  )
-                ) || $this->no_telp == '6281381912803'
+                ) 
+                /* || $this->no_telp == '6281381912803' */
 
             ) {
                 $this->sendBotCake( $this->libur() );
@@ -5632,7 +5631,7 @@ class WablasController extends Controller
     // QISCUS
     public function sendBotCake($message){
 
-        $app_id = env('QISCUS_APP_ID');
+        $app_id   = env('QISCUS_APP_ID');
         $url      = "https://omnichannel.qiscus.com/$app_id/bot";
         $agent_id = $app_id . '_admin@qismo.com';
          $data = [
