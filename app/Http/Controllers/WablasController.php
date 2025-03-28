@@ -163,7 +163,7 @@ class WablasController extends Controller
     }
     
     public function libur(){
-        $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
+        $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1446 H";
         $message .= PHP_EOL;
         $message .= "KLINIK JATI ELOK ";
         $message .= PHP_EOL;
