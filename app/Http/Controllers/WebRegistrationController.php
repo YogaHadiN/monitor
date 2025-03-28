@@ -32,6 +32,8 @@ class WebRegistrationController extends Controller
         session()->put('tenant_id', 1);
 
         $this->tenant = Tenant::find(1);
+        $this->middleware('onlyWhenWebRegistrationEnabled', ['only' => ['daftar_online', 'daftar_online_by_phone', 'daftar_online_post']]);
+
     }
     
     public function daftar_online(){
