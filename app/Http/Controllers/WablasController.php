@@ -203,12 +203,8 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $date_now = date('Y-m-d H:i:s');
             if (
-                (
-                     strtotime ($date_now) > strtotime( '2025-03-28 23:59:59'  ) &&
-                     strtotime ($date_now) < strtotime( '2025-04-05 00:00:00'  )
-                ) 
+                strtotime ($date_now) < strtotime( '2025-04-05 00:00:00'  )
                 /* || $this->no_telp == '6281381912803' */
-
             ) {
                 $this->sendBotCake( $this->libur() );
             } else {
