@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use App\Models\Tenant;
+use App\Models\Classes\Yoga;
 
 class onlyWhenWebRegistrationEnabled
 {

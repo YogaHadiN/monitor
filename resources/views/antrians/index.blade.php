@@ -28,8 +28,12 @@
                 <h4>Klinik Jati Elok</h4>
             </div>
         </div>
-        <h1>Daftar Online</h1>
-        <a href="{{ url('daftar_online') }}" class="mt-20 btn btn-info btn-block">Klik Disini</a>
+        @if ($libur)
+            {{ $text_libur }}
+        @else 
+            <h1>Daftar Online</h1>
+            <a href="{{ url('daftar_online') }}" class="mt-20 btn btn-info btn-block">Klik Disini</a>
+        @endif
         {{-- <a href='finspot:FingerspotReg;{{ $url_register }}' class='btn btn-sm btn-primary'>Register</a> --}} 
     </div>
 </body>

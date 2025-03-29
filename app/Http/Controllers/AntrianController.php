@@ -28,10 +28,16 @@ class AntrianController extends Controller
         session()->put('tenant_id', 1);
     }
   public function index(){
-     $url_register  = base64_encode(  'fingerprint/register?user_id=1' );
-     return view('antrians.index', [
-         'url_register' => $url_register
-     ]);
+    $url_register = base64_encode(  'fingerprint/register?user_id=1' );
+    $date_now     = date('Y-m-d H:i:s');
+    $libur        = strtotime ($date_now) < strtotime( '2025-04-05 00:00:00'  );
+    $wa           = new WablasController;
+    $text_libur   = $wa->libur();
+    return view('antrians.index', [
+        'url_register' => $url_register,
+        'text_libur' => $text_libur,
+        'libur' => $libur
+    ]);
   }
 	  
 	public function antri($id){
