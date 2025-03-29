@@ -22,7 +22,7 @@ class onlyWhenWebRegistrationEnabled
         $tenant = Tenant::find( $tenant_id );
         if (!$tenant->website_registration_enabled) {
             $pesan = Yoga::gagalFlash('Tidak dapat melakukan daftar online melalui website karena sedang di non aktifkan');
-            return redirect()->back()->withPesan($pesan);
+            return redirect('/');
         }
         return $next($request);
     }
