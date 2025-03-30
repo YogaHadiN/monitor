@@ -175,7 +175,7 @@ class WablasController extends Controller
         $message .= "5 April Pukul 13:00 WIB ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= "Selama waktu libur tersebut pelayanan pengobatan Peserta BPJS akan dialihkan ke:";
+        $message .= "Selama waktu libur tersebut pelayanan pengobatan Peserta BPJS akan dialihkan tanpa harus pindah Kepesertaan ke:";
         $message .= PHP_EOL;
         $message .= 'Tanggal 29 Maret, 30 Maret, 2 April, 3 April, 4 April:';
         $message .= PHP_EOL;
