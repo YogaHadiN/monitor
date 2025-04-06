@@ -29,6 +29,7 @@ class AntrianOnlineController extends Controller
     public $tipe_konsultasi;
     public $antrian;
     public $tenant_id;
+    public $tenant;
     public function __construct()
     {
         $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev';
@@ -220,7 +221,7 @@ class AntrianOnlineController extends Controller
             $response = '{
                 "metadata": {
                     "message": "Pendaftaran ke Poli Ini Sedang Tutup",
-                    "code": 201 
+                    "code": 201
                 }
             }';
             return Response::json(json_decode( $response, true ), 201);
@@ -396,7 +397,7 @@ class AntrianOnlineController extends Controller
                     "angkaantrean" : ' .$antrian->nomor. ',
                     "namapoli" : "' . $antrian->tipe_konsultasi->poli_bpjs->nmPoli. '",
                     "sisaantrean" : "'.$antrian->sisa_antrian.'",
-                    "antreanpanggil" : "'.$antrian->ruangan->antrian->nomor_antrian.'",
+                    "antreanpanggil" : "'.$antrian->ruangan->antrian?->nomor_antrian.'",
                     "keterangan" : "' . $keterangan. '"
             },
             "metadata": {
@@ -471,7 +472,7 @@ class AntrianOnlineController extends Controller
         if (
             $pasien->save()
         ) {
-            
+
             $response = '{
                         "metadata": {
                             "message": "Ok",
@@ -567,6 +568,7 @@ class AntrianOnlineController extends Controller
             }
 
             $tenant = Tenant::find(1);
+            $this->tenant = $tenant;
             return !$jadwal->count();
         } else {
             return false;
@@ -658,8 +660,8 @@ class AntrianOnlineController extends Controller
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
         $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
         $tenant = Tenant::find(1);
-        return 
-            !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari_id', date("N"))->exists() 
+        return
+            !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari_id', date("N"))->exists()
             || ( !$tenant->dentist_available && $kodepoli == '002' );
     }
 
@@ -689,7 +691,7 @@ class AntrianOnlineController extends Controller
     }
 
     public function antrean_sudah_dilayani(){
-        return 
+        return
             !is_null( $this->antrian ) &&
             $this->antrian->antriable_type !== 'App\Models\Antrian' &&
             $this->antrian->antriable_type !== 'App\Models\AntrianPoli' &&
@@ -705,7 +707,7 @@ class AntrianOnlineController extends Controller
                                             ->where('hari_id',  $hari_id )
                                             ->first();
         $jam_mulai = strtotime( $jadwal_konsultasi->jam_mulai );
-        if (  
+        if (
             $kodepoli == '002' &&
             $jam_mulai > strtotime("now")
         ) {
@@ -726,6 +728,6 @@ class AntrianOnlineController extends Controller
     {
         return null;
     }
-    
-    
-}    
+
+
+}
