@@ -20,7 +20,7 @@ use Log;
 class WebRegistrationController extends Controller
 {
     /**
-     * @param 
+     * @param
      */
     public $tenant;
     public function __construct()
@@ -32,10 +32,10 @@ class WebRegistrationController extends Controller
         session()->put('tenant_id', 1);
 
         $this->tenant = Tenant::find(1);
-        $this->middleware('onlyWhenWebRegistrationEnabled', ['only' => ['daftar_online', 'daftar_online_by_phone', 'daftar_online_post']]);
+        /* $this->middleware('onlyWhenWebRegistrationEnabled', ['only' => ['daftar_online', 'daftar_online_by_phone', 'daftar_online_post']]); */
 
     }
-    
+
     public function daftar_online(){
         return view('web_registrations.daftar_online');
     }
@@ -112,7 +112,7 @@ class WebRegistrationController extends Controller
                 'antrians'
             ));
         } else if (
-            is_null( $web_registration ) || 
+            is_null( $web_registration ) ||
             (
                 !is_null( $web_registration ) &&
                 !is_null( $web_registration->no_telp ) &&
@@ -346,7 +346,7 @@ class WebRegistrationController extends Controller
             $response                              = $bpjs->pencarianNoKartuValid( $nomor_asuransi_bpjs, true );
             $message                               = $response['response'];
             if (
-                !is_null( $message ) && 
+                !is_null( $message ) &&
                 $message['aktif'] &&
                 isset( $message['kdProviderPst'] ) &&
                 $message['kdProviderPst']['kdProvider'] == '0221B119'
@@ -403,7 +403,7 @@ class WebRegistrationController extends Controller
             'message',
         );
     }
-    
+
     public function alamat(){
         $alamat = Input::get('value');
         $no_telp = Input::get('no_telp');
@@ -470,7 +470,7 @@ class WebRegistrationController extends Controller
                     $jam_akhir_pendaftaran_gigi <= date("H:i:s")
                 ) {
                     $message = 'Pendaftaran dokter gigi telah berakhir hari ini';
-                } 
+                }
             } else  {
 
                 $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
@@ -581,7 +581,7 @@ class WebRegistrationController extends Controller
                         $bisa_digunakan = $response['bisa_digunakan'] ;
                         $message = $response['pesan'] ;
                     }
-                } 
+                }
 
                 if ($bisa_digunakan) {
                     $web_registration->pasien_id = $pasien_id;
@@ -693,12 +693,12 @@ class WebRegistrationController extends Controller
                 isset( $response['response'] ) ||
                 is_null( $response['response'] )
             )
-            
+
         ) {
             $code                                                = $response['code'];
             $message                                             = $response['response'];
             if (
-                $code == 204 
+                $code == 204
             ) {// jika tidak ditemukan
                 $pesan = "Nomor Kartu $nomor_asuransi_bpjs tidak ditemukan di sistem BPJS";
                 $bisa_digunakan = false;
@@ -712,7 +712,7 @@ class WebRegistrationController extends Controller
                 $code <= 299
             ){
                 // jika kartu aktif dan provider tepat
-                if ( 
+                if (
                     !is_null($message) &&
                     $message['aktif'] &&
                     $message['kdProviderPst']['kdProvider'] == '0221B119'
