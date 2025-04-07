@@ -2508,7 +2508,7 @@ class WablasController extends Controller
             ])
             ->exists();
         Log::info( '===============================' );
-        Log::info( $whatsappMainMenuExists );
+        Log::info( $whatsappMainMenuExists ? 'exists' : 'not exists' );
         Log::info( '===============================' );
         return $whatsappMainMenuExists;
     }
