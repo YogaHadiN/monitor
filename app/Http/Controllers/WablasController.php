@@ -1315,8 +1315,8 @@ class WablasController extends Controller
             $antrian = null;
 
             $carbon = Carbon::parse( $tanggal_berobat );
-            $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-            $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+            $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+            $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
             $antrians = Antrian::where('no_telp', $this->no_telp)
                 ->whereBetween('created_at', [
                         $startOfDay,
@@ -1440,8 +1440,8 @@ class WablasController extends Controller
             $no_telp = $this->no_telp;
 
             $carbon     = Carbon::parse( $this->whatsapp_satisfaction_survey->created_at->format('Y-m-d') );
-            $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-            $endOfDay   = $carbon->endOfDay()->format('Y-m-d');
+            $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+            $endOfDay   = $carbon->endOfDay()->format('Y-m-d H:i:s');
             Antrian::where('no_telp', $no_telp)
                     ->whereBetween('created_at', [
                         $startOfDay, $endOfDay
@@ -2341,8 +2341,8 @@ class WablasController extends Controller
     {
 
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $this->antrian = Antrian::where('no_telp', $this->no_telp)
                 ->whereBetween('created_at', [
                         $startOfDay,
@@ -2371,8 +2371,8 @@ class WablasController extends Controller
         ) {
 
             $carbon = Carbon::now();
-            $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-            $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+            $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+            $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
             Antrian::where('no_telp', $this->no_telp)
                 ->whereBetween('created_at', [
                         $startOfDay,
@@ -2417,8 +2417,8 @@ class WablasController extends Controller
         ) {
 
             $carbon = Carbon::now();
-            $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-            $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+            $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+            $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
             $antrian = Antrian::where('no_telp', $this->no_telp)
                 ->whereBetween('created_at', [
                     $startOfDay,
@@ -2438,8 +2438,8 @@ class WablasController extends Controller
              str_contains($this->message, 'aktifkan')
         ) {
             $carbon = Carbon::now();
-            $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-            $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+            $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+            $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
             $antrian = Antrian::where('no_telp', $this->no_telp)
                 ->whereBetween('created_at', [
                     $startOfDay,
@@ -2478,8 +2478,8 @@ class WablasController extends Controller
     }
     public function pasienTidakDalamAntrian(){
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $antrian = Antrian::where('no_telp', $this->no_telp)
             ->whereBetween('created_at', [
                 $startOfDay,
@@ -2515,8 +2515,8 @@ class WablasController extends Controller
 
     public function whatsappJadwalKonsultasiInquiryExists(){
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         return WhatsappJadwalKonsultasiInquiry::where('no_telp', $this->no_telp)
             ->whereBetween('created_at', [
                 $startOfDay,
@@ -2534,8 +2534,8 @@ class WablasController extends Controller
              $this->message == '4'
         ){
             $carbon = Carbon::now();
-            $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-            $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+            $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+            $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
             WhatsappJadwalKonsultasiInquiry::whereBetween('created_at', [
                 $startOfDay,
                 $endOfDay
@@ -2777,8 +2777,8 @@ class WablasController extends Controller
     public function masihAdaYangBelumCekListHariIni(){
         $cek_list_ruangan_harian_ids  = CekListRuangan::where('frekuensi_cek_id', 1)->pluck('id');
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $cek_list_dikerjakan_hari_ini = CekListDikerjakan::whereBetween('created_at', [
                                                                 $startOfDay,
                                                                 $endOfDay
@@ -2800,8 +2800,8 @@ class WablasController extends Controller
         }
 
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $cek_list_harians_dikerjakans = CekListDikerjakan::whereIn('cek_list_ruangan_id', $cek_list_ruangan_ids)
                                                         ->whereBetween('created_at', [
                                                                 $startOfDay,
@@ -2833,8 +2833,8 @@ class WablasController extends Controller
     }
     public function cekListDikerjakanUntukCekListRuanganIni( $cek_list_ruangan_id ){
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         return CekListDikerjakan::where('cek_list_ruangan_id',  $cek_list_ruangan_id )
                             ->whereBetween('created_at', [
                                     $startOfDay,
@@ -4026,8 +4026,8 @@ class WablasController extends Controller
 
 	public function antrianPost($id){
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
 
 		$antrians = Antrian::whereBetween('created_at', [
                                     $startOfDay,
@@ -4069,8 +4069,8 @@ class WablasController extends Controller
         $kode_unik = substr(str_shuffle(MD5(microtime())), 0, 5);
 
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
 
         while (Antrian::whereBetween('created_at', [
                                     $startOfDay,
@@ -4385,8 +4385,8 @@ class WablasController extends Controller
      */
     private function tanyaApakahMauMembatalkanReservasiOnline(){
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $antrians = Antrian::where('no_telp', $this->no_telp)
                         ->whereBetween('created_at', [
                                     $startOfDay,
@@ -5360,8 +5360,8 @@ class WablasController extends Controller
 
     public function balasanKonfirmasiWaktuPelayanan(){
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $antrian = Antrian::where('no_telp', $this->no_telp)
                         ->whereBetween('created_at', [
                                     $startOfDay,
@@ -5636,8 +5636,8 @@ class WablasController extends Controller
     }
     public function cekAntrian(){
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $ant = Antrian::where('no_telp', $this->no_telp)
             ->whereBetween('created_at', [
                         $startOfDay,
