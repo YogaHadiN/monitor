@@ -2499,8 +2499,8 @@ class WablasController extends Controller
     }
     public function whatsappMainMenuExists(){
         $carbon     = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay   = $carbon->endOfDay()->format('Y-m-d');
+        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay   = $carbon->endOfDay()->format('Y-m-d H:i:s');
         $whatsappMainMenuExists = WhatsappMainMenu::where('no_telp', $this->no_telp)
             ->whereBetween('created_at', [
                 $startOfDay,
