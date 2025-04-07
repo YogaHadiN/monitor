@@ -649,7 +649,9 @@ class WebRegistrationController extends Controller
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                         ->whereDate('created_at', date('Y-m-d'))
                                         ->first();
-        $web_registration->delete();
+        if ( !is_null( $web_registration ) ) {
+            $web_registration->delete();
+        }
         $message =  null;
         $message =  view('web_registrations.message', compact(
             'message'
