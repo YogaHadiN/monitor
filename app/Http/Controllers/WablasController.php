@@ -2498,15 +2498,19 @@ class WablasController extends Controller
         /* && $this->no_telp = '6281381912803'; */
     }
     public function whatsappMainMenuExists(){
-        $carbon = Carbon::now();
+        $carbon     = Carbon::now();
         $startOfDay = $carbon->startOfDay()->format('Y-m-d');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d');
-        return WhatsappMainMenu::where('no_telp', $this->no_telp)
+        $endOfDay   = $carbon->endOfDay()->format('Y-m-d');
+        $whatsappMainMenuExists = WhatsappMainMenu::where('no_telp', $this->no_telp)
             ->whereBetween('created_at', [
                 $startOfDay,
                 $endOfDay
             ])
             ->exists();
+        Log::info( '===============================' );
+        Log::info( $whatsappMainMenuExists );
+        Log::info( '===============================' );
+        return $whatsappMainMenuExists;
     }
 
     public function whatsappJadwalKonsultasiInquiryExists(){
