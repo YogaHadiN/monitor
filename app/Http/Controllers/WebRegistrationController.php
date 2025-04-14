@@ -305,19 +305,20 @@ class WebRegistrationController extends Controller
                     'tipe_konsultasi_id' => $tipe_konsultasi_id,
                 ]);
             } else {
-                $web_registration->tipe_konsultasi_id = $tipe_konsultasi_id;
-                $web_registration->save();
+                if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
+                    $wb             = new WablasController;
+                    $wb->tenant     = $this->tenant;
+                    $message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
+                    if (!is_null( $message_wablas )) {
+                        $message    = $message_wablas;
+                    }
+                } else {
+                    $web_registration->tipe_konsultasi_id = $tipe_konsultasi_id;
+                    $web_registration->save();
+                }
             }
         }
 
-        if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
-            $wb             = new WablasController;
-            $wb->tenant     = $this->tenant;
-            $message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
-            if (!is_null( $message_wablas )) {
-                $message    = $message_wablas;
-            }
-        }
 
         $message =  view('web_registrations.message', compact(
             'message'
