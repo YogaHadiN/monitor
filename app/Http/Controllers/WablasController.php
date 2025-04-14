@@ -125,6 +125,7 @@ class WablasController extends Controller
             ]);
             $no_telp->room_id = $this->room_id;
             $no_telp->save();
+            $no_telp->touch();
 
             $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                      ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
