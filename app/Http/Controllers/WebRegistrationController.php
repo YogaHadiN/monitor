@@ -305,6 +305,10 @@ class WebRegistrationController extends Controller
                     'tipe_konsultasi_id' => $tipe_konsultasi_id,
                 ]);
             } else {
+                Log::info("=========================================");
+                Log::info("Tipe Konsultasi Id");
+                Log::info( $tipe_konsultasi_id );
+                Log::info("=========================================");
                 if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
                     $wb             = new WablasController;
                     $wb->tenant     = $this->tenant;
