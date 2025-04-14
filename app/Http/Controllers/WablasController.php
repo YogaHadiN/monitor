@@ -576,7 +576,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
             is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
-            if ( $this->message_type == 'image' ) {
+            if ( $this->message_type == 'file_attachment' ) {
                 $this->whatsapp_registration->antrian->kartu_asuransi_image = $this->uploadImage();
                 $this->whatsapp_registration->antrian->save();
             } else {
@@ -2965,7 +2965,7 @@ class WablasController extends Controller
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
             ) {
-                if ( $this->message_type == 'image' ) {
+                if ( $this->message_type == 'file_attachment' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
                 }

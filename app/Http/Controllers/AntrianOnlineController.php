@@ -658,11 +658,15 @@ class AntrianOnlineController extends Controller
     }
     public function poliSedangLibur($kodepoli){
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
-        $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
-        $tenant = Tenant::find(1);
-        return
-            !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari_id', date("N"))->exists()
-            || ( !$tenant->dentist_available && $kodepoli == '002' );
+        if ( !is_null( $poli_bpjs ) ) {
+            $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
+            $tenant = Tenant::find(1);
+            return
+                !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari_id', date("N"))->exists()
+                || ( !$tenant->dentist_available && $kodepoli == '002' );
+        } else {
+            return true;
+        }
     }
 
     public function dokterTidakDitemukan($kodedokter){
