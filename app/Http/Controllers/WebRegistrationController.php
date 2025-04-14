@@ -552,6 +552,9 @@ class WebRegistrationController extends Controller
             $message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas hari ini';
         }
 
+        Log::info("============================================");
+        Log::info( $message );
+        Log::info("============================================");
         return [
             'count'              => count( $petugas_pemeriksas ),
             'petugas'            => $petugas_pemeriksas ,

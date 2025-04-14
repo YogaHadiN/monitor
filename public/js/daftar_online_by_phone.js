@@ -23,9 +23,6 @@ function submit(control, route_parameter) {
         '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
     );
 
-    console.log("value");
-    console.log(value);
-
     $.post(
         base + "/daftar_online_by_phone/submit/" + route_parameter,
         {
