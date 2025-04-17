@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-/* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
-/* Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
+Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']);
+Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
 
 Route::get('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']);
 Route::post('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
@@ -41,7 +41,7 @@ Route::post('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::
 Route::get('antrian_online/bpjs/auth', [\App\Http\Controllers\AntrianOnlineController::class, 'token']);
 
 Route::get("antrian_online/bpjs/ref/poli/tanggal/{tanggal}", [
-    \App\Http\Controllers\AntrianOnlineController::class, 
+    \App\Http\Controllers\AntrianOnlineController::class,
     "status_antrean"
 ]);
 
@@ -52,27 +52,27 @@ Route::group([
 ], function(){
 
     Route::get("antrian_online/bpjs/antrean/status/{kode_poli}/{tanggalperiksa}", [
-        \App\Http\Controllers\AntrianOnlineController::class, 
+        \App\Http\Controllers\AntrianOnlineController::class,
         "status_antrean"
     ]);
 
     Route::post("antrian_online/bpjs/antrean", [
-        \App\Http\Controllers\AntrianOnlineController::class, 
+        \App\Http\Controllers\AntrianOnlineController::class,
         "ambil_antrean"
     ]);
 
     Route::get("antrian_online/bpjs/antrean/sisapeserta/{nomorkartu_jkn}/{kode_poli}/{tanggalperiksa}", [
-        \App\Http\Controllers\AntrianOnlineController::class, 
+        \App\Http\Controllers\AntrianOnlineController::class,
         "sisa_antrean"
     ]);
 
     Route::post("antrian_online/bpjs/peserta", [
-        \App\Http\Controllers\AntrianOnlineController::class, 
+        \App\Http\Controllers\AntrianOnlineController::class,
         "pasien_baru"
     ]);
 
     Route::put("antrian_online/bpjs/antrean/batal", [
-        \App\Http\Controllers\AntrianOnlineController::class, 
+        \App\Http\Controllers\AntrianOnlineController::class,
         "batal_antrean"
     ]);
 

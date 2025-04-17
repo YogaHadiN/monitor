@@ -102,6 +102,7 @@ class WablasController extends Controller
             if (
                 $this->message_type == 'file_attachment'
             ) {
+                $this->message_type == 'image';
                 $this->image_url = Input::get('payload')['message']['payload']['url'];
                 if (isset(
                     Input::get('payload')['message']['payload']['caption']
@@ -155,6 +156,8 @@ class WablasController extends Controller
 
             $this->tenant = Tenant::find( $tenant_id );
             $this->message = strtolower( $this->message );
+        } else {
+            Log::info( Input::all() );
         }
 	}
     public function wablasGet(){
@@ -576,7 +579,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
             is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
-            if ( $this->message_type == 'file_attachment' ) {
+            if ( $this->message_type == 'image' ) {
                 $this->whatsapp_registration->antrian->kartu_asuransi_image = $this->uploadImage();
                 $this->whatsapp_registration->antrian->save();
             } else {
@@ -2965,7 +2968,7 @@ class WablasController extends Controller
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
             ) {
-                if ( $this->message_type == 'file_attachment' ) {
+                if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
                 }
@@ -4092,7 +4095,7 @@ class WablasController extends Controller
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(5);
     }
     public function isPicture(){
-        if ( $this->message_type == 'file_attachment' ) {
+        if ( $this->message_type == 'image' ) {
             return true;
         }
         return false;
@@ -5749,20 +5752,23 @@ class WablasController extends Controller
 
     // QISCUS
     public function sendBotCake($message){
+        if (!is_null( $this->room_id )) {
+            $app_id   = env('QISCUS_APP_ID');
+            $url      = "https://omnichannel.qiscus.com/$app_id/bot";
+            $agent_id = $app_id . '_admin@qismo.com';
+             $data = [
+               "sender_email" => $agent_id,
+               "message"      => $message,
+               "type"         => "text",
+               "room_id"      => $this->room_id
+            ];
 
-        $app_id   = env('QISCUS_APP_ID');
-        $url      = "https://omnichannel.qiscus.com/$app_id/bot";
-        $agent_id = $app_id . '_admin@qismo.com';
-         $data = [
-           "sender_email" => $agent_id,
-           "message"      => $message,
-           "type"         => "text",
-           "room_id"      => $this->room_id
-        ];
-
-        $response = Http::withHeaders([
-                        'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
-                    ])->post( $url, $data);
+            $response = Http::withHeaders([
+                            'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
+                        ])->post( $url, $data);
+        } else {
+            echo $message;
+        }
     }
 
     public function createReservasiOnline($konfirmasi_sdk = false){
