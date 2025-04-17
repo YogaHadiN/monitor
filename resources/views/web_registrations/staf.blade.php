@@ -13,6 +13,6 @@
         @endif
     </button>
 @endforeach
-<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi(this);return false;">
     Ulangi
 </button>

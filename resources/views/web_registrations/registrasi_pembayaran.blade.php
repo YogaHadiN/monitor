@@ -10,6 +10,6 @@
 <button class="btn btn-info btn-lg btn-block" value="3" onclick="submit(this, 'pembayaran');return false;">
   Lainnya
 </button>
-<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi(this);return false;">
     Ulangi
 </button>

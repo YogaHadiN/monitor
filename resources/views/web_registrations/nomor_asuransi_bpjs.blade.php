@@ -9,7 +9,7 @@
 <button class="btn btn-info btn-lg btn-block not_a_value" id="submit_nomor_asuransi_bpjs_button" onclick="validasiNomorKartuAktif(this);return false;">
     Submit
 </button>
-<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+<button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi(this);return false;">
     Ulangi
 </button>
 <script charset="utf-8">

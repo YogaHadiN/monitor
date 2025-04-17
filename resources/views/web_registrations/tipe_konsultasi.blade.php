@@ -12,7 +12,7 @@
 </button>
 
 @if ($antrians->count())
-    <button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi();return false;">
+    <button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi(this);return false;">
         Kembali
     </button>
 @endif

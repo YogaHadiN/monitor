@@ -79,7 +79,10 @@ function lanjutkan() {
         }
     );
 }
-function ulangi() {
+function ulangi(control) {
+    $(control).html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
     $.post(
         base + "/daftar_online_by_phone/submit/ulangi",
         {
