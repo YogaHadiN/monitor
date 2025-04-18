@@ -85,7 +85,7 @@ class WablasController extends Controller
 	public $random_string;
 	public $no_telp;
 	public $message;
-	public $message_type;
+	public $essage_type;
 	public $image_url;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
@@ -1286,7 +1286,6 @@ class WablasController extends Controller
 
             \Storage::disk('s3')->put($name, $contents);
             return $name;
-
         } else {
             return '';
         }
