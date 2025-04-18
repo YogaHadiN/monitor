@@ -156,6 +156,8 @@ class WablasController extends Controller
 
             $this->tenant = Tenant::find( $tenant_id );
             $this->message = strtolower( $this->message );
+            Log::info('message_type');
+            Log::info( $this->message_type );
         } else {
             Log::info( Input::all() );
         }
