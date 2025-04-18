@@ -102,7 +102,7 @@ class WablasController extends Controller
             if (
                 $this->message_type == 'file_attachment'
             ) {
-                $this->message_type == 'image';
+                $this->message_type = 'image';
                 $this->image_url = Input::get('payload')['message']['payload']['url'];
                 if (isset(
                     Input::get('payload')['message']['payload']['caption']
