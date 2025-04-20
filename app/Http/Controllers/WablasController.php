@@ -148,6 +148,12 @@ class WablasController extends Controller
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->first();
+
+        Log::info( $this->room_id );
+        Log::info( $this->no_telp );
+        Log::info( $this->message_type );
+        Log::info( $this->image_url );
+        Log::info( $this->message );
 	}
 
     public function wablasGet(){
@@ -454,9 +460,6 @@ class WablasController extends Controller
         if ( !is_null($this->whatsapp_registration) ) {
             $this->antrian = $this->whatsapp_registration->antrian;
         }
-
-        /* $this->antrian  = Antrian::where('kode_unik', $this->message ) */
-        /*                          ->first(); */
 
         $response              = '';
         $input_tidak_tepat     = false;
