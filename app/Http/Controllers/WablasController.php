@@ -95,8 +95,12 @@ class WablasController extends Controller
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
         $this->tenant = Tenant::find( $tenant_id );
-        Log::info(__LINE__);
-        Log::info( $this->tenant );
+
+        if (
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->estetika_buka = false;
+        }
 
         if ( !is_null( Input::get('payload') ) ) {
             $this->room_id      = Input::get('payload')['room']['id'];
@@ -123,46 +127,29 @@ class WablasController extends Controller
             } else {
                 $this->message = null;
             }
-
-
-            $no_telp = NoTelp::firstOrCreate([
-                'no_telp' => $this->no_telp,
-                'tenant_id' => 1
-            ]);
-            $no_telp->room_id = $this->room_id;
-            $no_telp->save();
-            $no_telp->touch();
-
-            $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                                     ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                     ->first();
-
-            if (
-                ( date('w') < 1 ||  date('w') > 5)
-            ) {
-                $this->gigi_buka = false;
-            }
-
-            if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam
-                $this->gigi_buka = false;
-            }
-
-            if (
-                ( date('w') < 1 ||  date('w') > 5)
-            ) {
-                $this->estetika_buka = false;
-            }
-
-            if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore
-                $this->estetika_buka = false;
-            }
-
             $this->message = strtolower( $this->message );
+
         } else {
-            $this->chatBotLog(__LINE__);
-            Log::info( Input::all() );
+            $this->room_id      = null;
+            $this->no_telp      = Input::get('phone');
+            $this->message_type = Input::get('messageType');
+            $this->image_url    = Input::get('url');
+            $this->message      = strtolower(Input::get('message'));
         }
+
+        $no_telp = NoTelp::firstOrCreate([
+            'no_telp' => $this->no_telp,
+            'tenant_id' => 1
+        ]);
+        $no_telp->room_id = $this->room_id;
+        $no_telp->save();
+        $no_telp->touch();
+
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                 ->first();
 	}
+
     public function wablasGet(){
         return 'ok';
     }
