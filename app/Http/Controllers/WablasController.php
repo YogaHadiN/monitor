@@ -157,6 +157,7 @@ class WablasController extends Controller
             $this->tenant = Tenant::find( $tenant_id );
             $this->message = strtolower( $this->message );
         } else {
+            $this->chatBotLog(__LINE__);
             Log::info( Input::all() );
         }
 	}
