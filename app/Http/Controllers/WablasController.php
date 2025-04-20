@@ -92,6 +92,8 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        $tenant_id = 1;
+        session()->put('tenant_id', $tenant_id);
 
         if ( !is_null( Input::get('payload') ) ) {
             $this->room_id      = Input::get('payload')['room']['id'];
@@ -151,8 +153,6 @@ class WablasController extends Controller
             if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore
                 $this->estetika_buka = false;
             }
-            $tenant_id = 1;
-            session()->put('tenant_id', $tenant_id);
 
             $this->tenant = Tenant::find( $tenant_id );
             $this->message = strtolower( $this->message );
