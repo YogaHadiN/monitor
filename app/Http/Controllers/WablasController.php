@@ -149,11 +149,18 @@ class WablasController extends Controller
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->first();
 
+        Log::info("=================================");
+        Log::info( 'room_id' );
         Log::info( $this->room_id );
+        Log::info( 'no_telp' );
         Log::info( $this->no_telp );
+        Log::info('message_type');
         Log::info( $this->message_type );
+        Log::info('image_url');
         Log::info( $this->image_url );
+        Log::info('message');
         Log::info( $this->message );
+        Log::info("=================================");
 	}
 
     public function wablasGet(){
