@@ -94,6 +94,9 @@ class WablasController extends Controller
 	public function __construct(){
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
+        $this->tenant = Tenant::find( $tenant_id );
+        Log::info(__LINE__);
+        Log::info( $this->tenant );
 
         if ( !is_null( Input::get('payload') ) ) {
             $this->room_id      = Input::get('payload')['room']['id'];
@@ -154,7 +157,6 @@ class WablasController extends Controller
                 $this->estetika_buka = false;
             }
 
-            $this->tenant = Tenant::find( $tenant_id );
             $this->message = strtolower( $this->message );
         } else {
             $this->chatBotLog(__LINE__);
