@@ -137,13 +137,15 @@ class WablasController extends Controller
             $this->message      = strtolower(Input::get('message'));
         }
 
-        $no_telp = NoTelp::firstOrCreate([
-            'no_telp' => $this->no_telp,
-            'tenant_id' => 1
-        ]);
-        $no_telp->room_id = $this->room_id;
-        $no_telp->save();
-        $no_telp->touch();
+        if ( !is_null( $this->no_telp ) ) {
+            $no_telp = NoTelp::firstOrCreate([
+                'no_telp' => $this->no_telp,
+                'tenant_id' => 1
+            ]);
+            $no_telp->room_id = $this->room_id;
+            $no_telp->save();
+            $no_telp->touch();
+        }
 
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
@@ -163,9 +165,6 @@ class WablasController extends Controller
         Log::info("=================================");
 	}
 
-    public function wablasGet(){
-        return 'ok';
-    }
 
     public function libur(){
         $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1446 H";
@@ -204,7 +203,8 @@ class WablasController extends Controller
 
 	public function webhook(){
         if (
-            !is_null( $this->message )
+            !is_null( $this->message ) &&
+            !is_null( $this->no_telp )
             /* && $this->no_telp == '6281381912803' */
         ) {
             $this->chatBotLog(__LINE__);
