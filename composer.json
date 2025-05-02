@@ -65,12 +65,9 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "classmap-authoritative": true
     },
     "minimum-stability": "dev",
-    "prefer-stable": true,
-    "config": {
-        "optimize-autoloader": true,
-        "classmap-authoritative": true
-    }
+    "prefer-stable": true
 }
