@@ -34,6 +34,8 @@ class WebRegistrationController extends Controller
         $this->tenant = Tenant::find(1);
         /* $this->middleware('onlyWhenWebRegistrationEnabled', ['only' => ['daftar_online', 'daftar_online_by_phone', 'daftar_online_post']]); */
 
+        $this->middleware('returnErrorIfAntrianDokterGigiNonAktif', ['except' => []]);
+
     }
 
     public function daftar_online(){
@@ -200,7 +202,7 @@ class WebRegistrationController extends Controller
                                                     ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                                                     ->get();
             /* dd( $tipe_konsultasi_id ); */
-            $message = null;
+            $this->message = null;
 
             //
             // jika dokter gigi ada tapi belum masuk waktu pendaftaran
@@ -290,12 +292,11 @@ class WebRegistrationController extends Controller
     }
     public function submit_tipe_konsultasi(){
         $tipe_konsultasi_id = Input::get('value');
-
         $no_telp            = Input::get('no_telp');
         $cek                = $this->cek( $tipe_konsultasi_id );
-        $message            = $cek['message'];
+        $this->message            = $cek['message'];
         $web_registration   = null;
-        if (empty( $message )) {
+        if (empty( $this->message )) {
             $web_registration = WebRegistration::whereDate('created_at', date('Y-m-d'))
                                                 ->where('no_telp', $no_telp)
                                                 ->first();
@@ -313,15 +314,12 @@ class WebRegistrationController extends Controller
         if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
             $wb             = new WablasController;
             $wb->tenant     = $this->tenant;
-            $message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
-            if (!is_null( $message_wablas )) {
-                $message    = $message_wablas;
+            $this->message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
+            if (!is_null( $this->message_wablas )) {
+                $this->message    = $this->message_wablas;
             }
         }
-
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message'
         );
@@ -344,23 +342,21 @@ class WebRegistrationController extends Controller
         } else {
             $bpjs                                  = new BpjsApiController;
             $response                              = $bpjs->pencarianNoKartuValid( $nomor_asuransi_bpjs, true );
-            $message                               = $response['response'];
+            $this->message                               = $response['response'];
             if (
-                !is_null( $message ) &&
-                $message['aktif'] &&
-                isset( $message['kdProviderPst'] ) &&
-                $message['kdProviderPst']['kdProvider'] == '0221B119'
+                !is_null( $this->message ) &&
+                $this->message['aktif'] &&
+                isset( $this->message['kdProviderPst'] ) &&
+                $this->message['kdProviderPst']['kdProvider'] == '0221B119'
             ) { // jika aktig
-                $web_registration->nama                = $message['nama'];
-                $web_registration->tanggal_lahir       = Carbon::createFromFormat("d-m-Y", $message['tglLahir'])->format("Y-m-d");
+                $web_registration->nama                = $this->message['nama'];
+                $web_registration->tanggal_lahir       = Carbon::createFromFormat("d-m-Y", $this->message['tglLahir'])->format("Y-m-d");
             }
         }
         $web_registration->save();
 
-        $message = null;
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $this->message = null;
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message',
         );
@@ -376,10 +372,8 @@ class WebRegistrationController extends Controller
         $web_registration->nama = $nama;
         $web_registration->save();
 
-        $message = null;
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $this->message = null;
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message',
         );
@@ -395,10 +389,8 @@ class WebRegistrationController extends Controller
         $web_registration->tanggal_lahir = Carbon::createFromFormat('d-m-Y', $tanggal_lahir)->format('Y-m-d');
         $web_registration->save();
 
-        $message = null;
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $this->message = null;
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message',
         );
@@ -414,10 +406,8 @@ class WebRegistrationController extends Controller
         $web_registration->alamat = $alamat;
         $web_registration->save();
 
-        $message = null;
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $this->message = null;
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message',
         );
@@ -435,10 +425,8 @@ class WebRegistrationController extends Controller
         $web_registration->ruangan_id = $petugas_pemeriksa->ruangan_id;
         $web_registration->save();
 
-        $message = null;
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $this->message = null;
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message',
         );
@@ -448,7 +436,7 @@ class WebRegistrationController extends Controller
         $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                                                 ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                                                 ->get();
-        $message = null;
+        $this->message = null;
 
         //
         // jika dokter gigi ada tapi belum masuk waktu pendaftaran
@@ -465,11 +453,11 @@ class WebRegistrationController extends Controller
                 if (
                     $petugas_pemeriksas[0]->jam_mulai >= date("H:i:s")
                 ) {
-                    $message = 'Pendaftaran dokter gigi dimulai jam ' . $petugas_pemeriksas[0]->jam_mulai;
+                    $this->message = 'Pendaftaran dokter gigi dimulai jam ' . $petugas_pemeriksas[0]->jam_mulai;
                 } else if (
                     $jam_akhir_pendaftaran_gigi <= date("H:i:s")
                 ) {
-                    $message = 'Pendaftaran dokter gigi telah berakhir hari ini';
+                    $this->message = 'Pendaftaran dokter gigi telah berakhir hari ini';
                 }
             } else  {
 
@@ -538,7 +526,7 @@ class WebRegistrationController extends Controller
                     $petugas_pemeriksas->count() < 1
                 ) {
                     $tipe_konsultasi = TipeKonsultasi::find( $tipe_konsultasi_id );
-                    $message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas saat ini';
+                    $this->message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas saat ini';
                 }
             }
         } else {
@@ -549,16 +537,16 @@ class WebRegistrationController extends Controller
                 Log::info(Input::all());
                 Log::info('===========================');
             }
-            $message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas hari ini';
+            $this->message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas hari ini';
         }
 
         Log::info("============================================");
-        Log::info( $message );
+        Log::info( $this->message );
         Log::info("============================================");
         return [
             'count'              => count( $petugas_pemeriksas ),
             'petugas'            => $petugas_pemeriksas ,
-            'message'            => $message,
+            'message'            => $this->message,
             'tipe_konsultasi_id' => $tipe_konsultasi_id,
         ];
     }
@@ -569,7 +557,7 @@ class WebRegistrationController extends Controller
                                         ->whereDate('created_at', date('Y-m-d'))
                                         ->first();
         $bisa_digunakan = true;
-        $message = null;
+        $this->message = null;
         if (!is_null( $pasien_id )) {
             $pasien = Pasien::find( $pasien_id );
             if (!is_null( $pasien )) {
@@ -582,7 +570,7 @@ class WebRegistrationController extends Controller
                         isset( $response['pesan'] )
                     ) {
                         $bisa_digunakan = $response['bisa_digunakan'] ;
-                        $message = $response['pesan'] ;
+                        $this->message = $response['pesan'] ;
                     }
                 }
 
@@ -600,9 +588,7 @@ class WebRegistrationController extends Controller
         }
 
         $web_registration->save();
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message'
         );
@@ -638,10 +624,8 @@ class WebRegistrationController extends Controller
 
         WebRegistration::where('no_telp', $no_telp)->delete();
 
-        $message =  null;
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $this->message =  null;
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message'
         );
@@ -655,10 +639,8 @@ class WebRegistrationController extends Controller
         if ( !is_null( $web_registration ) ) {
             $web_registration->delete();
         }
-        $message =  null;
-        $message =  view('web_registrations.message', compact(
-            'message'
-        ))->render();
+        $this->message =  null;
+        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(
             'message'
         );
@@ -701,7 +683,7 @@ class WebRegistrationController extends Controller
 
         ) {
             $code                                                = $response['code'];
-            $message                                             = $response['response'];
+            $this->message                                             = $response['response'];
             if (
                 $code == 204
             ) {// jika tidak ditemukan
@@ -718,9 +700,9 @@ class WebRegistrationController extends Controller
             ){
                 // jika kartu aktif dan provider tepat
                 if (
-                    !is_null($message) &&
-                    $message['aktif'] &&
-                    $message['kdProviderPst']['kdProvider'] == '0221B119'
+                    !is_null($this->message) &&
+                    $this->message['aktif'] &&
+                    $this->message['kdProviderPst']['kdProvider'] == '0221B119'
                 ) {
                     $pesan = 'Kartu bisa digunakan';
                     $bisa_digunakan = true;
@@ -730,11 +712,11 @@ class WebRegistrationController extends Controller
                     );
 
                 } else if(
-                    !is_null($message) &&
-                    !$message['aktif']
+                    !is_null($this->message) &&
+                    !$this->message['aktif']
                 ) {
                     $pesan = 'Kartu tidak aktif karena : ';
-                    $pesan .= $message['ketAktif'];
+                    $pesan .= $this->message['ketAktif'];
                     $bisa_digunakan = false;
 
                     return compact(
@@ -743,10 +725,10 @@ class WebRegistrationController extends Controller
                     );
 
                 } else if(
-                    !is_null($message) &&
-                    $message['kdProviderPst']['kdProvider'] !== '0221B119'
+                    !is_null($this->message) &&
+                    $this->message['kdProviderPst']['kdProvider'] !== '0221B119'
                 ) {
-                    $pesan = 'kartu tidak dapat digunakan karena tercatat aktif di : ' . $message['kdProviderPst']['kdProvider'];
+                    $pesan = 'kartu tidak dapat digunakan karena tercatat aktif di : ' . $this->message['kdProviderPst']['kdProvider'];
                     $pesan .= "Jika menurut Anda ini adalah kesalahan, silahkan langsung daftar di klinik";
                     $bisa_digunakan = false;
 

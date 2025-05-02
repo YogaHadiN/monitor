@@ -39,7 +39,7 @@ class AntrianController extends Controller
         'libur' => $libur
     ]);
   }
-	  
+
 	public function antri($id){
 		$ap                 = AntrianPoli::find($id);
 		$totalAntrian       = $this->totalAntrian($ap->tanggal);
@@ -54,7 +54,7 @@ class AntrianController extends Controller
 	public function fail(){
 		return view('unavailable');
 	}
-	
+
 	public function totalAntrian($tanggal){
 		$antrians = [];
 		$apx_per_tanggal = AntrianPeriksa::where('tanggal',  $tanggal)
@@ -82,7 +82,7 @@ class AntrianController extends Controller
 		if ( $px_per_tanggal->count() ) {
 			$antrian_saat_ini   = array_search($px_per_tanggal->first()->antrian, $antrians);
 		}
-		
+
 		$result = compact(
 			'antrians',
 			'antrian_saat_ini'
@@ -176,7 +176,7 @@ class AntrianController extends Controller
 			$angka = str_split($angka);
 			if(
 				$angka[1] == '0' ||
-				$angka[1] == '1'  &&  (int)$angka[2] < 2 
+				$angka[1] == '1'  &&  (int)$angka[2] < 2
 			){
 				$result[] =	$huruf;
 				$result[] =	(int) $angka[0];
@@ -211,7 +211,7 @@ class AntrianController extends Controller
 		$result[] =	'silahkanmenuju';
 		$result[] = $ruangan['file_panggilan'];
 		return $result;
-	
+
 	}
 
 	public function updateJumlahAntrianBaru( $panggil_pasien = true ){
@@ -227,7 +227,7 @@ class AntrianController extends Controller
             $ruangan_id = $ruangan['id'] ;
             $today = date('Y-m-d');
             $antrian_dipanggil       = Antrian::with(
-                                        'antriable', 
+                                        'antriable',
                                     )
                                     ->where('antriable_type', 'not like', 'App\Models\Periksa')
                                     ->where('tenant_id',1)
@@ -329,12 +329,12 @@ class AntrianController extends Controller
         // jika qr tidak hari ini, maka throw error tidak ditemukan
         // jika qr sudah diproses maka throw error tidak ditemukan
         if (
-            is_null( $antrian ) || 
+            is_null( $antrian ) ||
             (
                 !is_null( $antrian ) &&
                 (
-                    is_null( $antrian->qr_code_path_s3 ) || 
-                    date('Ymd') !== date('Ymd', strtotime($antrian->created_at)) || 
+                    is_null( $antrian->qr_code_path_s3 ) ||
+                    date('Ymd') !== date('Ymd', strtotime($antrian->created_at)) ||
                     $antrian->antriable_type !== 'App\Models\Antrian'
                 )
             )
@@ -344,7 +344,7 @@ class AntrianController extends Controller
         $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
         return "<img src='$urlFile' alt=''/>";
     }
-    
+
     public function convertSoundToArrayMobile(){
 		$nomor_antrian = Input::get('nomor_antrian');
 		$no_telp = Input::get('no_telp');
@@ -409,7 +409,7 @@ class AntrianController extends Controller
 			$angka = str_split($angka);
 			if(
 				$angka[1] == '0' ||
-				$angka[1] == '1'  &&  (int)$angka[2] < 2 
+				$angka[1] == '1'  &&  (int)$angka[2] < 2
 			){
 				$result[] =	$huruf;
 				$result[] =	(int) $angka[0];
@@ -473,4 +473,8 @@ class AntrianController extends Controller
             'antrian_view'
         );
     }
+    public function phpinfo(){
+        return phpinfo();
+    }
+
 }

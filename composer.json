@@ -12,11 +12,10 @@
         "php": "^8.2",
         "browner12/helpers": "^3.4",
         "endroid/qr-code": "^4.8",
-        "fruitcake/laravel-cors": "^2.0.5",
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^2.7",
-        "laravel/framework": "^9.0",
-        "laravel/sanctum": "^2.14",
+        "laravel/framework": "^10.0",
+        "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
         "laravelcollective/html": "^6.4",
         "league/flysystem-aws-s3-v3": "^3.0",
@@ -27,10 +26,10 @@
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
         "laravel/sail": "^1.0.1",
-        "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^6.1",
-        "phpunit/phpunit": "^9.5.10",
-        "spatie/laravel-ignition": "^1.0"
+        "mockery/mockery": "^1.5",
+        "nunomaduro/collision": "^7.0",
+        "phpunit/phpunit": "^10.0",
+        "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
         "psr-4": {
