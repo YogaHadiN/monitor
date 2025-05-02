@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "aws/aws-sdk-php": "^3.343",
         "browner12/helpers": "^3.4",
         "endroid/qr-code": "^4.8",
         "guzzlehttp/guzzle": "^7.2",
