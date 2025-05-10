@@ -92,6 +92,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        $this->image_url = null;
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
         $this->tenant = Tenant::find( $tenant_id );
@@ -4810,6 +4811,7 @@ class WablasController extends Controller
                 'no_telp'       => $this->no_telp,
                 'message'       => $this->message,
                 'tanggal'       => date("Y-m-d H:i:s"),
+                'image_url'     => $this->image_url,
                 'sending'       => 0,
                 'sudah_dibalas' => 0,
                 'tenant_id'     => 1,
