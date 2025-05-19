@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToTenant; 
+use App\Traits\BelongsToTenant;
 use Carbon\Carbon;
 use Log;
 
@@ -25,6 +25,17 @@ class PetugasPemeriksa extends Model
         return $this->antrian->count();
     }
 
+    public function getBelumWaktunyaPraktekAttribute(){
+        $now = Carbon::now();
+        $jam_mulai_praktek = Carbon::parse( $this->jam_mulai_default );
+        if (
+            $jam_mulai_praktek->isAfter( $now )
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     public function getAntrianAttribute(){
         return Antrian::whereDate("created_at",  date('Y-m-d') )
                                 ->whereRaw(
@@ -41,21 +52,21 @@ class PetugasPemeriksa extends Model
 
     public function getWaktuTungguAttribute(){
         $count = $this->sisa_antrian;
-
-
-/*         $sisa_antrian_online = Antrian::whereDate("created_at",  date('Y-m-d') ) */
-/*                                 ->whereRaw( */
-/*                                     " antriable_type = 'App\\\\\Models\\\\\Antrian' " */
-/*                                     )->where('ruangan_id', $this->ruangan_id) */
-/*                                 ->count(); */
-
         if ( $count < 4 ) {
             return '10-20 menit';
         } else {
-            return 3 * $count . '-' . 10 * $count . ' menit';
+            $menit_dokter_datang = 0;
+            if ( $this->belum_waktunya_praktek ) {
+                $now = Carbon::now();
+                $jam_mulai = Carbon::parse( $this->jam_mulai_default );
+                $menit_dokter_datang = $now->diffInMinutes($jam_mulai);
+            }
+            $start = ( 4 * $count ) + $menit_dokter_datang;
+            $to = ( 10 * $count ) + $menit_dokter_datang;
+            return $start . '-' . $to . ' menit';
         }
     }
-    
+
     public function getTanggalAttribute( $value ) {
         return Carbon::parse($value)->format('d-m-Y');
     }
@@ -65,7 +76,7 @@ class PetugasPemeriksa extends Model
     public function getJamMulaiAttribute($value){
         return Carbon::parse($value)->format("H:i");
     }
-    
+
     public function getAntrianTerpendekAttribute() {
         $petugas = PetugasPemeriksa::where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
                                     ->where('tanggal', date('Y-m-d'))
