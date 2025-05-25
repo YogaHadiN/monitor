@@ -19,6 +19,36 @@ class FonnteController extends Controller
         Log::info('fonnte');
         Log::info('postWebhook');
         /* $this->webhook(); */
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        $device = $data['device'];
+        $sender = $data['sender'];
+        $message = $data['message'];
+        $member= $data['member']; //group member who send the message
+        $name = $data['name'];
+        $location = $data['location'];
+        //data below will only received by device with all feature package
+        //start
+        $url =  $data['url'];
+        $filename =  $data['filename'];
+        $extension=  $data['extension'];
+
+        $data = [
+            $json ,
+            $data ,
+            $device ,
+            $sender ,
+            $message ,
+            $member,
+            $name ,
+            $location ,
+            $url ,
+            $filename ,
+            $extension
+        ];
+
+        Log::info($data);
+
     }
     public function getChaning(){
         Log::info('fonnte');
