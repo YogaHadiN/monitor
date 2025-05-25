@@ -152,6 +152,7 @@ class FonnteController extends Controller
             /* ]; */
         }
 
+        $reply = 'okeoke';
         Log::info('sender');
         Log::info($sender);
         Log::info('reply');
