@@ -159,7 +159,9 @@ class FonnteController extends Controller
         Log::info($sender);
         Log::info('reply');
         Log::info($reply);
-        return $this->sendFonnte($sender, $reply);
+
+        Log::info(env('FONNTE_TOKEN'));
+        $this->sendFonnte($sender, $reply);
     }
 
     private function sendFonnte($target, $data) {
