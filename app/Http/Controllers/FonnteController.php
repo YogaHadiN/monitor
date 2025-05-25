@@ -33,17 +33,18 @@ class FonnteController extends Controller
         $filename =  $data['filename'];
         $extension=  $data['extension'];
 
-        $data = compact( $json ,
-            $data ,
-            $device ,
-            $sender ,
-            $message ,
-            $member,
-            $name ,
-            $location ,
-            $url ,
-            $filename ,
-            $extension
+        $data = compact(
+            'json' ,
+            'data' ,
+            'device' ,
+            'sender' ,
+            'message' ,
+            'member',
+            'name' ,
+            'location' ,
+            'url' ,
+            'filename' ,
+            'extension'
         );
 
         Log::info($data);
