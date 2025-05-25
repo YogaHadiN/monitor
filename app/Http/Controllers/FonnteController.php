@@ -151,6 +151,11 @@ class FonnteController extends Controller
             /*     "message" => $message */
             /* ]; */
         }
+
+        Log::info('sender');
+        Log::info($sender);
+        Log::info('reply');
+        Log::info($reply);
         $this->sendFonnte($sender, $reply);
     }
 
