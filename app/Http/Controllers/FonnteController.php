@@ -155,13 +155,8 @@ class FonnteController extends Controller
         $reply = [
             'message' => 'okeoke'
         ];
-        Log::info('sender');
-        Log::info($sender);
-        Log::info('reply');
-        Log::info($reply);
-
         Log::info(env('FONNTE_TOKEN'));
-        $this->sendFonnte($sender, $reply);
+        /* $this->sendFonnte($sender, $reply); */
     }
 
     private function sendFonnte($target, $data) {
