@@ -192,6 +192,14 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
+        $no_telp_table = NoTelp::where('no_telp', $this->no_telp)->first();
+        if ( $this->fonnte ) {
+            $no_telp_table->fonnte = 1;
+        } else {
+            $no_telp_table->fonnte = 0;
+        }
+        $no_telp_table->save();
+
         if (
             !is_null( $this->message ) &&
             !is_null( $this->no_telp )
@@ -2500,9 +2508,6 @@ class WablasController extends Controller
                 $endOfDay
             ])
             ->exists();
-        Log::info( '===============================' );
-        Log::info( $whatsappMainMenuExists ? 'exists' : 'not exists' );
-        Log::info( '===============================' );
         return $whatsappMainMenuExists;
     }
 
