@@ -153,7 +153,7 @@ class FonnteController extends Controller
         Log::info("======================");
         Log::info(env('FONNTE_TOKEN'));
         Log::info("======================");
-        /* $this->sendFonnte($sender, $reply); */
+        $this->sendFonnte($sender, $reply);
     }
 
     private function sendFonnte($target, $data) {
