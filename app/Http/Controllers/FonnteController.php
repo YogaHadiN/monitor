@@ -169,7 +169,7 @@ class FonnteController extends Controller
 
     }
 
-    private function sendFonnte($target, $data) {
+    public function sendFonnte($target, $data) {
         $curl = curl_init();
         curl_setopt_array($curl, array(
           CURLOPT_URL => "https://api.fonnte.com/send",
