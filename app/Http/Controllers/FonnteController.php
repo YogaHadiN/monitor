@@ -153,9 +153,13 @@ class FonnteController extends Controller
         }
 
         $reply = [
-            'message' => 'okeoke'
+            'message' => 'okeoke',
+            'url' => null,
+            'filename' => null
         ];
+        Log::info("======================");
         Log::info(env('FONNTE_TOKEN'));
+        Log::info("======================");
         /* $this->sendFonnte($sender, $reply); */
     }
 
