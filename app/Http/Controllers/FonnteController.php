@@ -83,16 +83,9 @@ class FonnteController extends Controller
      */
     private function webhook()
     {
-        Log::info(86);
         header('Content-Type: application/json; charset=utf-8');
         $json      = file_get_contents('php://input');
         $data      = json_decode($json, true);
-        Log::info("===============================");
-        Log::info("DATA");
-        Log::info($data);
-        Log::info("JSON");
-        Log::info($json);
-        Log::info("===============================");
         $device    = $data['device'];
         $sender    = $data['sender'];
         $message   = $data['message'];
@@ -187,6 +180,8 @@ class FonnteController extends Controller
 
         $response = curl_exec($curl);
         curl_close($curl);
+
+        Log::info('respo');
 
         return $response;
     }
