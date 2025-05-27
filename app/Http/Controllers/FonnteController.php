@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Log;
+use App\Http\Controllers\WablasController;
 use Input;
 
 class FonnteController extends Controller
@@ -154,6 +155,17 @@ class FonnteController extends Controller
         Log::info(env('FONNTE_TOKEN'));
         Log::info("======================");
         $this->sendFonnte($sender, $reply);
+
+        $wablas               = new WablasController;
+        $wablas->room_id      = null;
+        $wablas->no_telp      = $sender;
+        $wablas->message_type = isset( $url ) ? 'image' : 'text';
+        $wablas->image_url    = $url
+        $wablas->message      = strtolower($message);
+        $wablas->fonnte      = true;
+
+
+
     }
 
     private function sendFonnte($target, $data) {

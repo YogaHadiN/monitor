@@ -87,11 +87,13 @@ class WablasController extends Controller
 	public $message;
 	public $essage_type;
 	public $image_url;
+	public $fonnte;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
     public $jadwalGigi;
 
 	public function __construct(){
+        $this->fonnte = false;
         $this->image_url = null;
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
@@ -5754,6 +5756,16 @@ class WablasController extends Controller
             $response = Http::withHeaders([
                             'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
                         ])->post( $url, $data);
+        } else if (
+            $this->fonnte
+        ) {
+            $fonnte = new FonnteController;
+            $reply = [
+                'message' => $this->message,
+                'url' => $this->image_url,
+                'filename' => null
+            ];
+            $fonnte->sendFonnte( $this->no_telp, $reply );
         } else {
             echo $message;
         }
