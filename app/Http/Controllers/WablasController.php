@@ -197,6 +197,7 @@ class WablasController extends Controller
             $no_telp_table->fonnte = 1;
         } else {
             $no_telp_table->fonnte = 0;
+            $no_telp_table->updated_at_qiscus = date('Y-m-d H:i:s');
         }
         $no_telp_table->save();
 

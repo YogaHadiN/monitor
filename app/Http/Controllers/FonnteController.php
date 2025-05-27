@@ -17,9 +17,6 @@ class FonnteController extends Controller
         /* $this->webhook(); */
     }
     public function postWebhook(){
-        Log::info('fonnte');
-        Log::info('postWebhook');
-
         $json      = file_get_contents('php://input');
         $data      = json_decode($json, true);
         if (!isset($data['sender']) || !isset($data['message'])) {
