@@ -19,7 +19,13 @@ class FonnteController extends Controller
     public function postWebhook(){
         Log::info('fonnte');
         Log::info('postWebhook');
-        $this->webhook();
+        if (!isset($data['sender']) || !isset($data['message'])) {
+            Log::error('Invalid payload', $data);
+            return;
+        } else {
+            $this->webhook();
+        }
+
         /* $json = file_get_contents('php://input'); */
         /* $data = json_decode($json, true); */
         /* $device = $data['device']; */
@@ -146,23 +152,15 @@ class FonnteController extends Controller
             /* ]; */
         }
 
-        $reply = [
-            'message' => 'okeoke : ' . $message,
-            'url' => null,
-            'filename' => null
-        ];
-        Log::info("======================");
-        Log::info(env('FONNTE_TOKEN'));
-        Log::info("======================");
-        $this->sendFonnte($sender, $reply);
 
         $wablas               = new WablasController;
         $wablas->room_id      = null;
         $wablas->no_telp      = $sender;
         $wablas->message_type = isset( $url ) ? 'image' : 'text';
-        $wablas->image_url    = $url
+        $wablas->image_url = isset($url) ? $url : null;
         $wablas->message      = strtolower($message);
         $wablas->fonnte      = true;
+        $wablas->webhook();
 
 
 
@@ -191,6 +189,17 @@ class FonnteController extends Controller
         ));
 
         $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+        if ($response === false || $httpCode !== 200) {
+            Log::error('Fonnte API failed', [
+                'response' => $response,
+                'error' => curl_error($curl),
+                'code' => $httpCode,
+            ]);
+        } else {
+            Log::info('Fonnte response', ['response' => $response]);
+        }
         curl_close($curl);
 
         Log::info('respo');
