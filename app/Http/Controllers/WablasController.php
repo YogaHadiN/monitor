@@ -5762,7 +5762,7 @@ class WablasController extends Controller
             $fonnte = new FonnteController;
             $reply = [
                 'message' => $message,
-                'url' => $this->image_url,
+                'url' => null,
                 'filename' => null
             ];
             $fonnte->sendFonnte( $this->no_telp, $reply );
