@@ -142,7 +142,9 @@ class WablasController extends Controller
         $whatsapp_bot_sql = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
                                  ->toRawSql();
-        Log::info($whatsapp_bot_sql);
+        if ( $this->no_telp == '6281381912803' ) {
+            Log::info($whatsapp_bot_sql);
+        }
 	}
 
 
