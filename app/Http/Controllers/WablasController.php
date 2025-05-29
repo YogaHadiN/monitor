@@ -2921,6 +2921,8 @@ class WablasController extends Controller
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
+        Log::info('whatsapp_bot');
+        Log::info( json_encode( $this->whatsapp_bot ) );
         if (!is_null( $this->whatsapp_bot )) {
             $this->whatsapp_bot->touch();
         }
