@@ -2706,7 +2706,7 @@ class WablasController extends Controller
 
                     foreach (PetugasPemeriksa::dokterSaatIni() as $k => $petugas) {
                         $message .= PHP_EOL;
-                        $message .= $this->tambahkanGelar( $petugas->staf->titel->titel, ucwords( strtolower($petugas->staf->nama) ) );
+                        $message .= $this->tambahkanGelar( $petugas->staf->titel->singkatan, ucwords( strtolower($petugas->staf->nama) ) );
                     }
                    $message .= PHP_EOL;
                     $message .= PHP_EOL;
