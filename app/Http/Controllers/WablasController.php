@@ -2924,6 +2924,8 @@ class WablasController extends Controller
         if (!is_null( $this->whatsapp_bot )) {
             $this->whatsapp_bot->touch();
         }
+        Log::info( $this->whatsapp_bot );
+        Log::info( $whatsapp_bot_service_id );
         $result = !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id;
         return $result;
     }
@@ -4554,6 +4556,7 @@ class WablasController extends Controller
                                 ->count();
     }
     public function registrasiAntrianOnline(){
+        $this->chatBotLog(__LINE__);
         if (
             (  date('G') <= 21 && // pendaftaran online tutup jam 21.59
             date('G') >= 7 ) || //
@@ -4572,6 +4575,7 @@ class WablasController extends Controller
                         ->exists()
             ) {
                 $this->chatBotLog(__LINE__);
+
                 $message =  'Untuk mendaftarkan pasien selanjutnya silahkan klik link di bawah ini : ';
                 $message .= PHP_EOL;
                 $message .= PHP_EOL;
