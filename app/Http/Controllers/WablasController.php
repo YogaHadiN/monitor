@@ -2924,10 +2924,12 @@ class WablasController extends Controller
         if (!is_null( $this->whatsapp_bot )) {
             $this->whatsapp_bot->touch();
         }
-        Log::info( '$this->whatsapp_bot' );
-        Log::info( $this->whatsapp_bot );
-        Log::info( '$whatsapp_bot_service_id' );
-        Log::info( $whatsapp_bot_service_id );
+        if ( $this->no_telp == '6281381912803' ) {
+            Log::info( '$this->whatsapp_bot' );
+            Log::info( $this->whatsapp_bot );
+            Log::info( '$whatsapp_bot_service_id' );
+            Log::info( $whatsapp_bot_service_id );
+        }
         $result = !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id;
         return $result;
     }
