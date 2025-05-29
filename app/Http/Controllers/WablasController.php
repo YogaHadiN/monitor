@@ -99,11 +99,6 @@ class WablasController extends Controller
         session()->put('tenant_id', $tenant_id);
         $this->tenant = Tenant::find( $tenant_id );
 
-        if (
-            ( date('w') < 1 ||  date('w') > 5)
-        ) {
-            $this->estetika_buka = false;
-        }
 
         if ( !is_null( Input::get('payload') ) ) {
             $this->room_id      = Input::get('payload')['room']['id'];
@@ -192,6 +187,12 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
+
+        if (
+            ( date('w') < 1 ||  date('w') > 5)
+        ) {
+            $this->estetika_buka = false;
+        }
         $no_telp_table = NoTelp::where('no_telp', $this->no_telp)->first();
         if ( $this->fonnte ) {
             $no_telp_table->fonnte = 1;
@@ -2701,7 +2702,13 @@ class WablasController extends Controller
                 $staf = $this->lastStaf();
                 if (!is_null( $staf )) {
                     $message .= PHP_EOL;
-                    $message .= 'Dokter umum yang saat ini praktik adalah ' . $this->tambahkanGelar( $staf->titel, ucwords( strtolower($staf->nama) ) );
+                    $message .= 'Dokter umum yang saat ini praktik adalah ';
+
+                    foreach (PetugasPemeriksa::dokterSaatIni() as $k => $petugas) {
+                        $message .= PHP_EOL;
+                        $message .= $this->tambahkanGelar( $petugas->staf->titel, ucwords( strtolower($petugas->staf->nama) ) )
+                    }
+                   $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= 'untuk memastikan silahkan hubungi 021-5977529';
                     $message .= PHP_EOL;

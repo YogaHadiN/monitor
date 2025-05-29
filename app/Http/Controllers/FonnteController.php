@@ -59,28 +59,17 @@ class FonnteController extends Controller
 
     }
     public function getChaning(){
-        Log::info('fonnte');
-        Log::info('getChaining');
     }
     public function postChaning(){
-        Log::info('fonnte');
-        Log::info('postChaning');
     }
     public function getStatus(){
-        Log::info('fonnte');
-        Log::info('getStatus');
     }
     public function postStatus(){
-        Log::info('fonnte');
-        Log::info('postStatus');
+
     }
     public function getConnect(){
-        Log::info('fonnte');
-        Log::info('getStatus');
     }
     public function postConnect(){
-        Log::info('fonnte');
-        Log::info('postStatus');
     }
 
     /**

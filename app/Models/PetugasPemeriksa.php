@@ -18,6 +18,12 @@ class PetugasPemeriksa extends Model
     public function ruangan(){
         return $this->belongsTo(Ruangan::class);
     }
+
+    public static function dokterSaatIni(){
+        return PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
+                                ->where('tipe_konsultasi_id', 1)
+                                ->get();
+    }
     public function tipe_konsultasi(){
         return $this->belongsTo(TipeKonsultasi::class);
     }
