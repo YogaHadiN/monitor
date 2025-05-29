@@ -3677,8 +3677,8 @@ class WablasController extends Controller
                 if (
                     ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
                     ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
-                    ( !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
+                    ( !is_null( $this->message[0] ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
+                    ( !is_null( $this->message[0] ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
                 ) {
                     if (
                         ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
