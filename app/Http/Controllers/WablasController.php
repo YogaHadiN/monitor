@@ -3076,6 +3076,7 @@ class WablasController extends Controller
     /* } */
 
     public function prosesAntrianOnline(){
+        Log::info('proses antrian online');
         $this->chatBotLog(__LINE__);
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
