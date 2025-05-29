@@ -186,12 +186,8 @@ class FonnteController extends Controller
                 'error' => curl_error($curl),
                 'code' => $httpCode,
             ]);
-        } else {
-            Log::info('Fonnte response', ['response' => $response]);
         }
         curl_close($curl);
-
-        Log::info('respo');
 
         return $response;
     }
