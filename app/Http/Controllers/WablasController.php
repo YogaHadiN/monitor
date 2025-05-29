@@ -178,7 +178,6 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
-
         if ( !is_null( $this->no_telp ) ) {
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
