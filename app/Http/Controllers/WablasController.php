@@ -134,17 +134,6 @@ class WablasController extends Controller
             $this->image_url    = Input::get('url');
             $this->message      = strtolower(Input::get('message'));
         }
-
-
-        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
-                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                 ->first();
-        $whatsapp_bot_sql = WhatsappBot::where('no_telp', $this->no_telp)
-                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                                 ->toRawSql();
-        if ( $this->no_telp == '6281381912803' ) {
-            Log::info($whatsapp_bot_sql);
-        }
 	}
 
 
@@ -184,6 +173,10 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
+
+        $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
+                                 ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+                                 ->first();
         if ( !is_null( $this->no_telp ) ) {
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
@@ -207,6 +200,7 @@ class WablasController extends Controller
             $no_telp_table->updated_at_qiscus = date('Y-m-d H:i:s');
         }
         $no_telp_table->save();
+
 
         if (
             !is_null( $this->message ) &&
