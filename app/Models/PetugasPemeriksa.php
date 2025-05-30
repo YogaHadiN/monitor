@@ -22,6 +22,8 @@ class PetugasPemeriksa extends Model
     public static function dokterSaatIni(){
         return PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                                 ->where('tipe_konsultasi_id', 1)
+                                ->where('jam_mulai', < , date('H:i:s'))
+                                ->where('jam_akhir', > , date('H:i:s'))
                                 ->get();
     }
     public function tipe_konsultasi(){
