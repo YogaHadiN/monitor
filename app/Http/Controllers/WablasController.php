@@ -2921,8 +2921,6 @@ class WablasController extends Controller
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
-        Log::info('whatsapp_bot');
-        Log::info( json_encode( $this->whatsapp_bot ) );
         if (!is_null( $this->whatsapp_bot )) {
             $this->whatsapp_bot->touch();
         }
@@ -3078,7 +3076,6 @@ class WablasController extends Controller
     /* } */
 
     public function prosesAntrianOnline(){
-        Log::info('proses antrian online');
         $this->chatBotLog(__LINE__);
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
              ->where('whatsapp_bot_id', $this->whatsapp_bot->id)
