@@ -7,11 +7,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
+use Log;
 
 class SendNoTelpToAndroid implements ShouldQueue
 {
     public function handle(NoTelpCreated $event)
     {
+
+        Log::info('=================');
+        Log::info('created no_telp');
+        Log::info('SendNoTelpToAndroid.php');
+        Log::info('=================');
         $noTelp = $event->noTelp;
 
         $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/service-account.json'));

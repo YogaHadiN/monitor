@@ -5,6 +5,7 @@ namespace App\Events;
 use App\Models\NoTelp;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Log;
 
 class NoTelpCreated
 {
@@ -14,6 +15,11 @@ class NoTelpCreated
 
     public function __construct(NoTelp $noTelp)
     {
+
+        Log::info('=================');
+        Log::info('created no_telp');
+        Log::info('NoTelpCreated.php');
+        Log::info('=================');
         $this->noTelp = $noTelp;
     }
 }
