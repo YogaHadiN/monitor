@@ -195,6 +195,7 @@ return [
         'Input' => Illuminate\Support\Facades\Request::class,
         'Image' => Intervention\Image\Facades\Image::class,
         'JWTAuth'=>Tymon\JWTAuth\Facades\JWTAuth::class,
+         'Redis' => Illuminate\Support\Facades\Redis::class,
     ])->toArray(),
 
 ];
