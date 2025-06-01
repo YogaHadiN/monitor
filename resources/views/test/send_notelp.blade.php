@@ -27,7 +27,7 @@
         <input type="text" name="id" value="{{ old('id', '12345') }}"><br><br>
 
         <label>No Telp:</label><br>
-        <input type="text" name="no_telp" value="{{ old('no_telp', '+628123456789') }}"><br><br>
+        <input type="text" name="no_telp" value="{{ old('no_telp', '628123456789') }}"><br><br>
 
         <label>FCM Device Token:</label><br>
         <textarea name="token" rows="3" cols="70">{{ old('token') }}</textarea><br><br>
