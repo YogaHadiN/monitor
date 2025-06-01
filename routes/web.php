@@ -17,8 +17,8 @@ use App\Jobs\TestJob;
 |
 */
 use App\Http\Controllers\TestNotifikasiController;
-Route::get('/test/send-notelp', 'TestNotifikasiController@form');
-Route::post('/test/send-notelp', 'TestNotifikasiController@send');
+Route::get('/test/send-notelp', [TestNotifikasiController::class, 'form']);
+Route::post('/test/send-notelp', [TestNotifikasiController::class, 'send']);
 
 Route::get('/', [AntrianController::class, 'index']);
 Route::get('/pifo', [AntrianController::class, 'phpinfo']);
