@@ -31,7 +31,6 @@ class TestNotifikasiController extends Controller
                     'name'  => (string) $noTelp->id,
                     'phone' => $noTelp->no_telp,
                 ]);
-            ]);
 
         $messaging->send($message);
 
