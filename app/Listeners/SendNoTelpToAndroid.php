@@ -3,13 +3,12 @@
 namespace App\Listeners;
 
 use App\Events\NoTelpCreated;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Log;
 
-class SendNoTelpToAndroid implements ShouldQueue
+class SendNoTelpToAndroid
 {
     public function handle(NoTelpCreated $event)
     {
