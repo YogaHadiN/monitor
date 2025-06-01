@@ -25,12 +25,9 @@ class SendNoTelpToAndroid
         $message = CloudMessage::withTarget('token', env('FCM_DEVICE_TOKEN'))
             ->withNotification(Notification::create('Kontak Baru', 'Nomor: ' . $noTelp->no_telp))
             ->withData([
-                'type' => 'new_contact',
-                'contact' => [
                     'name'  => (string) $noTelp->id,
                     'phone' => $noTelp->no_telp,
-                ]
-            ]);
+                ]);
 
         $messaging->send($message);
     }
