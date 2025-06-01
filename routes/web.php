@@ -4,6 +4,7 @@ use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\ValidateController;
 use App\Http\Controllers\PasienController;
 use App\Http\Controllers\WebRegistrationController;
+use App\Jobs\TestJob;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,3 +62,8 @@ Route::get('project/antrian_dokter', [\App\Http\Controllers\ProjectController::c
 Route::get('project/ambil_antrian', [\App\Http\Controllers\ProjectController::class, 'ambil_antrian']);
 Route::get('project/uang', [\App\Http\Controllers\ProjectController::class, 'uang']);
 Route::get('project/general_concent', [\App\Http\Controllers\ProjectController::class, 'general_concent']);
+
+Route::get('/tes-job', function () {
+    dispatch(new TestJob());
+    return 'TestJob dispatched!';
+});
