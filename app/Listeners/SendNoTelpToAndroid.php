@@ -23,13 +23,16 @@ class SendNoTelpToAndroid
         $messaging = $factory->createMessaging();
 
         $dummyToken = 'eP2c6cU-QOqO9OEjI4p5cG:APA91bHX3sWzQG9KsB8YhN9x9ABc1xxLQgTFKkPZCjT4fPZQmXrPje3HbN7HzkURP23VapdQ03zDqaL5V_lKxT_q5ljAQt7fJKDdWpyY9tEoCPv5z5lj7XcXeZrLg7yOv0GxjI_xxTestToken';
-        $message = CloudMessage::withTarget('token', $dummyToken)
         /* $message = CloudMessage::withTarget('token', env('FCM_DEVICE_TOKEN')) */
+        $message = CloudMessage::withTarget('token', $dummyToken)
             ->withNotification(Notification::create('Kontak Baru', 'Nomor: ' . $noTelp->no_telp))
             ->withData([
+                'type' => 'new_contact',
+                'contact' => [
                     'name'  => (string) $noTelp->id,
                     'phone' => $noTelp->no_telp,
-                ]);
+                ]
+            ]);
 
         $messaging->send($message);
     }
