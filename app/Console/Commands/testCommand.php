@@ -45,31 +45,21 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
-        $data = [
-               "psid" => "wa_6281381912803", 
-               "payload" => [], 
-               "data" => [
-                        "version" => "v2", 
-                        "content" => [
-                           "messages" => [
-                              [
-                                 "type" => "text", 
-                                 "buttons" => [], 
-                                 "text" => "Yoga Hadi NNNNNN" 
-                              ] 
-                           ] 
-                        ] 
-                     ] 
-            ]; 
-        $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
-        dd( $response->body() );
+        App\Models\NoTelp::create([
+            'no_telp' => '6281381912803',
+            'tenant_id' => 1,
+            'saved_by_other' => 0,
+            'room_id' => null,
+            'updated_at_qiscus' => now(),
+            'fonnte' => 0,
+            'disimpan_di_android' => 0,
+        ]);
     }
     public function refreshAntrianOnline(){
         WhatsappBot::where('no_telp', '6281381912803')->delete();
         ReservasiOnline::where('no_telp', '6281381912803')->delete();
     }
-    
+
     /**
      * undocumented function
      *
@@ -87,7 +77,7 @@ class testCommand extends Command
         ]);
 
     }
-    
+
 
     /**
      * undocumented function
@@ -107,7 +97,7 @@ class testCommand extends Command
         \App\Models\WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
         \App\Models\WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
     }
-    
+
 
 	/**
 	* undocumented function
@@ -186,6 +176,6 @@ class testCommand extends Command
 		echo "<pre>";
 		print_r($result);
 	}
-	
-	
+
+
 }
