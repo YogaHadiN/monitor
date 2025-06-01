@@ -54,11 +54,7 @@ Route::post('/daftar_online_by_phone/submit/daftar_lagi', [WebRegistrationContro
 Route::post('/daftar_online_by_phone/submit/hapus_antrian', [WebRegistrationController::class, 'hapus_antrian']);
 Route::post('/daftar_online_by_phone/submit/cek_antrian', [WebRegistrationController::class, 'cek_antrian']);
 
-
-
-
-
-
+Route::post('/push-fcm', [App\Http\Controllers\FcmPushController::class, 'kirim']);
 
 Route::get('project/antrian_farmasi', [\App\Http\Controllers\ProjectController::class, 'antrian_farmasi']);
 Route::get('project/antrian_dokter', [\App\Http\Controllers\ProjectController::class, 'antrian_dokter']);
