@@ -16,9 +16,8 @@ use App\Jobs\TestJob;
 | contains the "web" middleware group. Now create something great!
 |
 */
-use App\Http\Controllers\TestNotifikasiController;
-Route::get('/test/send-notelp', [TestNotifikasiController::class, 'form']);
-Route::post('/test/send-notelp', [TestNotifikasiController::class, 'send']);
+Route::get('/test/send-notelp', [\App\Http\Controllers\TestNotifikasiController::class, 'form']);
+Route::post('/test/send-notelp', [\App\Http\Controllers\TestNotifikasiController::class, 'send']);
 
 Route::get('/', [AntrianController::class, 'index']);
 Route::get('/pifo', [AntrianController::class, 'phpinfo']);
