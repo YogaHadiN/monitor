@@ -6,6 +6,7 @@
 /public/storage
 /storage/*.key
 /vendor
+/storage/app/firebase/service-account.json
 .DS_Store
 .env
 .env.backup
