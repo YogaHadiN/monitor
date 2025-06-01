@@ -18,7 +18,7 @@ class NoTelp extends Model
             Log::info('created no_telp');
             Log::info('NoTelp.php');
             Log::info('=================');
-            /* event(new NoTelpCreated($noTelp)); */
+            event(new NoTelpCreated($noTelp));
         });
     }
 }
