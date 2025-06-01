@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Events\NoTelpCreated;
+use Log;
 
 class NoTelp extends Model
 {
@@ -13,6 +14,9 @@ class NoTelp extends Model
     protected static function booted()
     {
         static::created(function ($noTelp) {
+            Log::info('=================');
+            Log::info('created no_telp');
+            Log::info('=================');
             event(new NoTelpCreated($noTelp));
         });
     }
