@@ -20,7 +20,6 @@ use App\Jobs\TestJob;
 /* Route::post('/test/send-notelp', [\App\Http\Controllers\TestNotifikasiController::class, 'send']); */
 
 Route::get('/', [AntrianController::class, 'index']);
-Route::get('/pifo', [AntrianController::class, 'phpinfo']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
 Route::get('antrianperiksa/monitor_baru', [AntrianController::class, 'monitor_baru']);
 Route::get('fingerprint/register', [AntrianController::class, 'register']);
