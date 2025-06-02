@@ -15,11 +15,6 @@ class NoTelpCreated
 
     public function __construct(NoTelp $noTelp)
     {
-
-        Log::info('=================');
-        Log::info('created no_telp');
-        Log::info('NoTelpCreated.php');
-        Log::info('=================');
         $this->noTelp = $noTelp;
     }
 }
