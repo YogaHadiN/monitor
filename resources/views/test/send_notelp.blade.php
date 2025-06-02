@@ -23,9 +23,6 @@
 
     <form method="POST" action="{{ url('/test/send-notelp') }}">
         @csrf
-        <label>ID Kontak:</label><br>
-        <input type="text" name="id" value="{{ old('id', '12345') }}"><br><br>
-
         <label>No Telp:</label><br>
         <input type="text" name="no_telp" value="{{ old('no_telp', '628123456789') }}"><br><br>
 
