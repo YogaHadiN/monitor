@@ -38,6 +38,15 @@ Route::post('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::cl
 Route::post('fonnte/webhook/connect', [\App\Http\Controllers\FonnteController::class, 'postConnect']);
 Route::post('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'postChaining']);
 
+Route::get('fonnte_2/webhook', [\App\Http\Controllers\FonnteSecondController::class, 'getWebhook']);
+Route::get('fonnte_2/webhook/status', [\App\Http\Controllers\FonnteSecondController::class, 'getStatus']);
+Route::get('fonnte_2/webhook/connect', [\App\Http\Controllers\FonnteSecondController::class, 'getConnect']);
+Route::get('fonnte_2/webhook/chaining', [\App\Http\Controllers\FonnteSecondController::class, 'getChaning']);
+Route::post('fonnte_2/webhook', [\App\Http\Controllers\FonnteSecondController::class, 'postWebhook']);
+Route::post('fonnte_2/webhook/status', [\App\Http\Controllers\FonnteSecondController::class, 'postStatus']);
+Route::post('fonnte_2/webhook/connect', [\App\Http\Controllers\FonnteSecondController::class, 'postConnect']);
+Route::post('fonnte_2/webhook/chaining', [\App\Http\Controllers\FonnteSecondController::class, 'postChaining']);
+
 Route::get('antrian_online/bpjs/auth', [\App\Http\Controllers\AntrianOnlineController::class, 'token']);
 
 Route::get("antrian_online/bpjs/ref/poli/tanggal/{tanggal}", [
