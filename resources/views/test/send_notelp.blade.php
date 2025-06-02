@@ -26,8 +26,8 @@
         <label>No Telp:</label><br>
         <input type="text" name="no_telp" value="{{ old('no_telp', '62999') }}"><br><br>
 
-        <label>FCM Device Token:</label><br>
-        <textarea name="token" rows="3" cols="70">{{ old('token') }}</textarea><br><br>
+        {{-- <label>FCM Device Token:</label><br> --}}
+        {{-- <textarea name="token" rows="3" cols="70">{{ old('token') }}</textarea><br><br> --}}
 
         <button type="submit">Kirim Notifikasi</button>
     </form>

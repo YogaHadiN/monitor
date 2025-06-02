@@ -18,21 +18,22 @@ class TestNotifikasiController extends Controller
     public function send(Request $request)
     {
         $request->validate([
-            'no_telp' => 'required|string',
-            'token'   => 'required|string',
+            'no_telp' => 'required|string'
         ]);
 
-        $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/service-account.json'));
-        $messaging = $factory->createMessaging();
 
-        $message = CloudMessage::withTarget('token', $request->token)
-            ->withData([
-                    'name'  => (string) 999999,
-                    'phone' => $request->no_telp,
-                ]);
-
-        $messaging->send($message);
+        NoTelp::create([
+            'no_telp'              => $request->no_telp,
+            'tenant_id'            => 1,
+            'saved_by_other'       => 0,
+            'room_id'              => 'room_abc123',
+            'updated_at_qiscus'    => now(),
+            'fonnte'               => 0,
+            'disimpan_di_android'  => 1,
+        ]);
 
         return back()->with('success', 'Notifikasi berhasil dikirim!');
+        $wa = new WablasController;
+        $wa->sendSingle()
     }
 }
