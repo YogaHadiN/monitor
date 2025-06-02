@@ -33,7 +33,5 @@ class TestNotifikasiController extends Controller
         ]);
 
         return back()->with('success', 'Notifikasi berhasil dikirim!');
-        $wa = new WablasController;
-        $wa->sendSingle()
     }
 }
