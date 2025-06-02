@@ -26,7 +26,6 @@ class TestNotifikasiController extends Controller
         $messaging = $factory->createMessaging();
 
         $message = CloudMessage::withTarget('token', $request->token)
-            ->withNotification(Notification::create('Kontak Baru', 'Nomor: ' . $request->no_telp))
             ->withData([
                     'name'  => (string) $request->id,
                     'phone' => $request->no_telp,

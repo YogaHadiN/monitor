@@ -12,18 +12,12 @@ class SendNoTelpToAndroid
 {
     public function handle(NoTelpCreated $event)
     {
-
-        Log::info('=================');
-        Log::info('created no_telp');
-        Log::info('SendNoTelpToAndroid.php');
-        Log::info('=================');
         $noTelp = $event->noTelp;
 
         $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/service-account.json'));
         $messaging = $factory->createMessaging();
 
         $message = CloudMessage::withTarget('token', env('FCM_DEVICE_TOKEN'))
-            ->withNotification(Notification::create('Kontak Baru', 'Nomor: ' . $noTelp->no_telp))
             ->withData([
                     'name'  => (string) $noTelp->id,
                     'phone' => $noTelp->no_telp,
