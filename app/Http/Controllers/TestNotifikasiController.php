@@ -22,15 +22,16 @@ class TestNotifikasiController extends Controller
             'token'   => 'required|string',
         ]);
 
-        NoTelp::create([
-            'no_telp' => $request->no_telp,
-            'tenant_id' => 1,
-            'saved_by_other' => 0,
-            'room_id' => null,
-            'updated_at_qiscus' => now(),
-            'fonnte' => 0,
-            'disimpan_di_android' => 0,
-        ]);
+        $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/service-account.json'));
+        $messaging = $factory->createMessaging();
+
+        $message = CloudMessage::withTarget('token', $request->token)
+            ->withData([
+                    'name'  => (string) 999999,
+                    'phone' => $request->no_telp,
+                ]);
+
+        $messaging->send($message);
 
         return back()->with('success', 'Notifikasi berhasil dikirim!');
     }
