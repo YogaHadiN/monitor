@@ -46,7 +46,7 @@ class testCommand extends Command
     public function handle()
     {
         \App\Models\NoTelp::create([
-            'no_telp' => '6281381912803',
+            'no_telp' => '6285721012351',
             'tenant_id' => 1,
             'saved_by_other' => 0,
             'room_id' => null,
