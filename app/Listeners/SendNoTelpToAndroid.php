@@ -17,6 +17,7 @@ class SendNoTelpToAndroid
         $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/service-account.json'));
         $messaging = $factory->createMessaging();
 
+        Log::info( env('FCM_DEVICE_TOKEN') );
         $message = CloudMessage::withTarget('token', env('FCM_DEVICE_TOKEN'))
             ->withData([
                     'name'  => (string) $noTelp->id,
