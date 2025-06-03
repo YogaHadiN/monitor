@@ -213,7 +213,7 @@ class WablasController extends Controller
                 strtotime ($date_now) < strtotime( '2025-04-05 00:00:00'  )
                 /* || $this->no_telp == '6281381912803' */
             ) {
-                $this->sendBotCake( $this->libur() );
+                $this->autoReply( $this->libur() );
             } else {
                 $this->chatBotLog(__LINE__);
                 if (
@@ -227,7 +227,7 @@ class WablasController extends Controller
                     $this->message == 'mau berobat sus'
                 ) {
                     $this->chatBotLog(__LINE__);
-                    $this->sendBotCake($this->registrasiAntrianOnline() );
+                    $this->autoReply($this->registrasiAntrianOnline() );
                     return false;
                 } else if (
                      str_contains($this->message ,'klinik_jati_elok_registration_')
@@ -237,9 +237,9 @@ class WablasController extends Controller
                     if (
                         OnsiteRegistration::where('random_string', $random_string)->exists()
                     ) {
-                        $this->sendBotCake($this->prosesOnsiteRegistration());
+                        $this->autoReply($this->prosesOnsiteRegistration());
                     } else {
-                        $this->sendBotCake("Nomor Registrasi Antrian Tidak Dikenali");
+                        $this->autoReply("Nomor Registrasi Antrian Tidak Dikenali");
                     }
 
                     $this->chatBotLog(__LINE__);
@@ -249,7 +249,7 @@ class WablasController extends Controller
                      str_contains($this->message ,'ahiri')
                 ) {
                     $this->chatBotLog(__LINE__);
-                    $this->sendBotCake($this->akhiriChatWithAdmin() );
+                    $this->autoReply($this->akhiriChatWithAdmin() );
                     return false;
                 } else if (str_contains( $this->message ,'jadwal usg' )) {
                     $this->chatBotLog(__LINE__);
@@ -276,7 +276,7 @@ class WablasController extends Controller
                     Message::where('no_telp', $this->no_telp)->update([
                         'sudah_dibalas' => 1
                     ]);
-                    $this->sendBotCake($pesan );
+                    $this->autoReply($pesan );
                     return false;
                 } else if (str_contains( $this->message ,'jadwal dokter gigi' )) {
                     $this->chatBotLog(__LINE__);
@@ -305,12 +305,12 @@ class WablasController extends Controller
                         'sudah_dibalas' => 1
                     ]);
 
-                    $this->sendBotCake($pesan );
+                    $this->autoReply($pesan );
 
                     return false;
                 } else if ( $this->message == 'komplain' ) {
                     $this->chatBotLog(__LINE__);
-                    $this->sendBotCake($this->autoReplyComplainMessage() );
+                    $this->autoReply($this->autoReplyComplainMessage() );
                     return false;
                 } else if (
                     !$this->noTelpDalamChatWithAdmin() &&
@@ -324,7 +324,7 @@ class WablasController extends Controller
                     $this->chatBotLog(__LINE__);
                     if ( $this->message == 'chat admin' ) {
                         resetWhatsappRegistration($this->no_telp);
-                        $this->sendBotCake( $this->chatAdmin() );
+                        $this->autoReply( $this->chatAdmin() );
                         return false;
                     } else {
                        $message = $this->registerChatAdmin();
@@ -337,7 +337,7 @@ class WablasController extends Controller
                     $this->message == 'batalkan'
                 ) {
                     $this->chatBotLog(__LINE__);
-                    $this->sendBotCake($this->hapusAntrianWhatsappBotReservasiOnline() );
+                    $this->autoReply($this->hapusAntrianWhatsappBotReservasiOnline() );
                 } else {
                     if ($this->message_type == 'text') {
                         if ( !is_null(  $this->message  ) ) {
@@ -665,7 +665,7 @@ class WablasController extends Controller
                 }
                 $input_tidak_tepat = false;
             } else {
-                $this->sendBotCake('Antrian kakak sudah berhasil kami daftarkan' );
+                $this->autoReply('Antrian kakak sudah berhasil kami daftarkan' );
             }
         }
         if (!empty($response)) {
@@ -692,7 +692,7 @@ class WablasController extends Controller
 
             } else if ( $category == 'text' ){
                 /* $response .= $payload['message']; */
-                $this->sendBotCake($response );
+                $this->autoReply($response );
             }
         }
 
@@ -725,7 +725,7 @@ class WablasController extends Controller
                     $message = "Mohon maaf atas ketidak nyamanannya .";
                     $message .= PHP_EOL;
                     $message .= "Bisa diinfokan kondisi saat ini?";
-                    $this->sendBotCake($message );
+                    $this->autoReply($message );
                     //
                 // Jika pasien memilih mengalami perbaikan, ucapkan terima kasih
                 //
@@ -734,12 +734,12 @@ class WablasController extends Controller
                     $recovery_index_id == 3
                 ) {
                     $message = "Baik kak, terima kasih atas responnya. Kami turut senang apabila kondisi kakak baik dan pengobatan berjalan dengan lancar";
-                    $this->sendBotCake($message );
+                    $this->autoReply($message );
                 } else {
                     $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                     $message .= PHP_EOL;
                     $message .= "Informasi ini akan menjadi bahan evaluasi kami";
-                    $this->sendBotCake($message );
+                    $this->autoReply($message );
                 }
             }
         }
@@ -763,7 +763,7 @@ class WablasController extends Controller
             $this->antrian->antriable_type != 'App\\Models\\Antrian'
         ){
             $this->saveNomorTeleponPasien();
-            $this->sendBotCake($this->pesanBalasanBilaTerdaftar( $this->antrian ) );
+            $this->autoReply($this->pesanBalasanBilaTerdaftar( $this->antrian ) );
         }
     }
 
@@ -1353,7 +1353,7 @@ class WablasController extends Controller
                 $message .= 'Silahkan dimanfaatkan dengan whatsapp *"daftar"* kirim ke nomor whatsapp ini. ';
                 $message .= PHP_EOL;
                 $message .= 'Semoga dapat memberikan pengalaman berobat yang lebih baik bagi kakak dan keluarga ';
-                $this->sendBotCake($message );
+                $this->autoReply($message );
 
             } else if ($antrians->count()) {
                 foreach ($antrians as $antrian) {
@@ -1372,7 +1372,7 @@ class WablasController extends Controller
                     'no_telp' => $this->no_telp,
                     'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
                 ]);
-                $this->sendBotCake($this->tanyaKapanKeluhanTerjadi() );
+                $this->autoReply($this->tanyaKapanKeluhanTerjadi() );
             } else if (
                 $this->lama() &&
                 !is_null( $antrian ) &&
@@ -1386,7 +1386,7 @@ class WablasController extends Controller
                 $antrian->complain_pelayanan_lama = 1;
                 $antrian->save();
 
-                $this->sendBotCake($this->tanyaValidasiWaktuPelayanan() );
+                $this->autoReply($this->tanyaValidasiWaktuPelayanan() );
             } else {
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 if (
@@ -1404,7 +1404,7 @@ class WablasController extends Controller
                 }
                 $message .= PHP_EOL;
                 $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
-                $this->sendBotCake($message );
+                $this->autoReply($message );
             }
             /* https://wa.me/6181381912803?text=hallo%20nama%20saya%20Yoga%20Hadi%20Nugroho */
         } else {
@@ -1457,7 +1457,7 @@ class WablasController extends Controller
                  $this->angkaPertama("1")  ||
                  $this->message == 'puas'
             ){
-                $this->sendBotCake($this->kirimkanLinkGoogleReview() );
+                $this->autoReply($this->kirimkanLinkGoogleReview() );
             } else if(
                  $this->angkaPertama("3")  ||
                  $this->message == 'tidak puas'
@@ -1465,7 +1465,7 @@ class WablasController extends Controller
                 $pesan = $this->autoReplyComplainMessage(
                     $this->whatsapp_satisfaction_survey->antrian->id
                 );
-                $this->sendBotCake( $pesan );
+                $this->autoReply( $pesan );
             } else if (
                  $this->angkaPertama("2")  ||
                  $this->message == 'biasa'
@@ -1480,7 +1480,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= "Jika kakak berkenan memberikan saran, kira-kira apa yang bisa kami perbaiki agar pelayanan kami bisa lebih baik?";
 
-                $this->sendBotCake($message );
+                $this->autoReply($message );
             }
             $this->whatsapp_satisfaction_survey->delete();
         } else {
@@ -1495,7 +1495,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= "Mohon balas dengan angka *1,2 atau 3* sesuai urutan diatas";
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
     private function registerWhatsappRecoveryIndex(){
@@ -1525,7 +1525,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= "Bisa diinfokan kondisi pasien saat ini?";
                 $this->whatsapp_recovery_index->delete();
-                $this->sendBotCake($message );
+                $this->autoReply($message );
             } else {
                 $this->whatsapp_recovery_index->delete();
                 $this->pesanUntukPasienSelanjutnya();
@@ -1542,7 +1542,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= "Mohon agar membalas dengan angka *1,2 atau 3* sesuai urutan diatas";
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
     /**
@@ -1566,7 +1566,7 @@ class WablasController extends Controller
             $message .= 'Meracik obat membutuhkan ketekunan dan ketelitian yang tinggi';
             $message .= PHP_EOL;
             $message .= 'Terima kasih untuk tidak membuat kami terburu-buru dalam meracik obat';
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else {
             $message = "Balasan yang anda masukkan tidak dikenali";
             $message .= PHP_EOL;
@@ -1576,7 +1576,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= PHP_EOL;
             $message .= "Balas dengan angka *1 atau 2* sesuai informasi diatas";
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
     /**
@@ -1618,7 +1618,7 @@ class WablasController extends Controller
             'no_telp' => $this->no_telp
         ]);
 
-        $this->sendBotCake($message );
+        $this->autoReply($message );
     }
     /**
      * undocumented function
@@ -1633,12 +1633,12 @@ class WablasController extends Controller
             WhatsappBpjsDentistRegistration::create([
                 'no_telp' => $this->no_telp
             ]);
-            $this->sendBotCake($this->pertanyaanPembayaranPasien() );
+            $this->autoReply($this->pertanyaanPembayaranPasien() );
         } else {
             $message = "Balasan yang kakak masukkan tidak dikenali";
             $message .= $this->messageWhatsappMainMenu();
 
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
     /**
@@ -1709,7 +1709,7 @@ class WablasController extends Controller
                 $this->whatsapp_bpjs_dentist_registrations->save();
 
                 $message = $this->tanyaKetersediaanSlot();
-                $this->sendBotCake($message );
+                $this->autoReply($message );
             }
         } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_booking)
@@ -1740,7 +1740,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= $this->tanyaKetersediaanSlot();
             }
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient)
         ) {
@@ -1756,10 +1756,10 @@ class WablasController extends Controller
                 } else {
                     $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs = 0;
                 }
-                $this->sendBotCake($this->konfirmasiSebelumDisimpanDiAntrianPoli() );
+                $this->autoReply($this->konfirmasiSebelumDisimpanDiAntrianPoli() );
             } else {
                 $this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient = $this->message;
-                $this->sendBotCake($this->tanyaNomorBpjsPasien() );
+                $this->autoReply($this->tanyaNomorBpjsPasien() );
             }
             $this->whatsapp_bpjs_dentist_registrations->save();
         } else if (
@@ -1786,7 +1786,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= $this->tanyaNomorBpjsPasien();
             }
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->nama)
         ) {
@@ -1795,12 +1795,12 @@ class WablasController extends Controller
             ) {
                 $this->whatsapp_bpjs_dentist_registrations->nama  = ucwords($this->message);
                 $this->whatsapp_bpjs_dentist_registrations->save();
-                $this->sendBotCake($this->tanyaTanggalLahirPasien($this->whatsapp_bpjs_dentist_registrations->antrian) );
+                $this->autoReply($this->tanyaTanggalLahirPasien($this->whatsapp_bpjs_dentist_registrations->antrian) );
             } else {
                 $message = 'Input yang kakak masukkan tidak tepat';
                 $message .= PHP_EOL;
                 $message .= $this->tanyaNamaLengkapPasien();
-                $this->sendBotCake($message );
+                $this->autoReply($message );
             }
         } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)
@@ -1818,7 +1818,7 @@ class WablasController extends Controller
                 $message .= PHP_EOL;
                 $message .= $this->tanyaTanggalLahirPasien($this->whatsapp_bpjs_dentist_registrations->antrian);
             }
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else if (
             !$this->whatsapp_bpjs_dentist_registrations->data_konfirmation
         ) {
@@ -1838,7 +1838,7 @@ class WablasController extends Controller
                     WhatsappBpjsDentistRegistration::create([
                         'no_telp' => $this->no_telp
                     ]);
-                    $this->sendBotCake($this->pertanyaanPembayaranPasien() );
+                    $this->autoReply($this->pertanyaanPembayaranPasien() );
                 }
             }
 
@@ -2236,7 +2236,7 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= PHP_EOL;
         $response .= "Mohon balas dengan angka *1 atau 2* sesuai urutan diatas";
-        $this->sendBotCake($response );
+        $this->autoReply($response );
     }
     /**
      * undocumented function
@@ -2327,12 +2327,12 @@ class WablasController extends Controller
             $message     .= PHP_EOL;
             $message     .= PHP_EOL;
             $message     .= 'Mohon balas dengan angka *1,2 atau 3* sesuai dengan informasi di atas';
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else {
             $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
             $message .= PHP_EOL;
             $message .= "Informasi ini akan menjadi bahan evaluasi kami";
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
     /**
@@ -2414,7 +2414,7 @@ class WablasController extends Controller
              str_contains($this->message, 'ck antri') ||
              str_contains($this->message, 'ck antran')
         ) {
-            $this->sendBotCake($this->cekAntrian() );
+            $this->autoReply($this->cekAntrian() );
         } else if (
              str_contains($this->message, 'kirim qr')
         ) {
@@ -2476,7 +2476,7 @@ class WablasController extends Controller
             }
         }
         if (isset($message)) {
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
     public function pasienTidakDalamAntrian(){
@@ -2554,7 +2554,7 @@ class WablasController extends Controller
         } else {
             $message = $this->pertanyaanTipeKonsultasi();
             $message .= $this->templateUlangi();
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
 
@@ -2564,28 +2564,28 @@ class WablasController extends Controller
             WhatsappJadwalKonsultasiInquiry::create([
                 'no_telp' => $this->no_telp
             ]);
-            $this->sendBotCake($this->pertanyaanTipeKonsultasi() );
+            $this->autoReply($this->pertanyaanTipeKonsultasi() );
         } else if ( $this->message == 2 ) {
-            $this->sendBotCake($this->registrasiAntrianOnline() );
+            $this->autoReply($this->registrasiAntrianOnline() );
         } else if ( $this->message == 3 ) {
-            $this->sendBotCake($this->informasiNomorFaskesKJE() );
+            $this->autoReply($this->informasiNomorFaskesKJE() );
             /* echo $this->registrasiInformasiNomorKartuBpjs(); */
         } else if ( $this->message == 4 ) {
-            $this->sendBotCake($this->autoReplyComplainMessage() );
+            $this->autoReply($this->autoReplyComplainMessage() );
         } else if ( $this->message == 5 ) {
-            $this->sendBotCake($this->chatAdmin() );
+            $this->autoReply($this->chatAdmin() );
         } else if ( $this->message == 6 ) {
-            $this->sendBotCake($this->konsultasiEstetikOnlineStart() );
+            $this->autoReply($this->konsultasiEstetikOnlineStart() );
         } else if( isset( $this->whatsapp_bot ) && $this->whatsapp_bot->prevent_repetition == 0 ) {
             $this->whatsapp_bot->prevent_repetition = 1;
             $this->whatsapp_bot->save();
             $message = $this->messageWhatsappMainMenu();
             $message .= $this->pesanMintaKlienBalasUlang();
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else {
             $message = $this->messageWhatsappMainMenu();
             $message .= $this->templateUlangi();
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
     /**
@@ -2608,10 +2608,10 @@ class WablasController extends Controller
     }
 
     public function balasJadwalDokterUmum(){
-        $this->sendBotCake($this->queryJadwalKonsultasiByTipeKonsultasi(1) );
+        $this->autoReply($this->queryJadwalKonsultasiByTipeKonsultasi(1) );
     }
     public function balasJadwalDokterGigi(){
-        $this->sendBotCake($this->queryJadwalKonsultasiByTipeKonsultasi(2) );
+        $this->autoReply($this->queryJadwalKonsultasiByTipeKonsultasi(2) );
     }
     public function balasJadwalDokterBidan(){
         $query  = "SELECT * ";
@@ -2636,10 +2636,10 @@ class WablasController extends Controller
             $message .= PHP_EOL;
         }
 
-        $this->sendBotCake($message );
+        $this->autoReply($message );
     }
     public function balasJadwalDokterUsg(){
-        $this->sendBotCake($this->queryJadwalKonsultasiByTipeKonsultasi(4) );
+        $this->autoReply($this->queryJadwalKonsultasiByTipeKonsultasi(4) );
     }
     /**
      * undocumented function
@@ -2917,7 +2917,7 @@ class WablasController extends Controller
             ])->delete();
             $message = 'Cek List selesai';
         }
-        $this->sendBotCake($message );
+        $this->autoReply($message );
     }
 
     public function cekListPhoneNumberRegisteredForWhatsappBotService( $whatsapp_bot_service_id ){
@@ -2947,14 +2947,14 @@ class WablasController extends Controller
                         'tenant_id'           => $whatsapp_bot->staf->tenant_id,
                         'cek_list_ruangan_id' => $cek->id
                     ]);
-                    $this->sendBotCake($this->masukkanGambar($cek) );
+                    $this->autoReply($this->masukkanGambar($cek) );
                 } else {
                     $message = 'Balasan anda tidak dikenali. Mohon masukkan angka';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
                     $message .= $this->pesanCekListHarianBerikutnya( $cek );
-                    $this->sendBotCake($message );
+                    $this->autoReply($message );
                 }
             }
             if (
@@ -2964,7 +2964,7 @@ class WablasController extends Controller
             ) {
                 $cek_list_dikerjakan->jumlah = $this->message;
                 $cek_list_dikerjakan->save();
-                $this->sendBotCake($this->masukkanGambar($cek) );
+                $this->autoReply($this->masukkanGambar($cek) );
             } else if (
                 !is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot ) &&
@@ -2985,21 +2985,21 @@ class WablasController extends Controller
                         if (
                             is_null($cek_list_dikerjakan->jumlah)
                         ) {
-                            $this->sendBotCake($this->pesanCekListHarianBerikutnya( $cek ) );
+                            $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
                         } else if (
                             is_null($cek_list_dikerjakan->image)
                         ) {
-                            $this->sendBotCake($this->masukkanGambar( $cek ) );
+                            $this->autoReply($this->masukkanGambar( $cek ) );
                         }
                     } else {
-                        $this->sendBotCake($this->pesanCekListHarianBerikutnya( $cek ) );
+                        $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
                     }
                 } else {
-                    $this->sendBotCake($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
+                    $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
                 }
             }
         } else {
-            $this->sendBotCake($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
+            $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
         }
     }
     public function cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input){
@@ -3095,7 +3095,7 @@ class WablasController extends Controller
             $this->message == 'batalkan'
         ) {
             $this->chatBotLog(__LINE__);
-            $this->sendBotCake($this->konfirmasiPembatalan() );
+            $this->autoReply($this->konfirmasiPembatalan() );
             return false;
         } else if (
             !is_null( $reservasi_online ) &&
@@ -3122,7 +3122,7 @@ class WablasController extends Controller
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    $this->sendBotCake($message );
+                    $this->autoReply($message );
                     return false;
                 }
                 $tipe_konsultasi_id = TipeKonsultasi::find( $this->message );
@@ -3147,7 +3147,7 @@ class WablasController extends Controller
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    $this->sendBotCake($message );
+                    $this->autoReply($message );
                     return false;
                 } else if(
                     !count( $petugas_pemeriksa_sekarang )
@@ -3165,7 +3165,7 @@ class WablasController extends Controller
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                    $this->sendBotCake($message );
+                    $this->autoReply($message );
                     return false;
                 }
                 // jika antrian poli gigi dan tidak ada jadwal konsultasi hari ini
@@ -3179,7 +3179,7 @@ class WablasController extends Controller
                         $message .= PHP_EOL;
                         $message .= PHP_EOL;
                         $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                        $this->sendBotCake($message );
+                        $this->autoReply($message );
                         return false;
                     } else {
                         $this->chatBotLog(__LINE__);
@@ -3212,7 +3212,7 @@ class WablasController extends Controller
                             $message .= PHP_EOL;
                             $message .= PHP_EOL;
                             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                            $this->sendBotCake($message );
+                            $this->autoReply($message );
                             return false;
                         } else if ( strtotime("now") > $jam_pelayanan_usg_berakhir->timestamp ) {
                             $message = 'Pelayanan USG Kehamilan hari ini telah selesai pada jam ' . $jam_pelayanan_usg_berakhir->format("H:i"). '. Mohon agar dapat mendaftar kembali saat jadwal USG Kehamilan tersedia';
@@ -3223,7 +3223,7 @@ class WablasController extends Controller
                             $message .= PHP_EOL;
                             $message .= PHP_EOL;
                             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                            $this->sendBotCake($message );
+                            $this->autoReply($message );
                             return false;
                         } else if ( strtotime("now") > $jam_pendaftaran_usg_berakhir ) {
                             $message = 'Pendaftaran USG Kehamilan secara online hari ini telah selesai';
@@ -3238,7 +3238,7 @@ class WablasController extends Controller
                             $message .= PHP_EOL;
                             $message .= PHP_EOL;
                             $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                            $this->sendBotCake($message );
+                            $this->autoReply($message );
                             return false;
                         } else {
                             $reservasi_online->tipe_konsultasi_id = $this->message;
@@ -3255,7 +3255,7 @@ class WablasController extends Controller
                         $message .= PHP_EOL;
                         $message .= PHP_EOL;
                         $message .= $this->hapusAntrianWhatsappBotReservasiOnline();
-                        $this->sendBotCake($message );
+                        $this->autoReply($message );
                         return false;
                     }
                 /* } else if ( */
@@ -3266,7 +3266,7 @@ class WablasController extends Controller
                 /*     $message .= PHP_EOL; */
                 /*     $message .= PHP_EOL; */
                 /*     $message .= $this->hapusAntrianWhatsappBotReservasiOnline(); */
-                /*     $this->sendBotCake($message ); */
+                /*     $this->autoReply($message ); */
                 /*     return false; */
                 } else if (
                     $this->sudahAdaAntrianUntukTipeKonsultasi( $this->message )
@@ -3706,7 +3706,7 @@ class WablasController extends Controller
 
                         /* $this->langsungKeAntrianPoliBilaMemungkinkan($antrian); */
 
-                        $this->sendBotCake($this->getQrCodeMessage( $antrian ) );
+                        $this->autoReply($this->getQrCodeMessage( $antrian ) );
 
                         /* $response = $this->pesanBalasanBilaTerdaftar( $antrian, true ); */
                         /* $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ; */
@@ -3857,7 +3857,7 @@ class WablasController extends Controller
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else {
         }
     }
@@ -4181,7 +4181,7 @@ class WablasController extends Controller
         $antrian_periksa = AntrianPeriksa::where('whatsapp_bot_id', $this->whatsapp_bot->id)->first();
         if ( is_null( $antrian_periksa ) ) {
             $this->whatsapp_bot->delete();
-            $this->sendBotCake("Pemeriksaan telah seleai, Gambar tidak dimasukkan ke pemeriksaan" );
+            $this->autoReply("Pemeriksaan telah seleai, Gambar tidak dimasukkan ke pemeriksaan" );
 
         } else if ( $this->isPicture() ) {
             $filename = $this->uploadImage();
@@ -4191,13 +4191,13 @@ class WablasController extends Controller
             ]);
 
             event(new GambarSubmitted($antrian_periksa->id));
-            $this->sendBotCake($this->nextPicturePlease() );
+            $this->autoReply($this->nextPicturePlease() );
 
         } else if ( $this->message == 'selesai' ) {
             $this->whatsapp_bot->delete();
-            $this->sendBotCake("Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik" );
+            $this->autoReply("Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik" );
         } else  {
-            $this->sendBotCake("Balasan yang kakak buat bukan gambar. Mohon masukkan gambar" );
+            $this->autoReply("Balasan yang kakak buat bukan gambar. Mohon masukkan gambar" );
         }
     }
     public function nextPicturePlease(){
@@ -4367,20 +4367,20 @@ class WablasController extends Controller
         $from = date('Y-m-d 00:00:00');
         $to   = date('Y-m-d 23:59:59');
         if ( $this->message == 1 ) {
-            $this->sendBotCake($this->hapusAntrianWhatsappBotReservasiOnline() );
+            $this->autoReply($this->hapusAntrianWhatsappBotReservasiOnline() );
         } else if(
              $this->message == 2
         ) {
             WhatsappBot::whereRaw("created_at between '{$from}' and '{$to}'")
                 ->where('no_telp', $this->no_telp)
                 ->delete();
-            $this->sendBotCake('Reservasi Online Dilanjutkan' );
+            $this->autoReply('Reservasi Online Dilanjutkan' );
         } else {
             $message = $this->tanyaApakahMauMembatalkanReservasiOnline();
             $message .= $this->samaDengan();
             $message .= PHP_EOL;
             $message .= "_Balasan yang anda masukkan tidak dikenali. Mohon diulangi_";
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
 
@@ -4656,7 +4656,7 @@ class WablasController extends Controller
             'no_telp' => $this->no_telp,
             'whatsapp_bot_service_id' => 11
         ]);
-        $this->sendBotCake($this->tanyaNomorBpjsPasien() );
+        $this->autoReply($this->tanyaNomorBpjsPasien() );
     }
     public function prosesBpjsNumberInquiry(){
         $bpjs = new BpjsApiController;
@@ -4672,7 +4672,7 @@ class WablasController extends Controller
                 $code == 204
             ) {
                 $this->pesan_error =  'Nomor tersebut tidak ditemukan di sistem BPJS';
-                $this->sendBotCake($this->pesanErrorBpjsInformationInquiry() );
+                $this->autoReply($this->pesanErrorBpjsInformationInquiry() );
             } else if (
                 $code >= 200 &&
                 $code <= 299
@@ -4691,17 +4691,17 @@ class WablasController extends Controller
                         $text .= PHP_EOL;
                         $text .= $message['ketAktif'];
                     }
-                    $this->sendBotCake($text );
+                    $this->autoReply($text );
                 } else {
-                    $this->sendBotCake("Data tidak ditemukan" );
+                    $this->autoReply("Data tidak ditemukan" );
                 }
                 WhatsappBot::where('no_telp', $this->no_telp)->delete();
             } else {
-                $this->sendBotCake('_Server BPJS saat ini sedang gangguan. Silahkan coba beberapa saat lagi_' );
+                $this->autoReply('_Server BPJS saat ini sedang gangguan. Silahkan coba beberapa saat lagi_' );
                 WhatsappBot::where('no_telp', $this->no_telp)->delete();
             }
         } else {
-            $this->sendBotCake($this->pesanErrorBpjsInformationInquiry() );
+            $this->autoReply($this->pesanErrorBpjsInformationInquiry() );
         }
     }
     public function pesanErrorBpjsInformationInquiry(){
@@ -4764,56 +4764,64 @@ class WablasController extends Controller
     }
 
     public function sendSingle($phone, $message){
-        if (
-            NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
-                ->where('no_telp', $phone)
-                ->exists()
-        ) {
-            $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
-            $data = [
-                   "psid" => "wa_" . $phone,
-                   "payload" => [],
-                   "data" => [
-                            "version" => "v2",
-                            "content" => [
-                               "messages" => [
-                                  [
-                                     "type" => "text",
-                                     "buttons" => [],
-                                     "text" => $message
-                                  ]
-                               ]
-                            ]
-                         ]
-                ];
-            $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
-        } else {
-            Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $phone);
-        }
+
+        $fonnte = new FonnteController;
+        $reply = [
+            'message' => $message,
+            'url' => null,
+            'filename' => null
+        ];
+        $fonnte->sendFonnte( $phone, $reply );
+        /* if ( */
+        /*     NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)') */
+        /*         ->where('no_telp', $phone) */
+        /*         ->exists() */
+        /* ) { */
+        /*     $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content'; */
+        /*     $data = [ */
+        /*            "psid" => "wa_" . $phone, */
+        /*            "payload" => [], */
+        /*            "data" => [ */
+        /*                     "version" => "v2", */
+        /*                     "content" => [ */
+        /*                        "messages" => [ */
+        /*                           [ */
+        /*                              "type" => "text", */
+        /*                              "buttons" => [], */
+        /*                              "text" => $message */
+        /*                           ] */
+        /*                        ] */
+        /*                     ] */
+        /*                  ] */
+        /*         ]; */
+        /*     $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data); */
+        /* } else { */
+        /*     Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $phone); */
+        /* } */
     }
 
-    public function sendSingleWablas($phone, $message){
-        $curl = curl_init();
-        $token = env('WABLAS_TOKEN');
-        $data = [
-        'phone' => $phone,
-        'message' => $message,
-        ];
-        curl_setopt($curl, CURLOPT_HTTPHEADER,
-            array(
-                "Authorization: $token",
-            )
-        );
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($curl, CURLOPT_URL,  "https://solo.wablas.com/api/send-message");
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        $result = curl_exec($curl);
-        curl_close($curl);
-        return $result;
-    }
+    /* public function sendSingleWablas($phone, $message){ */
+    /*     $curl = curl_init(); */
+    /*     $token = env('WABLAS_TOKEN'); */
+    /*     $data = [ */
+    /*     'phone' => $phone, */
+    /*     'message' => $message, */
+    /*     ]; */
+    /*     curl_setopt($curl, CURLOPT_HTTPHEADER, */
+    /*         array( */
+    /*             "Authorization: $token", */
+    /*         ) */
+    /*     ); */
+    /*     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST"); */
+    /*     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); */
+    /*     curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data)); */
+    /*     curl_setopt($curl, CURLOPT_URL,  "https://solo.wablas.com/api/send-message"); */
+    /*     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0); */
+    /*     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0); */
+    /*     $result = curl_exec($curl); */
+    /*     curl_close($curl); */
+    /*     return $result; */
+    /* } */
 
     public function noTelpDalamChatWithAdmin(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(12);
@@ -4846,7 +4854,7 @@ class WablasController extends Controller
                 $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
                 $message .= PHP_EOL;
                 $message .= 'Balas *akhiri* untuk mengakhiri percakapan';
-                $this->sendBotCake($message );
+                $this->autoReply($message );
             }
         }
     }
@@ -4877,7 +4885,7 @@ class WablasController extends Controller
         ) {
             $konsultasi_estetik_online->delete();
             $this->whatsapp_bot->delete();
-            $this->sendBotCake('Reservasi dibatalkan' );
+            $this->autoReply('Reservasi dibatalkan' );
         } else if (
             !is_null( $konsultasi_estetik_online ) &&
             !$konsultasi_estetik_online->konfirmasi_sdk
@@ -4896,7 +4904,7 @@ class WablasController extends Controller
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             is_null( $konsultasi_estetik_online->register_previously_saved_patient )
-        ) {
+       ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if ( (int)$this->message <= $dataCount && (int)$this->message > 0  ) {
@@ -5145,7 +5153,7 @@ class WablasController extends Controller
                 $konsultasi_estetik_online->save();
 
                 $text = "Silahkan difoto bagian kulit yang dikeluhkan";
-                $this->sendBotCake($text );
+                $this->autoReply($text );
                 /* echo "Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik"; */
             } else {
                 $message = $this->pertanyaanJenisKulit();
@@ -5232,9 +5240,9 @@ class WablasController extends Controller
                 $konsultasi_estetik_online->save();
 
                 $this->whatsapp_bot->delete();
-                $this->sendBotCake("Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik" );
+                $this->autoReply("Terima kasih atas inputnya. Pesan kakak akan dibalas ketika dokter estetik sedang berpraktik" );
             } else  {
-                $this->sendBotCake("Balasan yang kakak buat bukan gambar. Mohon masukkan gambar" );
+                $this->autoReply("Balasan yang kakak buat bukan gambar. Mohon masukkan gambar" );
             }
         }
 
@@ -5245,7 +5253,7 @@ class WablasController extends Controller
             if ( $input_tidak_tepat ) {
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         } else {
         }
     }
@@ -5432,7 +5440,7 @@ class WablasController extends Controller
             ) {
                 $message = $this->endKonfirmasiWaktuPelanan();
             }
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
 
@@ -5530,7 +5538,7 @@ class WablasController extends Controller
                 $complain->tanggal_kejadian = $tanggal;
                 $complain->save();
 
-                $this->sendBotCake("Mohon diinfokan nama pasien saat keluhan tersebut terjadi" );
+                $this->autoReply("Mohon diinfokan nama pasien saat keluhan tersebut terjadi" );
             } else {
                 $message = $this->tanyaKapanKeluhanTerjadi();
                 $message .= PHP_EOL;
@@ -5550,7 +5558,7 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Terima kasih telah membantu kami untuk dapat memperbaiki pelayanan kami';
             $this->whatsapp_bot->delete();
-            $this->sendBotCake($message );
+            $this->autoReply($message );
         }
     }
 
@@ -5726,7 +5734,7 @@ class WablasController extends Controller
     }
 
     //PANCAKE
-    /* public function sendBotCake($message){ */
+    /* public function autoReply($message){ */
     /*     if ( */
     /*         NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)') */
     /*             ->where('no_telp', $this->no_telp) */
@@ -5756,34 +5764,43 @@ class WablasController extends Controller
     /* } */
 
     // QISCUS
-    public function sendBotCake($message){
-        if (!is_null( $this->room_id )) {
-            $app_id   = env('QISCUS_APP_ID');
-            $url      = "https://omnichannel.qiscus.com/$app_id/bot";
-            $agent_id = $app_id . '_admin@qismo.com';
-             $data = [
-               "sender_email" => $agent_id,
-               "message"      => $message,
-               "type"         => "text",
-               "room_id"      => $this->room_id
-            ];
+    public function autoReply($message){
 
-            $response = Http::withHeaders([
-                            'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
-                        ])->post( $url, $data);
-        } else if (
-            $this->fonnte
-        ) {
-            $fonnte = new FonnteController;
-            $reply = [
-                'message' => $message,
-                'url' => null,
-                'filename' => null
-            ];
-            $fonnte->sendFonnte( $this->no_telp, $reply );
-        } else {
-            echo $message;
-        }
+        $fonnte = new FonnteController;
+        $reply = [
+            'message' => $message,
+            'url' => null,
+            'filename' => null
+        ];
+        $fonnte->sendFonnte( $this->no_telp, $reply );
+
+        /* if (!is_null( $this->room_id )) { */
+        /*     $app_id   = env('QISCUS_APP_ID'); */
+        /*     $url      = "https://omnichannel.qiscus.com/$app_id/bot"; */
+        /*     $agent_id = $app_id . '_admin@qismo.com'; */
+        /*      $data = [ */
+        /*        "sender_email" => $agent_id, */
+        /*        "message"      => $message, */
+        /*        "type"         => "text", */
+        /*        "room_id"      => $this->room_id */
+        /*     ]; */
+
+        /*     $response = Http::withHeaders([ */
+        /*                     'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'), */
+        /*                 ])->post( $url, $data); */
+        /* } else if ( */
+        /*     $this->fonnte */
+        /* ) { */
+        /*     $fonnte = new FonnteController; */
+        /*     $reply = [ */
+        /*         'message' => $message, */
+        /*         'url' => null, */
+        /*         'filename' => null */
+        /*     ]; */
+        /*     $fonnte->sendFonnte( $this->no_telp, $reply ); */
+        /* } else { */
+        /*     echo $message; */
+        /* } */
     }
 
     public function createReservasiOnline($konfirmasi_sdk = false){
