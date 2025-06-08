@@ -14,6 +14,8 @@
         </div>
     </div>
     <div class="alert alert-danger">
+        Mohon kehadiran nya 30 menit sebelum perkiraan panggilan <br>
+        pastikan <strong>Scan QR CODE</strong> dibawah ini saat sudah tiba di klinik <br>
         Mohon ambil antrian kembali apabila antrian terlewat
     </div>
     <div class="row mb-10">
