@@ -101,6 +101,7 @@ td {
         <div id="container">
 
         </div>
+        <br>
         <div class="alert alert-danger">
             <ul>
                 <li>Mohon kedatangannya 30 menit sebelum perkiraan panggilan antrian</li>
