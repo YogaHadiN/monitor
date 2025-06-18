@@ -2981,10 +2981,10 @@ class WablasController extends Controller
                 $message .= $this->pesanCekListHarianBerikutnya( $cek );
             } else if (
                 is_null( $cek->image )
-            ) (
+            ) {
                 Log::info(2984);
                 $message .= $this->masukkanGambar( $cek );
-            )
+            }
             $this->autoReply( $message );
         } else {
             $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
