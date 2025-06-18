@@ -93,6 +93,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        Log::info('construct');
         $this->fonnte = false;
         $this->image_url = null;
         $tenant_id = 1;
