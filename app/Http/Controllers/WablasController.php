@@ -2929,20 +2929,22 @@ class WablasController extends Controller
         return $result;
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
+        Log::info(2932);
         $message = '';
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
         if (!is_null($cek)) {
+            Log::info(2936);
             $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
             $whatsapp_bot = WhatsappBot::with('staf')
                 ->where('no_telp', $this->no_telp)
                 ->whereRaw('whatsapp_bot_service_id = ' . $whatsapp_bot_service_id. ' or whatsapp_bot_service_id = ' . $whatsapp_bot_service_id_input)
                 ->first();
-
             if (
                 !is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->jumlah )
             ) {
+                Log::info(2947);
                 if (is_numeric( $this->message )) {
                     $cek_list_dikerjakan->jumlah = $this->message;
                     $cek_list_dikerjakan->save();
@@ -2956,6 +2958,7 @@ class WablasController extends Controller
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
             ) {
+                Log::info(2961);
                 if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
@@ -2971,15 +2974,17 @@ class WablasController extends Controller
 
             $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
             if (
-                is_null( $cek->image )
-            ) {
-                $message .= $this->masukkanGambar( $cek );
-            } else if (
                 is_null( $cek->jumlah )
-            ) (
+            ) {
+                Log::info(2979);
                 $message .= $this->pesanCekListHarianBerikutnya( $cek );
+            } else if (
+                is_null( $cek->image )
+            ) (
+                Log::info(2984);
+                $message .= $this->masukkanGambar( $cek );
             )
-            $this->autoReply($message );
+            $this->autoReply( $message );
         } else {
             $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
         }
