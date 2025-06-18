@@ -174,12 +174,14 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
-        Log::info( 'image_url');
-        Log::info( $this->image_url );
-        Log::info( 'message_type');
-        Log::info( $this->message_type );
-        Log::info( 'message');
-        Log::info( $this->message );
+        if ( $this->no_telp == '6281381912803' ) {
+            Log::info( 'image_url');
+            Log::info( $this->image_url );
+            Log::info( 'message_type');
+            Log::info( $this->message_type );
+            Log::info( 'message');
+            Log::info( $this->message );
+        }
 
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
