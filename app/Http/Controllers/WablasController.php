@@ -2792,6 +2792,8 @@ class WablasController extends Controller
         $today = Carbon::now()->format("Y-m-d");
         $cek_list_dikerjakan_hari_ini = CekListDikerjakan::whereDate('created_at', $today)
                                                         ->whereIn('cek_list_ruangan_id', $cek_list_ruangan_harian_ids)
+                                                        ->whereNotNull('jumlah')
+                                                        ->whereNotNull('image')
                                                         ->groupBy('cek_list_ruangan_id')
                                                         ->get();
         Log::info('masihAdaYangBelumCekListHariIni');
@@ -2892,6 +2894,8 @@ class WablasController extends Controller
         return $this->prosesCekListDilakukan(1,1,2); // harian
     }
     public function prosesCekListHarianInput(){
+        Log::info('prosesCekListHarianInput');
+        Log::info( $this->masihAdaYangBelumCekListHariIni() );
         if ( $this->masihAdaYangBelumCekListHariIni() ) {
             $this->prosesCekListDikerjakanInput(1,1,2);
         } else {
