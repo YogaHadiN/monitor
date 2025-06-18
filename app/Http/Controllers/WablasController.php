@@ -2950,37 +2950,60 @@ class WablasController extends Controller
         $result = !is_null( $this->whatsapp_bot ) && $this->whatsapp_bot->whatsapp_bot_service_id == $whatsapp_bot_service_id;
         return $result;
     }
+
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
-        $this->chatBotLog(__LINE__);
-        $message = '';
+        $message= '';
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
         if (!is_null($cek)) {
-            $this->chatBotLog(__LINE__);
             $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
             $whatsapp_bot = WhatsappBot::with('staf')
                 ->where('no_telp', $this->no_telp)
                 ->whereRaw('whatsapp_bot_service_id = ' . $whatsapp_bot_service_id. ' or whatsapp_bot_service_id = ' . $whatsapp_bot_service_id_input)
                 ->first();
+
             if (
-                !is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot ) &&
-                is_null( $cek_list_dikerjakan->jumlah )
+                is_null(  $cek_list_dikerjakan  )
             ) {
-                $this->chatBotLog(__LINE__);
-                if (is_numeric( $this->message )) {
-                    $cek_list_dikerjakan->jumlah = $this->message;
-                    $cek_list_dikerjakan->save();
+                if ( is_numeric( $this->message ) ) {
+                    CekListDikerjakan::create([
+                        'jumlah'              => $this->message,
+                        'staf_id'             => $whatsapp_bot->staf_id,
+                        'tenant_id'           => $whatsapp_bot->staf->tenant_id,
+                        'cek_list_ruangan_id' => $cek->id
+                    ]);
+                    /* $this->autoReply($this->masukkanGambar($cek) ); */
                 } else {
                     $message .= 'Balasan anda tidak dikenali. Mohon masukkan angka';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
+                    /* $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ); */
+                    /* $message .= $this->pesanCekListHarianBerikutnya( $cek ); */
+                    /* $this->autoReply($message ); */
                 }
+            } else if (
+                !is_null( $whatsapp_bot ) &&
+                !is_null(  $cek_list_dikerjakan  ) &&
+                is_null( $cek_list_dikerjakan->jumlah )
+            ) {
+                if ( is_numeric( $this->message ) ) {
+                    $cek_list_dikerjakan->jumlah = $this->message;
+                    $cek_list_dikerjakan->save();
+                    /* $this->autoReply($this->masukkanGambar($cek) ); */
+                } else {
+                    $message .= 'Balasan anda tidak dikenali. Mohon masukkan angka';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    /* $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ); */
+                    /* $message .= $this->pesanCekListHarianBerikutnya( $cek ); */
+                    /* $this->autoReply($message ); */
+                }
+                /* $this->autoReply($this->masukkanGambar($cek) ); */
             } else if (
                 !is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
             ) {
-                $this->chatBotLog(__LINE__);
                 if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
@@ -2989,30 +3012,97 @@ class WablasController extends Controller
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                 }
-            }
-
-            $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
-
-            if (!is_null($cek)) {
-                $this->chatBotLog(__LINE__);
-                $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+                $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
                 if (
-                    is_null( $cek_list_dikerjakan->jumlah )
+                    !is_null( $cek )
                 ) {
-                    $this->chatBotLog(__LINE__);
-                    $message .= $this->pesanCekListHarianBerikutnya( $cek );
-                } else if (
-                    is_null( $cek_list_dikerjakan->image )
-                ) {
-                    $this->chatBotLog(__LINE__);
-                    $message .= $this->masukkanGambar( $cek );
+                    $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+                    if (
+                        !is_null($cek_list_dikerjakan)
+                    ) {
+                        if (
+                            is_null($cek_list_dikerjakan->jumlah)
+                        ) {
+                            $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
+                        } else if (
+                            is_null($cek_list_dikerjakan->image)
+                        ) {
+                            $this->autoReply($this->masukkanGambar( $cek ) );
+                        }
+                    } else {
+                        $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
+                    }
+                } else {
+                    $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
                 }
             }
-            $this->autoReply( $message );
         } else {
             $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
         }
     }
+    /* public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){ */
+    /*     $this->chatBotLog(__LINE__); */
+    /*     $message = ''; */
+    /*     $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ); */
+    /*     if (!is_null($cek)) { */
+    /*         $this->chatBotLog(__LINE__); */
+    /*         $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id ); */
+    /*         $whatsapp_bot = WhatsappBot::with('staf') */
+    /*             ->where('no_telp', $this->no_telp) */
+    /*             ->whereRaw('whatsapp_bot_service_id = ' . $whatsapp_bot_service_id. ' or whatsapp_bot_service_id = ' . $whatsapp_bot_service_id_input) */
+    /*             ->first(); */
+    /*         if ( */
+    /*             !is_null(  $cek_list_dikerjakan  ) && */
+    /*             !is_null( $whatsapp_bot ) && */
+    /*             is_null( $cek_list_dikerjakan->jumlah ) */
+    /*         ) { */
+    /*             $this->chatBotLog(__LINE__); */
+    /*             if (is_numeric( $this->message )) { */
+    /*                 $cek_list_dikerjakan->jumlah = $this->message; */
+    /*                 $cek_list_dikerjakan->save(); */
+    /*             } else { */
+    /*                 $message .= 'Balasan anda tidak dikenali. Mohon masukkan angka'; */
+    /*                 $message .= PHP_EOL; */
+    /*                 $message .= PHP_EOL; */
+    /*             } */
+    /*         } else if ( */
+    /*             !is_null(  $cek_list_dikerjakan  ) && */
+    /*             !is_null( $whatsapp_bot ) && */
+    /*             is_null( $cek_list_dikerjakan->image ) */
+    /*         ) { */
+    /*             $this->chatBotLog(__LINE__); */
+    /*             if ( $this->message_type == 'image' ) { */
+    /*                 $cek_list_dikerjakan->image = $this->uploadImage(); */
+    /*                 $cek_list_dikerjakan->save(); */
+    /*             } else { */
+    /*                 $message .= 'Balasan anda tidak dikenali. Mohon masukkan gambar'; */
+    /*                 $message .= PHP_EOL; */
+    /*                 $message .= PHP_EOL; */
+    /*             } */
+    /*         } */
+
+    /*         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ); */
+
+    /*         if (!is_null($cek)) { */
+    /*             $this->chatBotLog(__LINE__); */
+    /*             $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id ); */
+    /*             if ( */
+    /*                 is_null( $cek_list_dikerjakan->jumlah ) */
+    /*             ) { */
+    /*                 $this->chatBotLog(__LINE__); */
+    /*                 $message .= $this->pesanCekListHarianBerikutnya( $cek ); */
+    /*             } else if ( */
+    /*                 is_null( $cek_list_dikerjakan->image ) */
+    /*             ) { */
+    /*                 $this->chatBotLog(__LINE__); */
+    /*                 $message .= $this->masukkanGambar( $cek ); */
+    /*             } */
+    /*         } */
+    /*         $this->autoReply( $message ); */
+    /*     } else { */
+    /*         $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) ); */
+    /*     } */
+    /* } */
     public function cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input){
         $whatsapp_bot_service = WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->first();
 
