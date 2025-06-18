@@ -77,6 +77,7 @@ class WablasController extends Controller
 	public $whatsapp_registration;
 	public $whatsapp_recovery_index;
 	public $whatsapp_complaint;
+	public $message_reply;
 	public $tenant;
 	public $pesan_error;
 	public $failed_therapy;
@@ -93,7 +94,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info('construct');
+        $this->message_reply = '';
         $this->fonnte = false;
         $this->image_url = null;
         $tenant_id = 1;
@@ -2834,8 +2835,6 @@ class WablasController extends Controller
             ]);
             foreach ($cek_list_ruangan_harians as $cek) {
                 $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
-                if ( $cek->id == 20 ) {
-                }
                 if (
                     is_null(  $cek_list_dikerjakan  ) ||
                     ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->jumlah  ) ) ||
@@ -2860,32 +2859,32 @@ class WablasController extends Controller
     }
 
     public function pesanCekListHarianBerikutnya($cek){
-        $message = "Silahkan cek ";
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= '*'.$cek->cekList->cek_list . '*';
-        $message .= PHP_EOL;
-        $message .= "jumlah " . $cek->limit->limit . ' ' . $cek->jumlah_normal;
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Di ruangan ";
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "*" . $cek->ruangan->nama . '*';
-        return $message;
+        $this->message_reply .= "Silahkan cek ";
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= '*'.$cek->cekList->cek_list . '*';
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= "jumlah " . $cek->limit->limit . ' ' . $cek->jumlah_normal;
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= "Di ruangan ";
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= "*" . $cek->ruangan->nama . '*';
+        return $this->message_reply;
     }
     public function masukkanGambar($cek){
-        $message = "Mohon masukkan gambar  ";
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= '*'.$cek->cekList->cek_list . '*';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Di ruangan ";
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "*" . $cek->ruangan->nama . '*';
-        return $message;
+        $this->message_reply .= "Mohon masukkan gambar  ";
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= '*'.$cek->cekList->cek_list . '*';
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= "Di ruangan ";
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= PHP_EOL;
+        $this->message_reply .= "*" . $cek->ruangan->nama . '*';
+        return $this->message_reply;
     }
 
     //
@@ -2952,7 +2951,7 @@ class WablasController extends Controller
     }
 
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
-        $message= '';
+        $cek_list_selesai = false;
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
         if (!is_null($cek)) {
             $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
@@ -2972,14 +2971,10 @@ class WablasController extends Controller
                         'tenant_id'           => $whatsapp_bot->staf->tenant_id,
                         'cek_list_ruangan_id' => $cek->id
                     ]);
-                    /* $this->autoReply($this->masukkanGambar($cek) ); */
                 } else {
-                    $message .= 'Balasan anda tidak dikenali. Mohon masukkan angka';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    /* $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ); */
-                    /* $message .= $this->pesanCekListHarianBerikutnya( $cek ); */
-                    /* $this->autoReply($message ); */
+                    $this->message_reply .= 'Balasan anda tidak dikenali. Mohon masukkan angka';
+                    $this->message_reply .= PHP_EOL;
+                    $this->message_reply .= PHP_EOL;
                 }
             } else if (
                 !is_null( $whatsapp_bot ) &&
@@ -2989,16 +2984,11 @@ class WablasController extends Controller
                 if ( is_numeric( $this->message ) ) {
                     $cek_list_dikerjakan->jumlah = $this->message;
                     $cek_list_dikerjakan->save();
-                    /* $this->autoReply($this->masukkanGambar($cek) ); */
                 } else {
-                    $message .= 'Balasan anda tidak dikenali. Mohon masukkan angka';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    /* $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ); */
-                    /* $message .= $this->pesanCekListHarianBerikutnya( $cek ); */
-                    /* $this->autoReply($message ); */
+                    $this->message_reply .= 'Balasan anda tidak dikenali. Mohon masukkan angka';
+                    $this->message_reply .= PHP_EOL;
+                    $this->message_reply .= PHP_EOL;
                 }
-                /* $this->autoReply($this->masukkanGambar($cek) ); */
             } else if (
                 !is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot ) &&
@@ -3008,35 +2998,44 @@ class WablasController extends Controller
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
                 } else {
-                    $message .= 'Balasan anda tidak dikenali. Mohon masukkan gambar';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                }
-                $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
-                if (
-                    !is_null( $cek )
-                ) {
-                    $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
-                    if (
-                        !is_null($cek_list_dikerjakan)
-                    ) {
-                        if (
-                            is_null($cek_list_dikerjakan->jumlah)
-                        ) {
-                            $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
-                        } else if (
-                            is_null($cek_list_dikerjakan->image)
-                        ) {
-                            $this->autoReply($this->masukkanGambar( $cek ) );
-                        }
-                    } else {
-                        $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
-                    }
-                } else {
-                    $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
+                    $this->message_reply .= 'Balasan anda tidak dikenali. Mohon masukkan gambar';
+                    $this->message_reply .= PHP_EOL;
+                    $this->message_reply .= PHP_EOL;
                 }
             }
+
+            // ================================================================
+            // Setelah database terupdate / tidak terupdate, lanjut atur autoreply berdasarkan data yang tersimpan
+            // ================================================================
+            //
+            $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
+            if (
+                !is_null( $cek )
+            ) {
+                $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
+                if (
+                    !is_null($cek_list_dikerjakan)
+                ) {
+                    if (
+                        is_null($cek_list_dikerjakan->jumlah)
+                    ) {
+                        $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
+                    } else if (
+                        is_null($cek_list_dikerjakan->image)
+                    ) {
+                        $this->autoReply($this->masukkanGambar( $cek ) );
+                    }
+                } else {
+                    $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
+                }
+            } else {
+                $cek_list_selesai = true;
+            }
         } else {
+            $cek_list_selesai = true;
+        }
+
+        if ($cek_list_selesai) {
             $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
         }
     }
