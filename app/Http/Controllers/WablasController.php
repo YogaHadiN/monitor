@@ -2980,6 +2980,11 @@ class WablasController extends Controller
             }
 
             $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
+            Log::info('------------------');
+            Log::info( $cek );
+            Log::info('------------------');
+            dd( $cek );
+
             if (
                 is_null( $cek->jumlah )
             ) {
