@@ -2842,15 +2842,14 @@ class WablasController extends Controller
         return null;
     }
     public function cekListDikerjakanUntukCekListRuanganIni( $cek_list_ruangan_id ){
-        $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
+        $carbon = Carbon::now()->format('Y-m-d H:i:s');
         return CekListDikerjakan::where('cek_list_ruangan_id',  $cek_list_ruangan_id )
-                            ->whereBetween('created_at', [
-                                    $startOfDay,
-                                    $endOfDay
-                                ])
-                            ->first();
+                            ->whereDate('created_at', $today)
+                            ->firstOrCreate([
+                                'staf_id' => $this->whatsapp_bot->staf_id,
+                                'cek_list_ruangan_id' => $cek_list_ruangan_id,
+                                'no_telp' => $this->whatsapp_bot->no_telp
+                            ]);
     }
 
     public function pesanCekListHarianBerikutnya($cek){
