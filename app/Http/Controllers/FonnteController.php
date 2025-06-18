@@ -145,10 +145,10 @@ class FonnteController extends Controller
         $wablas               = new WablasController;
         $wablas->room_id      = null;
         $wablas->no_telp      = $sender;
-        $wablas->message_type = isset( $url ) ? 'image' : 'text';
-        $wablas->image_url = isset($url) ? $url : null;
+        $wablas->message_type = !empty( $url ) ? 'image' : 'text';
+        $wablas->image_url    = !empty($url) ? $url : null;
         $wablas->message      = strtolower($message);
-        $wablas->fonnte      = true;
+        $wablas->fonnte       = true;
         $wablas->webhook();
 
 
