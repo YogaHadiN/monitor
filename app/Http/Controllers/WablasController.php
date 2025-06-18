@@ -2842,7 +2842,7 @@ class WablasController extends Controller
         return null;
     }
     public function cekListDikerjakanUntukCekListRuanganIni( $cek_list_ruangan_id ){
-        $carbon = Carbon::now()->format('Y-m-d H:i:s');
+        $today = Carbon::now()->format('Y-m-d');
         return CekListDikerjakan::where('cek_list_ruangan_id',  $cek_list_ruangan_id )
                             ->whereDate('created_at', $today)
                             ->firstOrCreate([
