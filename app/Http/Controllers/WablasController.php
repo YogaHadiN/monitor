@@ -2962,6 +2962,7 @@ class WablasController extends Controller
                 if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
+                    $this->autoReply($this->pesanCekListHarianBerikutnya($cek) );
                 } else {
                     $message = 'Balasan anda tidak dikenali. Mohon masukkan gambar';
                     $message .= PHP_EOL;
