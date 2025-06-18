@@ -2794,6 +2794,10 @@ class WablasController extends Controller
                                                         ->whereIn('cek_list_ruangan_id', $cek_list_ruangan_harian_ids)
                                                         ->groupBy('cek_list_ruangan_id')
                                                         ->get();
+        Log::info('masihAdaYangBelumCekListHariIni');
+        Log::info([
+            $cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count()
+        ]);
         return !$cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
     }
     public function cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
