@@ -2795,6 +2795,7 @@ class WablasController extends Controller
         return $cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
     }
     public function cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
+        $this->chatBotLog(__LINE__);
         $cek_list_ruangan_harians = CekListRuangan::with('cekList', 'ruangan')
                                     ->where('frekuensi_cek_id', $frekuensi_cek_id)
                                     ->orderBy('ruangan_id', 'asc')
@@ -2806,13 +2807,9 @@ class WablasController extends Controller
         }
 
         $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
+        $today = $carbon->format('Y-m-d');
         $cek_list_harians_dikerjakans = CekListDikerjakan::whereIn('cek_list_ruangan_id', $cek_list_ruangan_ids)
-                                                        ->whereBetween('created_at', [
-                                                                $startOfDay,
-                                                                $endOfDay
-                                                            ])
+                                                        ->whereDate('created_at', $today)
                                                         ->whereNotNull('image')
                                                         ->whereNotNull('jumlah')
                                                         ->groupBy('cek_list_ruangan_id')
@@ -2907,16 +2904,20 @@ class WablasController extends Controller
         $this->prosesCekListDikerjakanInput(3,3,4);
     }
     public function prosesCekListDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
+        $this->chatBotLog(__LINE__);
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
         if ($cek) {
+            $this->chatBotLog(__LINE__);
             $message = $this->pesanCekListHarianBerikutnya( $cek );
         } else {
+            $this->chatBotLog(__LINE__);
             WhatsappBot::where('no_telp', $this->no_telp)->whereIn('whatsapp_bot_service_id',[
                 $whatsapp_bot_service_id,
                 $whatsapp_bot_service_id_input
             ])->delete();
             $message = 'Cek List selesai';
         }
+        $this->chatBotLog(__LINE__);
         $this->autoReply($message );
     }
 
@@ -2959,12 +2960,21 @@ class WablasController extends Controller
             }
             if (
                 !is_null(  $cek_list_dikerjakan  ) &&
-                is_null( $cek_list_dikerjakan->jumlah ) &&
-                !is_null( $whatsapp_bot )
+                !is_null( $whatsapp_bot ) &&
+                is_null( $cek_list_dikerjakan->jumlah )
             ) {
-                $cek_list_dikerjakan->jumlah = $this->message;
-                $cek_list_dikerjakan->save();
-                $this->autoReply($this->masukkanGambar($cek) );
+                if (is_numeric( $this->message )) {
+                    $cek_list_dikerjakan->jumlah = $this->message;
+                    $cek_list_dikerjakan->save();
+                    $this->autoReply($this->masukkanGambar($cek) );
+                } else {
+                    $message = 'Balasan anda tidak dikenali. Mohon masukkan angka';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
+                    $message .= $this->pesanCekListHarianBerikutnya( $cek );
+                    $this->autoReply($message );
+                }
             } else if (
                 !is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot ) &&
@@ -2973,30 +2983,38 @@ class WablasController extends Controller
                 if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
+                } else {
+                    $message = 'Balasan anda tidak dikenali. Mohon masukkan gambar';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
+                    $message .= $this->masukkanGambar( $cek );
+                    $this->autoReply($message );
                 }
-                $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
+            }
+
+            $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
+            if (
+                !is_null( $cek )
+            ) {
+                $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                 if (
-                    !is_null( $cek )
+                    !is_null($cek_list_dikerjakan)
                 ) {
-                    $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                     if (
-                        !is_null($cek_list_dikerjakan)
+                        is_null($cek_list_dikerjakan->jumlah)
                     ) {
-                        if (
-                            is_null($cek_list_dikerjakan->jumlah)
-                        ) {
-                            $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
-                        } else if (
-                            is_null($cek_list_dikerjakan->image)
-                        ) {
-                            $this->autoReply($this->masukkanGambar( $cek ) );
-                        }
-                    } else {
                         $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
+                    } else if (
+                        is_null($cek_list_dikerjakan->image)
+                    ) {
+                        $this->autoReply($this->masukkanGambar( $cek ) );
                     }
                 } else {
-                    $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
+                    $this->autoReply($this->pesanCekListHarianBerikutnya( $cek ) );
                 }
+            } else {
+                $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
             }
         } else {
             $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
