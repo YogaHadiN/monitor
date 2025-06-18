@@ -2983,7 +2983,6 @@ class WablasController extends Controller
             Log::info('------------------');
             Log::info( $cek );
             Log::info('------------------');
-            dd( $cek );
 
             if (!is_null($cek)) {
                 Log::info(2936);
