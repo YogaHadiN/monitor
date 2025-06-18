@@ -2968,9 +2968,6 @@ class WablasController extends Controller
                 if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
-
-                    $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
-                    $this->autoReply($this->pesanCekListHarianBerikutnya($cek) );
                 } else {
                     $message .= 'Balasan anda tidak dikenali. Mohon masukkan gambar';
                     $message .= PHP_EOL;
@@ -2979,26 +2976,22 @@ class WablasController extends Controller
             }
 
             $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
-            Log::info('------------------');
-            Log::info( $cek );
-            Log::info('------------------');
 
             if (!is_null($cek)) {
-                Log::info(2936);
+                $this->chatBotLog(__LINE__);
                 $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                 if (
                     is_null( $cek_list_dikerjakan->jumlah )
                 ) {
-                    Log::info(2979);
+                    $this->chatBotLog(__LINE__);
                     $message .= $this->pesanCekListHarianBerikutnya( $cek );
                 } else if (
                     is_null( $cek_list_dikerjakan->image )
                 ) {
-                    Log::info(2984);
+                    $this->chatBotLog(__LINE__);
                     $message .= $this->masukkanGambar( $cek );
                 }
             }
-
             $this->autoReply( $message );
         } else {
             $this->autoReply($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
