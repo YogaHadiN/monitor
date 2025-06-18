@@ -2789,13 +2789,8 @@ class WablasController extends Controller
 
     public function masihAdaYangBelumCekListHariIni(){
         $cek_list_ruangan_harian_ids  = CekListRuangan::where('frekuensi_cek_id', 1)->pluck('id');
-        $carbon = Carbon::now();
-        $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
-        $cek_list_dikerjakan_hari_ini = CekListDikerjakan::whereBetween('created_at', [
-                                                                $startOfDay,
-                                                                $endOfDay
-                                                            ])
+        $today = Carbon::now()->format("Y-m-d");
+        $cek_list_dikerjakan_hari_ini = CekListDikerjakan::whereDate('created_at', $today)
                                                         ->whereIn('cek_list_ruangan_id', $cek_list_ruangan_harian_ids)
                                                         ->groupBy('cek_list_ruangan_id')
                                                         ->get();
@@ -2893,7 +2888,11 @@ class WablasController extends Controller
         return $this->prosesCekListDilakukan(1,1,2); // harian
     }
     public function prosesCekListHarianInput(){
-        $this->prosesCekListDikerjakanInput(1,1,2);
+        if ( $this->masihAdaYangBelumCekListHariIni() ) {
+            $this->prosesCekListDikerjakanInput(1,1,2);
+        } else {
+            $this->autoReply('Semua Cek List sudah dikerjakan');
+        }
     }
     //
     //Cek List Bulanan
@@ -2935,11 +2934,11 @@ class WablasController extends Controller
         return $result;
     }
     public function prosesCekListDikerjakanInput( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
-        Log::info(2932);
+        $this->chatBotLog(__LINE__);
         $message = '';
         $cek = $this->cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input );
         if (!is_null($cek)) {
-            Log::info(2936);
+            $this->chatBotLog(__LINE__);
             $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
             $whatsapp_bot = WhatsappBot::with('staf')
                 ->where('no_telp', $this->no_telp)
@@ -2964,7 +2963,7 @@ class WablasController extends Controller
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
             ) {
-                Log::info(2961);
+                $this->chatBotLog(__LINE__);
                 if ( $this->message_type == 'image' ) {
                     $cek_list_dikerjakan->image = $this->uploadImage();
                     $cek_list_dikerjakan->save();
