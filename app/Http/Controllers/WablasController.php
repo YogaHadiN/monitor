@@ -2800,11 +2800,12 @@ class WablasController extends Controller
                                                         ->get();
         Log::info('masihAdaYangBelumCekListHariIni');
         Log::info([
-            $cek_list_ruangan_harian_ids->count() , $cek_list_dikerjakan_hari_ini->count()
+            $cek_list_ruangan_harian_ids->count() ,  // ini hasilnya 87
+            $cek_list_dikerjakan_hari_ini->count() // ini hasilnya 1
         ]);
-        $result = !$cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
+        $result = !( $cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count() );
         Log::info("resutl");
-        Log::info( $result );
+        Log::info( $result ); // kenapa result hasilnya true?
         return $result;
     }
     public function cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
