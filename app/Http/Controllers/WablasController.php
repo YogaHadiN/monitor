@@ -2901,7 +2901,9 @@ class WablasController extends Controller
         if ( $this->masihAdaYangBelumCekListHariIni() ) {
             $this->prosesCekListDikerjakanInput(1,1,2);
         } else {
-            $this->autoReply('Semua Cek List sudah dikerjakan');
+            $message_done = 'Semua Cek List sudah dikerjakan';
+            Log::info($message_done);
+            $this->autoReply($message_done);
         }
     }
     //
