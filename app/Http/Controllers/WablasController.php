@@ -2796,7 +2796,7 @@ class WablasController extends Controller
                                                         ->get();
         Log::info('masihAdaYangBelumCekListHariIni');
         Log::info([
-            $cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count()
+            $cek_list_ruangan_harian_ids->count() , $cek_list_dikerjakan_hari_ini->count()
         ]);
         return !$cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
     }
