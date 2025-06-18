@@ -2802,7 +2802,10 @@ class WablasController extends Controller
         Log::info([
             $cek_list_ruangan_harian_ids->count() , $cek_list_dikerjakan_hari_ini->count()
         ]);
-        return !$cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
+        $result = !$cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count();
+        Log::info("resutl");
+        Log::info( $result );
+        return $result;
     }
     public function cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
         $this->chatBotLog(__LINE__);
@@ -2898,7 +2901,6 @@ class WablasController extends Controller
     public function prosesCekListHarianInput(){
         Log::info('prosesCekListHarianInput');
         $masihAdaYangBelum =  $this->masihAdaYangBelumCekListHariIni() ;
-
         Log::info($masihAdaYangBelum);
         if ($masihAdaYangBelum) {
             $this->prosesCekListDikerjakanInput(1,1,2);
