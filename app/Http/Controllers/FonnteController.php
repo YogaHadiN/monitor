@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use Log;
 use App\Http\Controllers\WablasController;
 use Input;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Http;
 
 class FonnteController extends Controller
 {
@@ -52,6 +52,7 @@ class FonnteController extends Controller
     private function webhook()
     {
         header('Content-Type: application/json; charset=utf-8');
+
         $json      = file_get_contents('php://input');
         $data      = json_decode($json, true);
         $device    = $data['device'];
@@ -61,6 +62,8 @@ class FonnteController extends Controller
         $member    = $data['member']; //group member who send the message
         $name      = $data['name'];
         $location  = $data['location'];
+
+        $this->handleSunatboyChatbot($sender, strtolower($message));
 
         //data below will only received by device with all feature package
         //start
@@ -165,12 +168,13 @@ class FonnteController extends Controller
     }
 
 
+
     private function handleSunatboyChatbot($noWa, $message)
     {
         $stateKey = "sunatboy:$noWa:state";
         $state = Redis::get($stateKey) ?? 'ask_nama';
 
-        // Jika user nanya di luar alur (misalnya "berapa lama sembuh?")
+        // Jika user nanya sesuatu (ada tanda ? atau kata tanya)
         if ($state !== 'done' && $this->isQuestion($message)) {
             return $this->replyFonnte($noWa, $this->jawabPakaiGPT($message));
         }
@@ -221,6 +225,7 @@ class FonnteController extends Controller
                 ];
 
                 $ringkasan = "✅ Berikut data anak kakak:\n\n" . collect($summary)->map(fn($v, $k) => "$k: $v")->implode("\n");
+
                 return $this->replyFonnte($noWa, $ringkasan . "\n\nSaya bantu jadwalkan ya kak 🙏😊");
 
             case 'done':
@@ -232,26 +237,30 @@ class FonnteController extends Controller
         }
     }
 
-    private function isQuestion($msg)
+    private function isQuestion($text)
     {
-        return str_ends_with($msg, '?') || preg_match('/(berapa|bolehkah|gimana|apakah|aman)/i', $msg);
+        return (
+            str_ends_with($text, '?') ||
+            preg_match('/(berapa|bolehkah|gimana|apakah|aman|bisa|kapan)/i', $text)
+        ) &&
+        preg_match('/sunat|khitan/i', $msg);;
     }
 
-    private function jawabPakaiGPT($pesan)
+    private function jawabPakaiGPT($text)
     {
-        $apiKey = env('OPENAI_API_KEY');
-
-        $res = Http::withToken($apiKey)->post('https://api.openai.com/v1/chat/completions', [
+        $response = Http::withToken(env('OPENAI_API_KEY'))->post('https://api.openai.com/v1/chat/completions', [
             'model' => 'gpt-4',
             'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'Kamu adalah asisten ramah dari SunatBoy, klinik sunat modern. Jawablah pertanyaan orang tua dengan bahasa Indonesia yang sopan, hangat, dan meyakinkan.'
-                ],
-                ['role' => 'user', 'content' => $pesan],
+                ['role' => 'system', 'content' => 'Kamu adalah chatbot ramah dari klinik sunat anak SunatBoy. Jawablah dengan singkat, sopan, dan meyakinkan dalam Bahasa Indonesia.'],
+                ['role' => 'user', 'content' => $text],
             ]
         ]);
 
-        return $res['choices'][0]['message']['content'] ?? "Maaf kak, saya belum bisa jawab pertanyaan itu 🙏";
+        return $response['choices'][0]['message']['content'] ?? "Maaf kak, saya belum bisa jawab itu saat ini 🙏";
+    }
+
+    private function replyFonnte($target, $message)
+    {
+        return $this->sendFonnte($target, ['message' => $message]);
     }
 }
