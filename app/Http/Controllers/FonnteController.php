@@ -63,7 +63,7 @@ class FonnteController extends Controller
         $name      = $data['name'];
         $location  = $data['location'];
 
-        $this->handleSunatboyChatbot($sender, strtolower($message));
+        /* $this->handleSunatboyChatbot($sender, strtolower($message)); */
 
         //data below will only received by device with all feature package
         //start
