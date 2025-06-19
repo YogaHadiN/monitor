@@ -180,16 +180,21 @@ class FonnteController extends Controller
         Log::info( $state );
         Log::info('=====================');
 
-        if ($state === 'ask_nama') {
-            Redis::set("sunatboy:$noWa:nama", $message);
-            Redis::set($stateKey, 'ask_usia');
-            return $this->replyFonnte($noWa, "Terima kasih kak 🙏\nAnaknya usia berapa tahun ya? 👦");
+        if ($state === 'ask_nama' && $this->isQuestion($message)) {
+            // Jawab dulu dengan GPT
+            $this->replyFonnte($noWa, $this->jawabPakaiGPT($message));
+
+            // Lalu lanjut ke alur tanya nama
+            return $this->replyFonnte($noWa, "Halo kak 👋 Saya bantu informasinya ya.\nBoleh tahu nama kakak siapa?");
         }
 
         if ($state !== 'done' && $this->isQuestion($message)) {
-            // Jika belum mulai, paksa masuk ke percakapan alur sunat
+            // Jawab dengan GPT (misal: tanya harga)
+            $this->replyFonnte($noWa, $this->jawabPakaiGPT($message));
+
+            // Lanjutkan alur dari awal
             Redis::set($stateKey, 'ask_nama');
-            return $this->replyFonnte($noWa, "Halo kak 👋 Saya bantu informasinya ya.\nBoleh tahu nama kakak siapa?");
+            return $this->replyFonnte($noWa, "Boleh tahu nama kakak siapa? 😊");
         }
 
         switch ($state) {
