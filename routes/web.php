@@ -23,6 +23,10 @@ Route::get('/redis-test', function () {
     return \Illuminate\Support\Facades\Redis::get('cek');
 });
 
+Route::get('/pif', function () {
+    phpinfo();
+});
+
 Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
 Route::get('antrianperiksa/monitor_baru', [AntrianController::class, 'monitor_baru']);
