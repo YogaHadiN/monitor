@@ -243,7 +243,7 @@ class FonnteController extends Controller
             str_ends_with($text, '?') ||
             preg_match('/(berapa|bolehkah|gimana|apakah|aman|bisa|kapan)/i', $text)
         ) &&
-        preg_match('/sunat|khitan/i', $msg);;
+        preg_match('/sunat|khitan/i', $text);
     }
 
     private function jawabPakaiGPT($text)
