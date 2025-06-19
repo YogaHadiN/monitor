@@ -63,7 +63,7 @@ class FonnteController extends Controller
         $name      = $data['name'];
         $location  = $data['location'];
 
-        $this->handleSunatboyChatbot($sender, strtolower($message));
+        /* $this->handleSunatboyChatbot($sender, strtolower($message)); */
         //data below will only received by device with all feature package
         //start
         //
@@ -269,19 +269,7 @@ class FonnteController extends Controller
         $response = Http::withToken(env('OPENAI_API_KEY'))->post('https://api.openai.com/v1/chat/completions', [
             'model' => 'gpt-4',
             'messages' => [
-                ['role' => 'system', 'content' =><<<SYS
-                        Kamu adalah asisten ramah dari klinik sunat anak "SunatBoy".
-                        Balas pesan pengguna WhatsApp dengan gaya:
-                        - Sopan
-                        - Ramah
-                        - Singkat
-                        - Tidak menyebut kamu AI
-
-                        Apabila client bertanya harga jawab berikut :
-                        Biaya sunat tergantung usia, berat badan, dan jenis tindakan, kak 😊
-
-                        Setelah menjawab, jangan lupa arahkan ke pertanyaan selanjutnya: "Boleh tahu nama kakak siapa? 😊"
-                        SYS],
+                ['role' => 'system', 'content' => 'Kamu adalah chatbot ramah dari klinik sunat anak SunatBoy. Jawablah dengan singkat, sopan, dan meyakinkan dalam Bahasa Indonesia.'],
                 ['role' => 'user', 'content' => $text],
             ]
         ]);
