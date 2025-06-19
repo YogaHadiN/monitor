@@ -63,10 +63,10 @@ class FonnteController extends Controller
         $name      = $data['name'];
         $location  = $data['location'];
 
-        /* $this->handleSunatboyChatbot($sender, strtolower($message)); */
-
+        $this->handleSunatboyChatbot($sender, strtolower($message));
         //data below will only received by device with all feature package
         //start
+        //
         $url       = $data['url'];
         $filename  = $data['filename'];
         $extension = $data['extension'];
@@ -175,8 +175,21 @@ class FonnteController extends Controller
         $state = Redis::get($stateKey) ?? 'ask_nama';
 
         // Jika user nanya sesuatu (ada tanda ? atau kata tanya)
+        Log::info('=====================');
+        Log::info('state');
+        Log::info( $state );
+        Log::info('=====================');
+
+        if ($state === 'ask_nama') {
+            Redis::set("sunatboy:$noWa:nama", $message);
+            Redis::set($stateKey, 'ask_usia');
+            return $this->replyFonnte($noWa, "Terima kasih kak 🙏\nAnaknya usia berapa tahun ya? 👦");
+        }
+
         if ($state !== 'done' && $this->isQuestion($message)) {
-            return $this->replyFonnte($noWa, $this->jawabPakaiGPT($message));
+            // Jika belum mulai, paksa masuk ke percakapan alur sunat
+            Redis::set($stateKey, 'ask_nama');
+            return $this->replyFonnte($noWa, "Halo kak 👋 Saya bantu informasinya ya.\nBoleh tahu nama kakak siapa?");
         }
 
         switch ($state) {
