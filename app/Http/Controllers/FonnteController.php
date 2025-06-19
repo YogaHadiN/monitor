@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Log;
 use App\Http\Controllers\WablasController;
 use Input;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
 
 class FonnteController extends Controller
 {
@@ -26,36 +28,6 @@ class FonnteController extends Controller
             $this->webhook();
         }
 
-        /* $json = file_get_contents('php://input'); */
-        /* $data = json_decode($json, true); */
-        /* $device = $data['device']; */
-        /* $sender = $data['sender']; */
-        /* $message = $data['message']; */
-        /* $member= $data['member']; //group member who send the message */
-        /* $name = $data['name']; */
-        /* $location = $data['location']; */
-        /* //data below will only received by device with all feature package */
-        /* //start */
-        /* $url =  $data['url']; */
-        /* $filename =  $data['filename']; */
-        /* $extension=  $data['extension']; */
-
-        /* $data = compact( */
-        /*     'json' , */
-        /*     'data' , */
-        /*     'device' , */
-        /*     'sender' , */
-        /*     'message' , */
-        /*     'member', */
-        /*     'name' , */
-        /*     'location' , */
-        /*     'url' , */
-        /*     'filename' , */
-        /*     'extension' */
-        /* ); */
-
-        /* Log::info($data); */
-        /* sendFonnte($sender, $reply); */
 
     }
     public function getChaning(){
@@ -190,5 +162,96 @@ class FonnteController extends Controller
         curl_close($curl);
 
         return $response;
+    }
+
+
+    private function handleSunatboyChatbot($noWa, $message)
+    {
+        $stateKey = "sunatboy:$noWa:state";
+        $state = Redis::get($stateKey) ?? 'ask_nama';
+
+        // Jika user nanya di luar alur (misalnya "berapa lama sembuh?")
+        if ($state !== 'done' && $this->isQuestion($message)) {
+            return $this->replyFonnte($noWa, $this->jawabPakaiGPT($message));
+        }
+
+        switch ($state) {
+            case 'ask_nama':
+                Redis::set("sunatboy:$noWa:nama", $message);
+                Redis::set($stateKey, 'ask_usia');
+                return $this->replyFonnte($noWa, "Terima kasih kak 🙏\nAnaknya usia berapa tahun ya? 👦");
+
+            case 'ask_usia':
+                Redis::set("sunatboy:$noWa:usia", $message);
+                Redis::set($stateKey, 'ask_berat');
+                return $this->replyFonnte($noWa, "Berat badannya kira-kira berapa ya kak? ⚖️");
+
+            case 'ask_berat':
+                Redis::set("sunatboy:$noWa:berat", $message);
+                Redis::set($stateKey, 'ask_domisili');
+                return $this->replyFonnte($noWa, "Kakak domisili di mana ya? (kecamatan/kota) 🏡");
+
+            case 'ask_domisili':
+                Redis::set("sunatboy:$noWa:domisili", $message);
+                Redis::set($stateKey, 'ask_kekhawatiran');
+                return $this->replyFonnte($noWa, "Kalau boleh tahu kak, ada hal tertentu yang paling dikhawatirkan soal sunat ini? 😊");
+
+            case 'ask_kekhawatiran':
+                Redis::set("sunatboy:$noWa:kekhawatiran", $message);
+                Redis::set($stateKey, 'ask_tanggal');
+                return $this->replyFonnte($noWa, "Rencana sunatnya hari apa kak? 🗓️");
+
+            case 'ask_tanggal':
+                Redis::set("sunatboy:$noWa:tanggal", $message);
+                Redis::set($stateKey, 'ask_medis');
+                return $this->replyFonnte($noWa, "Apakah anak ada riwayat medis khusus? Misalnya alergi, fimosis, autis? 🧠");
+
+            case 'ask_medis':
+                Redis::set("sunatboy:$noWa:medis", $message);
+                Redis::set($stateKey, 'done');
+
+                $summary = [
+                    '👦 Nama' => Redis::get("sunatboy:$noWa:nama"),
+                    '🎂 Usia' => Redis::get("sunatboy:$noWa:usia"),
+                    '⚖️ Berat' => Redis::get("sunatboy:$noWa:berat"),
+                    '🏡 Domisili' => Redis::get("sunatboy:$noWa:domisili"),
+                    '🧠 Kekhawatiran' => Redis::get("sunatboy:$noWa:kekhawatiran"),
+                    '🗓️ Jadwal' => Redis::get("sunatboy:$noWa:tanggal"),
+                    '📄 Riwayat Medis' => Redis::get("sunatboy:$noWa:medis"),
+                ];
+
+                $ringkasan = "✅ Berikut data anak kakak:\n\n" . collect($summary)->map(fn($v, $k) => "$k: $v")->implode("\n");
+                return $this->replyFonnte($noWa, $ringkasan . "\n\nSaya bantu jadwalkan ya kak 🙏😊");
+
+            case 'done':
+                return $this->replyFonnte($noWa, "Terima kasih kak! Jika ingin mengubah data atau bertanya, tinggal balas ya 😊");
+
+            default:
+                Redis::set($stateKey, 'ask_nama');
+                return $this->replyFonnte($noWa, "Halo kak 👋 Saya bantu informasinya ya.\nBoleh tahu nama kakak siapa?");
+        }
+    }
+
+    private function isQuestion($msg)
+    {
+        return str_ends_with($msg, '?') || preg_match('/(berapa|bolehkah|gimana|apakah|aman)/i', $msg);
+    }
+
+    private function jawabPakaiGPT($pesan)
+    {
+        $apiKey = env('OPENAI_API_KEY');
+
+        $res = Http::withToken($apiKey)->post('https://api.openai.com/v1/chat/completions', [
+            'model' => 'gpt-4',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'Kamu adalah asisten ramah dari SunatBoy, klinik sunat modern. Jawablah pertanyaan orang tua dengan bahasa Indonesia yang sopan, hangat, dan meyakinkan.'
+                ],
+                ['role' => 'user', 'content' => $pesan],
+            ]
+        ]);
+
+        return $res['choices'][0]['message']['content'] ?? "Maaf kak, saya belum bisa jawab pertanyaan itu 🙏";
     }
 }

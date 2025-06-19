@@ -18,6 +18,10 @@ use App\Jobs\TestJob;
 */
 /* Route::get('/test/send-notelp', [\App\Http\Controllers\TestNotifikasiController::class, 'form']); */
 /* Route::post('/test/send-notelp', [\App\Http\Controllers\TestNotifikasiController::class, 'send']); */
+Route::get('/redis-test', function () {
+    \Illuminate\Support\Facades\Redis::set('cek', 'oke');
+    return \Illuminate\Support\Facades\Redis::get('cek');
+});
 
 Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
