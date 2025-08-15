@@ -24,8 +24,8 @@ use Illuminate\Support\Facades\Route;
 /* Route::post('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhook']); */
 
 
-Route::post('wablas/webhookcs', [\App\Http\Controllers\WablasEstetikController::class, 'webhook']);
-Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'webhook']);
+/* Route::post('wablas/webhookcs', [\App\Http\Controllers\WablasEstetikController::class, 'webhook']); */
+/* Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'webhook']); */
 
 
 
