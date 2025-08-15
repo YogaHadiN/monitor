@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']);
-Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
+/* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
+/* Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
 
-Route::get('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']);
-Route::post('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
+/* Route::get('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']); */
+/* Route::post('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
 
 /* Route::get('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhookGet']); */
 /* Route::post('qiscus/webhook', [\App\Http\Controllers\QiscusController::class, 'webhook']); */
@@ -38,14 +38,14 @@ Route::post('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::cl
 Route::post('fonnte/webhook/connect', [\App\Http\Controllers\FonnteController::class, 'postConnect']);
 Route::post('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::class, 'postChaining']);
 
-Route::get('fonnte_2/webhook', [\App\Http\Controllers\FonnteSecondController::class, 'getWebhook']);
-Route::get('fonnte_2/webhook/status', [\App\Http\Controllers\FonnteSecondController::class, 'getStatus']);
-Route::get('fonnte_2/webhook/connect', [\App\Http\Controllers\FonnteSecondController::class, 'getConnect']);
-Route::get('fonnte_2/webhook/chaining', [\App\Http\Controllers\FonnteSecondController::class, 'getChaning']);
-Route::post('fonnte_2/webhook', [\App\Http\Controllers\FonnteSecondController::class, 'postWebhook']);
-Route::post('fonnte_2/webhook/status', [\App\Http\Controllers\FonnteSecondController::class, 'postStatus']);
-Route::post('fonnte_2/webhook/connect', [\App\Http\Controllers\FonnteSecondController::class, 'postConnect']);
-Route::post('fonnte_2/webhook/chaining', [\App\Http\Controllers\FonnteSecondController::class, 'postChaining']);
+/* Route::get('fonnte_2/webhook', [\App\Http\Controllers\FonnteSecondController::class, 'getWebhook']); */
+/* Route::get('fonnte_2/webhook/status', [\App\Http\Controllers\FonnteSecondController::class, 'getStatus']); */
+/* Route::get('fonnte_2/webhook/connect', [\App\Http\Controllers\FonnteSecondController::class, 'getConnect']); */
+/* Route::get('fonnte_2/webhook/chaining', [\App\Http\Controllers\FonnteSecondController::class, 'getChaning']); */
+/* Route::post('fonnte_2/webhook', [\App\Http\Controllers\FonnteSecondController::class, 'postWebhook']); */
+/* Route::post('fonnte_2/webhook/status', [\App\Http\Controllers\FonnteSecondController::class, 'postStatus']); */
+/* Route::post('fonnte_2/webhook/connect', [\App\Http\Controllers\FonnteSecondController::class, 'postConnect']); */
+/* Route::post('fonnte_2/webhook/chaining', [\App\Http\Controllers\FonnteSecondController::class, 'postChaining']); */
 
 Route::get('antrian_online/bpjs/auth', [\App\Http\Controllers\AntrianOnlineController::class, 'token']);
 

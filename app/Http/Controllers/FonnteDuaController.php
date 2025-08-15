@@ -12,11 +12,9 @@ use Illuminate\Support\Facades\Http;
 class FonnteController extends Controller
 {
     public function getWebhook(){
-        /* Log::info( env('FONNTE_TOKEN') ); */
         Log::info('fonnte');
         Log::info('getWebhook');
         Log::info('yogggaaaa');
-        /* $this->webhook(); */
     }
     public function postWebhook(){
         $json      = file_get_contents('php://input');
@@ -27,8 +25,6 @@ class FonnteController extends Controller
         } else {
             $this->webhook();
         }
-
-
     }
     public function getChaning(){
     }
@@ -63,29 +59,21 @@ class FonnteController extends Controller
         $name      = $data['name'];
         $location  = $data['location'];
 
-        /* $this->handleSunatboyChatbot($sender, strtolower($message)); */
-        //data below will only received by device with all feature package
-        //start
-        //
         $url       = $data['url'];
         $filename  = $data['filename'];
         $extension = $data['extension'];
-        //end
 
+        $no_telp = NoTelp::where('no_telp', $sender)->first();
+        if (
+            $no_telp->no_kje_bot_berubah !== date('Y-m-d')
+        ) {
+            $no_telp->no_kje_bot_berubah = date('Y-m-d');
+            $no_telp->save();
 
-
-
-        $wablas               = new WablasController;
-        $wablas->room_id      = null;
-        $wablas->no_telp      = $sender;
-        $wablas->message_type = !empty( $url ) ? 'image' : 'text';
-        $wablas->image_url    = !empty($url) ? $url : null;
-        $wablas->message      = strtolower($message);
-        $wablas->fonnte       = true;
-        $wablas->webhook();
-
-
-
+            $wablas               = new WablasController;
+            $wablas->no_telp      = $sender;
+            $wablas->autoReply('Nomor pelayanan Klinik Jati Elok berubah menjadi 0821-1378-1271. Silahkan hubungi nomor tersebut. Mohon maaf atas ketidaknyamanannya');
+        }
     }
 
     public function sendFonnte($target, $data) {
@@ -124,8 +112,6 @@ class FonnteController extends Controller
 
         return $response;
     }
-
-
 
     private function handleSunatboyChatbot($noWa, $message)
     {
