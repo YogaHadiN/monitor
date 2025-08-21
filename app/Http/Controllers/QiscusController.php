@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
 use App\Models\AntrianPoli;
 use App\Models\Message;
 use App\Models\KeluhanEstetik;
@@ -111,7 +111,6 @@ class QiscusController extends Controller
 
         $no_telp = NoTelp::firstOrCreate([
             'no_telp' => $this->no_telp,
-            'tenant_id' => 1
         ]);
 
         $no_telp->touch();
@@ -120,23 +119,23 @@ class QiscusController extends Controller
              ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
              ->first();
 
-        if ( 
+        if (
             ( date('w') < 1 ||  date('w') > 5)
         ) {
             $this->gigi_buka = false;
         }
 
-        if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam 
+        if ( !( date('H') >= 15 && date('H') <= 19)) { // jam 3 sore sampai 8 malam
             $this->gigi_buka = false;
         }
 
-        if ( 
+        if (
             ( date('w') < 1 ||  date('w') > 5)
         ) {
             $this->estetika_buka = false;
         }
 
-        if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore 
+        if ( !( date('H') >= 11 && date('H') <= 15)) { // jam 11 siang sampai 5 sore
             $this->estetika_buka = false;
         }
 
@@ -154,7 +153,7 @@ class QiscusController extends Controller
     public function wablasGet(){
         return 'ok';
     }
-    
+
     public function libur(){
         $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1445 H";
         $message .= PHP_EOL;
@@ -177,32 +176,32 @@ class QiscusController extends Controller
         $message .= "Mohon maaf lahir dan batin";
         return $message;
     }
-	
+
 	public function webhook(){
         /* if ( */
         /*     $this->no_telp == '6281381912803' */
         /* ) { */
         /*      $request = [ */
-        /*        "version" => "v2", */ 
+        /*        "version" => "v2", */
         /*        "content" => [ */
         /*              "messages" => [ */
         /*                 [ */
-        /*                    "type" => "text", */ 
-        /*                    "text" => "Moga2 bisa webhoooooookkkkkkkk", */ 
-        /*                    "buttons" => [] */ 
-        /*                 ] */ 
-        /*              ], */ 
-        /*              "actions" => [], */ 
-        /*              "quick_replies" => [] */ 
-        /*           ] */ 
-        /*     ]; */ 
+        /*                    "type" => "text", */
+        /*                    "text" => "Moga2 bisa webhoooooookkkkkkkk", */
+        /*                    "buttons" => [] */
+        /*                 ] */
+        /*              ], */
+        /*              "actions" => [], */
+        /*              "quick_replies" => [] */
+        /*           ] */
+        /*     ]; */
         /*      echo json_encode( $request ); */
         /* } */
 
 
 
         if (
-            !is_null( $this->message ) 
+            !is_null( $this->message )
             /* && $this->no_telp == '6281381912803' */
         ) {
 
@@ -289,7 +288,7 @@ class QiscusController extends Controller
                     $this->sendBotCake($this->autoReplyComplainMessage() );
                     return false;
                 } else if (
-                    !$this->noTelpDalamChatWithAdmin() && 
+                    !$this->noTelpDalamChatWithAdmin() &&
                     (
                         $this->message == 'chat admin' ||
                         str_contains($this->message, 'mau nanya') ||
@@ -447,13 +446,13 @@ class QiscusController extends Controller
 
         $response              = '';
         $input_tidak_tepat     = false;
-        if (  
+        if (
             substr($this->message, 0, 5) == 'ulang' &&
             isset( $this->whatsapp_registration ) &&
             !is_null($this->whatsapp_registration->antrian)
         ) {
             $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antrian);
-        } else if ( 
+        } else if (
             isset( $this->whatsapp_registration ) &&
             $this->whatsapp_registration->registering_confirmation < 1
         ){
@@ -466,11 +465,11 @@ class QiscusController extends Controller
             ) {
                 $this->whatsapp_registration->registering_confirmation = 1;
                 $this->whatsapp_registration->save();
-            } 
-        } else if ( 
+            }
+        } else if (
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
-            is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
+            is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id )
         ){
             if (
                 $this->validasiRegistrasiPembayaran()
@@ -479,17 +478,17 @@ class QiscusController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
-            is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
+            is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient )
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
             if (
                 is_numeric( $this->message ) &&
-                (int)$this->message <= $dataCount && 
-                (int)$this->message > 0  
+                (int)$this->message <= $dataCount &&
+                (int)$this->message > 0
             ) {
                 $pasien = Pasien::find( $data[ (int) $this->message -1 ]->pasien_id );
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
@@ -503,22 +502,22 @@ class QiscusController extends Controller
                 ) {
                     $this->whatsapp_registration->antrian->kartu_asuransi_image = $pasien->bpjs_image;
                     $this->whatsapp_registration->antrian->nomor_bpjs           = $pasien->nomor_asuransi_bpjs;
-                } 
+                }
                 $this->whatsapp_registration->antrian->save();
             } else if (
                 is_numeric( $this->message ) &&
-                (int)$this->message > $dataCount && 
-                (int)$this->message > 0  
+                (int)$this->message > $dataCount &&
+                (int)$this->message > 0
             ){
                 $this->whatsapp_registration->antrian->register_previously_saved_patient  = $this->message;
             } else {
                 $this->input_tidak_tepat = true;
             }
             $this->whatsapp_registration->antrian->save();
-        } else if ( 
+        } else if (
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
-            is_null( $this->whatsapp_registration->antrian->nama ) 
+            is_null( $this->whatsapp_registration->antrian->nama )
         ) {
             if (
                 preg_match('~[0-9]+~', $this->message)
@@ -536,10 +535,10 @@ class QiscusController extends Controller
                 $this->whatsapp_registration->antrian->nama  = ucwords(strtolower($this->message));;
                 $this->whatsapp_registration->antrian->save();
             }
-        } else if ( 
+        } else if (
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
-            is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
+            is_null( $this->whatsapp_registration->antrian->tanggal_lahir )
         ) {
             $tanggal = $this->convertToPropperDate();
             if (!is_null( $tanggal )) {
@@ -548,7 +547,7 @@ class QiscusController extends Controller
             } else {
                 $this->input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
             !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) &&
@@ -557,12 +556,12 @@ class QiscusController extends Controller
             is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
             if ( $this->message_type == 'image' ) {
-                $this->whatsapp_registration->antrian->kartu_asuransi_image = $this->uploadImage(); 
+                $this->whatsapp_registration->antrian->kartu_asuransi_image = $this->uploadImage();
                 $this->whatsapp_registration->antrian->save();
             } else {
                 $this->input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             isset( $this->whatsapp_registration ) &&
             !is_null( $this->whatsapp_registration->antrian ) &&
             !is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) &&
@@ -603,7 +602,7 @@ class QiscusController extends Controller
             $response .= $this->uraianPengisian($this->whatsapp_registration->antrian);
         }
 
-        if ( 
+        if (
             !is_null($this->whatsapp_registration)
         ) {
             $botKirim = $this->botKirim($this->whatsapp_registration);
@@ -683,7 +682,7 @@ class QiscusController extends Controller
             $recovery_index_id = $this->recoveryIndexConverter();
             $antrian = Antrian::find($id);
             if (
-                !is_null($antrian) 
+                !is_null($antrian)
                 && !$antrian->recovery_index_id
                 && $antrian->no_telp == $this->no_telp
             ) {
@@ -724,13 +723,13 @@ class QiscusController extends Controller
         // Jika pasien berada di antrian kasir
         if (
             $this->antrian &&
-            $this->antrian->antriable_type == 'App\\Models\\AntrianKasir'             
+            $this->antrian->antriable_type == 'App\\Models\\AntrianKasir'
         ){
             $this->saveNomorTeleponPasien();
             // kirimkan nomor rekening beserta dengan jumlah yang harus ditransfer
         } else if (
             $this->antrian &&
-             $this->antrian->antriable_type == 'App\\Models\\Periksa' 
+             $this->antrian->antriable_type == 'App\\Models\\Periksa'
         ){
             $this->saveNomorTeleponPasien();
             // kirimkan umpan balik pelayanan
@@ -743,7 +742,7 @@ class QiscusController extends Controller
             $this->sendBotCake($this->pesanBalasanBilaTerdaftar( $this->antrian ) );
         }
     }
-    
+
 	private function clean($param)
 	{
         if (
@@ -813,7 +812,7 @@ class QiscusController extends Controller
             !is_null($this->whatsapp_registration) &&
             !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
-             is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id ) 
+             is_null( $this->whatsapp_registration->antrian->registrasi_pembayaran_id )
         ) {
 			$text = 'Bisa dibantu menggunakan pembayaran apa ';
             $text .=  PHP_EOL;
@@ -849,7 +848,7 @@ class QiscusController extends Controller
             !is_null($this->whatsapp_registration) &&
             !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
-             is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient ) 
+             is_null( $this->whatsapp_registration->antrian->register_previously_saved_patient )
         ) {
             $message = $this->pesanUntukPilihPasien();
             $payload[] = [
@@ -862,7 +861,7 @@ class QiscusController extends Controller
             !is_null($this->whatsapp_registration) &&
             !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
-             is_null( $this->whatsapp_registration->antrian->nama ) 
+             is_null( $this->whatsapp_registration->antrian->nama )
         ) {
             $message =  $this->tanyaNamaLengkapPasien(false);
             $message .=  'untuk nomor antrian *' . $this->whatsapp_registration->antrian->nomor_antrian . '* ?';
@@ -877,7 +876,7 @@ class QiscusController extends Controller
             !is_null($this->whatsapp_registration) &&
             !$this->whatsapp_registration_deleted &&
             !is_null($this->whatsapp_registration->antrian) &&
-             is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) 
+             is_null( $this->whatsapp_registration->antrian->tanggal_lahir )
         ) {
 			$text    = $this->tanyaTanggalLahirPasien($this->whatsapp_registration->antrian);
             $message = $text;
@@ -1021,19 +1020,19 @@ class QiscusController extends Controller
 		$encodedSignature     = base64_encode($signature);
 		$encodedAuthorization = base64_encode($pcareUname.':'.$pcarePWD.':'.$kdAplikasi);
 
-		$headers = array( 
-					"Accept: application/json", 
-					"X-cons-id:".$consID, 
-					"X-timestamp: ".$stamp, 
-					"X-signature: ".$encodedSignature, 
-					"X-authorization: Basic " .$encodedAuthorization 
-				); 
+		$headers = array(
+					"Accept: application/json",
+					"X-cons-id:".$consID,
+					"X-timestamp: ".$stamp,
+					"X-signature: ".$encodedSignature,
+					"X-authorization: Basic " .$encodedAuthorization
+				);
 
 		$ch = curl_init($uri);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); 
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$data = curl_exec($ch);
 		curl_close($ch);
 		return json_decode($data, true);
@@ -1156,7 +1155,7 @@ class QiscusController extends Controller
         $message .= "Simpan nomor ini di hape anda agar link di atas bisa aktif dan memudahkan anda mengklik";
         return $message;
     }
-    
+
     public function sendButton($data){
         $curl = curl_init();
         $token = env('WABLAS_TOKEN');
@@ -1243,13 +1242,13 @@ class QiscusController extends Controller
      */
     private function angkaPertama($pembanding) {
         $number = preg_replace("/[^0-9]/", "", $this->message);
-        return !empty( $this->message ) 
+        return !empty( $this->message )
             /* && ( $this->message_type == 'text' ) */
             && ( !empty( $number ) )
             && ( $this->message[0] ==  $pembanding|| $number[0] ==  $pembanding);
     }
-    
-    
+
+
     private function uploadImage()
     {
         if (
@@ -1298,7 +1297,7 @@ class QiscusController extends Controller
                 $this->lama()
             ) {
                 if ( count( $antrians ) ) {
-                    
+
                 }
 
                 $message = 'Sebelumnya kami mohon maaf atas ketidaknyaman yang kakak rasakan. ';
@@ -1359,9 +1358,9 @@ class QiscusController extends Controller
                 $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
                 if (
                     is_null( $antrian ) ||
-                    ( 
+                    (
                         !is_null( $antrian ) &&
-                        $antrian->satisfaction_index == 1 
+                        $antrian->satisfaction_index == 1
                     )
                 ) {
                     $message .= PHP_EOL;
@@ -1415,7 +1414,7 @@ class QiscusController extends Controller
                     ->update([
                         'satisfaction_index' => $satisfaction_index_ini
                     ]);
-            
+
             if(
                  $this->angkaPertama("1")  ||
                  $this->message == 'puas'
@@ -1471,13 +1470,13 @@ class QiscusController extends Controller
             $this->message == 'tidak ada perubahan'
         ) {
             $recovery_index_ini = $this->recoveryIndexConverter( $this->message );
-            $this->whatsapp_recovery_index->antrian->recovery_index_id = $recovery_index_ini; 
+            $this->whatsapp_recovery_index->antrian->recovery_index_id = $recovery_index_ini;
             $this->whatsapp_recovery_index->antrian->save();
             $nama = ucwords($this->whatsapp_recovery_index->antrian->antriable->pasien->nama);
 
             if(
                  $this->angkaPertama("3") ||
-                 $this->message == 'tidak ada perubahan' 
+                 $this->message == 'tidak ada perubahan'
             ){
                 $fail             = new FailedTherapy;
                 $fail->no_telp    = $this->no_telp;
@@ -1520,10 +1519,10 @@ class QiscusController extends Controller
             ( !is_null( $this->message ) && $this->message[0] == '2' )
         ) {
             $menunggu_ini = $this->menungguConverter( $this->message );
-            $this->kuesioner_menunggu_obat->antrian->menunggu = $menunggu_ini; 
+            $this->kuesioner_menunggu_obat->antrian->menunggu = $menunggu_ini;
             $this->kuesioner_menunggu_obat->antrian->save();
             $this->kuesioner_menunggu_obat->delete();
-            
+
             $message = 'Kakak akan kami infokan apabila obat telah selesai diracik';
             $message .= PHP_EOL;
             $message .= 'Meracik obat membutuhkan ketekunan dan ketelitian yang tinggi';
@@ -1566,7 +1565,7 @@ class QiscusController extends Controller
      *
      * @return void
      */
-    
+
 
     private function createWhatsappMainMenu(){
         $message = '*Klinik Jati Elok*';
@@ -1652,7 +1651,7 @@ class QiscusController extends Controller
         $text .= "Balas dengan angka *1,2 atau 3* sesuai informasi di atas";
         return $text;
     }
-    
+
     /**
      * undocumented function
      *
@@ -1660,7 +1659,7 @@ class QiscusController extends Controller
      */
     private function registerWhatsappBpjsDentistRegistration()
     {
-        if ( 
+        if (
             is_null($this->whatsapp_bpjs_dentist_registrations->registrasi_pembayaran_id)
         ) {
             if (
@@ -1673,8 +1672,8 @@ class QiscusController extends Controller
 
                 $message = $this->tanyaKetersediaanSlot();
                 $this->sendBotCake($message );
-            } 
-        } else if ( 
+            }
+        } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_booking)
         ) {
             $slots = $this->queryKetersediaanSlotBpjsSatuMingguKeDepan();
@@ -1704,7 +1703,7 @@ class QiscusController extends Controller
                 $message .= $this->tanyaKetersediaanSlot();
             }
             $this->sendBotCake($message );
-        } else if ( 
+        } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->register_previously_saved_patient)
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
@@ -1725,7 +1724,7 @@ class QiscusController extends Controller
                 $this->sendBotCake($this->tanyaNomorBpjsPasien() );
             }
             $this->whatsapp_bpjs_dentist_registrations->save();
-        } else if ( 
+        } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs)
         ) {
             $message = '';
@@ -1750,7 +1749,7 @@ class QiscusController extends Controller
                 $message .= $this->tanyaNomorBpjsPasien();
             }
             $this->sendBotCake($message );
-        } else if ( 
+        } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->nama)
         ) {
             if (
@@ -1765,7 +1764,7 @@ class QiscusController extends Controller
                 $message .= $this->tanyaNamaLengkapPasien();
                 $this->sendBotCake($message );
             }
-        } else if ( 
+        } else if (
             is_null($this->whatsapp_bpjs_dentist_registrations->tanggal_lahir)
         ) {
             $tanggal = $this->convertToPropperDate();
@@ -1782,7 +1781,7 @@ class QiscusController extends Controller
                 $message .= $this->tanyaTanggalLahirPasien($this->whatsapp_bpjs_dentist_registrations->antrian);
             }
             $this->sendBotCake($message );
-        } else if ( 
+        } else if (
             !$this->whatsapp_bpjs_dentist_registrations->data_konfirmation
         ) {
             if (
@@ -1795,7 +1794,7 @@ class QiscusController extends Controller
                     $this->whatsapp_bpjs_dentist_registrations->data_konfirmation  = 1;
                     $this->whatsapp_bpjs_dentist_registrations->save();
                     $this->masukkanDiAntrianPoli();
-                } else if ( 
+                } else if (
                     $this->message == '2'
                 ) {
                     WhatsappBpjsDentistRegistration::create([
@@ -1836,7 +1835,7 @@ class QiscusController extends Controller
         $nomor_lainnya = count($data) + 1;
         $message .= $nomor_lainnya. ". Lainnya ";
 
-        $balas_dengan .= ' atau ' . $nomor_lainnya . '*'; 
+        $balas_dengan .= ' atau ' . $nomor_lainnya . '*';
         $balas_dengan .= ' sesuai urutan di atas';
 
         $message .= PHP_EOL;
@@ -1854,7 +1853,7 @@ class QiscusController extends Controller
         $tanda_tanya = $question ? '?' : '';
         return 'Bisa dibantu *Nama Lengkap* pasien ' . $tanda_tanya;
     }
-    
+
     /**
      * undocumented function
      *
@@ -1907,28 +1906,28 @@ class QiscusController extends Controller
             ){
                 $bulan = '01';
             } else if(
-                trim($bulan) == 'februari' || 
+                trim($bulan) == 'februari' ||
                 trim($bulan) == 'feb' ||
                 trim($bulan) == '02' ||
                 trim($bulan) == '2'
             ){
                 $bulan = '02';
             } else if(
-                trim($bulan) == 'maret' || 
+                trim($bulan) == 'maret' ||
                 trim($bulan) == 'mar' ||
                 trim($bulan) == '03' ||
                 trim($bulan) == '3'
             ){
                 $bulan = '03';
             } else if(
-                trim($bulan) == 'april' || 
+                trim($bulan) == 'april' ||
                 trim($bulan) == 'apr' ||
                 trim($bulan) == '04' ||
                 trim($bulan) == '4'
 
             ){
                 $bulan = '04';
-            } else if( 
+            } else if(
                 trim($bulan) == 'mei'  ||
                 trim($bulan) == '05' ||
                 trim($bulan) == '5'
@@ -1936,7 +1935,7 @@ class QiscusController extends Controller
             ){
                 $bulan = '05';
             } else if(
-                trim($bulan) == 'juni' || 
+                trim($bulan) == 'juni' ||
                 trim($bulan) == 'jun' ||
                 trim($bulan) == '06' ||
                 trim($bulan) == '6'
@@ -1944,7 +1943,7 @@ class QiscusController extends Controller
             ){
                 $bulan = '06';
             } else if(
-                trim($bulan) == 'juli' || 
+                trim($bulan) == 'juli' ||
                 trim($bulan) == 'jul' ||
                 trim($bulan) == '07' ||
                 trim($bulan) == '7'
@@ -1958,8 +1957,8 @@ class QiscusController extends Controller
             ){
                 $bulan = '08';
             } else if(
-                trim($bulan) == 'september' || 
-                trim($bulan) == 'sept' || 
+                trim($bulan) == 'september' ||
+                trim($bulan) == 'sept' ||
                 trim($bulan) == 'sep' ||
                 trim($bulan) == '09' ||
                 trim($bulan) == '9'
@@ -1974,15 +1973,15 @@ class QiscusController extends Controller
             ){
                 $bulan = 10;
             } else if(
-                trim($bulan) == 'november' || 
-                trim($bulan) == 'nopember' || 
+                trim($bulan) == 'november' ||
+                trim($bulan) == 'nopember' ||
                 trim($bulan) == 'nov' ||
                 trim($bulan) == '11'
 
             ){
                 $bulan = 11;
             } else if(
-                trim($bulan) == 'desember' || 
+                trim($bulan) == 'desember' ||
                 trim($bulan) == 'des' ||
                 trim($bulan) == '12'
 
@@ -2442,11 +2441,11 @@ class QiscusController extends Controller
 
 
     public function balasJadwalKonsultasi(){
-        if ( 
+        if (
              $this->message == '1'  ||
              $this->message == '2'  ||
              $this->message == '3'  ||
-             $this->message == '4' 
+             $this->message == '4'
         ){
             WhatsappJadwalKonsultasiInquiry::where('created_at', 'like', date('Y-m-d') . '%')
                 ->where('no_telp', $this->no_telp)
@@ -2515,7 +2514,7 @@ class QiscusController extends Controller
         $message .= "_Atau ketik *chat admin* untuk bantuan admin_";
         return $message;
     }
-    
+
     public function balasJadwalDokterUmum(){
         $this->sendBotCake($this->queryJadwalKonsultasiByTipeKonsultasi(1) );
     }
@@ -2715,10 +2714,10 @@ class QiscusController extends Controller
                 $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
                 if ( $cek->id == 20 ) {
                 }
-                if ( 
+                if (
                     is_null(  $cek_list_dikerjakan  ) ||
                     ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->jumlah  ) ) ||
-                    ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->image  ) ) 
+                    ( !is_null( $cek_list_dikerjakan ) && is_null(  $cek_list_dikerjakan->image  ) )
                 ) {
                     return $cek;
                     break;
@@ -2820,7 +2819,7 @@ class QiscusController extends Controller
                 ->whereRaw('whatsapp_bot_service_id = ' . $whatsapp_bot_service_id. ' or whatsapp_bot_service_id = ' . $whatsapp_bot_service_id_input)
                 ->first();
 
-            if ( 
+            if (
                 is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot )
             ) {
@@ -2841,7 +2840,7 @@ class QiscusController extends Controller
                     $this->sendBotCake($message );
                 }
             }
-            if ( 
+            if (
                 !is_null(  $cek_list_dikerjakan  ) &&
                 is_null( $cek_list_dikerjakan->jumlah ) &&
                 !is_null( $whatsapp_bot )
@@ -2849,7 +2848,7 @@ class QiscusController extends Controller
                 $cek_list_dikerjakan->jumlah = $this->message;
                 $cek_list_dikerjakan->save();
                 $this->sendBotCake($this->masukkanGambar($cek) );
-            } else if ( 
+            } else if (
                 !is_null(  $cek_list_dikerjakan  ) &&
                 !is_null( $whatsapp_bot ) &&
                 is_null( $cek_list_dikerjakan->image )
@@ -2863,10 +2862,10 @@ class QiscusController extends Controller
                     !is_null( $cek )
                 ) {
                     $cek_list_dikerjakan = $this->cekListDikerjakanUntukCekListRuanganIni( $cek->id );
-                    if ( 
+                    if (
                         !is_null($cek_list_dikerjakan)
                     ) {
-                        if (  
+                        if (
                             is_null($cek_list_dikerjakan->jumlah)
                         ) {
                             $this->sendBotCake($this->pesanCekListHarianBerikutnya( $cek ) );
@@ -2878,7 +2877,7 @@ class QiscusController extends Controller
                     } else {
                         $this->sendBotCake($this->pesanCekListHarianBerikutnya( $cek ) );
                     }
-                } else { 
+                } else {
                     $this->sendBotCake($this->cekListSelesai($whatsapp_bot_service_id,$whatsapp_bot_service_id_input) );
                 }
             }
@@ -2890,24 +2889,24 @@ class QiscusController extends Controller
         $whatsapp_bot_service = WhatsappBot::whereIn("whatsapp_bot_service_id", [$whatsapp_bot_service_id,$whatsapp_bot_service_id_input])->where('no_telp', $this->no_telp)->first();
 
         if (
-            $whatsapp_bot_service->whatsapp_bot_service_id == 1 || 
+            $whatsapp_bot_service->whatsapp_bot_service_id == 1 ||
             $whatsapp_bot_service->whatsapp_bot_service_id == 2 // input harian
         ) {
             $frekuensi_cek_id = 1;
         } else if (
-            $whatsapp_bot_service->whatsapp_bot_service_id == 8 || 
+            $whatsapp_bot_service->whatsapp_bot_service_id == 8 ||
             $whatsapp_bot_service->whatsapp_bot_service_id == 9 // input mingguan
         ) {
             $frekuensi_cek_id = 2;
         } else if (
-            $whatsapp_bot_service->whatsapp_bot_service_id == 3 || 
+            $whatsapp_bot_service->whatsapp_bot_service_id == 3 ||
             $whatsapp_bot_service->whatsapp_bot_service_id == 4 // input bulanan
         ) {
             $frekuensi_cek_id = 3;
         }
         $whatsapp_bot_service->delete();
 
-        $bulan_ini = date('Y-m-d'); 
+        $bulan_ini = date('Y-m-d');
 
         $query  = "SELECT ";
         $query .= "cls.cek_list as cek_list, ";
@@ -2958,7 +2957,7 @@ class QiscusController extends Controller
     /* public function prosesAntrianOnline(){ */
     /*     echo "Antrian online saat ini sedang dalam proses pemeliharaan dan untuk sementara waktu tidak dapat digunakan. Kami mohon maaf atas ketidaknyamanannya."; */
     /* } */
-    
+
     public function prosesAntrianOnline(){
         /* Log::info(2908); */
         $reservasi_online = ReservasiOnline::with('pasien')->where('no_telp', $this->no_telp)
@@ -2987,9 +2986,9 @@ class QiscusController extends Controller
         ) {
             /* Log::info(2934); */
 
-            if ( 
-                $this->message == '1' || 
-                $this->message == '2' || 
+            if (
+                $this->message == '1' ||
+                $this->message == '2' ||
                 $this->message == '3'
             ) {
                 if (
@@ -3232,16 +3231,16 @@ class QiscusController extends Controller
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !$reservasi_online->konfirmasi_sdk
         ) {
-            if ( 
-                $this->message == 'ya' || 
-                $this->message == 'iya' || 
-                $this->message == 'iy' || 
+            if (
+                $this->message == 'ya' ||
+                $this->message == 'iya' ||
+                $this->message == 'iy' ||
                 $this->message == 'y'
             ) {
                 $reservasi_online->konfirmasi_sdk = 1;
                 $reservasi_online->save();
             }
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3266,12 +3265,12 @@ class QiscusController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
-            is_null( $reservasi_online->register_previously_saved_patient ) 
+            is_null( $reservasi_online->register_previously_saved_patient )
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
@@ -3289,7 +3288,7 @@ class QiscusController extends Controller
                         $code                                                = $response['code'];
                         $message                                             = $response['response'];
                         if (
-                            $code == 204 
+                            $code == 204
                         ) {// jika tidak ditemukan
                             $reservasi_online->pasien_id                         = $pasien->id;
                             $reservasi_online->nama                              = $pasien->nama;
@@ -3305,7 +3304,7 @@ class QiscusController extends Controller
                             $code <= 299
                         ){
                             // jika kartu aktif dan provider tepat
-                            if ( 
+                            if (
                                 !is_null($message) &&
                                 $message['aktif'] &&
                                 $message['kdProviderPst']['kdProvider'] == '0221B119'
@@ -3378,13 +3377,13 @@ class QiscusController extends Controller
                 $reservasi_online->registering_confirmation = 0;
             }
             $reservasi_online->save();
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
-            is_null( $reservasi_online->nomor_asuransi_bpjs ) 
+            is_null( $reservasi_online->nomor_asuransi_bpjs )
         ) {
             $this->pesan_error =   pesanErrorValidateNomorAsuransiBpjs( $this->message )  ;
             if (empty( $this->pesan_error )) {
@@ -3413,14 +3412,14 @@ class QiscusController extends Controller
                     }
 
                     if (
-                        !is_null( $message ) && 
+                        !is_null( $message ) &&
                         $message['aktif'] &&
                         isset( $message['kdProviderPst'] ) &&
                         $message['kdProviderPst']['kdProvider'] == '0221B119' &&
                         $reservasi_online->data_bpjs_cocok
                     ) { // jika aktig
-                        if ( 
-                            !is_null( $pasien ) 
+                        if (
+                            !is_null( $pasien )
                         ) {
                             // update sesuai dengan pasien yang ditemukan
                             $reservasi_online->nomor_asuransi_bpjs = $this->message;
@@ -3442,7 +3441,7 @@ class QiscusController extends Controller
                             $reservasi_online->tanggal_lahir   = Carbon::createFromFormat("d-m-Y", $message['tglLahir'])->format("Y-m-d");
                         }
                     } else if(
-                        !is_null( $message ) && 
+                        !is_null( $message ) &&
                         !$message['aktif']
                     ) { // jika tidak aktif
                         $input_tidak_tepat = true;
@@ -3450,15 +3449,15 @@ class QiscusController extends Controller
                         $this->pesan_error .= PHP_EOL;
                         $this->pesan_error .= $message['ketAktif'];
                     } else if(
-                        !is_null( $message ) && 
+                        !is_null( $message ) &&
                         $message['kdProviderPst']['kdProvider'] !== '0221B119'
                     ) { // jika tidak aktif
                         $input_tidak_tepat = true;
                         $this->pesan_error = $this->validasiBpjsProviderSalah( $this->message, $message );
                     } else if(
-                        !is_null( $message ) && 
+                        !is_null( $message ) &&
                         !$reservasi_online->data_bpjs_cocok
-                    ) { 
+                    ) {
                         $reservasi_online->nomor_asuransi_bpjs = $this->message;
                         $reservasi_online->verifikasi_bpjs = 0;
                     } else {
@@ -3490,14 +3489,14 @@ class QiscusController extends Controller
                 $input_tidak_tepat = true;
             }
             $reservasi_online->save();
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
-            is_null( $reservasi_online->nama ) 
+            is_null( $reservasi_online->nama )
         ) {
             if ( validateName( $this->message ) ) {
                 $reservasi_online->nama  = ucwords(strtolower($this->message));;
@@ -3505,7 +3504,7 @@ class QiscusController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3513,7 +3512,7 @@ class QiscusController extends Controller
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
             !is_null( $reservasi_online->nama ) &&
-            is_null( $reservasi_online->tanggal_lahir ) 
+            is_null( $reservasi_online->tanggal_lahir )
         ) {
             $tanggal = $this->convertToPropperDate();
             if (!is_null( $tanggal )) {
@@ -3522,7 +3521,7 @@ class QiscusController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3538,7 +3537,7 @@ class QiscusController extends Controller
             //=========================================
             // INPUT KARTU ASURANSI
             //=========================================
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3553,12 +3552,12 @@ class QiscusController extends Controller
             if (
                 $this->isPicture()
             ) {
-                $reservasi_online->kartu_asuransi_image = $this->uploadImage(); 
+                $reservasi_online->kartu_asuransi_image = $this->uploadImage();
                 $reservasi_online->save();
             } else {
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3577,7 +3576,7 @@ class QiscusController extends Controller
                                         ->where('jam_akhir', '>=', $reservasi_online->created_at->format('H:i:s'))
                                         ->get();
             $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
-            if ( 
+            if (
                 is_numeric( $this->message ) &&
                 $this->message > 0 &&
                 $this->message <= $petugas->count()
@@ -3589,7 +3588,7 @@ class QiscusController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3682,7 +3681,7 @@ class QiscusController extends Controller
         ) {
             /* Log::info(3338); */
             $message = $this->tanyaSyaratdanKetentuan($reservasi_online->tipe_konsultasi_id);
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3690,37 +3689,37 @@ class QiscusController extends Controller
         ) {
             /* Log::info(3344); */
             $message = $this->pertanyaanPembayaranPasien();
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
-            is_null( $reservasi_online->register_previously_saved_patient ) 
+            is_null( $reservasi_online->register_previously_saved_patient )
         ) {
             /* Log::info(3355); */
             $message = $this->pesanUntukPilihPasien();
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
-            is_null( $reservasi_online->nomor_asuransi_bpjs ) 
+            is_null( $reservasi_online->nomor_asuransi_bpjs )
         ) {
             /* Log::info(3365); */
             $message = $this->tanyaNomorBpjsPasien();
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
             !is_null( $reservasi_online->registrasi_pembayaran_id ) &&
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
-            is_null( $reservasi_online->nama ) 
+            is_null( $reservasi_online->nama )
         ) {
             /* Log::info(3376); */
             $message = $this->tanyaNamaLengkapPasien();
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3728,11 +3727,11 @@ class QiscusController extends Controller
             !is_null( $reservasi_online->register_previously_saved_patient ) &&
             !is_null( $reservasi_online->nomor_asuransi_bpjs ) &&
             !is_null( $reservasi_online->nama ) &&
-            is_null( $reservasi_online->tanggal_lahir ) 
+            is_null( $reservasi_online->tanggal_lahir )
         ) {
             /* Log::info(3388); */
             $message = $this->tanyaTanggalLahirPasien();
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3745,7 +3744,7 @@ class QiscusController extends Controller
         ) {
             $message = $this->tanyaAlamatLengkapPasien();
             /* Log::info(3402); */
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3759,7 +3758,7 @@ class QiscusController extends Controller
         ) {
             $message = $this->tanyaKartuAsuransiImage($reservasi_online);
             /* Log::info(3416); */
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3773,7 +3772,7 @@ class QiscusController extends Controller
             is_null( $reservasi_online->staf_id )
         ) {
             $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
-        } else if ( 
+        } else if (
             !is_null( $reservasi_online ) &&
             $reservasi_online->konfirmasi_sdk &&
             !is_null( $reservasi_online->tipe_konsultasi_id ) &&
@@ -3914,7 +3913,7 @@ class QiscusController extends Controller
         return $text;
     }
     public function tanyaNamaAtauNomorBpjsPasien($model){
-        
+
         if ( $model->registrasi_pembayaran_id !== 2 ) {
             $model->nomor_asuransi_bpjs = 0;
             $model->save();
@@ -3959,7 +3958,7 @@ class QiscusController extends Controller
             return  compact('jam_mulai', 'jam_akhir');
         }
     }
-    
+
 
 	public function antrianPost($id){
 		$antrians = Antrian::where('created_at', 'like', date('Y-m-d') . '%')
@@ -4018,7 +4017,7 @@ class QiscusController extends Controller
         }
         return false;
     }
-    
+
 
     public function tanyaPeriodeKeluhanUtama(){
         $message = "Sudah berapa lama keluhan tersebut dialami";
@@ -4117,7 +4116,7 @@ class QiscusController extends Controller
         }
     }
     public function nextPicturePlease(){
-        
+
         $message =  "Silahkan balas dengan gambar berikutnya";
         $message .=  PHP_EOL;
         $message .=  PHP_EOL;
@@ -4220,7 +4219,7 @@ class QiscusController extends Controller
         // ANTRIKAN PASIEN UNTUK DOKTER KEDUA
         //
         $petugas_pemeriksas = $this->petugas_pemeriksa_sekarang($reservasi_online);
-        
+
         if (
             $petugas_pemeriksas->count() < 1
         ) {
@@ -4428,7 +4427,7 @@ class QiscusController extends Controller
             $antrians = Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
                 ->where('no_telp', $this->no_telp)
                 ->whereRaw("
-                        ( 
+                        (
                             antriable_type = 'App\\\Models\\\Antrian' or
                             antriable_type = 'App\\\Models\\\AntrianPoli' or
                             antriable_type = 'App\\\Models\\\AntrianPeriksa'
@@ -4470,7 +4469,7 @@ class QiscusController extends Controller
 
         if (
             date('G') <= 21 && // pendaftaran online tutup jam 21.59
-            date('G') >= 7 // 
+            date('G') >= 7 //
         ) {
             $this->whatsapp_bot = WhatsappBot::create([
                 'no_telp' => $this->no_telp,
@@ -4512,7 +4511,7 @@ class QiscusController extends Controller
                 ( !empty( trim(  $pasien->nomor_ktp  ) ) && !is_null( $pasien->nomor_ktp ) ) && // data nomor ktp terekam
                 ( !empty( trim($response['noKTP']) ) && !is_null($response['noKTP']) ) // data nomor ktp ada di pcare
             ) {
-                $ktp_oke = 
+                $ktp_oke =
                     ( !empty( trim(  $pasien->nomor_ktp  ) ) && !is_null( $pasien->nomor_ktp ) ) && // nomor ktp tidak null dan tidak empty
                     $pasien->nomor_ktp == $response['noKTP']; // nomor ktp di sistem dan di pcare sama
             } else if (
@@ -4523,7 +4522,7 @@ class QiscusController extends Controller
             }
             if( $tanggal_lahir_cocok && $ktp_oke ){
                 $result = 1;
-            } 
+            }
         }
         return $result;
     }
@@ -4556,11 +4555,11 @@ class QiscusController extends Controller
         $code = $response['code'];
         $message = $response['response'];
         $this->pesan_error = pesanErrorValidateNomorAsuransiBpjs( $this->message );
-        if ( 
+        if (
             is_null( $this->pesan_error ) ||
             empty( trim(  $this->pesan_error  ) )
         ) {
-            if ( 
+            if (
                 $code == 204
             ) {
                 $this->pesan_error =  'Nomor tersebut tidak ditemukan di sistem BPJS';
@@ -4663,27 +4662,27 @@ class QiscusController extends Controller
         ) {
             $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content';
             $data = [
-                   "psid" => "wa_" . $phone, 
-                   "payload" => [], 
+                   "psid" => "wa_" . $phone,
+                   "payload" => [],
                    "data" => [
-                            "version" => "v2", 
+                            "version" => "v2",
                             "content" => [
                                "messages" => [
                                   [
-                                     "type" => "text", 
-                                     "buttons" => [], 
+                                     "type" => "text",
+                                     "buttons" => [],
                                      "text" => $message
-                                  ] 
-                               ] 
-                            ] 
-                         ] 
-                ]; 
+                                  ]
+                               ]
+                            ]
+                         ]
+                ];
             $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data);
         } else {
             Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $phone);
         }
     }
-    
+
     public function sendSingleWablas($phone, $message){
         $curl = curl_init();
         $token = env('WABLAS_TOKEN');
@@ -4773,20 +4772,20 @@ class QiscusController extends Controller
             !is_null( $konsultasi_estetik_online ) &&
             !$konsultasi_estetik_online->konfirmasi_sdk
         ) {
-            if ( 
-                $this->message == 'ya' || 
-                $this->message == 'iy' || 
-                $this->message == 'iya' || 
+            if (
+                $this->message == 'ya' ||
+                $this->message == 'iy' ||
+                $this->message == 'iya' ||
                 $this->message == 'y'
             ) {
                 $konsultasi_estetik_online->konfirmasi_sdk = 1;
                 $konsultasi_estetik_online->save();
                 $message = $this->tanyaNamaLengkapAtauPilihPasien( $konsultasi_estetik_online );
             }
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
-            is_null( $konsultasi_estetik_online->register_previously_saved_patient ) 
+            is_null( $konsultasi_estetik_online->register_previously_saved_patient )
         ) {
             $data = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
@@ -4807,11 +4806,11 @@ class QiscusController extends Controller
                 $message = $this->tanyaNamaLengkapPasien();
             }
             $konsultasi_estetik_online->save();
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
-            is_null( $konsultasi_estetik_online->nama ) 
+            is_null( $konsultasi_estetik_online->nama )
         ) {
             if ( validateName( $this->message ) ) {
                 $konsultasi_estetik_online->nama  = ucwords(strtolower($this->message));;
@@ -4821,12 +4820,12 @@ class QiscusController extends Controller
                 $message =  $this->tanyaNamaLengkapPasien();
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
             !is_null( $konsultasi_estetik_online->nama ) &&
-            is_null( $konsultasi_estetik_online->tanggal_lahir ) 
+            is_null( $konsultasi_estetik_online->tanggal_lahir )
         ) {
             $tanggal = $this->convertToPropperDate();
             if (!is_null( $tanggal )) {
@@ -4837,7 +4836,7 @@ class QiscusController extends Controller
                 $message =  $this->tanyaTanggalLahirPasien();
                 $input_tidak_tepat = true;
             }
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -4848,7 +4847,7 @@ class QiscusController extends Controller
             $konsultasi_estetik_online->alamat  = $this->message;
             $konsultasi_estetik_online->save();
             $message = $this->tanyaJenisKelamin();
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -4872,7 +4871,7 @@ class QiscusController extends Controller
                 $message = $this->tanyaJenisKelamin();
             }
             $konsultasi_estetik_online->save();
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -4880,7 +4879,7 @@ class QiscusController extends Controller
             !is_null( $konsultasi_estetik_online->tanggal_lahir ) &&
             !is_null( $konsultasi_estetik_online->alamat ) &&
             !is_null( $konsultasi_estetik_online->sex ) &&
-            is_null( $konsultasi_estetik_online->hamil ) 
+            is_null( $konsultasi_estetik_online->hamil )
         ) {
             if (
                 $this->message == 1
@@ -4896,7 +4895,7 @@ class QiscusController extends Controller
                 $message = $this->tanyaHamil();
             }
             $konsultasi_estetik_online->save();
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -4927,7 +4926,7 @@ class QiscusController extends Controller
                 $message .= $this->pesanMintaKlienBalasUlang();
                 $message = $this->tanyaKeluhanUtama();
             }
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -4949,7 +4948,7 @@ class QiscusController extends Controller
                 $message = $this->tanyaLanjutkanAtauUlangi( $konsultasi_estetik_online );
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -4965,7 +4964,7 @@ class QiscusController extends Controller
             $konsultasi_estetik_online->save();
 
             $message = $this->tanyaPeriodeKeluhanUtama();
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -4979,10 +4978,10 @@ class QiscusController extends Controller
             is_null( $konsultasi_estetik_online->periode_keluhan_utama_id )
         ) {
             if (
-                $this->message == '1' || 
-                $this->message == '2' || 
-                $this->message == '3' || 
-                $this->message == '4' || 
+                $this->message == '1' ||
+                $this->message == '2' ||
+                $this->message == '3' ||
+                $this->message == '4' ||
                 $this->message == '5'
             ) {
                 $konsultasi_estetik_online->periode_keluhan_utama_id = $this->message;
@@ -4993,7 +4992,7 @@ class QiscusController extends Controller
                 $message = $this->tanyaPeriodeKeluhanUtama();
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -5010,7 +5009,7 @@ class QiscusController extends Controller
             $konsultasi_estetik_online->pengobatan_sebelumnya = $this->message;
             $konsultasi_estetik_online->save();
             $message = $this->pertanyaanJenisKulit();
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -5026,10 +5025,10 @@ class QiscusController extends Controller
             is_null( $konsultasi_estetik_online->jenis_kulit_id )
         ) {
             if (
-                $this->message == '1' || 
-                $this->message == '2' || 
-                $this->message == '3' || 
-                $this->message == '4' || 
+                $this->message == '1' ||
+                $this->message == '2' ||
+                $this->message == '3' ||
+                $this->message == '4' ||
                 $this->message == '5'
             ) {
                 $konsultasi_estetik_online->jenis_kulit_id = $this->message;
@@ -5042,7 +5041,7 @@ class QiscusController extends Controller
                 $message = $this->pertanyaanJenisKulit();
                 $message .= $this->pesanMintaKlienBalasUlang();
             }
-        } else if ( 
+        } else if (
             !is_null( $konsultasi_estetik_online ) &&
             $konsultasi_estetik_online->konfirmasi_sdk &&
             !is_null( $konsultasi_estetik_online->register_previously_saved_patient ) &&
@@ -5163,7 +5162,7 @@ class QiscusController extends Controller
     }
 
     public function lama(){
-        return 
+        return
             str_contains( $this->message, 'lama ') ||
             str_contains( $this->message, 'lambat ') ||
             str_contains( $this->message, 'lama') ||
@@ -5270,7 +5269,7 @@ class QiscusController extends Controller
                 ) {
                     if (
                          $this->message == '1' ||
-                         $this->message == '2' 
+                         $this->message == '2'
                     ) {
                         $antrian->konfirmasi_waktu_pelayanan = $this->message == '1' ? 1 : 0;
                         $antrian->save();
@@ -5301,7 +5300,7 @@ class QiscusController extends Controller
             ) {
                 if (
                      $this->message == '1' ||
-                     $this->message == '2' 
+                     $this->message == '2'
                 ) {
                     $antrian->konfirmasi_informasi_waktu_pelayanan_obat_racikan = $this->message == '1' ? 1 : 0;
                     $antrian->save();
@@ -5335,8 +5334,8 @@ class QiscusController extends Controller
         if (
             $antrian->pasien_id
         ) {
-            if ( 
-                $antrian->registrasi_pembayaran_id == 1 || 
+            if (
+                $antrian->registrasi_pembayaran_id == 1 ||
                 (
                     $antrian->registrasi_pembayaran_id == 2 && // jika bpjs
                     $antrian->verifikasi_bpjs == 1 // dan sudah verifikasi BPJS
@@ -5398,7 +5397,7 @@ class QiscusController extends Controller
     public function validasiTanggalDanNamaPasienKeluhan(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(15);
     }
-    
+
     public function balasanValidasiTanggalDanNamaPasienKeluhan(){
         $tanggal = $this->convertToPropperDate( $this->message );
         $today = Carbon::now();
@@ -5459,7 +5458,7 @@ class QiscusController extends Controller
         $message .= 'Balas *kirim qr* untuk mengirim ulang qr code';
         return $message;
     }
-    
+
     public function batalkanSemuaFitur(){
     }
     public function petugas_pemeriksa_sekarang($reservasi_online){
@@ -5558,7 +5557,7 @@ class QiscusController extends Controller
                 /* $message .= PHP_EOL; */
                 $message .= $this->aktifkan_notifikasi_otomatis_text();
                 if (
-                    $ant->reservasi_online && 
+                    $ant->reservasi_online &&
                     $sisa_antrian < 11 &&
                     $ant->sudah_hadir_di_klinik == 0
                 ) {
@@ -5572,7 +5571,7 @@ class QiscusController extends Controller
                     $message .= PHP_EOL;
 
                 } else if (
-                    $ant->reservasi_online && 
+                    $ant->reservasi_online &&
                     $ant->sudah_hadir_di_klinik == 0
                 ) {
                     $message .= PHP_EOL;
@@ -5611,7 +5610,7 @@ class QiscusController extends Controller
            "message"      => $message,
            "type"         => "text",
            "room_id"      => $this->room_id
-        ]; 
+        ];
 
         $response = Http::withHeaders([
                         'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'),
@@ -5645,5 +5644,5 @@ class QiscusController extends Controller
             return 'Fitur chat admin sudah ditutup dan dibuka kembali jam 7 pagi. Silahkan hubungi melalui telepon 0215977529 mulai jam 7 pagi. Mohon maaf atas ketidaknyamanannya';
         }
     }
-    
+
 }

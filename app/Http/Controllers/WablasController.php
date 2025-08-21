@@ -190,7 +190,6 @@ class WablasController extends Controller
         if ( !is_null( $this->no_telp ) ) {
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
-                'tenant_id' => 1
             ]);
             $no_telp->room_id = $this->room_id;
             $no_telp->save();

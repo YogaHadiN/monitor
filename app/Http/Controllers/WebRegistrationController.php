@@ -52,9 +52,6 @@ class WebRegistrationController extends Controller
     public function daftar_online_by_phone($no_telp){
         $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
         $no_telp                 = decrypt_string( $no_telp );
-        $telp                    = NoTelp::where('no_telp', $no_telp)->firstOrCreate([
-            'no_telp' => $no_telp
-        ]);
 
         return view('web_registrations.daftar_online_by_phone', compact(
             'no_telp',
