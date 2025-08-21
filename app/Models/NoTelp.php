@@ -13,10 +13,9 @@ class NoTelp extends Model
     protected $guarded = [];
     protected static function booted()
     {
-        static::creating(function ($noTelp) {
-            $noTelp->tenant_id = 1;
-        });
         static::created(function ($noTelp) {
+            $noTelp->tenant_id = 1;
+            $noTelp->save();
             event(new NoTelpCreated($noTelp));
         });
     }
