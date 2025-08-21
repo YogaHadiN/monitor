@@ -15,7 +15,6 @@ class NoTelp extends Model
     {
         static::creating(function ($noTelp) {
             $noTelp->tenant_id = 1;
-            $noTelp->save();
         });
         static::created(function ($noTelp) {
             event(new NoTelpCreated($noTelp));
