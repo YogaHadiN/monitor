@@ -19,7 +19,7 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
         \App\Events\NoTelpCreated::class => [
-            \App\Listeners\SendNoTelpToAndroid::class,
+            /* \App\Listeners\SendNoTelpToAndroid::class, */
         ],
     ];
 
