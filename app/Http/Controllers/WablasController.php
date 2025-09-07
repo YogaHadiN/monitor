@@ -2658,12 +2658,14 @@ class WablasController extends Controller
      */
     public function queryJadwalKonsultasiByTipeKonsultasi($param)
     {
+        // ===== ambil jadwal (seperti semula) =====
         $query  = "SELECT ";
         $query .= "har.hari, ";
         $query .= "ttl.singkatan as titel, ";
         $query .= "TIME_FORMAT(jad.jam_mulai, '%H:%i') as jam_mulai, ";
         $query .= "TIME_FORMAT(jad.jam_akhir, '%H:%i') as jam_akhir, ";
         $query .= "tip.tipe_konsultasi, ";
+        $query .= "sta.id as staf_id, "; // <— tambahkan id staf untuk cek izin
         $query .= "sta.nama ";
         $query .= "FROM jadwal_konsultasis as jad ";
         $query .= "JOIN stafs as sta on sta.id = jad.staf_id ";
@@ -2675,60 +2677,93 @@ class WablasController extends Controller
         $query .= "AND jad.tenant_id = $tenant_id ";
         $query .= "ORDER BY hari_id asc, jam_mulai asc";
 
-        $query = DB::select($query);
-        if (count($query)) {
-            $result = [];
-
-            foreach ($query as $q) {
-                $result[$q->hari][] = [
-                    'nama' => $q->nama,
-                    'titel' => $q->titel,
-                    'jam_mulai' => $q->jam_mulai,
-                    'jam_akhir' => $q->jam_akhir,
-                ];
-            }
-            $message = '*Jadwal ' . ucwords(strtolower($query[0]->tipe_konsultasi)) . '*';
-            $message .= PHP_EOL;
-            $message .= "Klinik Jati Elok";
-            $message .= PHP_EOL;
-            foreach ($result as $k => $r) {
-                if ( strtolower( $k ) != 'senin' ) {
-                    $message .= PHP_EOL;
-                }
-                $message .= ucwords($k) . ': ';
-                $message .= PHP_EOL;
-                foreach ($r as $i => $d) {
-                    if (count($r) > 1) {
-                        $nomor    = $i + 1;
-                        $message .= $nomor . '. ';
-                    }
-                    $message .=  $this->tambahkanGelar($d['titel'],ucwords($d['nama']));
-                    $message .= PHP_EOL;
-                    $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
-                    $message .= PHP_EOL;
-                }
-            }
-            if ( $param == 1 ) {
-                $staf = $this->lastStaf();
-                if (!is_null( $staf )) {
-                    $message .= PHP_EOL;
-                    $message .= 'Dokter umum yang saat ini praktik adalah ';
-
-                    foreach (PetugasPemeriksa::dokterSaatIni() as $k => $petugas) {
-                        $message .= PHP_EOL;
-                        $message .= $this->tambahkanGelar( $petugas->staf->titel->singkatan, ucwords( strtolower($petugas->staf->nama) ) );
-                    }
-                   $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= 'untuk memastikan silahkan hubungi 021-5977529';
-                    $message .= PHP_EOL;
-                    $message .= 'Terima kasih';
-                }
-            }
-        } else {
-            $message = 'Fitur ini dalam pengembangan';
-
+        $rows = DB::select($query);
+        if (!count($rows)) {
+            return 'Fitur ini dalam pengembangan';
         }
+
+        // ===== siapkan lookup petugas_pemeriksas untuk HARI INI =====
+        // Hari ini: ambil roster (petugas_pemeriksas) — filter tenant & tipe konsultasi yang sama
+        $today      = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
+        $stafHariIni = \App\Models\PetugasPemeriksa::query()
+            ->where('tanggal', $today)
+            ->where('tenant_id', $tenant_id)
+            ->where('tipe_konsultasi_id', $param)
+            ->pluck('staf_id')
+            ->all(); // array of staf_id aktif hari ini
+
+        // Nama hari dalam DB tampaknya pakai Bahasa Indonesia: Senin, Selasa, dst.
+        $hariIndo = [
+            0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu',
+            4 => 'Kamis',  5 => 'Jumat', 6 => 'Sabtu'
+        ];
+        $hariIniStr = $hariIndo[\Carbon\Carbon::now('Asia/Jakarta')->dayOfWeek]; // contoh: "Senin"
+
+        // ===== group by hari untuk compose message =====
+        $result = [];
+        foreach ($rows as $q) {
+            $result[$q->hari][] = [
+                'staf_id'   => $q->staf_id,
+                'nama'      => $q->nama,
+                'titel'     => $q->titel,
+                'jam_mulai' => $q->jam_mulai,
+                'jam_akhir' => $q->jam_akhir,
+            ];
+        }
+
+        $message  = '*Jadwal ' . ucwords(strtolower($rows[0]->tipe_konsultasi)) . '*';
+        $message .= PHP_EOL;
+        $message .= 'Klinik Jati Elok';
+        $message .= PHP_EOL;
+
+        foreach ($result as $hari => $r) {
+            if (strtolower($hari) != 'senin') { $message .= PHP_EOL; }
+            $message .= ucwords($hari) . ': ' . PHP_EOL;
+
+            foreach ($r as $i => $d) {
+                if (count($r) > 1) {
+                    $nomor = $i + 1;
+                    $message .= $nomor . '. ';
+                }
+
+                // Nama + gelar
+                $message .= $this->tambahkanGelar($d['titel'], ucwords($d['nama'])) . PHP_EOL;
+
+                // Jam praktik
+                $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' )';
+
+                // ===== Tambahkan (izin hari ini) bila:
+                // - ini adalah baris untuk HARI INI, dan
+                // - staf pada baris ini TIDAK ada di roster petugas_pemeriksas hari ini
+                if (strcasecmp($hari, $hariIniStr) === 0) {
+                    if (!in_array($d['staf_id'], $stafHariIni, true)) {
+                        $message .= ' (izin hari ini)';
+                    }
+                }
+
+                $message .= PHP_EOL;
+            }
+        }
+
+        // Tambahan keterangan dokter umum yang sedang praktik (kode asli)
+        if ($param == 1) {
+            $staf = $this->lastStaf();
+            if (!is_null($staf)) {
+                $message .= PHP_EOL;
+                $message .= 'Dokter umum yang saat ini praktik adalah ';
+                foreach (\App\Models\PetugasPemeriksa::dokterSaatIni() as $k => $petugas) {
+                    $message .= PHP_EOL;
+                    $message .= $this->tambahkanGelar(
+                        $petugas->staf->titel->singkatan,
+                        ucwords(strtolower($petugas->staf->nama))
+                    );
+                }
+                $message .= PHP_EOL . PHP_EOL;
+                $message .= 'untuk memastikan silahkan hubungi 021-5977529' . PHP_EOL;
+                $message .= 'Terima kasih';
+            }
+        }
+
         return $message;
     }
     /**
@@ -3356,14 +3391,6 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
             }
 
-        // ===== konfirmasi syarat & ketentuan =====
-        } elseif (!is_null($reservasi_online) && !is_null($reservasi_online->tipe_konsultasi_id) && !$reservasi_online->konfirmasi_sdk) {
-            $this->chatBotLog(__LINE__);
-            if (in_array($msg, ['ya','iya','iy','y'], true)) {
-                $reservasi_online->konfirmasi_sdk = 1;
-                $reservasi_online->save();
-            }
-
         // ===== pilih metode pembayaran =====
         } elseif (!is_null($reservasi_online) && $reservasi_online->konfirmasi_sdk && !is_null($reservasi_online->tipe_konsultasi_id) && is_null($reservasi_online->registrasi_pembayaran_id)) {
             if ($this->validasiRegistrasiPembayaran()) {
@@ -3462,10 +3489,10 @@ class WablasController extends Controller
                     }
                 } else {
                     // Non-BPJS
-                    $reservasi_online->pasien_id  = $pasien->id;
-                    $reservasi_online->nama       = $pasien->nama;
-                    $reservasi_online->tanggal_lahir = $pasien->tanggal_lahir;
-                    $reservasi_online->alamat     = $pasien->alamat;
+                    $reservasi_online->pasien_id                         = $pasien->id;
+                    $reservasi_online->nama                              = $pasien->nama;
+                    $reservasi_online->tanggal_lahir                     = $pasien->tanggal_lahir;
+                    $reservasi_online->alamat                            = $pasien->alamat;
                     $reservasi_online->register_previously_saved_patient = (int)$msg;
                 }
             } else {
@@ -3590,16 +3617,87 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
             }
 
+            //Pilih staf
         } elseif ($reservasi_online->konfirmasi_sdk && !is_null($reservasi_online->kartu_asuransi_image) && is_null($reservasi_online->staf_id)) {
 
             $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
             if (ctype_digit($msg) && (int)$msg > 0 && (int)$msg <= $petugas->count()) {
-                $idx = (int)$msg - 1;
-                $reservasi_online->staf_id    = $petugas->get($idx)->staf_id;
-                $reservasi_online->ruangan_id = $petugas->get($idx)->ruangan_id;
+                $idx  = (int)$msg - 1;
+                $pp   = $petugas->get($idx); // Petugas terpilih (PetugasPemeriksa)
+                $now  = Carbon::now('Asia/Jakarta');
+
+                // set staf & ruangan
+                $reservasi_online->staf_id    = $pp->staf_id;
+                $reservasi_online->ruangan_id = $pp->ruangan_id;
+
+                // ===== Tentukan apakah ini "booking terjadwal" berdasarkan window & allowed
+                $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
+                $hasOpenTime         = !empty($pp->jam_mulai_booking_online);
+
+                if ($isSchedulingAllowed && $hasOpenTime) {
+                    $open  = Carbon::parse($pp->tanggal.' '.$pp->jam_mulai_booking_online, 'Asia/Jakarta')->seconds(0);
+                    $start = Carbon::parse($pp->tanggal.' '.$pp->jam_mulai,                'Asia/Jakarta')->seconds(0);
+
+                    // Window: [jam_mulai_booking_online, jam_mulai)
+                    if ($now->greaterThanOrEqualTo($open) && $now->lessThan($start)) {
+
+                        // ===== Cek kuota per petugas (max_booking di baris PetugasPemeriksa ini)
+                        if ($this->kuotaBookingPetugasPenuh($pp, $reservasi_online->tipe_konsultasi_id)) {
+                            // penuh → tawarkan waitlist
+                            $reservasi_online->schedulled_booking = 2;   // 2 = penuh, offer waitlist
+                            $reservasi_online->waitlist_flag      = null; // belum memilih
+                            $reservasi_online->save();
+
+                            $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($pp));
+                            return false; // hentikan alur, tunggu jawaban waitlist
+                        }
+
+                        // belum penuh → set sebagai booking terjadwal
+                        $reservasi_online->schedulled_booking = 1;
+
+                    } else {
+                        // di luar window → bukan booking terjadwal
+                        $reservasi_online->schedulled_booking = 0;
+                    }
+                } else {
+                    // scheduling tidak diizinkan / tidak punya jam_mulai_booking_online
+                    $reservasi_online->schedulled_booking = 0;
+                }
+
                 $reservasi_online->save();
+
             } else {
                 $input_tidak_tepat = true;
+            }
+            //Pilih waitlist
+        } elseif (
+            !is_null($reservasi_online) &&
+            (int)($reservasi_online->schedulled_booking ?? 0) === 2 &&  // penuh, sedang ditawarkan waitlist
+            is_null($reservasi_online->waitlist_flag)
+        ) {
+            if (in_array($msg, ['ya','y','1'], true)) {
+                $reservasi_online->waitlist_flag = 1; // setuju waitlist
+                $reservasi_online->save();
+
+                $this->autoReply($this->pesanWaitlistTercatat());
+                return false;
+
+            } elseif (in_array($msg, ['tidak','t','n','2'], true)) {
+                $reservasi_online->waitlist_flag   = 0; // menolak
+                $reservasi_online->schedulled_booking = 0; // fallback ke "daftar sekarang"
+                $reservasi_online->save();
+
+                $this->autoReply($this->pesanTolakWaitlistTawarkanDaftarSekarang());
+                return false;
+
+            } else {
+                $input_tidak_tepat = true;
+            }
+        } elseif (!is_null($reservasi_online) && !is_null($reservasi_online->tipe_konsultasi_id) && !$reservasi_online->konfirmasi_sdk) {
+            $this->chatBotLog(__LINE__);
+            if (in_array($msg, ['ya','iya','iy','y'], true)) {
+                $reservasi_online->konfirmasi_sdk = 1;
+                $reservasi_online->save();
             }
 
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
@@ -3612,11 +3710,42 @@ class WablasController extends Controller
                 $ulangByText    = ($firstChar === '2'   && $tenant && !$tenant->iphone_whatsapp_button_available);
 
                 if ($lanjutByButton || $lanjutByText) {
-                    $reservasi_online->reservasi_selesai = 1;
-                    $reservasi_online->save();
-
-                    // finalisasi dibuat idempoten + transaksi
                     \DB::transaction(function() use ($reservasi_online) {
+
+                        if ((int)($reservasi_online->schedulled_booking ?? 0) === 1) {
+                            // Ambil shift final & kunci barisnya
+                            $ppFinal = \App\Models\PetugasPemeriksa::query()
+                                ->where('staf_id', $reservasi_online->staf_id)
+                                ->where('tanggal', \Carbon\Carbon::now('Asia/Jakarta')->toDateString())
+                                ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
+                                ->lockForUpdate()
+                                ->first();
+
+                            // Jika kuota penuh saat finalisasi → tawarkan waitlist, batalkan finalisasi
+                            if ($ppFinal && $this->kuotaBookingPetugasPenuh($ppFinal, $reservasi_online->tipe_konsultasi_id)) {
+                                $reservasi_online->schedulled_booking = 2;   // penuh
+                                $reservasi_online->waitlist_flag      = null;
+                                $reservasi_online->save();
+
+                                $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
+                                return; // keluar dari transaksi tanpa membuat QR / antrian
+                            }
+
+                            // Kuota masih ada → generate QR booking (tanpa membuat antrian)
+                            // >>> PAKAI KOLOM YANG BENAR (qrcode / qr_code_path_s3), contoh:
+                            $reservasi_online->qrcode = $this->generateQrCodeForOnlineReservation('B', $reservasi_online);
+                            $reservasi_online->reservasi_selesai = 1;
+                            $reservasi_online->save();
+
+                            if (method_exists($this, 'getQrCodeMessageBooking')) {
+                                $this->autoReply($this->getQrCodeMessageBooking($reservasi_online));
+                            } else {
+                                $this->autoReply("Booking terjadwal sudah tercatat.\nSilakan gunakan QR saat datang.\nKode: ".$reservasi_online->qrcode);
+                            }
+                            return; // selesai case booking, jangan buat antrian
+                        }
+
+                        // === Case non-schedulled: jalur lama (buat antrian) ===
                         $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
 
                         $antrian = $this->antrianPost($reservasi_online->ruangan_id);
@@ -3635,12 +3764,14 @@ class WablasController extends Controller
                         $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
                         $antrian->reservasi_online         = 1;
                         $antrian->sudah_hadir_di_klinik    = 0;
-                        $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
+                        $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation('A', $antrian);
                         $antrian->save();
                         $antrian->antriable_id             = $antrian->id;
                         $antrian->save();
 
-                        // kirim QR & bersihkan sesi
+                        $reservasi_online->reservasi_selesai = 1;
+                        $reservasi_online->save();
+
                         $this->autoReply($this->getQrCodeMessage($antrian));
                         WhatsappBot::where('no_telp', $this->no_telp)->delete();
                         ReservasiOnline::where('no_telp', $this->no_telp)->delete();
@@ -3658,13 +3789,16 @@ class WablasController extends Controller
         }
 
         // ===== pesan tindak lanjut (prompt berikutnya) =====
-        if (!is_null($reservasi_online) && is_null($reservasi_online->tipe_konsultasi_id)) {
+        if (
+            !is_null($reservasi_online) &&
+            (int)($reservasi_online->schedulled_booking ?? 0) === 2 &&
+            is_null($reservasi_online->waitlist_flag)
+        ) {
+            $this->chatBotLog(__LINE__);
+            $message = $this->tanyaGabungWaitlist();
+        } else if (!is_null($reservasi_online) && is_null($reservasi_online->tipe_konsultasi_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->pertanyaanPoliYangDituju();
-
-        } elseif (!is_null($reservasi_online) && !is_null($reservasi_online->tipe_konsultasi_id) && !$reservasi_online->konfirmasi_sdk) {
-            $this->chatBotLog(__LINE__);
-            $message = $this->tanyaSyaratdanKetentuan($reservasi_online->tipe_konsultasi_id);
 
         } elseif ($reservasi_online->konfirmasi_sdk && is_null($reservasi_online->registrasi_pembayaran_id)) {
             $this->chatBotLog(__LINE__);
@@ -3697,7 +3831,9 @@ class WablasController extends Controller
         } elseif ($reservasi_online->konfirmasi_sdk && !is_null($reservasi_online->kartu_asuransi_image) && is_null($reservasi_online->staf_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
-
+        } elseif (!is_null($reservasi_online) && !is_null($reservasi_online->tipe_konsultasi_id) && !$reservasi_online->konfirmasi_sdk) {
+            $this->chatBotLog(__LINE__);
+            $message = $this->tanyaSyaratdanKetentuan($reservasi_online);
         } elseif ($reservasi_online->konfirmasi_sdk && !is_null($reservasi_online->staf_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
@@ -4117,9 +4253,9 @@ class WablasController extends Controller
      *
      * @return void
      */
-    public function generateQrCodeForOnlineReservation($antrian){
+    public function generateQrCodeForOnlineReservation($prefix, $antrian){
 
-        $text = 'A' . $antrian->id;
+        $text = $prefix . $antrian->id;
         $filename = $text. '.png';
         $qr_code = QrCode::create($text)
                          ->setSize(600)
@@ -4307,8 +4443,9 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tanyaSyaratdanKetentuan($tipe_konsultasi_id)
+    private function tanyaSyaratdanKetentuan($reservasi_online)
     {
+        $tipe_konsultasi_id = $reservasi_online->tipe_konsultasi_id;
         $tipe_konsultasi = $tipe_konsultasi_id == '3' ? 'USG Kehamilan' : TipeKonsultasi::find( $tipe_konsultasi_id )->tipe_konsultasi;
         $message = 'Kakak akan melakukan registrasi ' . ucwords( $tipe_konsultasi ). ' secara online';
         $message .= PHP_EOL;
@@ -5334,6 +5471,7 @@ class WablasController extends Controller
             }
         }
     }
+
     public function tanyaKeluhanEstetikId(){
         $message = "Bisa dibantu keluhan yang dialami?";
         $message .= PHP_EOL;
@@ -5437,51 +5575,87 @@ class WablasController extends Controller
 
     public function batalkanSemuaFitur(){
     }
-    public function petugas_pemeriksa_sekarang($reservasi_online){
+    public function petugas_pemeriksa_sekarang($reservasi_online)
+    {
+        $nowJkt  = Carbon::now('Asia/Jakarta');
+        $today   = $nowJkt->toDateString();
+        $nowTime = $nowJkt->format('H:i:s');
 
-        $petugas_pemeriksas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
-                                                ->where('jam_mulai' , '<=', $reservasi_online->created_at->format('H:i:s'))
-                                                ->where('jam_akhir' , '>=', $reservasi_online->created_at->format('H:i:s'))
-                                                ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
-                                                ->get();
+        $base = PetugasPemeriksa::query()
+            ->where('tanggal', $today)
+            ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id);
 
-        $jumlah_petugas_pemeriksas_saat_ini = $petugas_pemeriksas->count();
+        // (opsional) filter tenant jika ada
+        if (!empty($reservasi_online->tenant_id)) {
+            $base->where('tenant_id', $reservasi_online->tenant_id);
+        } elseif (!empty($this->tenant?->id)) {
+            $base->where('tenant_id', $this->tenant->id);
+        }
 
-        if (
-            $jumlah_petugas_pemeriksas_saat_ini == 1
-        ) {
-            $sisa_antrian = $petugas_pemeriksas->first()->sisa_antrian;
-            $waktu_tunggu_menit = $sisa_antrian * 3;
-            $jam_mulai_akhir_antrian = Carbon::now()->addMinutes( $waktu_tunggu_menit )->format('H:i:s');
-            $petugas_pemeriksas_nanti = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
-                                        ->where('jam_mulai', '<=', $jam_mulai_akhir_antrian)
-                                        ->where('jam_akhir', '>=', $jam_mulai_akhir_antrian)
-                                        ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
-                                        ->get();
+        // Kandidat:
+        // A. Aktif sekarang
+        // C. Scheduling dibuka & shift belum berakhir
+        //    - Jika jam_mulai_booking_online TIDAK NULL => booking hanya s.d. (jam_mulai - 30 menit)
+        //    - Jika jam_mulai_booking_online NULL => pakai fallback jam_mulai (tanpa cutoff)
+        $petugas_pemeriksas = (clone $base)
+            ->where(function($q) use ($nowTime) {
+                // A: aktif sekarang
+                $q->where(function($qq) use ($nowTime) {
+                    $qq->where('jam_mulai', '<=', $nowTime)
+                       ->where('jam_akhir', '>=', $nowTime);
+                })
+                // C: scheduling-open
+                ->orWhere(function($qq) use ($nowTime) {
+                    $qq->where('schedulled_booking_allowed', 1)
+                       ->where('jam_akhir', '>=', $nowTime)
+                       ->where(function($qc) use ($nowTime) {
+                           // C1: booking via jam_mulai_booking_online (ADA) -> batasi s.d. jam_mulai - 30 menit
+                           $qc->where(function($q1) use ($nowTime) {
+                               $q1->whereNotNull('jam_mulai_booking_online')
+                                  ->where('jam_mulai_booking_online', '<=', $nowTime)
+                                  // nowTime <= jam_mulai - 30 menit
+                                  ->whereRaw("TIME(?) <= TIME(DATE_SUB(jam_mulai, INTERVAL 30 MINUTE))", [$nowTime]);
+                           })
+                           // C2: booking tanpa jam_mulai_booking_online (NULL) -> fallback ke jam_mulai, tanpa cutoff
+                           ->orWhere(function($q2) use ($nowTime) {
+                               $q2->whereNull('jam_mulai_booking_online')
+                                  ->where('jam_mulai', '<=', $nowTime);
+                           });
+                       });
+                });
+            })
+            ->orderBy('jam_mulai', 'asc')
+            ->get()
+            ->unique('id')
+            ->values();
+
+        $jumlah = $petugas_pemeriksas->count();
+
+        // Jika hanya 1, cek apakah estimasi selesai antrian bergeser ke shift lain
+        if ($jumlah === 1) {
+            $sisa_antrian          = (int) ($petugas_pemeriksas->first()->sisa_antrian ?? 0);
+            $waktu_tunggu_menit    = $sisa_antrian * 3; // asumsi 3 menit per pasien
+            $jam_mulai_akhir_antri = $nowJkt->copy()->addMinutes($waktu_tunggu_menit)->format('H:i:s');
+
+            $petugas_pemeriksas_nanti = (clone $base)
+                ->where('jam_mulai', '<=', $jam_mulai_akhir_antri)
+                ->where('jam_akhir', '>=', $jam_mulai_akhir_antri)
+                ->get();
+
             if ($petugas_pemeriksas_nanti->count() > 1) {
                 $petugas_pemeriksas = $petugas_pemeriksas_nanti;
             }
         }
 
-        if ( $petugas_pemeriksas->count() > 1 ) {
-            // populate ulang petugas pemeriksa
-            $repopulate = [];
-            foreach ($petugas_pemeriksas as $petugas) {
-                $repopulate[] = [
-                    'data'         => $petugas,
-                    'sisa_antrian' => $petugas->sisa_antrian
-                ];
-            }
-            usort($repopulate, function($a, $b) {
-                return $a['sisa_antrian'] <=> $b['sisa_antrian'];
-            });
-
-            $data = [];
-            foreach ($repopulate as $petugas) {
-                $data[] = $petugas['data'];
-            }
-            $petugas_pemeriksas = collect($data);
+        // Jika >1, urutkan: aktif dulu, lalu scheduling-open; dalam grup sama: sisa_antrian kecil lebih dulu
+        if ($petugas_pemeriksas->count() > 1) {
+            $petugas_pemeriksas = $petugas_pemeriksas->sortBy(function($p) use ($nowTime) {
+                $aktif = ($p->jam_mulai <= $nowTime && $p->jam_akhir >= $nowTime) ? 0 : 1; // 0=aktif, 1=scheduling-open
+                $sisa  = (int)($p->sisa_antrian ?? 9999);
+                return [$aktif, $sisa, $p->jam_mulai];
+            })->values();
         }
+
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
@@ -5800,5 +5974,80 @@ class WablasController extends Controller
         $message .= PHP_EOL;
         $message .= "Mohon maaf atas ketidaknyamanannya.";
         return $message;
+    }
+
+    /**
+     * Cek apakah kuota booking terjadwal untuk petugas/shift ini sudah penuh.
+     * Menghitung jumlah ReservasiOnline "schedulled_booking = 1" untuk staf & tanggal tsb.
+     * max_booking null/0 = tanpa batas.
+     */
+
+    protected function kuotaBookingPetugasPenuh($pp, ?int $tipe_konsultasi_id = null): bool
+    {
+        $max = (int)($pp->max_booking ?? 0);
+        if ($max <= 0) return false; // tanpa batas
+
+        $tenantId = optional($this->tenant)->id;
+
+        // Tentukan window booking shift ini
+        // Jika jam_mulai_booking_online null → fallback ke jam_mulai (window nol menit)
+        $startJkt = Carbon::parse($pp->tanggal.' '.($pp->jam_mulai_booking_online ?: $pp->jam_mulai), 'Asia/Jakarta')->seconds(0);
+        $endJkt   = Carbon::parse($pp->tanggal.' '.$pp->jam_mulai, 'Asia/Jakarta')->seconds(0);
+
+        // Jika DB Anda simpan UTC, konversi ke UTC:
+        // $startDb = $startJkt->copy()->setTimezone('UTC');
+        // $endDb   = $endJkt->copy()->setTimezone('UTC');
+        // Kalau DB sudah Asia/Jakarta, cukup pakai $startJkt/$endJkt langsung.
+        $startDb = $startJkt;
+        $endDb   = $endJkt;
+
+        $q = \App\Models\ReservasiOnline::query()
+            ->where('schedulled_booking', 1)           // hanya booking terjadwal (bukan waitlist/now)
+            ->where('staf_id', $pp->staf_id)
+            ->where('ruangan_id', $pp->ruangan_id)
+            ->when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
+            ->when($tipe_konsultasi_id, fn($q) => $q->where('tipe_konsultasi_id', $tipe_konsultasi_id));
+
+        // Hitung di dalam window booking shift ini; jika start == end, jatuhkan ke filter tanggal harian
+        if ($startDb->lt($endDb)) {
+            $q->whereBetween('created_at', [$startDb->toDateTimeString(), $endDb->toDateTimeString()]);
+        } else {
+            // fallback: amankan minimal per tanggal shift
+            $q->whereDate('created_at', $pp->tanggal);
+        }
+
+        $count = $q->count();
+        return $count >= $max;
+    }
+
+    /** Pesan kuota penuh (per petugas) + tawarkan waitlist */
+    protected function pesanKuotaPenuhPerPetugasDenganWaitlist($pp): string
+    {
+        $mulai = substr((string)$pp->jam_mulai, 0, 5);
+        $akhir = substr((string)$pp->jam_akhir, 0, 5);
+        $kuota = (int)($pp->max_booking ?? 0);
+
+        return
+            "Maaf, kuota *booking terjadwal* untuk jadwal ini sudah *penuh*.\n".
+            "• Jam pelayanan: *{$mulai}–{$akhir}*\n".
+            "• Kuota terjadwal: *".($kuota > 0 ? $kuota : 'tanpa batas')."*\n\n".
+            "Apakah Kakak mau masuk *waitlist* (daftar tunggu)?\n".
+            "Balas *ya* untuk masuk, atau *tidak*.";
+    }
+
+    /** Prompt ulang jika user salah input di state waitlist */
+    protected function tanyaGabungWaitlist(): string
+    {
+        return "Kuota booking terjadwal sudah *penuh*.\nBalas *1/ya* untuk masuk *waitlist*, atau *2/tidak*.";
+    }
+
+    protected function pesanWaitlistTercatat(): string
+    {
+        return "Siap, Kakak sudah kami masukkan ke *waitlist* untuk jadwal ini. Jika ada slot batal, kami hubungi secara *berurutan*. 🙏";
+    }
+
+    protected function pesanTolakWaitlistTawarkanDaftarSekarang(): string
+    {
+        return "Baik, tidak masuk waitlist. Kakak kami persilahkan untuk mendaftar kembali di hari lain. untuk informasi detil silahkan ketik 'Jadwal Dokter Gigi'. Mohon maaf atas ketidaknyamanannya.";
     }
 }

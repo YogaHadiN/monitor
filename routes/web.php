@@ -5,6 +5,7 @@ use App\Http\Controllers\ValidateController;
 use App\Http\Controllers\PasienController;
 use App\Http\Controllers\WebRegistrationController;
 use App\Jobs\TestJob;
+use App\Http\Controllers\ReservationQrController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,6 +72,15 @@ Route::get('project/antrian_dokter', [\App\Http\Controllers\ProjectController::c
 Route::get('project/ambil_antrian', [\App\Http\Controllers\ProjectController::class, 'ambil_antrian']);
 Route::get('project/uang', [\App\Http\Controllers\ProjectController::class, 'uang']);
 Route::get('project/general_concent', [\App\Http\Controllers\ProjectController::class, 'general_concent']);
+
+// routes/web.php
+
+Route::get('/schedulled_reservations/{reservasi}/qr-view', [ReservationQrController::class, 'view'])
+    ->name('schedulled_reservations.qr.view'); // tambahkan ->middleware('signed') bila perlu
+
+// Jika file disimpan di disk private dan perlu di-stream:
+Route::get('/schedulled_reservations/{reservasi}/qr-image', [ReservationQrController::class, 'image'])
+    ->name('schedulled_reservations.qr.image'); // bisa juga diberi ->middleware('signed')
 
 Route::get('/tes-job', function () {
     dispatch(new TestJob());
