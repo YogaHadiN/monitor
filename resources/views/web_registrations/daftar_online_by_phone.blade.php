@@ -74,11 +74,7 @@ td {
     to { -webkit-transform: rotate(360deg); }
 }
 
-
-
 </style>
-
-
 </head>
 
 <body>

@@ -253,9 +253,6 @@ class WebRegistrationController extends Controller
                     // JIKA SUDAH ADA 2 RUANGAN YANG DIAKTIFKAN, AKTIFKAN KEDUANYA
                     //
 
-
-
-
                     //
                     // JIKA PASIEN SUDAH MENUMPUK NAMUN DOKTER KEDUA BELUM DATANG
                     //
@@ -307,10 +304,13 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->alamat ) &&
             !is_null( $web_registration->staf_id ) &&
             $web_registration->data_terkonfirmasi == 0
-
         ) {
             Log::info(__LINE__);
             return view('web_registrations.data_terkonfirmasi', compact('web_registration'));
+        } else if(
+            !is_null( $web_registration )
+        ) {
+            $web_registration->delete();
         }
     }
 
