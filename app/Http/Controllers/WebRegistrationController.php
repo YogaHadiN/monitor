@@ -637,6 +637,10 @@ class WebRegistrationController extends Controller
         $wablas = new WablasController;
         $antrian                = $wablas->antrianPost( $web_registration->ruangan_id );
 
+        Log::info('=====================');
+        Log::info(640);
+        Log::info($web_registration);
+        Log::info('=====================');
 
         $antrian->nama                     = $web_registration->nama;
         $antrian->nomor_bpjs               = $web_registration->nomor_asuransi_bpjs;
