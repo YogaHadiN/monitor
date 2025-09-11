@@ -103,6 +103,8 @@ class WebRegistrationController extends Controller
                                     )"
                                 )
                                 ->get();
+
+        Log::info(__LINE__);
         if (
             count( $antrians ) &&
             is_null( $web_registration )
