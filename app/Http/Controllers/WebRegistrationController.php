@@ -107,6 +107,8 @@ class WebRegistrationController extends Controller
             count( $antrians ) &&
             is_null( $web_registration )
         ) {
+
+            Log::info(__LINE__);
             return view('web_registrations.nomor_antrian', compact(
                 'antrians'
             ));
@@ -118,6 +120,8 @@ class WebRegistrationController extends Controller
                 is_null( $web_registration->tipe_konsultasi_id )
             )
         ) {
+
+            Log::info(__LINE__);
             $tipe_konsultasi_dokter_umum = TipeKonsultasi::find(1);
             $tipe_konsultasi_dokter_gigi = TipeKonsultasi::find(2);
             $tipe_konsultasi_bidan = TipeKonsultasi::find(3);
@@ -132,6 +136,8 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->tipe_konsultasi_id ) &&
             is_null( $web_registration->registrasi_pembayaran_id )
         ) {
+
+            Log::info(__LINE__);
             return view('web_registrations.registrasi_pembayaran');
         } else if (
             !is_null( $web_registration ) &&
@@ -139,6 +145,8 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->registrasi_pembayaran_id ) &&
             is_null( $web_registration->register_previously_saved_patient )
         ) {
+
+            Log::info(__LINE__);
             $wablas = new WablasController;
             $wablas->no_telp = $no_telp;
             $pasiens = $wablas->queryPreviouslySavedPatientRegistry();
@@ -149,6 +157,8 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->registrasi_pembayaran_id ) &&
             is_null( $web_registration->nomor_asuransi_bpjs )
         ) {
+
+            Log::info(__LINE__);
             return view('web_registrations.nomor_asuransi_bpjs');
         } else if (
             !is_null( $web_registration ) &&
@@ -158,6 +168,8 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->nomor_asuransi_bpjs ) &&
             is_null( $web_registration->nama )
         ) {
+
+            Log::info(__LINE__);
             return view('web_registrations.nama');
         } else if (
             !is_null( $web_registration ) &&
@@ -168,6 +180,8 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->nama ) &&
             is_null( $web_registration->tanggal_lahir )
         ) {
+
+            Log::info(__LINE__);
             return view('web_registrations.tanggal_lahir');
         } else if (
             !is_null( $web_registration ) &&
@@ -179,6 +193,8 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->tanggal_lahir ) &&
             is_null( $web_registration->alamat )
         ) {
+
+            Log::info(__LINE__);
             return view('web_registrations.alamat');
         } else if (
             !is_null( $web_registration ) &&
@@ -191,6 +207,8 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->alamat ) &&
             is_null( $web_registration->staf_id )
         ) {
+
+            Log::info(__LINE__);
             $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();
@@ -284,9 +302,11 @@ class WebRegistrationController extends Controller
             $web_registration->data_terkonfirmasi == 0
 
         ) {
+            Log::info(__LINE__);
             return view('web_registrations.data_terkonfirmasi', compact('web_registration'));
         }
     }
+
     public function submit_tipe_konsultasi(){
         $tipe_konsultasi_id = Input::get('value');
         $no_telp            = Input::get('no_telp');
@@ -777,4 +797,9 @@ class WebRegistrationController extends Controller
          }
          return $no_telp;
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
 }
