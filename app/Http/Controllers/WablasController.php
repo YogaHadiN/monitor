@@ -76,6 +76,7 @@ class WablasController extends Controller
 	public $whatsapp_main_menu;
 	public $kuesioner_menunggu_obat;
 	public $whatsapp_registration;
+	public $input_registrasi_pembayaran_id;
 	public $whatsapp_recovery_index;
 	public $whatsapp_complaint;
 	public $message_reply;
@@ -3751,13 +3752,13 @@ class WablasController extends Controller
                         // === Case non-schedulled: jalur lama (buat antrian) ===
                         $this->input_nomor_bpjs = $reservasi_online->nomor_asuransi_bpjs;
 
+                        $this->input_registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                         $antrian = $this->antrianPost($reservasi_online->ruangan_id);
                         $antrian->nama                     = $reservasi_online->nama;
                         $antrian->nomor_bpjs               = $reservasi_online->nomor_asuransi_bpjs;
                         $antrian->no_telp                  = $reservasi_online->no_telp;
                         $antrian->tanggal_lahir            = $reservasi_online->tanggal_lahir;
                         $antrian->alamat                   = $reservasi_online->alamat;
-                        $antrian->registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
                         $antrian->pasien_id                = $reservasi_online->pasien_id;
                         $antrian->verifikasi_bpjs          = $reservasi_online->verifikasi_bpjs;
                         $antrian->ruangan_id               = $reservasi_online->ruangan_id;
@@ -4020,9 +4021,9 @@ class WablasController extends Controller
 
 
 	public function antrianPost($id){
-        $carbon = Carbon::now();
+        $carbon     = Carbon::now();
         $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
+        $endOfDay   = $carbon->endOfDay()->format('Y-m-d H:i:s');
 
 		$antrians = Antrian::whereBetween('created_at', [
                                     $startOfDay,
@@ -4047,12 +4048,13 @@ class WablasController extends Controller
             $tipe_konsultasi_id = $ruangan->default_tipe_konsultasi_id;
         }
 
-        $antrian->tenant_id      = 1 ;
-        $antrian->ruangan_id     = $id ;
-        $antrian->tipe_konsultasi_id     = $tipe_konsultasi_id ;
-		$antrian->antriable_id   = $antrian->id;
-		$antrian->kode_unik      = $this->kodeUnik();
-		$antrian->antriable_type = 'App\\Models\\Antrian';
+        $antrian->tenant_id                = 1 ;
+        $antrian->ruangan_id               = $id ;
+        $antrian->tipe_konsultasi_id       = $tipe_konsultasi_id ;
+        $antrian->registrasi_pembayaran_id = $this->input_registrasi_pembayaran_id;
+		$antrian->antriable_id             = $antrian->id;
+		$antrian->kode_unik                = $this->kodeUnik();
+		$antrian->antriable_type           = 'App\\Models\\Antrian';
 		$antrian->save();
 
 		$this->updateJumlahAntrian(false, null);

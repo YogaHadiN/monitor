@@ -635,6 +635,7 @@ class WebRegistrationController extends Controller
         $web_registration->save();
 
         $wablas = new WablasController;
+        $wablas->input_registrasi_pembayaran_id = $web_registration->registrasi_pembayaran_id;
         $antrian                = $wablas->antrianPost( $web_registration->ruangan_id );
 
         Log::info('=====================');
@@ -654,7 +655,6 @@ class WebRegistrationController extends Controller
         $antrian->no_telp                  = $web_registration->no_telp;
         $antrian->tanggal_lahir            = $web_registration->tanggal_lahir;
         $antrian->alamat                   = $web_registration->alamat;
-        $antrian->registrasi_pembayaran_id = $web_registration->registrasi_pembayaran_id;
         $antrian->pasien_id                = $web_registration->pasien_id;
         $antrian->ruangan_id               = $web_registration->ruangan_id;
         $antrian->tipe_konsultasi_id       = $web_registration->tipe_konsultasi_id;
