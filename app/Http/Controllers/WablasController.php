@@ -463,6 +463,9 @@ class WablasController extends Controller
                         } else if( $this->noTelpDalamChatWithAdmin() ) {
                             $this->chatBotLog(__LINE__);
                             $this->createWhatsappChat(); // buat main menu
+                        } else if( $this->rekonfirmationWaitlistReservation() ) {
+                            $this->chatBotLog(__LINE__);
+                            $this->waitlistReservationConfirmation(); // buat main menu
                         } else if( $this->pasienTidakDalamAntrian() ) {
                             $this->chatBotLog(__LINE__);
                             return $this->createWhatsappMainMenu(); // buat main menu
@@ -6072,5 +6075,140 @@ class WablasController extends Controller
     protected function pesanTolakWaitlistTawarkanDaftarSekarang(): string
     {
         return "Baik, tidak masuk waitlist. Kakak kami persilahkan untuk mendaftar kembali di hari lain. untuk informasi detil silahkan ketik 'Jadwal Dokter Gigi'. Mohon maaf atas ketidaknyamanannya.";
+    }
+    public function rekonfirmationWaitlistReservation(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(15);
+    }
+
+    public function waitlistReservationConfirmation()
+    {
+        $tz  = 'Asia/Jakarta';
+        $now = \Carbon\Carbon::now($tz);
+
+        $msg       = is_string($this->message) ? strtolower(trim($this->message)) : '';
+        $yesTokens = ['ya','y','ok','oke','iya','siap','setuju','yes','yaa','ya!'];
+        $noTokens  = ['tidak','ga','nggak','gak','no','batal','batalkan','t'];
+
+        // pakai created_at (hari ini)
+        $startToday = $now->copy()->startOfDay();
+        $endToday   = $now->copy()->endOfDay();
+
+        // ============== KONFIRMASI "YA" ==============
+        if (in_array($msg, $yesTokens, true)) {
+            try {
+                \DB::beginTransaction();
+
+                // waitlist aktif nomor ini, dibuat hari ini
+                $waitlist = \App\Models\ReservasiOnline::query()
+                    ->with('staf')
+                    ->where('waitlist_flag', 1)
+                    ->where('no_telp', $this->no_telp)
+                    ->whereBetween('created_at', [$startToday, $endToday])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$waitlist) {
+                    \DB::rollBack();
+                    $this->autoReply("Data waitlist tidak ditemukan atau sudah tidak berlaku.");
+                    return;
+                }
+
+                // ambil baris kuota (petugas_pemeriksas) berdasar staf & created_at hari ini
+                $slotRow = \DB::table('petugas_pemeriksas')
+                    ->where('staf_id', $waitlist->staf_id)
+                    ->whereBetween('created_at', [$startToday, $endToday])
+                    ->where('jam_akhir', '>=', $now->format('H:i'))
+                    ->orderByDesc('id')               // ambil yang terbaru hari ini
+                    ->lockForUpdate()
+                    ->first();
+
+                $maxBooking = (int)($slotRow->max_booking ?? 1);
+
+                // hitung reservasi aktif hari ini utk staf tsb (tanpa tanggal/jam)
+                $existing = \App\Models\ReservasiOnline::query()
+                    ->where('staf_id', $waitlist->staf_id)
+                    ->where('schedulled_booking', 1)
+                    ->where('reservasi_selesai', 1)
+                    ->whereBetween('created_at', [$startToday, $endToday])
+                    ->lockForUpdate()
+                    ->count();
+
+                if ($existing >= $maxBooking) { //
+                    \DB::rollBack();
+                    $this->autoReply(
+                        "Mohon maaf, kuota untuk saat ini *penuh*.\n".
+                        "Kakak tetap kami simpan di *waitlist*. Jika ada pembukaan slot, kami akan menghubungi kembali."
+                    );
+                    return;
+                }
+
+                // duplikasi konfirmasi
+                if ((int)$waitlist->registering_confirmation === 1 || (int)$waitlist->schedulled_booking === 1) {
+                    \DB::commit();
+                    $qrLink = route('schedulled_reservations.qr-view', ['reservasi' => $waitlist->id]);
+                    $this->autoReply(
+                        "Kakak sudah terkonfirmasi sebelumnya ✅\n\n".
+                        "Akses QR Code:\n{$qrLink}\n\n".
+                        "Catatan: simpan nomor WhatsApp ini di kontak agar tautan bisa diklik."
+                    );
+                    return;
+                }
+
+                $waitlist->waitlist_flag            = 0;
+                $waitlist->schedulled_booking       = 1;
+                $waitlist->registering_confirmation = 1;
+                $waitlist->reservasi_selesai        = 1;
+                $waitlist->qrcode                   = $this->generateQrCodeForOnlineReservation('B', $waitlist);
+                $waitlist->save();
+
+                \DB::commit();
+
+                // batas scan = 90 menit dari created_at konfirmasi (atau sekarang jika null)
+                $baseTime  = $waitlist->updated_at ? $waitlist->updated_at->timezone($tz) : $now;
+                $batasScan = $baseTime->copy()->addMinutes(90)->format('H:i');
+                $stafNama  = optional($waitlist->staf)->nama ?? 'dokter';
+                $qrLink    = route('schedulled_reservations.qr-view', ['reservasi' => $waitlist->id]);
+
+                $this->autoReply(
+                    "Halo {$waitlist->nama},\n\n".
+                    "Konfirmasi *waitlist* Kakak berhasil ✅\n\n".
+                    "Reservasi untuk *{$stafNama}* sudah didaftarkan.\n\n".
+                    "Jangan lupa *scan QR Code* di klinik paling lambat jam *{$batasScan}* (±90 menit sejak konfirmasi).\n\n".
+                    "Akses QR Code (simpan nomor WA ini agar tautan bisa diklik):\n{$qrLink}\n\n".
+                    "Terima kasih 🙏"
+                );
+                return;
+
+            } catch (\Throwable $e) {
+                \DB::rollBack();
+                $this->autoReply("Terjadi kendala saat konfirmasi. Coba beberapa saat lagi ya, Kak.");
+                return;
+            }
+        }
+
+        // ============== TOLAK / BATAL ==============
+        if (in_array($msg, $noTokens, true)) {
+            try {
+                $waitlist = \App\Models\ReservasiOnline::query()
+                    ->where('waitlist_flag', 1)
+                    ->where('no_telp', $this->no_telp)
+                    ->whereBetween('created_at', [$startToday, $endToday])
+                    ->first();
+
+                if ($waitlist) {
+                    $waitlist->delete(); // atau set canceled_at jika ada
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+
+            if (function_exists('resetWhatsappRegistration')) {
+                resetWhatsappRegistration($this->no_telp);
+            }
+
+            $this->autoReply("Reservasi dibatalkan, terima kasih.");
+            return;
+        }
+
+        // ============== INPUT TAK DIPAHAMI ==============
+        $this->autoReply("Balasan kurang jelas. Ketik *YA* untuk konfirmasi waitlist, atau *TIDAK* untuk batal.");
     }
 }
