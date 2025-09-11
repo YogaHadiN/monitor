@@ -105,6 +105,8 @@ class WebRegistrationController extends Controller
                                 ->get();
 
         Log::info(__LINE__);
+        Log::info($antrians);
+        Log::info($web_registration);
         if (
             count( $antrians ) &&
             is_null( $web_registration )
