@@ -105,13 +105,17 @@ class WebRegistrationController extends Controller
                                 ->get();
 
         Log::info(__LINE__);
+        Log::info("====================");
+        Log::info("ANTRIAN");
         Log::info($antrians);
+        Log::info("====================");
+        Log::info("WEB_REGIS");
         Log::info($web_registration);
+        Log::info("====================");
         if (
             count( $antrians ) &&
             is_null( $web_registration )
         ) {
-
             Log::info(__LINE__);
             return view('web_registrations.nomor_antrian', compact(
                 'antrians'
@@ -124,7 +128,6 @@ class WebRegistrationController extends Controller
                 is_null( $web_registration->tipe_konsultasi_id )
             )
         ) {
-
             Log::info(__LINE__);
             $tipe_konsultasi_dokter_umum = TipeKonsultasi::find(1);
             $tipe_konsultasi_dokter_gigi = TipeKonsultasi::find(2);
