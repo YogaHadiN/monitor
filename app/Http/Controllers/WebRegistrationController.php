@@ -638,6 +638,13 @@ class WebRegistrationController extends Controller
         $antrian                = $wablas->antrianPost( $web_registration->ruangan_id );
 
         Log::info('=====================');
+        Log::info('=====================');
+        Log::info('=====================');
+        Log::info('=====================');
+        Log::info('=====================');
+        Log::info('=====================');
+        Log::info('=====================');
+        Log::info('=====================');
         Log::info(640);
         Log::info($web_registration);
         Log::info('=====================');
