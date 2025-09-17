@@ -6247,11 +6247,10 @@ class WablasController extends Controller
 
     public function errorValidasiSchedulledBooking(){
         $nowJkt  = Carbon::now('Asia/Jakarta');
-        $jumlah_antrian_gigi = Antrian::where('')
-        PetugasPemeriksa::where('tipe_konsultasi_id', 2) // dokter gigi
+        return PetugasPemeriksa::where('tipe_konsultasi_id', 2) // dokter gigi
             ->whereDate('tanggal', $nowJkt) // hari ini
             ->where('schedulled_booking_allowed', 1) // masih ada
-            ->where('schedulled_booking_allowed', 1)
+            ->exists();
     }
     public function pesanAntrolDokterGigiNonAktif(){
         $message = 'Pelayanan Antrian Online Dokter Gigi saat ini dalam maintenance';
