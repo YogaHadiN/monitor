@@ -177,14 +177,6 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
-        if ( $this->no_telp == '6281381912803' ) {
-            Log::info( 'image_url');
-            Log::info( $this->image_url );
-            Log::info( 'message_type');
-            Log::info( $this->message_type );
-            Log::info( 'message');
-            Log::info( $this->message );
-        }
 
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
                                  ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
@@ -3262,7 +3254,7 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
 
             // hanya terima '1' / '2' / '3'
-            if (in_array($msg, ['1','2','3'], true)) {
+            if (in_array($msg, ['1','2','3','4'], true)) {
 
                 // !!! HILANGKAN pemaksaan '3' -> '4' (membingungkan maintenance)
                 $tipeMsg = $msg; // '1' umum, '2' gigi, '3' USG (contoh)
@@ -3362,6 +3354,43 @@ class WablasController extends Controller
                             $reservasi_online->tipe_konsultasi_id = $tipeMsg;
                             $reservasi_online->save();
                         }
+                    } else {
+                        $message  = 'Hari ini tidak tersedia jadwal USG Kehamilan. Mohon mendaftar saat jadwal tersedia.';
+                        $message .= PHP_EOL.PHP_EOL.'Untuk info jadwal usg, ketik "Jadwal USG"';
+                        $message .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya';
+                        $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
+                        $this->autoReply($message);
+                        return false;
+                    }
+                // khusus SpDV
+                } elseif ($tipeMsg === '4') {
+                    $jadwal_spdv = JadwalKonsultasi::where('hari_id', $nowJkt->isoWeekday()) // 1-7
+                                        ->where('tipe_konsultasi_id', 6) //spdv
+                                        ->first();
+                    $petugas_spdv = PetugasPemeriksa::whereDate('tanggal', $nowJkt) // 1-7
+                                        ->where('tipe_konsultasi_id', 6) //spdv
+                                        ->first();
+
+                    // jika jadwal tidak ada
+                    if (
+                        is_null( $jadwal_spdv ) &&
+                        is_null( $petugas_spdv )
+                    ) {
+                        $message  = 'Hari ini tidak tersedia jadwal Dokter Spesialis . Mohon mendaftar saat jadwal tersedia.';
+                        $message .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya';
+                        $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
+                        $this->autoReply($message);
+                        return false;
+                    } else if (
+                        // jika jadwal ada, namun petugas tidak ada karena berhalangan
+                        !is_null( $jadwal_spdv ) &&
+                        is_null( $petugas_spdv )
+                    ) {
+                        $message  = 'Hari ini Dokter Spesialis Kulit berhalangan. Mohon mendaftar kembali saat jadwal tersedia.';
+                        $message .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya';
+                        $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
+                        $this->autoReply($message);
+                        return false;
                     } else {
                         $message  = 'Hari ini tidak tersedia jadwal USG Kehamilan. Mohon mendaftar saat jadwal tersedia.';
                         $message .= PHP_EOL.PHP_EOL.'Untuk info jadwal usg, ketik "Jadwal USG"';
@@ -4000,6 +4029,8 @@ class WablasController extends Controller
         $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian[2]. ' antrian)';
         $message .= PHP_EOL;
         $message .= '3. USG Kehamilan';
+        $message .= PHP_EOL;
+        $message .= '4. Dokter Spesialis Kulit dan Kelamin';
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Balas dengan angka *1, 2 atau 3* sesuai dengan informasi di atas';
@@ -5925,7 +5956,7 @@ class WablasController extends Controller
         $this->chatBotLog(__LINE__);
 
         // 0) Jika ada petugas yang mengizinkan scheduled booking → JANGAN return pesan apa pun
-        if ($this->adaPetugasGigiDenganScheduledBooking()) {
+        if ($this->errorValidasiSchedulledBooking()) {
             return; // null → lanjutkan proses berikutnya
         }
 
@@ -6213,4 +6244,21 @@ class WablasController extends Controller
         // ============== INPUT TAK DIPAHAMI ==============
         $this->autoReply("Balasan kurang jelas. Ketik *YA* untuk konfirmasi waitlist, atau *TIDAK* untuk batal.");
     }
+
+    public function errorValidasiSchedulledBooking(){
+        $nowJkt  = Carbon::now('Asia/Jakarta');
+        $jumlah_antrian_gigi = Antrian::where('')
+        PetugasPemeriksa::where('tipe_konsultasi_id', 2) // dokter gigi
+            ->whereDate('tanggal', $nowJkt) // hari ini
+            ->where('schedulled_booking_allowed', 1) // masih ada
+            ->where('schedulled_booking_allowed', 1)
+    }
+    public function pesanAntrolDokterGigiNonAktif(){
+        $message = 'Pelayanan Antrian Online Dokter Gigi saat ini dalam maintenance';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Mohon maaf atas ketidaknyamanannya';
+        return $message;
+    }
+
 }
