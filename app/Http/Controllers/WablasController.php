@@ -3259,14 +3259,6 @@ class WablasController extends Controller
                 // !!! HILANGKAN pemaksaan '3' -> '4' (membingungkan maintenance)
                 $tipeMsg = $msg; // '1' umum, '2' gigi, '3' USG (contoh)
 
-                // kalau antrian gigi dimatikan
-                if ($tipeMsg === '2' && $tenant && (int)$tenant->dentist_queue_enabled === 0) {
-                    $message  = $this->pesanAntrolDokterGigiNonAktif();
-                    $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
-                    $this->autoReply($message);
-                    return false;
-                }
-
                 // cek jadwal petugas hari ini & saat ini
                 $petugas_pemeriksa_hari_ini = PetugasPemeriksa::where('tipe_konsultasi_id', $tipeMsg)
                     ->where('tanggal', $nowJkt->toDateString())
@@ -3822,6 +3814,7 @@ class WablasController extends Controller
         }
 
         // ===== pesan tindak lanjut (prompt berikutnya) =====
+        // BALAS PESAN
         if (
             !is_null($reservasi_online) &&
             (int)($reservasi_online->schedulled_booking ?? 0) === 2 &&
@@ -4320,50 +4313,96 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tanyaSiapaPetugasPemeriksa($reservasi_online){
-        //
-        // JIKA PASIEN SUDAH MENUMPUK NAMUN DOKTER KEDUA BELUM DATANG
-        // ANTRIKAN PASIEN UNTUK DOKTER KEDUA
-        //
+    private function tanyaSiapaPetugasPemeriksa($reservasi_online)
+    {
+        $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
         $petugas_pemeriksas = $this->petugas_pemeriksa_sekarang($reservasi_online);
 
-        if (
-            $petugas_pemeriksas->count() < 1
-        ) {
-            $tipe_konsultasi = TipeKonsultasi::find( $tipe_konsultasi_id );
-            $message = 'Tidak ada petugas ' . ucwords( $tipe_konsultasi->tipe_konsultasi ) . ' yang bertugas saat ini';
-        } else {
-            $message = 'Silahkan Pilih Dokter pemeriksa.';
-            $message .=  PHP_EOL;
-            foreach ($petugas_pemeriksas as $k => $petugas) {
-                $message .=  PHP_EOL;
-                $nomor = $k+1;
-                $message .=  $nomor . '. ' . $petugas->staf->nama_dengan_gelar;
-                $message .=  PHP_EOL;
-                $message .=  '(' . $petugas->sisa_antrian. ' Antrian)';
-                $message .=  PHP_EOL;
+        // Formatter default (dokter umum & tipe lain): pakai sisa_antrian
+        $formatPilihanDefault = function ($list, int $tipe_konsultasi_id): string {
+            if ($list->count() < 1) {
+                $tipe = \App\Models\TipeKonsultasi::find($tipe_konsultasi_id)?->tipe_konsultasi ?? 'pemeriksa';
+                return 'Tidak ada petugas ' . ucwords($tipe) . ' yang bertugas saat ini';
             }
-            $message .=  PHP_EOL;
-            $message .=  "Balas dengan angka ";
 
-            $message .= '*';
-            foreach ($petugas_pemeriksas as $k => $petugas) {
-                $nomor = $k+1;
-                if ( $k > 0 ) {
-                    if ($k == count( $petugas_pemeriksas ) - 1) {
-                        $message .= ' atau ' .  $nomor;
-                    } else {
-                        $message .= ', ' . $nomor;
-                    }
-                } else {
-                    $message .=  $nomor;
-                }
+            $message  = 'Silahkan Pilih Dokter pemeriksa.' . PHP_EOL;
+            $opsi     = [];
+
+            foreach ($list as $k => $petugas) {
+                $no   = $k + 1;
+                $opsi[] = (string) $no;
+
+                $nama = $petugas->staf->nama_dengan_gelar
+                    ?? $petugas->staf->nama
+                    ?? 'Dokter';
+                $sisa = $petugas->sisa_antrian ?? 0;
+
+                $message .= PHP_EOL;
+                $message .= $no . '. ' . $nama . PHP_EOL;
+                $message .= '(' . $sisa . ' Antrian)' . PHP_EOL;
             }
-            $message .= '*';
-            $message .=  " sesuai dengan pilihan diatas";
+
+            $n = count($opsi);
+            $ops =
+                $n === 1 ? $opsi[0] :
+                ($n === 2 ? $opsi[0] . ' atau ' . $opsi[1] :
+                 implode(', ', array_slice($opsi, 0, $n - 1)) . ' atau ' . $opsi[$n - 1]);
+
+            $message .= PHP_EOL . 'Balas dengan angka *' . $ops . '* sesuai dengan pilihan diatas';
+            return $message;
+        };
+
+        // Formatter khusus GIGI: tampilkan (jam_mulai - 30 menit) - (jam_akhir - 1 jam)
+        $formatPilihanGigi = function ($list): string {
+            if ($list->count() < 1) {
+                return 'Tidak ada petugas Dokter Gigi yang bertugas saat ini';
+            }
+
+            $message  = 'Silahkan Pilih Dokter pemeriksa.' . PHP_EOL;
+            $opsi     = [];
+
+            foreach ($list as $k => $petugas) {
+                $no     = $k + 1;
+                $opsi[] = (string) $no;
+
+                $nama   = $petugas->staf->nama_dengan_gelar
+                    ?? $petugas->staf->nama
+                    ?? 'Dokter Gigi';
+
+                // Hitung window registrasi langsung untuk tampilan
+                $mulai  = \Carbon\Carbon::parse($petugas->jam_mulai, 'Asia/Jakarta')->subMinutes(30);
+                $akhir  = \Carbon\Carbon::parse($petugas->jam_akhir, 'Asia/Jakarta')->subHour();
+
+                $message .= PHP_EOL;
+                $message .= $no . '. ' . $nama . PHP_EOL;
+                $message .= '(' . $mulai->format('H:i') . ' - ' . $akhir->format('H:i') . ')' . PHP_EOL;
+            }
+
+            $n = count($opsi);
+            $ops =
+                $n === 1 ? $opsi[0] :
+                ($n === 2 ? $opsi[0] . ' atau ' . $opsi[1] :
+                 implode(', ', array_slice($opsi, 0, $n - 1)) . ' atau ' . $opsi[$n - 1]);
+
+            $message .= PHP_EOL . 'Balas dengan angka *' . $ops . '* sesuai dengan pilihan diatas';
+            return $message;
+        };
+
+        // DOKTER UMUM
+        if ((int)$reservasi_online->tipe_konsultasi_id === 1) {
+            return $formatPilihanDefault($petugas_pemeriksas, 1);
         }
-        return $message;
+
+        // DOKTER GIGI — tampilkan window waktu, bukan sisa antrian
+        if ((int)$reservasi_online->tipe_konsultasi_id === 2) {
+            // Anda bilang validasi waktu sudah dilakukan sebelumnya, jadi langsung tampilkan daftar
+            return $formatPilihanGigi($petugas_pemeriksas);
+        }
+
+        // Default untuk tipe lain
+        return $formatPilihanDefault($petugas_pemeriksas, (int)$reservasi_online->tipe_konsultasi_id);
     }
+
     private function tanyaKartuAsuransiImage($reservasi_online){
         $message = 'Bisa dibantu kirimkan';
         $message .=  PHP_EOL;
@@ -5952,86 +5991,125 @@ class WablasController extends Controller
         /* $this->proceedRegistering(); */
     }
 
-    public function validasiDokterPengambilanAntrianDokterGigi(){
-        $this->chatBotLog(__LINE__);
+    public function validasiDokterPengambilanAntrianDokterGigi()
+    {
+        $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
 
-        // 0) Jika ada petugas yang mengizinkan scheduled booking → JANGAN return pesan apa pun
-        if ($this->errorValidasiSchedulledBooking()) {
-            return; // null → lanjutkan proses berikutnya
-        }
-
-        $tz         = 'Asia/Jakarta';
-        $now        = \Carbon\Carbon::now($tz);
-        $jadwalGigi = $this->jadwalGigi ?? null; // pastikan variabel ada
-
-        // 1) Fitur antrian gigi nonaktif?
-        if ((int)$this->tenant->dentist_queue_enabled === 0) {
-            return $this->pesanAntrolDokterGigiNonAktif();
-        }
-
-        // 2) Tidak ada jadwal / tenant menandai gigi libur
-        if (!$jadwalGigi || !(bool)$this->tenant->dentist_available) {
-            $message  = 'Hari ini pelayanan poli gigi libur' . PHP_EOL . PHP_EOL;
-            $message .= 'Silahkan untuk mendaftar kembali saat Poli Gigi tersedia' . PHP_EOL;
-            $message .= "Untuk informasi tersebut silahkan ketik 'Jadwal Dokter Gigi'" . PHP_EOL . PHP_EOL;
-            $message .= 'Mohon maaf atas ketidaknyamanannya';
+        // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
+        if (
+            $this->tenant &&
+            (int) $this->tenant->dentist_queue_enabled === 0 &&
+            $this->no_telp !== '6281381912803'
+        ) {
+            $message  = $this->pesanAntrolDokterGigiNonAktif();
+            $message .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
             return $message;
         }
 
-        // 3) Stop pelayanan manual oleh tenant
-        if ((bool)$this->tenant->dokter_gigi_stop_pelayanan_hari_ini) {
-            $message  = 'Pengambilan Antrian Poli Gigi hari ini telah selesai' . PHP_EOL;
-            $message .= 'Silahkan untuk mendaftar kembali saat Poli Gigi tersedia' . PHP_EOL;
-            $message .= "Untuk informasi tersebut silahkan ketik 'Jadwal Dokter Gigi'" . PHP_EOL;
-            $message .= 'Mohon maaf atas ketidaknyamanannya.';
-            return $message;
+        // 2) Scheduled booking: cari yang paling awal dan paling akhir (hari ini)
+        $rowMulaiOnline = \App\Models\PetugasPemeriksa::query()
+            ->where('tipe_konsultasi_id', 2)
+            ->whereDate('tanggal', $nowJkt)
+            ->where('schedulled_booking_allowed', 1)
+            ->orderBy('jam_mulai_booking_online', 'asc')
+            ->first();
+
+        $rowMulaiTerakhir = \App\Models\PetugasPemeriksa::query()
+            ->where('tipe_konsultasi_id', 2)
+            ->whereDate('tanggal', $nowJkt)
+            ->where('schedulled_booking_allowed', 1)
+            ->orderBy('jam_mulai', 'desc')
+            ->first();
+
+        if ($rowMulaiOnline || $rowMulaiTerakhir) {
+            // 2a) Pastikan window scheduled booking sudah dibuka
+            if ($rowMulaiOnline && !empty($rowMulaiOnline->jam_mulai_booking_online)) {
+                $jam_mulai_booking_online = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_booking_online, 'Asia/Jakarta');
+                if ($nowJkt->lt($jam_mulai_booking_online)) {
+                    $message  = 'Pendaftaran online baru dimulai pada ' . $jam_mulai_booking_online->format('H:i');
+                    $message .= PHP_EOL . 'Silakan mendaftar kembali setelah jam tersebut.';
+                    $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
+                    return $message;
+                }
+            }
+
+            // 2b) Jika ada jadwal yang berakhir ≤ 1 jam dari sekarang → arahkan offline
+            $oneHour = $nowJkt->copy()->addHour();
+
+            // NOTE: Jika kolom jam_akhir TYPEnya DATETIME, hapus toTimeString() dan pakai $nowJkt/$oneHour langsung.
+            $rowsSisaSejam = \App\Models\PetugasPemeriksa::query()
+                ->where('tipe_konsultasi_id', 2)
+                ->whereDate('tanggal', $nowJkt)
+                ->whereBetween('jam_akhir', [$nowJkt->toTimeString(), $oneHour->toTimeString()])
+                ->orderBy('jam_akhir', 'desc')
+                ->get();
+
+            if ($rowsSisaSejam->isNotEmpty()) {
+                // Pakai baris paling akhir dari yang masih tersisa ≤ 1 jam
+                $row           = $rowsSisaSejam->first();
+                $jamMulaiRow   = \Carbon\Carbon::parse($row->jam_mulai, 'Asia/Jakarta');
+                $jamAkhirRow   = \Carbon\Carbon::parse($row->jam_akhir, 'Asia/Jakarta');
+
+                // Window: 30 menit sebelum jam_mulai s/d 1 jam sebelum jam_akhir
+                $windowStart = $jamMulaiRow->copy()->subMinutes(30);
+                $windowEnd   = $jamAkhirRow->copy()->subHour(); // batas registrasi langsung
+
+                if ($nowJkt->between($windowStart, $windowEnd, true)) {
+                    $message  = 'Reservasi dokter gigi online hari ini sudah berakhir.';
+                    $message .= PHP_EOL . 'Reservasi secara langsung dibuka sampai jam ' . $windowEnd->format('H:i') . '.';
+                    $message .= PHP_EOL . PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
+                    return $message;
+                }
+                // jika tidak berada pada window, lanjut proses normal
+            }
+            // jika tidak ada yang berakhir ≤ 1 jam, lanjut proses normal (online masih jauh dari tutup)
         }
 
-        // 4) Validasi waktu buka/tutup
-        $start = \Carbon\Carbon::createFromFormat('H:i', $jadwalGigi['jam_mulai'], $tz);
-        $end   = \Carbon\Carbon::createFromFormat('H:i', $jadwalGigi['jam_akhir'], $tz);
+        // 3) TANPA scheduled booking — gunakan rentang praktik hari ini
+        $dokter_gigi_q = \App\Models\PetugasPemeriksa::query()
+            ->where('tipe_konsultasi_id', 2)
+            ->whereDate('tanggal', $nowJkt);
 
-        $onlineClose  = $end->copy()->subHours(3); // tutup online 3 jam sebelum berakhir
-        $offlineClose = $end->copy()->subHour();   // tutup offline 1 jam sebelum berakhir
+        if ($dokter_gigi_q->exists()) {
+            $dokter_gigi_awal  = (clone $dokter_gigi_q)->orderBy('jam_mulai', 'asc')->first();
+            $dokter_gigi_akhir = (clone $dokter_gigi_q)->orderBy('jam_akhir', 'desc')->first();
 
-        // Belum mulai
-        if ($now->lt($start)) {
-            $jam_mulai = $start->format('H:i');
-            $jam_akhir_daftar_online = $onlineClose->format('H:i');
-            $message  = "Pengambilan Antrian Poli Gigi secara online hari ini dimulai jam {$jam_mulai} ";
-            $message .= "sampai pukul {$jam_akhir_daftar_online}.";
-            $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
-            return $message;
-        }
+            $jam_mulai_registrasi_langsung = \Carbon\Carbon::parse($dokter_gigi_awal->jam_mulai, 'Asia/Jakarta')->subMinutes(30);
+            $jam_akhir_registrasi_langsung = \Carbon\Carbon::parse($dokter_gigi_akhir->jam_akhir, 'Asia/Jakarta')->subHour(); // (jam_akhir - 1h)
 
-        // Online sudah berakhir (offline masih mungkin buka sampai offlineClose)
-        if ($now->gt($onlineClose)) {
-            $jam_akhir_online  = $onlineClose->format('H:i');
-            $jam_akhir_offline = $offlineClose->format('H:i');
+            // Selesai jika sekarang ≥ (jam_akhir - 1 jam)  ← perbaikan: JANGAN subHour() lagi
+            if ($nowJkt->gte($jam_akhir_registrasi_langsung)) {
+                return $this->reservasiDokterGigiSudahSelesai();
+            }
 
-            // Masih dalam rentang offline (ambil antrian langsung di tempat)
-            if ($now->lt($offlineClose)) {
-                $message  = "Pengambilan Antrian Poli Gigi secara online berakhir jam {$jam_akhir_online}. ";
-                $message .= "Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}.";
-                $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
+            // Belum mulai registrasi langsung
+            if ($nowJkt->lt($jam_mulai_registrasi_langsung)) {
+                $message  = 'Pendaftaran online dokter gigi tidak tersedia saat ini.';
+                $message .= PHP_EOL . 'Registrasi secara langsung dibuka jam ' . $jam_mulai_registrasi_langsung->format('H:i') . '.';
+                $message .= PHP_EOL . "Untuk melihat jadwal yang tersedia ketik 'Jadwal Dokter Gigi'.";
                 return $message;
             }
 
-            // Offline juga sudah tutup (>= offlineClose)
-            $message  = "Pengambilan antrian Poli Gigi hari ini telah berakhir.";
-            $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
-            return $message;
+            // Sedang jam praktik normal tanpa scheduled booking → lanjut (tidak return)
+        } else {
+            // Tidak ada jadwal sama sekali hari ini
+            return $this->pelayananPoliGigiLibur();
         }
 
-        // Jika sudah lewat offlineClose tanpa melewati cabang di atas (edge case),
-        // anggap berakhir total.
-        if ($now->gte($offlineClose)) {
-            $message  = "Pengambilan antrian Poli Gigi hari ini telah berakhir.";
-            $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
-            return $message;
+        // 4) Fallback berbasis jadwal harian (opsional)
+        $tz         = 'Asia/Jakarta';
+        $now        = \Carbon\Carbon::now($tz);
+        $jadwalGigi = $this->jadwalGigi ?? null;
+
+        if (!$jadwalGigi || !(bool) ($this->tenant->dentist_available ?? false)) {
+            return $this->pelayananPoliGigiLibur();
         }
 
-        // Sampai di sini berarti: sudah mulai & online masih dibuka → lanjut proses (return null)
+        if ((bool) ($this->tenant->dokter_gigi_stop_pelayanan_hari_ini ?? false)) {
+            return $this->reservasiDokterGigiSudahSelesai();
+        }
+
+        // Masih dibuka → lanjut proses (return null)
         return;
     }
 
@@ -6259,5 +6337,23 @@ class WablasController extends Controller
         $message .= 'Mohon maaf atas ketidaknyamanannya';
         return $message;
     }
+    public function reservasiDokterGigiSudahSelesai(){
+        $message = 'Reservasi dokter gigi hari ini sudah berakhir';
+        $message .= PHP_EOL;
+        $message .= 'untuk melihat jadwal di hari lain ketik "Jadwal Dokter Gigi "';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= "Mohon maaf atas ketidaknyamanannya";
+        return $message;
+    }
+    public function pelayananPoliGigiLibur(){
+        $message  = 'Hari ini pelayanan poli gigi libur' . PHP_EOL . PHP_EOL;
+        $message .= 'Silakan mendaftar kembali saat Poli Gigi tersedia' . PHP_EOL;
+        $message .= "Untuk informasi tersebut silakan ketik 'Jadwal Dokter Gigi'" . PHP_EOL . PHP_EOL;
+        $message .= 'Mohon maaf atas ketidaknyamanannya';
+        return $message;
+    }
+
+
 
 }
