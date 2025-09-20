@@ -4363,6 +4363,11 @@ class WablasController extends Controller
         /** @var \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $list */
         $list = collect($this->petugas_pemeriksa_sekarang($reservasi_online));
 
+        Log::info('======================');
+        Log::info('list');
+        Log::info($list);
+        Log::info('======================');
+
         // Hindari N+1 saat akses $petugas->staf (jika Eloquent collection)
         if (method_exists($list, 'loadMissing')) {
             $list->loadMissing('staf');
