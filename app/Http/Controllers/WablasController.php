@@ -3995,6 +3995,7 @@ class WablasController extends Controller
             $response .= $this->samaDengan();
             $response .= PHP_EOL;
             $response .= PHP_EOL;
+            $response .= $this->tanyaSyaratdanKetentuan($model);
         }
         return $response;
     }
@@ -4558,11 +4559,10 @@ class WablasController extends Controller
             if ($jamMulaiGigi) {
                 $nl = PHP_EOL;
                 $jamTerakhirQrScan = \Carbon\Carbon::parse($jamMulaiGigi, $tz)->subMinutes(15)->format('H:i');
-                $message .= "- Harap melakukan scan QR di klinik **paling lambat pukul {$jamTerakhirQrScan}**." . $nl;
+                $message .= "- Harap melakukan scan QR di klinik **paling lambat pukul {$jamTerakhirQrScan} ( 15 menit sebelum jam praktik dimulai )*." . $nl;
                 $message .= '- Antrean akan otomatis **dibatalkan** bila terlambat melakukan scan.' ;
 
             } else {
-
                 // Fallback bila jadwal gigi belum di-set
                 $message .= '*Mohon scan QR di klinik maksimal 15 menit sebelum jam mulai pemeriksaan gigi.*';
                 $message .= PHP_EOL . 'Antrean akan dibatalkan apabila telat scan pada jam tersebut';
