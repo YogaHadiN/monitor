@@ -2200,7 +2200,7 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_bpjs_dentist_registrations->nomor_asuransi_bpjs ) ||
             !is_null( $this->whatsapp_bpjs_dentist_registrations->tanggal_lahir )
         ) {
-            $response =  "*Uraian Pengisian Anda*";
+            $response =  "*Rangkuman Pengisian Anda*";
             $response .= PHP_EOL;
             $response .= PHP_EOL;
         }
@@ -4539,7 +4539,7 @@ class WablasController extends Controller
         $message = PHP_EOL;
         $message .= 'Ketik *batalkan* untuk membatalkan';
         $message .= PHP_EOL;
-        $message .= 'Ketik *chat admin* untuk mandapatkan bantuan dari admin';
+        $message .= 'Ketik *chat admin* untuk mendapatkan bantuan dari admin';
         return $message;
     }
     private function waktuTunggu($sisa_antrian)
