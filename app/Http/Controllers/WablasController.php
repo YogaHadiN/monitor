@@ -4531,46 +4531,67 @@ class WablasController extends Controller
      *
      * @return void
      */
+
     private function tanyaSyaratdanKetentuan($reservasi_online)
     {
-        $tipe_konsultasi_id = $reservasi_online->tipe_konsultasi_id;
-        $tipe_konsultasi = $tipe_konsultasi_id == '3' ? 'USG Kehamilan' : TipeKonsultasi::find( $tipe_konsultasi_id )->tipe_konsultasi;
-        $message = 'Kakak akan melakukan registrasi ' . ucwords( $tipe_konsultasi ). ' secara online';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
+        $tz = 'Asia/Jakarta';
+        $tipe_id = (int) $reservasi_online->tipe_konsultasi_id;
+
+        // Label tipe: override untuk USG Kehamilan
+        $tipe_konsultasi = $tipe_id === 3
+            ? 'USG Kehamilan'
+            : (TipeKonsultasi::find($tipe_id)->tipe_konsultasi ?? 'konsultasi');
+
+        $message  = 'Kakak akan melakukan registrasi ' . ucwords($tipe_konsultasi) . ' secara online';
+        $message .= PHP_EOL . PHP_EOL;
         $message .= '*Apabila antrean terlewat harap mengambil antrean kembali*';
 
-        if ( $tipe_konsultasi_id == 1 ) {
+        if ($tipe_id === 1) {
+            // Poli umum
+            $message .= PHP_EOL . PHP_EOL;
+            $message .= 'Pastikan kehadiran Anda dan scan QR di klinik *30 menit* sebelum antrean Anda dipanggil';
+        } elseif ($tipe_id === 2) {
+            // Dokter gigi
             $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= 'Pastikan kehadiran anda dan scan QR di klinik *30 menit* sebelum antrian anda dipanggil';
-        } else if ( $tipe_konsultasi_id == 2) {
-            $message .= PHP_EOL;
-            $jam_terakhir_qr_scan = date( "H:i", strtotime("-15 minutes", strtotime( $this->jadwalGigi['jam_mulai'] )) );
-            $message .= "*Mohon scan qr di klinik maksimal pada jam {$jam_tiba_paling_lambat}*";
-            $message .= PHP_EOL;
-            $message .= "Antrian akan dibatalkan apabila telat scan pada jam tersebut";
-        } else if ( $tipe_konsultasi_id == 3) {
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $jam_tiba_paling_lambat = JadwalKonsultasi::where('tipe_konsultasi_id', 4) // USG
-                                                        ->where('hari_id', date("N"))
-                                                        ->first()->jam_akhir;
-            $jam_tiba_paling_lambat = Carbon::parse($jam_tiba_paling_lambat)->format('H:i');
-            $message .= "*Terakhir penerimaan pasien jam {$jam_tiba_paling_lambat}*";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "Syarat USG dengan menggunakan Asuransi BPJS : ";
-            $message .= PHP_EOL;
-            $message .= "- Membawa Buku KIA";
-            $message .= PHP_EOL;
-            $message .= "- Pemeriksaan Kehamilan pertama kali pada usia kehamilan 4-12 minggu ";
-            $message .= "atau Pemeriksaan Kehamilan kelima kali pada usia kehamilan diatas 28 minggu";
+
+            // Ambil jam mulai gigi dari $this->jadwalGigi bila tersedia
+            $jamMulaiGigi = $this->jadwalGigi['jam_mulai'] ?? null;
+
+            if ($jamMulaiGigi) {
+                $jamTerakhirQrScan = \Carbon\Carbon::parse($jamMulaiGigi, $tz)->subMinutes(15)->format('H:i');
+                $message .= "*Mohon scan QR di klinik maksimal pukul {$jamTerakhirQrScan}*";
+                $message .= PHP_EOL . "Antrean akan dibatalkan apabila telat scan pada jam tersebut";
+            } else {
+                // Fallback bila jadwal gigi belum di-set
+                $message .= '*Mohon scan QR di klinik maksimal 15 menit sebelum jam mulai pemeriksaan gigi.*';
+                $message .= PHP_EOL . 'Antrean akan dibatalkan apabila telat scan pada jam tersebut';
+            }
+        } elseif ($tipe_id === 3) {
+            // USG Kehamilan
+            $message .= PHP_EOL . PHP_EOL;
+
+            // Cari jam terakhir penerimaan pasien USG utk hari ini (hari_id: 1=Senin ... 7=Minggu)
+            $hariId = (int) \Carbon\Carbon::now($tz)->format('N');
+            $rowUsg = \App\Models\JadwalKonsultasi::query()
+                        ->where('tipe_konsultasi_id', 3) // konsisten: USG = 3
+                        ->where('hari_id', $hariId)
+                        ->first();
+
+            if ($rowUsg && $rowUsg->jam_akhir) {
+                $jamTibaPalingLambat = \Carbon\Carbon::parse($rowUsg->jam_akhir, $tz)->format('H:i');
+                $message .= "*Terakhir penerimaan pasien jam {$jamTibaPalingLambat}*";
+            } else {
+                $message .= '*Terakhir penerimaan pasien mengikuti jam akhir layanan USG hari ini.*';
+            }
+
+            $message .= PHP_EOL . PHP_EOL;
+            $message .= "Syarat USG dengan menggunakan Asuransi BPJS:";
+            $message .= PHP_EOL . "- Membawa Buku KIA";
+            $message .= PHP_EOL . "- Pemeriksaan Kehamilan pertama kali pada usia kehamilan 4–12 minggu";
+            $message .= PHP_EOL . "- ATAU pemeriksaan kehamilan kelima pada usia kehamilan di atas 28 minggu";
         }
 
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= 'Jika setuju balas *ya* untuk melanjutkan';
+        $message .= PHP_EOL . PHP_EOL . 'Jika setuju balas *ya* untuk melanjutkan';
         return $message;
     }
     public function konfirmasiPembatalan(){
@@ -6035,6 +6056,15 @@ class WablasController extends Controller
             ->where('schedulled_booking_allowed', 1)
             ->orderBy('jam_mulai', 'desc')
             ->first();
+
+        Log::info('=======================');
+        Log::info('rowMulaiOnline');
+        Log::info($rowMulaiOnline);
+        Log::info('=======================');
+        Log::info('=======================');
+        Log::info('rowMulaiTerakhir');
+        Log::info($rowMulaiTerakhir);
+        Log::info('=======================');
 
         if ($rowMulaiOnline || $rowMulaiTerakhir) {
             // 2a) Pastikan window scheduled booking sudah dibuka
