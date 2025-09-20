@@ -5717,22 +5717,24 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $nowTime = $nowJkt->format('H:i:s');
 
         // === KASUS KHUSUS: dokter gigi & antrian online dimatikan ===
-
         if (
             (int) ($reservasi_online->tipe_konsultasi_id ?? 0) === 2 &&
             (int) ($this->tenant->dentist_queue_enabled ?? 0) === 0
         ) {
-            $today    = Carbon::now('Asia/Jakarta')->toDateString();
+            $today    = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
             $tenantId = $reservasi_online->tenant_id
                 ?? ($this->tenant->id ?? 1);
 
-            $namaDokter = DB::table('petugas_pemeriksas')
-                ->join('stafs as stf', 'stf.id', '=', 'petugas_pemeriksas.staf_id')
+            $baseNama = \App\Models\PetugasPemeriksa::query()
                 ->whereDate('petugas_pemeriksas.tanggal', $today)
                 ->where('petugas_pemeriksas.tipe_konsultasi_id', 2)
                 ->where('petugas_pemeriksas.schedulled_booking_allowed', 1)
-                ->where('petugas_pemeriksas.tenant_id', $tenantId)
-                ->where('stf.tenant_id', $tenantId) // kalau memang tabel stafs juga ada tenant_id
+                ->where('petugas_pemeriksas.tenant_id', $tenantId);
+
+            $namaDokter = $baseNama
+                ->join('stafs as stf', 'stf.id', '=', 'petugas_pemeriksas.staf_id')
+                // (opsional) jika kolom stf.tenant_id ada dan harus sama:
+                ->where('stf.tenant_id', $tenantId)
                 ->orderBy('stf.nama', 'asc')
                 ->distinct()
                 ->pluck('stf.nama')

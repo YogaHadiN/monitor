@@ -4,13 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToTenant;
 use Carbon\Carbon;
 use Log;
 
 class PetugasPemeriksa extends Model
 {
-    use BelongsToTenant,HasFactory;
+    use HasFactory;
     protected $guarded = [];
     public function staf(){
         return $this->belongsTo(Staf::class);
