@@ -4362,6 +4362,11 @@ class WablasController extends Controller
         /** @var \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $list */
         $list = collect($this->petugas_pemeriksa_sekarang($reservasi_online));
 
+        Log::info('====================');
+        Log::info('list');
+        Log::info( $list );
+        Log::info('====================');
+
         // Usahakan relasi staf sudah ter-load (hindari N+1). Abaikan jika bukan Eloquent Collection.
         if (method_exists($list, 'loadMissing')) {
             $list->loadMissing('staf');
