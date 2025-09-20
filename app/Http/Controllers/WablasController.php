@@ -4552,8 +4552,6 @@ class WablasController extends Controller
             $message .= 'Pastikan kehadiran Anda dan scan QR di klinik *30 menit* sebelum antrean Anda dipanggil';
         } elseif ($tipe_id === 2) {
             // Dokter gigi
-            $message .= PHP_EOL;
-
             // Ambil jam mulai gigi dari $this->jadwalGigi bila tersedia
             $jamMulaiGigi = $this->jadwalGigi['jam_mulai'] ?? null;
 
