@@ -675,14 +675,20 @@ class WablasController extends Controller
             }
         }
         if (!empty($response)) {
+
             try {
                 $payload   = $this->botKirim($this->whatsapp_registration)[0];
             } catch (\Exception $e) {
+
             }
+
             $category = $payload['category'];
             if ( $category == 'button' ) {
+
                 $message['buttons'] = $payload['message']['buttons'];
+
                 $message['content'] = $response;
+
                 $payload = null;
 
                 $payload[] = [
@@ -701,10 +707,6 @@ class WablasController extends Controller
                 $this->autoReply($response );
             }
         }
-
-        // dokumentasikan kegagalan terapi
-        // Cek kepuasan pelanggan
-
         if ( str_contains( $this->message, '(pqid' ) ) {
             $id = explode('pqid', $this->message)[1];
             $id = preg_replace('~\D~', '', $id);
