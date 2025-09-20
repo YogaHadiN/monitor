@@ -3974,6 +3974,7 @@ class WablasController extends Controller
     public function tanyaLanjutkanAtauUlangi($model){
         $message = $this->uraianPengisian( $model );
         $message .= $this->samaDengan();
+        $message .= PHP_EOL;
         $message .= $this->lanjutAtauUlangi();
         return $message;
     }
