@@ -4544,7 +4544,7 @@ class WablasController extends Controller
 
         $message  = 'Kakak akan melakukan registrasi ' . ucwords($tipe_konsultasi) . ' secara online';
         $message .= PHP_EOL . PHP_EOL;
-        $message .= '*Apabila antrean terlewat harap mengambil antrean kembali*';
+        $message .= '- Jika antrean terlewat, silakan mengambil antrean kembali.' . $nl;
 
         if ($tipe_id === 1) {
             // Poli umum
@@ -4558,9 +4558,11 @@ class WablasController extends Controller
             $jamMulaiGigi = $this->jadwalGigi['jam_mulai'] ?? null;
 
             if ($jamMulaiGigi) {
+                $nl = PHP_EOL;
                 $jamTerakhirQrScan = \Carbon\Carbon::parse($jamMulaiGigi, $tz)->subMinutes(15)->format('H:i');
-                $message .= "*Mohon scan QR di klinik maksimal pukul {$jamTerakhirQrScan}*";
-                $message .= PHP_EOL . "Antrean akan dibatalkan apabila telat scan pada jam tersebut";
+                $message .= "- Harap melakukan scan QR di klinik **paling lambat pukul {$jamTerakhirQrScan}**." . $nl;
+                $message .= '- Antrean akan otomatis **dibatalkan** bila terlambat melakukan scan.' . $nl . $nl;
+
             } else {
                 // Fallback bila jadwal gigi belum di-set
                 $message .= '*Mohon scan QR di klinik maksimal 15 menit sebelum jam mulai pemeriksaan gigi.*';
