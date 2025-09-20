@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use App\Models\AntrianPoli;
 use App\Models\Message;
 use App\Models\KeluhanEstetik;
@@ -4354,97 +4355,114 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function tanyaSiapaPetugasPemeriksa($reservasi_online)
+    private function tanyaSiapaPetugasPemeriksa(ReservasiOnline $reservasi_online): string
     {
-        $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
-        $petugas_pemeriksas = $this->petugas_pemeriksa_sekarang($reservasi_online);
-        Log::info('=========================');
-        Log::info('petugas_pemeriksa');
-        Log::info('=========================');
+        $nowJkt = Carbon::now('Asia/Jakarta');
 
-        // Formatter default (dokter umum & tipe lain): pakai sisa_antrian
-        $formatPilihanDefault = function ($list, int $tipe_konsultasi_id): string {
+        /** @var \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $list */
+        $list = collect($this->petugas_pemeriksa_sekarang($reservasi_online));
+
+        // Usahakan relasi staf sudah ter-load (hindari N+1). Abaikan jika bukan Eloquent Collection.
+        if (method_exists($list, 'loadMissing')) {
+            $list->loadMissing('staf');
+        }
+
+        // === Helper umum ===
+        $joinOpsi = function (int $n): string {
+            if ($n <= 1) return '1';
+            if ($n === 2) return '1 atau 2';
+            // 1, 2, 3 atau 4
+            return implode(', ', range(1, $n - 1)) . ' atau ' . $n;
+        };
+
+        $formatDefault = function (Collection $list, int $tipe_konsultasi_id): string
+        {
             if ($list->count() < 1) {
-                $tipe = \App\Models\TipeKonsultasi::find($tipe_konsultasi_id)?->tipe_konsultasi ?? 'pemeriksa';
+                $tipe = TipeKonsultasi::find($tipe_konsultasi_id)?->tipe_konsultasi ?? 'pemeriksa';
                 return 'Tidak ada petugas ' . ucwords($tipe) . ' yang bertugas saat ini';
             }
 
-            $message  = 'Silahkan Pilih Dokter pemeriksa.' . PHP_EOL;
-            $opsi     = [];
-
+            $message = 'Silakan pilih Dokter pemeriksa.' . PHP_EOL;
             foreach ($list as $k => $petugas) {
                 $no   = $k + 1;
-                $opsi[] = (string) $no;
-
                 $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
                     ?? 'Dokter';
-                $sisa = $petugas->sisa_antrian ?? 0;
+                $sisa = (int) ($petugas->sisa_antrian ?? 0);
 
-                $message .= PHP_EOL;
-                $message .= $no . '. ' . $nama . PHP_EOL;
-                $message .= '(' . $sisa . ' Antrian)' . PHP_EOL;
+                $message .= PHP_EOL
+                          . $no . '. ' . $nama . PHP_EOL
+                          . '(' . $sisa . ' Antrian)' . PHP_EOL;
             }
 
-            $n = count($opsi);
-            $ops =
-                $n === 1 ? $opsi[0] :
-                ($n === 2 ? $opsi[0] . ' atau ' . $opsi[1] :
-                 implode(', ', array_slice($opsi, 0, $n - 1)) . ' atau ' . $opsi[$n - 1]);
-
-            $message .= PHP_EOL . 'Balas dengan angka *' . $ops . '* sesuai dengan pilihan diatas';
+            $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($joinOpsi($list->count())) . '* sesuai dengan pilihan di atas';
             return $message;
         };
 
-        // Formatter khusus GIGI: tampilkan (jam_mulai - 30 menit) - (jam_akhir - 1 jam)
-        $formatPilihanGigi = function ($list): string {
+        $formatGigi = function (Collection $list): string
+        {
             if ($list->count() < 1) {
                 return 'Tidak ada petugas Dokter Gigi yang bertugas saat ini';
             }
 
-            $message  = 'Silahkan Pilih Dokter pemeriksa.' . PHP_EOL;
-            $opsi     = [];
+            $message = 'Silakan pilih Dokter pemeriksa.' . PHP_EOL;
 
             foreach ($list as $k => $petugas) {
-                $no     = $k + 1;
-                $opsi[] = (string) $no;
-
-                $nama   = $petugas->staf->nama_dengan_gelar
+                $no   = $k + 1;
+                $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
                     ?? 'Dokter Gigi';
 
-                // Hitung window registrasi langsung untuk tampilan
-                $mulai  = \Carbon\Carbon::parse($petugas->jam_mulai, 'Asia/Jakarta')->subMinutes(30);
-                $akhir  = \Carbon\Carbon::parse($petugas->jam_akhir, 'Asia/Jakarta')->subHour();
+                // Guard jam kosong/invalid
+                $mulaiRaw = $petugas->jam_mulai ?? null;
+                $akhirRaw = $petugas->jam_akhir ?? null;
 
-                $message .= PHP_EOL;
-                $message .= $no . '. ' . $nama . PHP_EOL;
-                $message .= '(' . $mulai->format('H:i') . ' - ' . $akhir->format('H:i') . ')' . PHP_EOL;
+                $mulai = $mulaiRaw ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->subMinutes(30) : null;
+                $akhir = $akhirRaw ? Carbon::parse($akhirRaw, 'Asia/Jakarta')->subHour() : null;
+
+                // Jika salah satu null, tampilkan "-" agar tidak meledak
+                $mulaiStr = $mulai ? $mulai->format('H:i') : '-';
+                $akhirStr = $akhir ? $akhir->format('H:i') : '-';
+
+                // Jika range terbalik (mis. akhir sebelum mulai), fallback ke jam asli bila ada
+                if ($mulai && $akhir && $akhir->lessThan($mulai) && $mulaiRaw && $akhirRaw) {
+                    $mulaiStr = Carbon::parse($mulaiRaw, 'Asia/Jakarta')->format('H:i');
+                    $akhirStr = Carbon::parse($akhirRaw, 'Asia/Jakarta')->format('H:i');
+                }
+
+                $message .= PHP_EOL
+                          . $no . '. ' . $nama . PHP_EOL
+                          . '(' . $mulaiStr . ' - ' . $akhirStr . ')' . PHP_EOL;
             }
 
-            $n = count($opsi);
-            $ops =
-                $n === 1 ? $opsi[0] :
-                ($n === 2 ? $opsi[0] . ' atau ' . $opsi[1] :
-                 implode(', ', array_slice($opsi, 0, $n - 1)) . ' atau ' . $opsi[$n - 1]);
-
-            $message .= PHP_EOL . 'Balas dengan angka *' . $ops . '* sesuai dengan pilihan diatas';
+            $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($joinOpsi($list->count())) . '* sesuai dengan pilihan di atas';
             return $message;
         };
 
-        // DOKTER UMUM
-        if ((int)$reservasi_online->tipe_konsultasi_id === 1) {
-            return $formatPilihanDefault($petugas_pemeriksas, 1);
+        // === Routing per tipe ===
+        $tipeId = (int) ($reservasi_online->tipe_konsultasi_id ?? 0);
+
+        if ($tipeId === 1) {
+            return $formatDefault($list, 1);
         }
 
-        // DOKTER GIGI — tampilkan window waktu, bukan sisa antrian
-        if ((int)$reservasi_online->tipe_konsultasi_id === 2) {
-            // Anda bilang validasi waktu sudah dilakukan sebelumnya, jadi langsung tampilkan daftar
-            return $formatPilihanGigi($petugas_pemeriksas);
+        if ($tipeId === 2) {
+            // Validasi waktu diasumsikan sudah dilakukan sebelumnya
+            return $formatGigi($list);
         }
 
         // Default untuk tipe lain
-        return $formatPilihanDefault($petugas_pemeriksas, (int)$reservasi_online->tipe_konsultasi_id);
+        return $formatDefault($list, $tipeId);
+    }
+
+    /**
+     * Opsional: kecilkan peluang karakter spesial “nakal” di WA markdown.
+     * Boleh dihapus jika tidak perlu.
+     */
+    private function sanitizeWhatsApp(string $text): string
+    {
+        // Lindungi tanda bintang agar tidak merusak bold/italic tak sengaja
+        return str_replace(['*', '_', '~', '`'], ['＊', '＿', '～', '｀'], $text);
     }
 
     private function tanyaKartuAsuransiImage($reservasi_online){
@@ -6030,7 +6048,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     public function validasiDokterPengambilanAntrianDokterGigi()
     {
         $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
-
         // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
         if (
             $this->tenant &&
@@ -6057,19 +6074,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ->orderBy('jam_mulai', 'desc')
             ->first();
 
-        Log::info('=======================');
-        Log::info('rowMulaiOnline');
-        Log::info($rowMulaiOnline);
-        Log::info('=======================');
-        Log::info('=======================');
-        Log::info('rowMulaiTerakhir');
-        Log::info($rowMulaiTerakhir);
-        Log::info('=======================');
-
-        Log::info('=======================');
-        Log::info('$rowMulaiOnline || $rowMulaiTerakhir');
-        Log::info($rowMulaiOnline || $rowMulaiTerakhir);
-        Log::info('=======================');
         $dokter_gigi_q = \App\Models\PetugasPemeriksa::query()
             ->where('tipe_konsultasi_id', 2)
             ->whereDate('tanggal', $nowJkt);
@@ -6146,7 +6150,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $message .= PHP_EOL . "Untuk melihat jadwal yang tersedia ketik 'Jadwal Dokter Gigi'.";
                 return $message;
             }
-
             // Sedang jam praktik normal tanpa scheduled booking → lanjut (tidak return)
         } else {
             // Tidak ada jadwal sama sekali hari ini
