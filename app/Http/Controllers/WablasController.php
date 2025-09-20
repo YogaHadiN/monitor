@@ -5726,7 +5726,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 ->where('petugas_pemeriksas.tipe_konsultasi_id', 2)
                 ->where('petugas_pemeriksas.schedulled_booking_allowed', 1);
 
-            // filter tenant
             if (!empty($reservasi_online->tenant_id)) {
                 $baseNama->where('petugas_pemeriksas.tenant_id', $reservasi_online->tenant_id);
             } elseif (!empty($this->tenant?->id)) {
@@ -5744,7 +5743,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return $namaDokter;
         }
 
-        // === BEHAVIOR EXISTING (tetap sama) ===
+        // === BEHAVIOR EXISTING ===
         $base = PetugasPemeriksa::query()
             ->where('petugas_pemeriksas.tanggal', $today)
             ->where('petugas_pemeriksas.tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id);
@@ -5757,10 +5756,12 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         $petugas_pemeriksas = (clone $base)
             ->where(function($q) use ($nowTime) {
+                // A: aktif sekarang
                 $q->where(function($qq) use ($nowTime) {
                     $qq->where('petugas_pemeriksas.jam_mulai', '<=', $nowTime)
                        ->where('petugas_pemeriksas.jam_akhir', '>=', $nowTime);
                 })
+                // C: scheduling-open
                 ->orWhere(function($qq) use ($nowTime) {
                     $qq->where('petugas_pemeriksas.schedulled_booking_allowed', 1)
                        ->where('petugas_pemeriksas.jam_akhir', '>=', $nowTime)
@@ -5768,7 +5769,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                            $qc->where(function($q1) use ($nowTime) {
                                $q1->whereNotNull('petugas_pemeriksas.jam_mulai_booking_online')
                                   ->where('petugas_pemeriksas.jam_mulai_booking_online', '<=', $nowTime)
-                                  ->whereRaw("TIME(?) <= TIME(DATE_SUB(petugas_pemeriksas.jam_mulai, INTERVAL 30 MINUTE))", [$nowTime]);
+                                  ->whereRaw(
+                                      "TIME(?) <= TIME(DATE_SUB(petugas_pemeriksas.jam_mulai, INTERVAL 30 MINUTE))",
+                                      [$nowTime]
+                                  );
                            })
                            ->orWhere(function($q2) use ($nowTime) {
                                $q2->whereNull('petugas_pemeriksas.jam_mulai_booking_online')
@@ -5782,7 +5786,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ->unique('id')
             ->values();
 
-        // … lanjutkan logic existing (sama persis dengan versi Anda) …
+        // … lanjut seperti logic Anda …
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
