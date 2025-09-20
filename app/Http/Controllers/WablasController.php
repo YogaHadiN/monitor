@@ -3204,10 +3204,10 @@ class WablasController extends Controller
     public function whatsappAntrianOnlineExists(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(6);
     }
+
     /* public function prosesAntrianOnline(){ */
     /*     echo "Antrian online saat ini sedang dalam proses pemeliharaan dan untuk sementara waktu tidak dapat digunakan. Kami mohon maaf atas ketidaknyamanannya."; */
     /* } */
-
 
     public function prosesAntrianOnline()
     {
