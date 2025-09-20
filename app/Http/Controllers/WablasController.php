@@ -3678,6 +3678,10 @@ class WablasController extends Controller
             && is_null($reservasi_online->staf_id)) {
 
             $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
+            Log::info('========================');
+            Log::info('petugas_pemeriksa');
+            Log::info( $petugas );
+            Log::info('========================');
             if (ctype_digit($msg) && (int)$msg > 0 && (int)$msg <= $petugas->count()) {
                 $idx = (int)$msg - 1;
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
