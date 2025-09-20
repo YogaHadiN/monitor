@@ -5734,7 +5734,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $namaDokter = $baseNama
                 ->join('stafs as stf', 'stf.id', '=', 'petugas_pemeriksas.staf_id')
                 // (opsional) jika kolom stf.tenant_id ada dan harus sama:
-                ->where('stf.tenant_id', $tenantId) */
+                ->where('stf.tenant_id', $tenantId)
                 ->orderBy('stf.nama', 'asc')
                 ->distinct()
                 ->pluck('stf.nama')
