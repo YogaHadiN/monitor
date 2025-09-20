@@ -4413,7 +4413,7 @@ class WablasController extends Controller
                 $mulaiRaw = $petugas->jam_mulai ?? null;
                 $akhirRaw = $petugas->jam_akhir ?? null;
 
-                $mulai = $mulaiRaw ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->subMinutes(30) : null;
+                $mulai = $mulaiRaw ? Carbon::parse($mulaiRaw, 'Asia/Jakarta') : null;
                 $akhir = $akhirRaw ? Carbon::parse($akhirRaw, 'Asia/Jakarta')->subHour() : null;
 
                 $mulaiStr = $mulai ? $mulai->format('H:i') : '-';
@@ -4427,7 +4427,10 @@ class WablasController extends Controller
 
                 $message .= PHP_EOL
                           . $no . '. ' . $nama . PHP_EOL
-                          . '(' . $mulaiStr . ' - ' . $akhirStr . ')' . PHP_EOL;
+                          . '(' . $mulaiStr . ' - ' . $akhirStr . ')' . PHP_EOL
+                          . 'Pengambilan antrian online harus scan QR CODE di klinik 15 menit sebelum jam mulai praktek ('
+                          . ($mulaiRaw ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->format('H:i') : '-')
+                          . ') atau antrian online dibatalkan.' . PHP_EOL;
             }
 
             $ops = $this->joinOpsi($list->count());
