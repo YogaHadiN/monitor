@@ -1,8 +1,8 @@
-<?php 
+<?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Traits\BelongsToTenant; 
+use App\Traits\BelongsToTenant;
 use App\Models\Asuransi;
 use App\Models\Ruangan;
 use App\Models\DeletedAntrian;
@@ -106,7 +106,7 @@ class Antrian extends Model
             ]);
         });
     }
-    
+
     protected $guarded = [];
 	protected $casts = [
 		'tanggal_lahir' => 'datetime'
@@ -115,7 +115,7 @@ class Antrian extends Model
 	public function whatsapp_registration(){
 		return $this->hasOne(WhatsappRegistration::class);
 	}
-    
+
     public function complain(){
         return $this->belongsTo(Complain::class);
     }
@@ -180,7 +180,7 @@ class Antrian extends Model
                                             ->where('ruangan_id', $this->ruangan_id)
                                             ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
                                             ->first();
-        return $petugas_pemeriksa->sisa_antrian;
+        return is_null( $petugas_pemeriksa )? 0 : $petugas_pemeriksa->sisa_antrian;
     }
 
     public function ruangan(){
