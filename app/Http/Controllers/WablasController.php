@@ -4572,7 +4572,7 @@ class WablasController extends Controller
         if ($tipe_id === 1) {
             // Poli umum
             $lines[] = '';
-            $lines[] = 'Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
+            $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
         } elseif ($tipe_id === 2) {
             // Dokter gigi
             // Ambil jam mulai dari jadwal gigi bila tersedia (contoh `$this->jadwalGigi['jam_mulai'] = "17:00"`)
