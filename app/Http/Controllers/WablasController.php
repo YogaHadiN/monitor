@@ -3219,6 +3219,27 @@ class WablasController extends Controller
         })();
         $nowJkt    = \Carbon\Carbon::now('Asia/Jakarta');
 
+        // kalau klinik tutup, non aktifkan fitur pendaftaran
+        $jam_buka = Carbon::parse( $tenant->jam_buka );
+        $jam_tutup = Carbon::parse( $tenant->jam_tutup )->subMinutes(30);
+
+        if (
+            $nowJkt->lt( $jam_buka ) ||
+            $jam_tutup->lt( $nowJkt )
+        ) {
+            $jam_buka = $jam_buka->toTimeString();
+            $jam_tutup = $jam_tutup->toTimeString();
+            $message = "Klinik Buka jam $jam_buka ";
+            $message .= PHP_EOL;
+            $message .= "Tutup jam $jam_tutup ";
+            $message .= PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= "Mohon ulangi kembali saat klinik buka.";
+            $message .= PHP_EOL;
+            $message .= "Terima kasih";
+            $this->autoReply( $message );
+        }
+
         // normalisasi pesan user
         $rawMsg    = is_string($this->message) ? trim($this->message) : '';
         $msg       = strtolower($rawMsg);
@@ -3276,19 +3297,10 @@ class WablasController extends Controller
 
                 $tipe_konsultasi = TipeKonsultasi::find($tipeMsg);
 
+
+
                 if ($petugas_pemeriksa_hari_ini->isEmpty()) {
                     $message  = 'Hari ini tidak ada pelayanan '.$tipe_konsultasi->tipe_konsultasi;
-                    $message .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya';
-                    $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
-                    $this->autoReply($message);
-                    return false;
-                } elseif ($petugas_pemeriksa_sekarang->isEmpty()) {
-                    $petugas_pemeriksa = $petugas_pemeriksa_hari_ini->first();
-                    $jam_mulai = $petugas_pemeriksa->jam_mulai;
-                    $jam_akhir = $petugas_pemeriksa->jam_akhir;
-                    $message  = 'Pelayanan '.$tipe_konsultasi->tipe_konsultasi;
-                    $message .= " hari ini dimulai jam $jam_mulai sampai dengan $jam_akhir";
-                    $message .= PHP_EOL."Pendaftaran dimulai jam $jam_mulai";
                     $message .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya';
                     $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
                     $this->autoReply($message);
@@ -3297,6 +3309,7 @@ class WablasController extends Controller
 
                 // khusus GIGI: validasi tambahan
                 if ($tipeMsg === '2') {
+
                     $this->chatBotLog(__LINE__);
                     $err = $this->validasiDokterPengambilanAntrianDokterGigi();
                     if (!is_null($err)) {
@@ -4533,8 +4546,10 @@ class WablasController extends Controller
             $message .= 'Pastikan kehadiran anda dan scan QR di klinik *30 menit* sebelum antrian anda dipanggil';
         } else if ( $tipe_konsultasi_id == 2) {
             $message .= PHP_EOL;
-            $jam_tiba_paling_lambat = date( "H:i", strtotime("-2 hours", strtotime( $this->jadwalGigi['jam_akhir'] )) );
-            $message .= "*Terakhir penerimaan pasien jam {$jam_tiba_paling_lambat}*";
+            $jam_terakhir_qr_scan = date( "H:i", strtotime("-15 minutes", strtotime( $this->jadwalGigi['jam_mulai'] )) );
+            $message .= "*Mohon scan qr di klinik maksimal pada jam {$jam_tiba_paling_lambat}*";
+            $message .= PHP_EOL;
+            $message .= "Antrian akan dibatalkan apabila telat scan pada jam tersebut";
         } else if ( $tipe_konsultasi_id == 3) {
             $message .= PHP_EOL;
             $message .= PHP_EOL;
