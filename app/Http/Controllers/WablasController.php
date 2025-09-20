@@ -4582,7 +4582,6 @@ class WablasController extends Controller
             $message .= PHP_EOL . "- ATAU pemeriksaan kehamilan kelima pada usia kehamilan di atas 28 minggu";
         }
 
-        $message .= PHP_EOL . PHP_EOL . 'Jika setuju balas *ya* untuk melanjutkan';
         return $message;
     }
     public function konfirmasiPembatalan(){
