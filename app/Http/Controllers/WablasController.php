@@ -5735,9 +5735,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $namaDokter = $baseNama
                 ->join('stafs as stf', 'stf.id', '=', 'petugas_pemeriksas.staf_id')
                 ->orderBy('stf.nama')
+                ->distinct()
                 ->pluck('stf.nama')
-                ->unique()
-                ->values()
                 ->all();
 
             return $namaDokter;
