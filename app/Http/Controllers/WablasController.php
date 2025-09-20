@@ -4355,6 +4355,7 @@ class WablasController extends Controller
      *
      * @return void
      */
+
     private function tanyaSiapaPetugasPemeriksa(ReservasiOnline $reservasi_online): string
     {
         $nowJkt = Carbon::now('Asia/Jakarta');
@@ -4362,19 +4363,12 @@ class WablasController extends Controller
         /** @var \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $list */
         $list = collect($this->petugas_pemeriksa_sekarang($reservasi_online));
 
-        // Usahakan relasi staf sudah ter-load (hindari N+1). Abaikan jika bukan Eloquent Collection.
+        // Hindari N+1 saat akses $petugas->staf (jika Eloquent collection)
         if (method_exists($list, 'loadMissing')) {
             $list->loadMissing('staf');
         }
 
-        // === Helper umum ===
-        $joinOpsi = function (int $n): string {
-            if ($n <= 1) return '1';
-            if ($n === 2) return '1 atau 2';
-            // 1, 2, 3 atau 4
-            return implode(', ', range(1, $n - 1)) . ' atau ' . $n;
-        };
-
+        // === Formatter default: pakai sisa_antrian ===
         $formatDefault = function (Collection $list, int $tipe_konsultasi_id): string
         {
             if ($list->count() < 1) {
@@ -4383,6 +4377,7 @@ class WablasController extends Controller
             }
 
             $message = 'Silakan pilih Dokter pemeriksa.' . PHP_EOL;
+
             foreach ($list as $k => $petugas) {
                 $no   = $k + 1;
                 $nama = $petugas->staf->nama_dengan_gelar
@@ -4395,10 +4390,12 @@ class WablasController extends Controller
                           . '(' . $sisa . ' Antrian)' . PHP_EOL;
             }
 
-            $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($joinOpsi($list->count())) . '* sesuai dengan pilihan di atas';
+            $ops = $this->joinOpsi($list->count());
+            $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($ops) . '* sesuai dengan pilihan di atas';
             return $message;
         };
 
+        // === Formatter gigi: tampilkan window waktu (jam_mulai-30)–(jam_akhir-60) ===
         $formatGigi = function (Collection $list): string
         {
             if ($list->count() < 1) {
@@ -4413,18 +4410,16 @@ class WablasController extends Controller
                     ?? $petugas->staf->nama
                     ?? 'Dokter Gigi';
 
-                // Guard jam kosong/invalid
                 $mulaiRaw = $petugas->jam_mulai ?? null;
                 $akhirRaw = $petugas->jam_akhir ?? null;
 
                 $mulai = $mulaiRaw ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->subMinutes(30) : null;
                 $akhir = $akhirRaw ? Carbon::parse($akhirRaw, 'Asia/Jakarta')->subHour() : null;
 
-                // Jika salah satu null, tampilkan "-" agar tidak meledak
                 $mulaiStr = $mulai ? $mulai->format('H:i') : '-';
                 $akhirStr = $akhir ? $akhir->format('H:i') : '-';
 
-                // Jika range terbalik (mis. akhir sebelum mulai), fallback ke jam asli bila ada
+                // Jika range terbalik, fallback ke jam asli bila ada
                 if ($mulai && $akhir && $akhir->lessThan($mulai) && $mulaiRaw && $akhirRaw) {
                     $mulaiStr = Carbon::parse($mulaiRaw, 'Asia/Jakarta')->format('H:i');
                     $akhirStr = Carbon::parse($akhirRaw, 'Asia/Jakarta')->format('H:i');
@@ -4435,7 +4430,8 @@ class WablasController extends Controller
                           . '(' . $mulaiStr . ' - ' . $akhirStr . ')' . PHP_EOL;
             }
 
-            $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($joinOpsi($list->count())) . '* sesuai dengan pilihan di atas';
+            $ops = $this->joinOpsi($list->count());
+            $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($ops) . '* sesuai dengan pilihan di atas';
             return $message;
         };
 
@@ -4447,21 +4443,23 @@ class WablasController extends Controller
         }
 
         if ($tipeId === 2) {
-            // Validasi waktu diasumsikan sudah dilakukan sebelumnya
             return $formatGigi($list);
         }
 
-        // Default untuk tipe lain
         return $formatDefault($list, $tipeId);
     }
 
-    /**
-     * Opsional: kecilkan peluang karakter spesial “nakal” di WA markdown.
-     * Boleh dihapus jika tidak perlu.
-     */
+    /** Helper: rangkai opsi "1 atau 2" / "1, 2, 3 atau 4" */
+    private function joinOpsi(int $n): string
+    {
+        if ($n <= 1) return '1';
+        if ($n === 2) return '1 atau 2';
+        return implode(', ', range(1, $n - 1)) . ' atau ' . $n;
+    }
+
+    /** Opsional: cegah karakter spesial WA di dalam teks angka opsinya */
     private function sanitizeWhatsApp(string $text): string
     {
-        // Lindungi tanda bintang agar tidak merusak bold/italic tak sengaja
         return str_replace(['*', '_', '~', '`'], ['＊', '＿', '～', '｀'], $text);
     }
 
