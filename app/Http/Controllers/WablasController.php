@@ -4603,7 +4603,7 @@ class WablasController extends Controller
                 : (\App\Models\TipeKonsultasi::query()->find($tipe_id)->tipe_konsultasi ?? 'konsultasi');
 
         $lines   = [];
-        $lines[] = '*Dengan melanjutkan berarti Anda setuju untuk:*';
+        $lines[] = '*Dengan melanjutkan berarti Anda setuju dengan ketentuan berikut:*';
         $lines[] = '- Jika antrean terlewat, silakan mengambil antrean kembali.';
 
         if ($tipe_id === 1) {
