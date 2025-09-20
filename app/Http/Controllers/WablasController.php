@@ -4358,6 +4358,9 @@ class WablasController extends Controller
     {
         $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
         $petugas_pemeriksas = $this->petugas_pemeriksa_sekarang($reservasi_online);
+        Log::info('=========================');
+        Log::info('petugas_pemeriksa');
+        Log::info('=========================');
 
         // Formatter default (dokter umum & tipe lain): pakai sisa_antrian
         $formatPilihanDefault = function ($list, int $tipe_konsultasi_id): string {
