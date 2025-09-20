@@ -4567,8 +4567,6 @@ class WablasController extends Controller
                 : (\App\Models\TipeKonsultasi::query()->find($tipe_id)->tipe_konsultasi ?? 'konsultasi');
 
         $lines   = [];
-        $lines[] = 'Kakak akan melakukan registrasi *' . ucwords($tipe_konsultasi) . '* secara online.';
-        $lines[] = '';
         $lines[] = '- Jika antrean terlewat, silakan mengambil antrean kembali.';
 
         if ($tipe_id === 1) {
@@ -4616,7 +4614,8 @@ class WablasController extends Controller
             $lines[] = '- Pemeriksaan kehamilan *pertama* pada usia kehamilan 4–12 minggu; *atau*';
             $lines[] = '- Pemeriksaan kehamilan *kelima* pada usia kehamilan di atas 28 minggu.';
         }
-
+        $lines[] = '';
+        $lines[] = '';
         return implode(PHP_EOL, $lines);
     }
 
