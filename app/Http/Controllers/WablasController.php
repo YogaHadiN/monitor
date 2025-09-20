@@ -3731,13 +3731,6 @@ class WablasController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-        } elseif (!is_null($reservasi_online) && !is_null($reservasi_online->tipe_konsultasi_id) && !$reservasi_online->konfirmasi_sdk) {
-            $this->chatBotLog(__LINE__);
-            if (in_array($msg, ['ya','iya','iy','y'], true)) {
-                $reservasi_online->konfirmasi_sdk = 1;
-                $reservasi_online->save();
-            }
-
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
         } elseif ($reservasi_online->konfirmasi_sdk && !is_null($reservasi_online->staf_id)) {
 
@@ -3870,9 +3863,6 @@ class WablasController extends Controller
         } elseif ($reservasi_online->konfirmasi_sdk && !is_null($reservasi_online->kartu_asuransi_image) && is_null($reservasi_online->staf_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
-        } elseif (!is_null($reservasi_online) && !is_null($reservasi_online->tipe_konsultasi_id) && !$reservasi_online->konfirmasi_sdk) {
-            $this->chatBotLog(__LINE__);
-            $message = $this->tanyaSyaratdanKetentuan($reservasi_online);
         } elseif ($reservasi_online->konfirmasi_sdk && !is_null($reservasi_online->staf_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
