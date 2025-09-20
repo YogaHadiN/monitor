@@ -6066,11 +6066,23 @@ class WablasController extends Controller
         Log::info($rowMulaiTerakhir);
         Log::info('=======================');
 
+        Log::info('=======================');
+        Log::info('$rowMulaiOnline || $rowMulaiTerakhir');
+        Log::info($rowMulaiOnline || $rowMulaiTerakhir);
+        Log::info('=======================');
+        $dokter_gigi_q = \App\Models\PetugasPemeriksa::query()
+            ->where('tipe_konsultasi_id', 2)
+            ->whereDate('tanggal', $nowJkt);
+
         if ($rowMulaiOnline || $rowMulaiTerakhir) {
+            $this->chatBotLog(__LINE__);
             // 2a) Pastikan window scheduled booking sudah dibuka
+            //
             if ($rowMulaiOnline && !empty($rowMulaiOnline->jam_mulai_booking_online)) {
+                $this->chatBotLog(__LINE__);
                 $jam_mulai_booking_online = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_booking_online, 'Asia/Jakarta');
                 if ($nowJkt->lt($jam_mulai_booking_online)) {
+                    $this->chatBotLog(__LINE__);
                     $message  = 'Pendaftaran online baru dimulai pada ' . $jam_mulai_booking_online->format('H:i');
                     $message .= PHP_EOL . 'Silakan mendaftar kembali setelah jam tersebut.';
                     $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
@@ -6090,6 +6102,7 @@ class WablasController extends Controller
                 ->get();
 
             if ($rowsSisaSejam->isNotEmpty()) {
+                $this->chatBotLog(__LINE__);
                 // Pakai baris paling akhir dari yang masih tersisa ≤ 1 jam
                 $row           = $rowsSisaSejam->first();
                 $jamMulaiRow   = \Carbon\Carbon::parse($row->jam_mulai, 'Asia/Jakarta');
@@ -6100,6 +6113,7 @@ class WablasController extends Controller
                 $windowEnd   = $jamAkhirRow->copy()->subHour(); // batas registrasi langsung
 
                 if ($nowJkt->between($windowStart, $windowEnd, true)) {
+                    $this->chatBotLog(__LINE__);
                     $message  = 'Reservasi dokter gigi online hari ini sudah berakhir.';
                     $message .= PHP_EOL . 'Reservasi secara langsung dibuka sampai jam ' . $windowEnd->format('H:i') . '.';
                     $message .= PHP_EOL . PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
@@ -6108,14 +6122,10 @@ class WablasController extends Controller
                 // jika tidak berada pada window, lanjut proses normal
             }
             // jika tidak ada yang berakhir ≤ 1 jam, lanjut proses normal (online masih jauh dari tutup)
-        }
-
-        // 3) TANPA scheduled booking — gunakan rentang praktik hari ini
-        $dokter_gigi_q = \App\Models\PetugasPemeriksa::query()
-            ->where('tipe_konsultasi_id', 2)
-            ->whereDate('tanggal', $nowJkt);
-
-        if ($dokter_gigi_q->exists()) {
+        } else if(
+            $dokter_gigi_q->exists()
+        ){
+            $this->chatBotLog(__LINE__);
             $dokter_gigi_awal  = (clone $dokter_gigi_q)->orderBy('jam_mulai', 'asc')->first();
             $dokter_gigi_akhir = (clone $dokter_gigi_q)->orderBy('jam_akhir', 'desc')->first();
 
@@ -6124,11 +6134,13 @@ class WablasController extends Controller
 
             // Selesai jika sekarang ≥ (jam_akhir - 1 jam)  ← perbaikan: JANGAN subHour() lagi
             if ($nowJkt->gte($jam_akhir_registrasi_langsung)) {
+                $this->chatBotLog(__LINE__);
                 return $this->reservasiDokterGigiSudahSelesai();
             }
 
             // Belum mulai registrasi langsung
             if ($nowJkt->lt($jam_mulai_registrasi_langsung)) {
+                $this->chatBotLog(__LINE__);
                 $message  = 'Pendaftaran online dokter gigi tidak tersedia saat ini.';
                 $message .= PHP_EOL . 'Registrasi secara langsung dibuka jam ' . $jam_mulai_registrasi_langsung->format('H:i') . '.';
                 $message .= PHP_EOL . "Untuk melihat jadwal yang tersedia ketik 'Jadwal Dokter Gigi'.";
