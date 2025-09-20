@@ -4559,7 +4559,7 @@ class WablasController extends Controller
                 $nl = PHP_EOL;
                 $jamTerakhirQrScan = \Carbon\Carbon::parse($jamMulaiGigi, $tz)->subMinutes(15)->format('H:i');
                 $message .= "- Harap melakukan scan QR di klinik **paling lambat pukul {$jamTerakhirQrScan}**." . $nl;
-                $message .= '- Antrean akan otomatis **dibatalkan** bila terlambat melakukan scan.' . $nl . $nl;
+                $message .= '- Antrean akan otomatis **dibatalkan** bila terlambat melakukan scan.' ;
 
             } else {
 
