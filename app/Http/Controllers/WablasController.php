@@ -4544,7 +4544,7 @@ class WablasController extends Controller
 
         $message  = 'Kakak akan melakukan registrasi ' . ucwords($tipe_konsultasi) . ' secara online';
         $message .= PHP_EOL . PHP_EOL;
-        $message .= '- Jika antrean terlewat, silakan mengambil antrean kembali.' . $nl;
+        $message .= '- Jika antrean terlewat, silakan mengambil antrean kembali.' . PHP_EOL;
 
         if ($tipe_id === 1) {
             // Poli umum
@@ -4564,6 +4564,7 @@ class WablasController extends Controller
                 $message .= '- Antrean akan otomatis **dibatalkan** bila terlambat melakukan scan.' . $nl . $nl;
 
             } else {
+
                 // Fallback bila jadwal gigi belum di-set
                 $message .= '*Mohon scan QR di klinik maksimal 15 menit sebelum jam mulai pemeriksaan gigi.*';
                 $message .= PHP_EOL . 'Antrean akan dibatalkan apabila telat scan pada jam tersebut';
