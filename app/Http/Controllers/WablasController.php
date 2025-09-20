@@ -4433,11 +4433,11 @@ class WablasController extends Controller
                 $message .= PHP_EOL
                           . $no . '. ' . $nama . PHP_EOL
                           . '(' . $mulaiStr . ' - ' . $akhirStr . ')' . PHP_EOL
-                          . 'Pengambilan antrian online wajib melakukan scan QR CODE di klinik '
+                          . 'Pengambilan antrian online wajib melakukan scan QR CODE di klinik sebelum pukul '
                           . ($mulaiRaw
                                 ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->subMinutes(15)->format('H:i')
                                 : '-')
-                          . '. Jika tidak scan pada waktu tersebut, antrian online akan dibatalkan.'
+                          . '. Jika tidak scan pada waktu tersebut, antrian online akan dibatalkan secara otomatis.'
                           . PHP_EOL;
             }
 
