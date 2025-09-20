@@ -5743,8 +5743,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 ->where('stf.tenant_id', $tenantId)
                 ->orderBy('stf.nama', 'asc')
                 ->distinct()
-                ->pluck('stf.nama')
-                ->all();
+                ->pluck('stf.nama');
 
             return $namaDokter;
         }
