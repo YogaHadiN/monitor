@@ -5727,9 +5727,9 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 ->where('petugas_pemeriksas.schedulled_booking_allowed', 1);
 
             if (!empty($reservasi_online->tenant_id)) {
-                $baseNama->where('petugas_pemeriksas.tenant_id', $reservasi_online->tenant_id);
-            } elseif (!empty($this->tenant?->id)) {
                 $baseNama->where('petugas_pemeriksas.tenant_id', $this->tenant->id);
+            } else {
+                $baseNama->where('petugas_pemeriksas.tenant_id', 1);
             }
 
             $namaDokter = $baseNama
