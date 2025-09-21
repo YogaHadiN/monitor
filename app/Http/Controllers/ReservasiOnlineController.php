@@ -27,7 +27,7 @@ class ReservasiOnlineController extends Controller
 
         // Siapkan informasi tambahan
         $pasienNama  = $reservasi->nama ?? optional($reservasi->pasien)->nama;
-        $dokterNama  = optional($reservasi->staf)->nama;
+        $dokterNama  = optional($reservasi->staf)->nama_dengan_gelar;
 
         $petugas_pemeriksa = PetugasPemeriksa::whereDate('tanggal', Carbon::now())
                                             ->where('staf_id', $reservasi->staf_id)
@@ -86,6 +86,24 @@ class ReservasiOnlineController extends Controller
         }
 
         $reservasi->delete();
+
+        // Siapkan informasi tambahan
+        $pasienNama  = $reservasi->nama ?? optional($reservasi->pasien)->nama;
+        $dokterNama  = optional($reservasi->staf)->nama_dengan_gelar;
+
+        $message = 'Reservasi Anda ';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Nama : ' . $pasienNama;
+        $message .= PHP_EOL;
+        $message .= 'Dokter : ' . $dokterNama;
+        $message .= PHP_EOL;
+        $message .= 'Pada hari ini';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Telah dibatalkan';
+
+        $wa->sendSingle($reservasi->no_telp, $message)
 
         return response()->json([
             'ok'       => true,
