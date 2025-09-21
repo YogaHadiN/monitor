@@ -3789,6 +3789,7 @@ class WablasController extends Controller
                                 $message .= PHP_EOL;
                                 $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
                                 $message .= PHP_EOL;
+                                $message .= $this->batalkan();
                                 $this->autoReply($message);
                             }
                             return;
