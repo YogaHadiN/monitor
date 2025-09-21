@@ -4447,7 +4447,7 @@ class WablasController extends Controller
                           . ($mulaiRaw
                                 ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->subMinutes(15)->format('H:i')
                                 : '-')
-                          . '. Jika tidak scan pada waktu tersebut, antrian online akan dibatalkan secara otomatis.'
+                          . '. atau reservasi ini otomatis dibatalkan.'
                           . PHP_EOL;
             }
 
