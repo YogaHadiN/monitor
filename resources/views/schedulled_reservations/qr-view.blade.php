@@ -55,6 +55,5 @@
   </div>
 </div>
 </body>
-{!! HTML::script('js/schedulled_reservation_qr.js')!!}
-
+    <script src="{{ url('js/schedulled_reservation_qr.js') }}"></script>
 </html>
