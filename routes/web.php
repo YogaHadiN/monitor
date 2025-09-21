@@ -76,6 +76,8 @@ Route::get('project/general_concent', [\App\Http\Controllers\ProjectController::
 Route::get('schedulled_booking/qr/{id}', [\App\Http\Controllers\ReservasiOnlineController::class, 'qr']);
 Route::get('/reservasi/{id}/checkin', [\App\Http\Controllers\ReservasiOnlineController::class, 'checkin'])
     ->name('reservations.checkin');
+Route::delete('/reservasi/{reservasi}', [\App\Http\Controllers\ReservasiOnlineController::class, 'destroy'])
+    ->name('reservations.destroy');
 
 
 // routes/web.php

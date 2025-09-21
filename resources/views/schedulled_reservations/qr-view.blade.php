@@ -3,6 +3,7 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>QR Reservasi #{{ $reservasi->id }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -44,7 +45,13 @@
 
         <div class="d-flex gap-2">
           <a class="btn btn-outline-secondary w-100" href="{{ $qrUrl }}" download>Unduh</a>
-          <a class="btn btn-danger w-100" rel="noopener">Batalkan Reservasi</a>
+        <button
+          type="button"
+          id="btn-cancel"
+          class="btn btn-danger w-100"
+          data-cancel-url="{{ route('reservations.destroy', $reservasi->id) }}">
+          Batalkan Reservasi
+        </button>
         </div>
 
         <div class="mt-3 small text-center text-muted">

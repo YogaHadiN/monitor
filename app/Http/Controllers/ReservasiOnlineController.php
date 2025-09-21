@@ -75,5 +75,23 @@ class ReservasiOnlineController extends Controller
         // TODO: logic check-in
         return "Check-in reservasi #{$id}";
     }
+
+    public function destroy($id)
+    {
+        $reservasi = ReservasiOnline::findOrFail($id);
+
+        // Hapus QR di S3 jika ada
+        if ($reservasi->qr_code_path_s3) {
+            Storage::disk('s3')->delete($reservasi->qr_code_path_s3);
+        }
+
+        $reservasi->delete();
+
+        return response()->json([
+            'ok'       => true,
+            'message'  => 'Reservasi dibatalkan.',
+            'redirect' => url('/'), // ubah jika ingin redirect ke halaman lain
+        ]);
+    }
 }
 
