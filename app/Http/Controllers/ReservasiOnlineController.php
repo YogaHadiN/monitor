@@ -60,7 +60,6 @@ class ReservasiOnlineController extends Controller
             return 'Qr Code tidak ditemukan';
         }
 
-        dd( $qrUrl );
         return view('schedulled_reservations.qr-view', compact(
             'reservasi',
             'jam_reservasi_dihapus',
