@@ -68,17 +68,6 @@ class ReservasiOnlineController extends Controller
                 }
             }
 
-            $result = Builder::create()
-                ->writer(new PngWriter())
-                ->data($qrPayload)
-                ->encoding(new Encoding('UTF-8'))
-                ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-                ->size(300)
-                ->margin(10)
-                ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-                ->build();
-
-            $qrUrl = 'data:image/png;base64,' . base64_encode($result->getString());
         }
 
         return view('schedulled_reservations.qr-view', compact(
@@ -86,8 +75,7 @@ class ReservasiOnlineController extends Controller
             'jam_reservasi_dihapus',
             'pasienNama',
             'dokterNama',
-            'jamMulaiStr',
-            'qrUrl'
+            'jamMulaiStr'
         ));
     }
 

@@ -29,12 +29,12 @@
           <div><strong>Dokter:</strong> {{ $dokterNama }}</div>
           <div><strong>Jam Mulai:</strong> {{ $jamMulaiStr }} WIB</div>
           <div class="small text-muted mt-1">Pastikan kecerahan layar cukup agar mudah dipindai.</div>
-          <div class="small text-muted mt-1"> <strong><i>Mohon scan qr di klinik sebelum jam {{ $jam_reservasi_dihapus }}</i></strong></div>
+          <div class="small text-muted mt-1"> <strong><i>Mohon scan qr di klinik sebelum jam {{ $jam_reservasi_dihapus }}. Agar reservasi ini tidak dihapus</i></strong></div>
         </div>
 
         <div class="qr-wrap mb-3 text-center">
           {{-- Jika pakai disk publik (URL langsung) --}}
-          <img class="qr" src="{{ $qrUrl }}" alt="QR Reservasi #{{ $reservasi->id }}">
+          <img class="qr" src="{{ $reservasi->qrcode }}" alt="QR Reservasi #{{ $reservasi->id }}">
 
           {{-- Jika disk private, gunakan ini (hapus yang atas):
           <img class="qr" src="{{ route('schedulled_reservations.qr.image', $reservasi) }}" alt="QR Reservasi #{{ $reservasi->id }}">
