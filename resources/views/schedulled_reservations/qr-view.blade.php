@@ -30,7 +30,7 @@
           <div><strong>Dokter:</strong> {{ $dokterNama }}</div>
           <div><strong>Jam Mulai:</strong> {{ $jamMulaiStr }} WIB</div>
           <div class="small text-muted mt-1">Pastikan kecerahan layar cukup agar mudah dipindai.</div>
-          <div class="small text-muted mt-1"> <strong><i>Mohon scan qr di klinik sebelum jam {{ $jam_reservasi_dihapus }}. Agar reservasi ini tidak dihapus</i></strong></div>
+          <div class="small text-muted mt-1"> <strong><i>Mohon scan qr di klinik sebelum jam {{ $jam_reservasi_dihapus }}. Agar reservasi ini tidak terhapus secara otomatis</i></strong></div>
         </div>
 
         <div class="qr-wrap mb-3 text-center">
@@ -43,8 +43,8 @@
         </div>
 
         <div class="d-flex gap-2">
-          <a class="btn btn-primary w-100" href="{{ $qrUrl }}" target="_blank" rel="noopener">Buka Gambar</a>
           <a class="btn btn-outline-secondary w-100" href="{{ $qrUrl }}" download>Unduh</a>
+          <a class="btn btn-danger w-100" rel="noopener">Batalkan</a>
         </div>
 
         <div class="mt-3 small text-center text-muted">
