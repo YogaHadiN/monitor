@@ -35,7 +35,7 @@
 
         <div class="qr-wrap mb-3 text-center">
           {{-- Jika pakai disk publik (URL langsung) --}}
-          <img class="qr" src="{{ $reservasi->qrcode }}" alt="QR Reservasi #{{ $reservasi->id }}">
+          <img class="qr" src="{{ $qrUrl }}" alt="QR Reservasi #{{ $reservasi->id }}">
 
           {{-- Jika disk private, gunakan ini (hapus yang atas):
           <img class="qr" src="{{ route('schedulled_reservations.qr.image', $reservasi) }}" alt="QR Reservasi #{{ $reservasi->id }}">
