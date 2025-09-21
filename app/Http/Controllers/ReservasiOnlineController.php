@@ -27,9 +27,22 @@ class ReservasiOnlineController extends Controller
         // Siapkan informasi tambahan
         $pasienNama  = $reservasi->nama ?? optional($reservasi->pasien)->nama;
         $dokterNama  = optional($reservasi->staf)->nama;
-        $jamMulaiStr = Carbon::parse($reservasi->created_at)
-                        ->timezone('Asia/Jakarta')
-                        ->format('H:i');
+
+        $petugas_pemeriksa = PetugasPemeriksa::whereDate('tanggal', Carbon::now())
+                                            ->where('staf_id', $reservasi_online->staf_id)
+                                            ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
+                                            ->where('ruangan_id', $reservasi_online->ruangan_id)
+                                            ->first();
+
+        if (!is_null( $petugas_pemeriksa )) {
+            $jamMulaiStr = Carbon::parse($petugas_pemeriksa->jam_mulai_default)
+                            ->timezone('Asia/Jakarta')
+                            ->format('H:i');
+        } else {
+            return 'petugas tidak ditemukan';
+        }
+
+
 
         // === Pilihan cara tampilkan QR ===
         // a) Kalau sudah ada path QR tersimpan di DB / Storage:
