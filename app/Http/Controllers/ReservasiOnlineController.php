@@ -51,34 +51,13 @@ class ReservasiOnlineController extends Controller
 
         // === Pilihan cara tampilkan QR ===
         // a) Kalau sudah ada path QR tersimpan di DB / Storage:
-        $qrUrl = $reservasi->qr_code_path_s3
-            ? Storage::disk('s3')->url($reservasi->qr_code_path_s3)
+        $qrUrl = $reservasi->qrcode
+            ? Storage::disk('s3')->url($reservasi->qrcode)
             : null;
 
         // b) Atau generate langsung dari data string (ENDROID)
         if (!$qrUrl) {
-            $qrPayload = trim((string) $reservasi->qrcode);
-
-            if ($qrPayload === '') {
-                // kalau route tidak ada, fallback manual
-                if (RouteFacade::has('reservations.checkin')) {
-                    $qrPayload = route('reservations.checkin', $reservasi->id);
-                } else {
-                    $qrPayload = URL::to("/reservasi/{$reservasi->id}/checkin");
-                }
-            }
-
-            $result = Builder::create()
-                ->writer(new PngWriter())
-                ->data($qrPayload)
-                ->encoding(new Encoding('UTF-8'))
-                ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-                ->size(300)
-                ->margin(10)
-                ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-                ->build();
-
-            $qrUrl = 'data:image/png;base64,' . base64_encode($result->getString());
+            return 'Qr Code tidak ditemukan';
         }
 
         return view('schedulled_reservations.qr-view', compact(
