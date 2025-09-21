@@ -83,6 +83,7 @@ class ReservasiOnlineController extends Controller
 
         return view('schedulled_reservations.qr-view', compact(
             'reservasi',
+            'jam_reservasi_dihapus',
             'pasienNama',
             'dokterNama',
             'jamMulaiStr',
