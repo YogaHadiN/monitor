@@ -30,9 +30,9 @@ class ReservasiOnlineController extends Controller
         $dokterNama  = optional($reservasi->staf)->nama;
 
         $petugas_pemeriksa = PetugasPemeriksa::whereDate('tanggal', Carbon::now())
-                                            ->where('staf_id', $reservasi_online->staf_id)
-                                            ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
-                                            ->where('ruangan_id', $reservasi_online->ruangan_id)
+                                            ->where('staf_id', $reservasi->staf_id)
+                                            ->where('tipe_konsultasi_id', $reservasi->tipe_konsultasi_id)
+                                            ->where('ruangan_id', $reservasi->ruangan_id)
                                             ->first();
 
         if (!is_null( $petugas_pemeriksa )) {
