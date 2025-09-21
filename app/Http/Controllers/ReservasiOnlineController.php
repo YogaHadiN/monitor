@@ -20,6 +20,7 @@ class ReservasiOnlineController extends Controller
 {
     public function qr($reservasi_online_id)
     {
+        $reservasi_online_id = decrypt_string( $reservasi_online_id );
         // Ambil data reservasi
         $reservasi = ReservasiOnline::findOrFail($reservasi_online_id);
 
