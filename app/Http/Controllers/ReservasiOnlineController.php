@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use App\Models\ReservasiOnline;
 use App\Models\PetugasPemeriksa;
 use Carbon\Carbon;
+
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\SendWhatsappMessageJob;
+use Illuminate\Http\JsonResponse;
 
 // endroid/qr-code
 use Endroid\QrCode\Builder\Builder;
@@ -76,39 +79,57 @@ class ReservasiOnlineController extends Controller
         return "Check-in reservasi #{$id}";
     }
 
-    public function destroy($id)
-    {
-        $reservasi = ReservasiOnline::findOrFail($id);
 
-        // Hapus QR di S3 jika ada
-        if ($reservasi->qr_code_path_s3) {
-            Storage::disk('s3')->delete($reservasi->qr_code_path_s3);
+    public function destroy($id): JsonResponse
+    {
+        // Ambil reservasi + relasi yang diperlukan
+        $reservasi = ReservasiOnline::with([
+            'pasien:id,nama',
+            'staf:id,nama,titel_id,tenant_id',
+            'staf.titel:id,singkatan',
+        ])->findOrFail($id);
+
+        // Siapkan data lebih dulu (supaya aman jika delete dilakukan)
+        $phone      = $reservasi->no_telp;
+        $pasienNama = $reservasi->nama ?? optional($reservasi->pasien)->nama ?? 'Pasien';
+
+        $dokterNamaObj = $reservasi->staf;
+        $dokterNama = $dokterNamaObj->nama_dengan_gelar
+            ?? $dokterNamaObj->nama
+            ?? 'Dokter';
+
+        // Susun pesan
+        $message  = "Reservasi Anda \n\n";
+        $message .= "Nama : {$pasienNama}\n";
+        $message .= "Dokter : {$dokterNama}\n";
+        $message .= "Pada hari ini\n\n";
+        $message .= "Telah dibatalkan";
+
+        // Hapus QR di S3 (jika ada) - log kalau gagal, tapi lanjutkan
+        try {
+            if (!empty($reservasi->qr_code_path_s3)) {
+                Storage::disk('s3')->delete($reservasi->qr_code_path_s3);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Gagal menghapus QR S3', [
+                'reservasi_id' => $reservasi->id,
+                'path'         => $reservasi->qr_code_path_s3,
+                'error'        => $e->getMessage(),
+            ]);
         }
 
+        // Hapus record
         $reservasi->delete();
 
-        // Siapkan informasi tambahan
-        $pasienNama  = $reservasi->nama ?? optional($reservasi->pasien)->nama;
-        $dokterNama  = optional($reservasi->staf)->nama_dengan_gelar;
-
-        $message = 'Reservasi Anda ';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= 'Nama : ' . $pasienNama;
-        $message .= PHP_EOL;
-        $message .= 'Dokter : ' . $dokterNama;
-        $message .= PHP_EOL;
-        $message .= 'Pada hari ini';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= 'Telah dibatalkan';
-
-        $wa->sendSingle($reservasi->no_telp, $message);
+        // Kirim WA via job (non-blocking)
+        if (!empty($phone)) {
+            SendWhatsappMessageJob::dispatch($phone, $message)->onQueue('whatsapp');
+        }
 
         return response()->json([
             'ok'       => true,
             'message'  => 'Reservasi dibatalkan.',
-            'redirect' => url('/'), // ubah jika ingin redirect ke halaman lain
+            'redirect' => url('/'),
         ]);
     }
 }
