@@ -25,6 +25,7 @@
         </div>
 
         <div class="mb-3">
+            <div><strong>Reservasi Id:</strong> {{ $reservasi->id }}</div>
           <div><strong>Pasien:</strong> {{ $pasienNama }}</div>
           <div><strong>Dokter:</strong> {{ $dokterNama }}</div>
           <div><strong>Jam Mulai:</strong> {{ $jamMulaiStr }} WIB</div>
