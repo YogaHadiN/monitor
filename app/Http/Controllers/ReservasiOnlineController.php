@@ -11,6 +11,7 @@ use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\SendWhatsappMessageJob;
+use App\Http\Controllers\WablasController;
 use Illuminate\Http\JsonResponse;
 
 // endroid/qr-code
@@ -107,13 +108,13 @@ class ReservasiOnlineController extends Controller
 
         // Hapus QR di S3 (jika ada) - log kalau gagal, tapi lanjutkan
         try {
-            if (!empty($reservasi->qr_code_path_s3)) {
-                Storage::disk('s3')->delete($reservasi->qr_code_path_s3);
+            if (!empty($reservasi->qrcode)) {
+                Storage::disk('s3')->delete($reservasi->qrcode);
             }
         } catch (\Throwable $e) {
             \Log::warning('Gagal menghapus QR S3', [
                 'reservasi_id' => $reservasi->id,
-                'path'         => $reservasi->qr_code_path_s3,
+                'path'         => $reservasi->qrcode,
                 'error'        => $e->getMessage(),
             ]);
         }
@@ -123,7 +124,8 @@ class ReservasiOnlineController extends Controller
 
         // Kirim WA via job (non-blocking)
         if (!empty($phone)) {
-            SendWhatsappMessageJob::dispatch($phone, $message)->onQueue('whatsapp');
+            $wa = new WablasController;
+               $wa->sendSingle($phone, $message);
         }
 
         return response()->json([
