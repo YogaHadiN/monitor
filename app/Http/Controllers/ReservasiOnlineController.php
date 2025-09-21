@@ -44,6 +44,10 @@ class ReservasiOnlineController extends Controller
         }
 
 
+        $jam_reservasi_dihapus = Carbon::parse( $jamMulaiStr )
+                                            ->subMinutes(15)
+                                            ->timezone('Asia/Jakarta')
+                                            ->format('H:i');
 
         // === Pilihan cara tampilkan QR ===
         // a) Kalau sudah ada path QR tersimpan di DB / Storage:

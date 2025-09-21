@@ -29,6 +29,7 @@
           <div><strong>Dokter:</strong> {{ $dokterNama }}</div>
           <div><strong>Jam Mulai:</strong> {{ $jamMulaiStr }} WIB</div>
           <div class="small text-muted mt-1">Pastikan kecerahan layar cukup agar mudah dipindai.</div>
+          <div class="small text-muted mt-1">Mohon scan qr di klinik sebelum jam {{ $jam_reservasi_dihapus }}</div>
         </div>
 
         <div class="qr-wrap mb-3 text-center">
