@@ -103,7 +103,7 @@ class ReservasiOnlineController extends Controller
         $message .= PHP_EOL;
         $message .= 'Telah dibatalkan';
 
-        $wa->sendSingle($reservasi->no_telp, $message)
+        $wa->sendSingle($reservasi->no_telp, $message);
 
         return response()->json([
             'ok'       => true,
