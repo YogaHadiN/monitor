@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use App\Models\ReservasiOnline;
+use App\Models\PetugasPemeriksa;
 use Carbon\Carbon;
 
 // endroid/qr-code
