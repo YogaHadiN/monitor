@@ -44,7 +44,7 @@
 
         <div class="d-flex gap-2">
           <a class="btn btn-outline-secondary w-100" href="{{ $qrUrl }}" download>Unduh</a>
-          <a class="btn btn-danger w-100" rel="noopener">Batalkan</a>
+          <a class="btn btn-danger w-100" rel="noopener">Batalkan Reservasi</a>
         </div>
 
         <div class="mt-3 small text-center text-muted">
