@@ -55,4 +55,6 @@
   </div>
 </div>
 </body>
+{!! HTML::script('js/schedulled_reservation_qr.js')!!}
+
 </html>
