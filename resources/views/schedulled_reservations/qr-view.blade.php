@@ -21,7 +21,7 @@
       <div class="card p-4">
         <div class="mb-3">
           <h1 class="h4 mb-1">QR Reservasi Online</h1>
-          <div class="text-muted">Tunjukkan QR ini ke petugas untuk check-in.</div>
+          <div class="text-muted">Scan QR berikut saat anda tiba di klinik</div>
         </div>
 
         <div class="mb-3">

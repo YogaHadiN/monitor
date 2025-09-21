@@ -3679,10 +3679,6 @@ class WablasController extends Controller
             && is_null($reservasi_online->staf_id)) {
 
             $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
-            Log::info('========================');
-            Log::info('petugas_pemeriksa');
-            Log::info( $petugas );
-            Log::info('========================');
             if (ctype_digit($msg) && (int)$msg > 0 && (int)$msg <= $petugas->count()) {
                 $idx = (int)$msg - 1;
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
@@ -3782,7 +3778,18 @@ class WablasController extends Controller
                             if (method_exists($this, 'getQrCodeMessageBooking')) {
                                 $this->autoReply($this->getQrCodeMessageBooking($reservasi_online));
                             } else {
-                                $this->autoReply("Booking terjadwal sudah tercatat.\nSilakan gunakan QR saat datang.\nKode: " . $reservasi_online->qrcode);
+                                $message = "Booking terjadwal sudah tercatat.\nSilakan gunakan QR saat datang.";
+                                $message .= PHP_EOL;
+                                $message .= PHP_EOL;
+                                $message .= 'Klik link berikut untuk melihat qr code :';
+                                $message .= PHP_EOL;
+                                $message .= PHP_EOL;
+                                $message .= 'https://www.klinikjatielok.com/schedulled_booking/qr/' . encrypt_string( $reservasi_online->id );
+                                $message .= PHP_EOL;
+                                $message .= PHP_EOL;
+                                $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
+                                $message .= PHP_EOL;
+                                $this->autoReply($message);
                             }
                             return;
                         }

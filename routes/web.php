@@ -73,6 +73,11 @@ Route::get('project/ambil_antrian', [\App\Http\Controllers\ProjectController::cl
 Route::get('project/uang', [\App\Http\Controllers\ProjectController::class, 'uang']);
 Route::get('project/general_concent', [\App\Http\Controllers\ProjectController::class, 'general_concent']);
 
+Route::get('schedulled_booking/qr/{id}', [\App\Http\Controllers\ReservasiOnlineController::class, 'qr']);
+Route::get('/reservasi/{id}/checkin', [\App\Http\Controllers\ReservasiOnlineController::class, 'checkin'])
+    ->name('reservations.checkin');
+
+
 // routes/web.php
 
 Route::get('/schedulled_reservations/{reservasi}/qr-view', [ReservationQrController::class, 'view'])
