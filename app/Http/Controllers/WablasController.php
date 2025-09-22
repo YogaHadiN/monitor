@@ -3419,6 +3419,7 @@ class WablasController extends Controller
                     if ($petugas_pemeriksa->count() === 1) {
                         $this->chatBotLog(__LINE__);
                         $reservasi_online->staf_id    = $petugas_pemeriksa->first()->staf_id;
+                        $reservasi_online->petugas_pemeriksa_id    = $petugas_pemeriksa->first()->id;
                         $reservasi_online->ruangan_id = $petugas_pemeriksa->first()->ruangan_id;
                         $reservasi_online->save();
                     }
@@ -3685,6 +3686,7 @@ class WablasController extends Controller
 
                 // set staf & ruangan
                 $reservasi_online->staf_id    = $pp->staf_id;
+                $reservasi_online->petugas_pemeriksa_id    = $pp->petugas_pemeriksa_id;
                 $reservasi_online->ruangan_id = $pp->ruangan_id;
 
                 // ===== window booking terjadwal =====
@@ -3799,7 +3801,7 @@ class WablasController extends Controller
                         $this->input_nomor_bpjs              = $reservasi_online->nomor_asuransi_bpjs;
                         $this->input_registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
 
-                        $antrian = $this->antrianPost($reservasi_online->ruangan_id);
+                        $antrian                        = $this->antrianPost($reservasi_online->ruangan_id);
                         $antrian->nama                  = $reservasi_online->nama;
                         $antrian->nomor_bpjs            = $reservasi_online->nomor_asuransi_bpjs;
                         $antrian->no_telp               = $reservasi_online->no_telp;
@@ -3810,6 +3812,7 @@ class WablasController extends Controller
                         $antrian->ruangan_id            = $reservasi_online->ruangan_id;
                         $antrian->tipe_konsultasi_id    = $reservasi_online->tipe_konsultasi_id;
                         $antrian->staf_id               = $reservasi_online->staf_id;
+                        $antrian->petugas_pemeriksa_id  = $reservasi_online->petugas_pemeriksa_id;
                         $antrian->kartu_asuransi_image  = $reservasi_online->kartu_asuransi_image;
                         $antrian->data_bpjs_cocok       = $reservasi_online->data_bpjs_cocok;
                         $antrian->reservasi_online      = 1;
@@ -4071,7 +4074,7 @@ class WablasController extends Controller
         $jumlah_antrian = $this->jumlahAntrian();
         $message .= '1. Dokter Umum (ada ' . $jumlah_antrian[1]. ' antrian)';
         $message .= PHP_EOL;
-        $message .= '2. Dokter Gigi (ada ' . $jumlah_antrian[2]. ' antrian)';
+        $message .= '2. Dokter Gigi';
         $message .= PHP_EOL;
         $message .= '3. USG Kehamilan';
         $message .= PHP_EOL;
@@ -6153,7 +6156,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $dokter_gigi_awal  = (clone $dokter_gigi_q)->orderBy('jam_mulai', 'asc')->first();
             $dokter_gigi_akhir = (clone $dokter_gigi_q)->orderBy('jam_akhir', 'desc')->first();
 
-            $jam_mulai_registrasi_langsung = \Carbon\Carbon::parse($dokter_gigi_awal->jam_mulai, 'Asia/Jakarta')->subMinutes(30);
+            $jam_mulai_registrasi_langsung = \Carbon\Carbon::parse($dokter_gigi_awal->jam_mulai, 'Asia/Jakarta');
             $jam_akhir_registrasi_langsung = \Carbon\Carbon::parse($dokter_gigi_akhir->jam_akhir, 'Asia/Jakarta')->subHour(); // (jam_akhir - 1h)
 
             // Selesai jika sekarang ≥ (jam_akhir - 1 jam)  ← perbaikan: JANGAN subHour() lagi
