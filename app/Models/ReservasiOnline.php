@@ -27,4 +27,7 @@ class ReservasiOnline extends Model
     public function staf(){
         return $this->belongsTo(Staf::class);
     }
+    public function petugas_pemeriksa(){
+        return $this->belongsTo(PetugasPemeriksa::class);
+    }
 }

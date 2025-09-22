@@ -3730,14 +3730,6 @@ class WablasController extends Controller
                 $this->autoReply($this->pesanWaitlistTercatat());
                 return false;
 
-            } elseif (in_array($msg, ['tidak','t','n','2'], true)) {
-                $reservasi_online->waitlist_flag   = 0; // menolak
-                $reservasi_online->schedulled_booking = 0; // fallback daftar sekarang
-                $reservasi_online->save();
-
-                $this->autoReply($this->pesanTolakWaitlistTawarkanDaftarSekarang());
-                return false;
-
             } else {
                 $input_tidak_tepat = true;
             }
@@ -3767,6 +3759,10 @@ class WablasController extends Controller
                                 $reservasi_online->schedulled_booking = 2;   // penuh
                                 $reservasi_online->waitlist_flag      = null;
                                 $reservasi_online->save();
+
+                                $petugas_pemeriksa = $reservasi_online->petugas_pemeriksa;
+                                $petugas_pemeriksa->max_booking_achieved = 1;
+                                $petugas_pemeriksa->save();
 
                                 $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
                                 return; // keluar tanpa membuat QR / antrian
@@ -6250,9 +6246,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         return
             "Maaf, kuota *booking terjadwal* untuk jadwal ini sudah *penuh*.\n".
             "• Jam pelayanan: *{$mulai}–{$akhir}*\n".
-            "• Kuota terjadwal: *".($kuota > 0 ? $kuota : 'tanpa batas')."*\n\n".
+            /* "• Kuota terjadwal: *".($kuota > 0 ? $kuota : 'tanpa batas')."*\n\n". */
             "Apakah Kakak mau masuk *waitlist* (daftar tunggu)?\n".
-            "Balas *ya* untuk masuk, atau *tidak*.";
+            "Balas *ya* untuk masuk\n";
+            "Balas *batalkan* untuk membatalkan reservasi";
     }
 
     /** Prompt ulang jika user salah input di state waitlist */
@@ -6279,23 +6276,23 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $tz  = 'Asia/Jakarta';
         $now = \Carbon\Carbon::now($tz);
 
-        $msg       = is_string($this->message) ? strtolower(trim($this->message)) : '';
-        $yesTokens = ['ya','y','ok','oke','iya','siap','setuju','yes','yaa','ya!'];
-        $noTokens  = ['tidak','ga','nggak','gak','no','batal','batalkan','t'];
+        $msg       = is_string($this->message) ? mb_strtolower(trim($this->message)) : '';
+        $yesTokens = ['ya','y','ok','oke','iya','siap','setuju','yes','yaa','ya!','ambil','ready','lanjut'];
+        $noTokens  = ['tidak','ga','nggak','gak','no','batal','batalkan','t','skip','n'];
 
-        // pakai created_at (hari ini)
         $startToday = $now->copy()->startOfDay();
         $endToday   = $now->copy()->endOfDay();
 
-        // ============== KONFIRMASI "YA" ==============
+        // ====== KONFIRMASI "YA" ======
         if (in_array($msg, $yesTokens, true)) {
             try {
                 \DB::beginTransaction();
 
-                // waitlist aktif nomor ini, dibuat hari ini
+                // Ambil waitlist aktif utk nomor ini, yang sudah pernah dikirimi inquiry hari ini
                 $waitlist = \App\Models\ReservasiOnline::query()
                     ->with('staf')
                     ->where('waitlist_flag', 1)
+                    ->where('waitlist_reservation_inquiry_sent', 1)
                     ->where('no_telp', $this->no_telp)
                     ->whereBetween('created_at', [$startToday, $endToday])
                     ->lockForUpdate()
@@ -6307,27 +6304,34 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
-                // ambil baris kuota (petugas_pemeriksas) berdasar staf & created_at hari ini
+                // Cari baris petugas hari ini dengan window waktu masih relevan
                 $slotRow = \DB::table('petugas_pemeriksas')
                     ->where('staf_id', $waitlist->staf_id)
-                    ->whereBetween('created_at', [$startToday, $endToday])
+                    ->whereDate('tanggal', $now->toDateString())
+                    ->where('jam_mulai', '<=', $now->format('H:i'))
                     ->where('jam_akhir', '>=', $now->format('H:i'))
-                    ->orderByDesc('id')               // ambil yang terbaru hari ini
+                    ->orderByDesc('id')
                     ->lockForUpdate()
                     ->first();
 
+                if (!$slotRow) {
+                    \DB::rollBack();
+                    $this->autoReply("Jadwal dokter belum aktif saat ini. Kami pertahankan di waitlist ya, Kak.");
+                    return;
+                }
+
                 $maxBooking = (int)($slotRow->max_booking ?? 1);
 
-                // hitung reservasi aktif hari ini utk staf tsb (tanpa tanggal/jam)
-                $existing = \App\Models\ReservasiOnline::query()
+                // Hitung jumlah booking aktif hari ini utk staf tsb dengan benar-benar mengunci baris
+                $existingIds = \App\Models\ReservasiOnline::query()
                     ->where('staf_id', $waitlist->staf_id)
                     ->where('schedulled_booking', 1)
-                    ->where('reservasi_selesai', 1)
+                    ->where('reservasi_selesai', 0) // aktif (belum selesai)
                     ->whereBetween('created_at', [$startToday, $endToday])
                     ->lockForUpdate()
-                    ->count();
+                    ->pluck('id');
 
-                if ($existing >= $maxBooking) { //
+                if ($existingIds->count() >= $maxBooking) {
                     \DB::rollBack();
                     $this->autoReply(
                         "Mohon maaf, kuota untuk saat ini *penuh*.\n".
@@ -6336,7 +6340,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
-                // duplikasi konfirmasi
+                // Jika sebelumnya sudah terkonfirmasi
                 if ((int)$waitlist->registering_confirmation === 1 || (int)$waitlist->schedulled_booking === 1) {
                     \DB::commit();
                     $qrLink = route('schedulled_reservations.qr-view', ['reservasi' => $waitlist->id]);
@@ -6348,19 +6352,25 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
+                // Pastikan petugas_pemeriksa_id terisi jika Anda memerlukannya
+                if (empty($waitlist->petugas_pemeriksa_id)) {
+                    $waitlist->petugas_pemeriksa_id = (int)$slotRow->id;
+                }
+
+                // Konversi ke booking aktif, JANGAN tandai selesai
                 $waitlist->waitlist_flag            = 0;
                 $waitlist->schedulled_booking       = 1;
                 $waitlist->registering_confirmation = 1;
-                $waitlist->reservasi_selesai        = 1;
+                $waitlist->reservasi_selesai        = 0; // tetap aktif sampai visit selesai
                 $waitlist->qrcode                   = $this->generateQrCodeForOnlineReservation('B', $waitlist);
                 $waitlist->save();
 
                 \DB::commit();
 
-                // batas scan = 90 menit dari created_at konfirmasi (atau sekarang jika null)
+                // Batas scan: 90 menit dari waktu commit/update
                 $baseTime  = $waitlist->updated_at ? $waitlist->updated_at->timezone($tz) : $now;
                 $batasScan = $baseTime->copy()->addMinutes(90)->format('H:i');
-                $stafNama  = optional($waitlist->staf)->nama ?? 'dokter';
+                $stafNama  = optional($waitlist->staf)->nama_dengan_gelar ?? (optional($waitlist->staf)->nama ?? 'dokter');
                 $qrLink    = route('schedulled_reservations.qr-view', ['reservasi' => $waitlist->id]);
 
                 $this->autoReply(
@@ -6380,29 +6390,27 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             }
         }
 
-        // ============== TOLAK / BATAL ==============
+        // ====== TOLAK / BATAL ======
         if (in_array($msg, $noTokens, true)) {
             try {
                 $waitlist = \App\Models\ReservasiOnline::query()
                     ->where('waitlist_flag', 1)
+                    ->where('waitlist_reservation_inquiry_sent', 1)
                     ->where('no_telp', $this->no_telp)
                     ->whereBetween('created_at', [$startToday, $endToday])
-                    ->first();
+                    ->delete();
 
-                if ($waitlist) {
-                    $waitlist->delete(); // atau set canceled_at jika ada
-                }
             } catch (\Throwable $e) { /* ignore */ }
 
             if (function_exists('resetWhatsappRegistration')) {
                 resetWhatsappRegistration($this->no_telp);
             }
 
-            $this->autoReply("Reservasi dibatalkan, terima kasih.");
+            $this->autoReply("Baik, kami batalkan permintaan waitlist Kakak. Terima kasih.");
             return;
         }
 
-        // ============== INPUT TAK DIPAHAMI ==============
+        // ====== INPUT TIDAK DIPAHAMI ======
         $this->autoReply("Balasan kurang jelas. Ketik *YA* untuk konfirmasi waitlist, atau *TIDAK* untuk batal.");
     }
 
