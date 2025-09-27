@@ -56,15 +56,25 @@ class Antrian extends Model
             }
         });
         self::deleting(function($model){
-            $last_updated_antrian_id = Antrian::orderBy('updated_at','DESC')->first()->id;
+            // id antrian terakhir di-update (kode Anda)
+            $last_updated_antrian_id = Antrian::orderBy('updated_at','DESC')->value('id');
             $model->deleting_antrian_id = $last_updated_antrian_id;
+
+            // <<<<< TANGKAP SUMBER DELETE (controller, file, line, route, dll)
+            $model->delete_source = self::buildDeleteSourceString($model);
+
+            // simpan perubahan ke instance (Anda memang sudah melakukan save di sini)
             $model->save();
         });
+
         self::deleted(function($model){
+            // Hapus relasi terkait (kode Anda)
             WhatsappRegistration::where('antrian_id', $model->id)->delete();
+
+            // <<<<< MASUKKAN delete_source KE salah satu kolom di deleted_antrians
             DeletedAntrian::create([
-                'timestamp_antrian_dibuat'                      => $model->create_at,
-                'ruangan_id'                              => $model->ruangan_id,
+                'timestamp_antrian_dibuat'                      => $model->created_at,
+                'ruangan_id'                                    => $model->ruangan_id,
                 'url'                                           => $model->url,
                 'deleting_antrian_id'                           => $model->deleting_antrian_id,
                 'nomor'                                         => $model->nomor,
@@ -102,7 +112,10 @@ class Antrian extends Model
                 'jam_pasien_mulai_mengantri'                    => $model->jam_pasien_mulai_mengantri,
                 'customer_satisfaction_survey_sent'             => $model->customer_satisfaction_survey_sent,
                 'terakhir_dipanggil'                            => $model->terakhir_dipanggil,
-                'dibatalkan_pasien'                             => $model->dibatalkan_pasien
+                'dibatalkan_pasien'                             => $model->dibatalkan_pasien,
+
+                // <<<<< tambahkan kolom baru ini
+                'delete_source'                                 => $model->delete_source ?? null,
             ]);
         });
     }
