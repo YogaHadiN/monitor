@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Services\AntrianNumberService;
 use App\Traits\BelongsToTenant;
 use App\Models\Asuransi;
 use App\Models\Ruangan;
@@ -16,19 +17,21 @@ class Antrian extends Model
     use BelongsToTenant,HasFactory;
     public static function boot(){
         parent::boot();
-        self::creating(function($antrian){
-            $existing_antrian = Antrian::where('created_at', 'like' , date('Y-m-d') . '%' )
-                                            ->where('ruangan_id',  $antrian->ruangan_id )
-                                            ->where('tenant_id',  1 )
-                                            ->orderBy('nomor', 'desc')
-                                            ->first();
-            if ( is_null( $existing_antrian ) ) {
-                $antrian->nomor = 1;
-            } else {
-                $antrian->nomor = $existing_antrian->nomor + 1;
-            }
+
+        static::creating(function (Antrian $antrian) {
+            // Pastikan field ini sudah ada nilainya sebelum nomor di-generate
+            $tenantId  = (int) ($antrian->tenant_id ?? 1);
+            $ruanganId = (int) $antrian->ruangan_id;
+
+            // Gunakan tanggal lokal operasional
+            $tanggal = Carbon::now('Asia/Jakarta')->toDateString();
+
+            // Ambil nomor baru yang dijamin unik per (tenant, ruangan, tanggal)
+            $antrian->nomor = app(AntrianNumberService::class)->next($tenantId, $ruanganId, $tanggal);
+
         });
-        self::created(function($antrian){
+
+       self::created(function($antrian){
             $existing_antrians = Antrian::where('antriable_type', 'App\Models\Antrian')
                 ->where('created_at', 'like' , date('Y-m-d') . '%' )
                 ->where('id', 'not like' , $antrian->id )
@@ -120,7 +123,7 @@ class Antrian extends Model
         });
     }
 
-    protected $guarded = [];
+    protected $guarded = ['nomor'];
 	protected $casts = [
 		'tanggal_lahir' => 'datetime'
 	];

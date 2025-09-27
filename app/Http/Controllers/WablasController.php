@@ -4100,36 +4100,22 @@ class WablasController extends Controller
         $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay   = $carbon->endOfDay()->format('Y-m-d H:i:s');
 
-		$antrians = Antrian::whereBetween('created_at', [
-                                    $startOfDay,
-                                    $endOfDay
-                                ])
-							->where('ruangan_id',$id)
-							->where('tenant_id', 1)
-							->orderBy('nomor', 'desc')
-							->first();
-
-        $antrian                   = new Antrian;
-		if ( is_null( $antrians ) ) {
-			$antrian->nomor            = 1 ;
-
-		} else {
-			$antrian_terakhir          = $antrians->nomor + 1;
-			$antrian->nomor            = $antrian_terakhir ;
-		}
-
-        $ruangan =  Ruangan::find($id) ;
+        $antrian = new Antrian;
+        $ruangan = Ruangan::find($id) ;
         if ( !is_null($ruangan) ) {
             $tipe_konsultasi_id = $ruangan->default_tipe_konsultasi_id;
         }
 
-        $antrian->tenant_id                = 1 ;
-        $antrian->ruangan_id               = $id ;
-        $antrian->tipe_konsultasi_id       = $tipe_konsultasi_id ;
-        $antrian->registrasi_pembayaran_id = $this->input_registrasi_pembayaran_id;
+        $antrian = Antrian::create([
+            'tenant_id'                => 1 ,
+            'ruangan_id'               => $id ,
+            'tipe_konsultasi_id'       => $tipe_konsultasi_id ,
+            'registrasi_pembayaran_id' => $this->input_registrasi_pembayaran_id,
+            'kode_unik'                => $this->kodeUnik(),
+            'antriable_type'           => 'App\\Models\\Antrian',
+        ]);
+
 		$antrian->antriable_id             = $antrian->id;
-		$antrian->kode_unik                = $this->kodeUnik();
-		$antrian->antriable_type           = 'App\\Models\\Antrian';
 		$antrian->save();
 
 		$this->updateJumlahAntrian(false, null);
