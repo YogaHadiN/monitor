@@ -1,0 +1,1 @@
+$response = $wablas->sendMessage('081381912803', 'Halo, ini pesan uji coba dari Laravel via Wablas masss.');
