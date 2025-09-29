@@ -11,7 +11,7 @@ class WablasWebhookController extends Controller
     public function wablas(){
         Log::info('===============================');
         Log::info('NO TELPPP');
-        Log::info( Input::all() );
+        Log::info( Input::get('phone') );
         Log::info('===============================');
     }
 }
