@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Route;
 /* Route::post('moota/webhook', [\App\Http\Controllers\MootaController::class, 'webhook']); */
 
 Route::get('kje_bot2/webhook/wablas', [\App\Http\Controllers\WablasWebhookController::class, 'wablas']);
+Route::post('kje_bot2/webhook/wablas', [\App\Http\Controllers\WablasWebhookController::class, 'wablas']);
 
 
 Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']);
