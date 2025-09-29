@@ -248,6 +248,54 @@ class Antrian extends Model
         }
     }
 
+    private static function firstAppCaller(array $trace): array
+    {
+        $base = base_path();
+
+        // 1) Prioritas: Controller
+        foreach ($trace as $f) {
+            $file = $f['file'] ?? null;
+            if ($file && str_contains($file, DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Http'.DIRECTORY_SEPARATOR.'Controllers'.DIRECTORY_SEPARATOR)) {
+                return [
+                    'file'     => ltrim(str_replace($base.DIRECTORY_SEPARATOR, '', $file), DIRECTORY_SEPARATOR),
+                    'line'     => $f['line'] ?? null,
+                    'class'    => $f['class'] ?? null,
+                    'function' => $f['function'] ?? null,
+                ];
+            }
+        }
+
+        // 2) Selain controller, ambil frame pertama dari folder app/
+        foreach ($trace as $f) {
+            $file = $f['file'] ?? null;
+            if ($file && str_contains($file, DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR)) {
+                return [
+                    'file'     => ltrim(str_replace($base.DIRECTORY_SEPARATOR, '', $file), DIRECTORY_SEPARATOR),
+                    'line'     => $f['line'] ?? null,
+                    'class'    => $f['class'] ?? null,
+                    'function' => $f['function'] ?? null,
+                ];
+            }
+        }
+
+        // 3) Fallback: frame pertama yang punya file
+        foreach ($trace as $f) {
+            if (!empty($f['file'])) {
+                return [
+                    'file'     => ltrim(str_replace($base.DIRECTORY_SEPARATOR, '', $f['file']), DIRECTORY_SEPARATOR),
+                    'line'     => $f['line'] ?? null,
+                    'class'    => $f['class'] ?? null,
+                    'function' => $f['function'] ?? null,
+                ];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Rangkai string sumber penghapusan (controller@method file:line | route | user | ip).
+     */
     private static function buildDeleteSourceString(self $model): string
     {
         $trace  = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 60);
