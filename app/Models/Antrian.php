@@ -247,4 +247,38 @@ class Antrian extends Model
             }
         }
     }
+
+    private static function buildDeleteSourceString(self $model): string
+    {
+        $trace  = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 60);
+        $caller = self::firstAppCaller($trace);
+
+        $routeName   = '-';
+        $routeAction = '-';
+        $url         = '-';
+        $ip          = '-';
+        $userId      = '-';
+
+        if (!app()->runningInConsole() && app()->bound('request')) {
+            $route       = optional(request()->route());
+            $routeAction = method_exists($route, 'getActionName') ? ($route->getActionName() ?? '-') : '-';
+            $routeName   = method_exists($route, 'getName') ? ($route->getName() ?? '-') : '-';
+            $url         = request()->fullUrl() ?? '-';
+            $ip          = request()->ip() ?? '-';
+            $userId      = optional(auth()->user())->id ?? '-';
+        }
+
+        return sprintf(
+            '%s@%s in %s:%s | route=%s | action=%s | url=%s | user=%s | ip=%s',
+            $caller['class'] ?? '-',
+            $caller['function'] ?? '-',
+            $caller['file'] ?? '-',
+            $caller['line'] ?? '-',
+            $routeName,
+            $routeAction,
+            $url,
+            $userId,
+            $ip
+        );
+    }
 }
