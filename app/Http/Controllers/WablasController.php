@@ -4687,14 +4687,13 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     {
         if ( $hapus_antrian ) {
             $from = date('Y-m-d 00:00:00');
-            $to = date('Y-m-d 23:59:59');
+            $to   = date('Y-m-d 23:59:59');
             $antrians = Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
                 ->where('no_telp', $this->no_telp)
+                ->where('sudah_hadir_di_klinik', 0)
                 ->whereRaw("
                         (
-                            antriable_type = 'App\\\Models\\\Antrian' or
-                            antriable_type = 'App\\\Models\\\AntrianPoli' or
-                            antriable_type = 'App\\\Models\\\AntrianPeriksa'
+                            antriable_type = 'App\\\Models\\\Antrian'
                         )
                     ")
                 ->get();
