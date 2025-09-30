@@ -659,11 +659,10 @@ class WebRegistrationController extends Controller
         $no_telp = Input::get('no_telp');
         $antrian = Antrian::where('no_telp',  $no_telp )
                             ->whereDate('created_at', date('Y-m-d'))
+                            ->where('sudah_hadir_di_klinik', 0)
                             ->whereRaw(
                                 "(
-                                    antriable_type = 'App\\\Models\\\Antrian' or
-                                    antriable_type = 'App\\\Models\\\AntrianPeriksa' or
-                                    antriable_type = 'App\\\Models\\\AntrianPoli'
+                                    antriable_type = 'App\\\Models\\\Antrian'
                                 )"
                             )
                             ->delete();
