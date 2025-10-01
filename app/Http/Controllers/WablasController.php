@@ -188,9 +188,6 @@ class WablasController extends Controller
             $no_telp->touch();
         }
 
-        if ( $this->no_telp !== '6281381912803' ) {
-            return;
-        }
 
 
         $this->whatsapp_bot = WhatsappBot::where('no_telp', $this->no_telp)
@@ -4729,8 +4726,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $this->chatBotLog(__LINE__);
         if (
             (  date('G') <= 21 && // pendaftaran online tutup jam 21.59
-            date('G') >= 7 ) || //
-            $this->no_telp == '6281381912803'
+            date('G') >= 7 )
         ) {
             if (
                 Antrian::where('no_telp', $this->no_telp)
