@@ -422,24 +422,36 @@ class WebRegistrationController extends Controller
             'message',
         );
     }
-    public function staf(){
-        $petugas_pemeriksa_id    = Input::get('value');
-        $no_telp = Input::get('no_telp');
+    public function staf()
+    {
+        $petugas_pemeriksa_id = Input::get('value');
+        $no_telp              = Input::get('no_telp');
+
         $web_registration = WebRegistration::where('no_telp', $no_telp)
-                                            ->whereDate('created_at', date('Y-m-d'))
-                                            ->first();
+            ->whereDate('created_at', date('Y-m-d')) // pakai Y (4 digit tahun)
+            ->first();
 
-        $petugas_pemeriksa = PetugasPemeriksa::find( $petugas_pemeriksa_id );
+        if (!$web_registration) {
+            $this->message = 'registrasi tidak ditemukan';
+        } else {
+            $petugas_pemeriksa = PetugasPemeriksa::find($petugas_pemeriksa_id);
 
-        $web_registration->staf_id = $petugas_pemeriksa->staf_id;
-        $web_registration->ruangan_id = $petugas_pemeriksa->ruangan_id;
-        $web_registration->save();
+            if ($petugas_pemeriksa) {
+                $web_registration->staf_id    = $petugas_pemeriksa->staf_id;
+                $web_registration->ruangan_id = $petugas_pemeriksa->ruangan_id;
+                $web_registration->save();
 
-        $this->message = null;
-        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
-        return compact(
-            'message',
-        );
+                $this->message = null;
+            } else {
+                $this->message = 'petugas pemeriksa tidak ditemukan';
+            }
+        }
+
+        $message = view('web_registrations.message', [
+            'message' => $this->message
+        ])->render();
+
+        return compact('message');
     }
 
     public function cek($tipe_konsultasi_id){
