@@ -3689,11 +3689,15 @@ class WablasController extends Controller
                 $idx = (int)$msg - 1;
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
 
+                Log::info('======================');
+                Log::info('petugas_pemeriksa');
+                Log::info( $pp );
+                Log::info('======================');
                 $this->chatBotLog(__LINE__);
                 // set staf & ruangan
-                $reservasi_online->staf_id    = $pp->staf_id;
-                $reservasi_online->petugas_pemeriksa_id    = $pp->petugas_pemeriksa_id;
-                $reservasi_online->ruangan_id = $pp->ruangan_id;
+                $reservasi_online->staf_id              = $pp->staf_id;
+                $reservasi_online->petugas_pemeriksa_id = $pp->petugas_pemeriksa_id;
+                $reservasi_online->ruangan_id           = $pp->ruangan_id;
 
                 // ===== window booking terjadwal =====
                 $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
