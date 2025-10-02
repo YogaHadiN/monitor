@@ -3680,7 +3680,9 @@ class WablasController extends Controller
         // ===== pilih staf =====
         } elseif (
             !is_null($reservasi_online->kartu_asuransi_image)
-            && is_null($reservasi_online->staf_id)) {
+            && is_null($reservasi_online->staf_id))
+        {
+            $this->chatBotLog(__LINE__);
 
             $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
             if (ctype_digit($msg) && (int)$msg > 0 && (int)$msg <= $petugas->count()) {
@@ -4591,14 +4593,6 @@ class WablasController extends Controller
     private function tanyaSyaratdanKetentuan($reservasi_online): string
     {
         $this->chatBotLog(__LINE__);
-        Log::info('=====================');
-        Log::info('OKE');
-        Log::info('reservasi_online');
-        Log::info($reservasi_online);
-        Log::info('model');
-        Log::info(class_basename($reservasi_online));
-        Log::info('=====================');
-        Log::info('=====================');
         $tz      = 'Asia/Jakarta';
         $now     = \Carbon\Carbon::now($tz);
         $tipe_id = (int) ($reservasi_online->tipe_konsultasi_id ?? 0);
