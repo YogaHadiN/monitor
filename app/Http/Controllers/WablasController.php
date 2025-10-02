@@ -5761,22 +5761,14 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
             $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
 
-            $query = \App\Models\PetugasPemeriksa::query()
-                ->with('staf:id,nama,tenant_id') // eager load
-                ->whereDate('petugas_pemeriksas.tanggal', $today)
-                ->where('petugas_pemeriksas.tipe_konsultasi_id', 2)
-                ->where('petugas_pemeriksas.schedulled_booking_allowed', 1)
-                ->where('petugas_pemeriksas.tenant_id', $tenantId)
+            $query = \App\Models\PetugasPemeriksa::with('staf') // eager load
+                ->whereDate('tanggal', $today)
+                ->where('tipe_konsultasi_id', 2)
+                ->where('schedulled_booking_allowed', 1)
+                ->where('tenant_id', $tenantId)
                 ->whereHas('staf', fn($q) => $q->where('tenant_id', $tenantId))
-                ->orderBy('petugas_pemeriksas.jam_mulai', 'asc');
+                ->orderBy('jam_mulai', 'asc');
 
-            // === log SQL ===
-            \Log::info("SQL: ".$query->toSql(), $query->getBindings());
-
-            // kalau Laravel ≥9.21 ada toRawSql()
-            if (method_exists($query->getQuery(), 'toRawSql')) {
-                \Log::info("RAW SQL: ".$query->toRawSql());
-            }
 
             // === eksekusi ===
             return $query->get()
