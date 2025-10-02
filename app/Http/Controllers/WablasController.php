@@ -3696,7 +3696,7 @@ class WablasController extends Controller
                 $this->chatBotLog(__LINE__);
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
-                $reservasi_online->petugas_pemeriksa_id = $pp->petugas_pemeriksa_id;
+                $reservasi_online->petugas_pemeriksa_id = $pp->id;
                 $reservasi_online->ruangan_id           = $pp->ruangan_id;
 
                 // ===== window booking terjadwal =====
