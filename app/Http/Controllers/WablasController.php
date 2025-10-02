@@ -5768,6 +5768,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 ->where('petugas_pemeriksas.schedulled_booking_allowed', 1)
                 ->where('petugas_pemeriksas.tenant_id', $tenantId);
 
+            Log::info( $base_nama->first()->staf->nama );
+
             $namaDokter = $baseNama
                 ->join('stafs as stf', 'stf.id', '=', 'petugas_pemeriksas.staf_id')
                 // (opsional) jika kolom stf.tenant_id ada dan harus sama:
