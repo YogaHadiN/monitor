@@ -4590,9 +4590,12 @@ class WablasController extends Controller
 
     private function tanyaSyaratdanKetentuan($reservasi_online): string
     {
+        $this->chatBotLog(__LINE__);
         Log::info('=====================');
+        Log::info('OKE');
         Log::info('reservasi_online');
         Log::info($reservasi_online);
+        Log::info('=====================');
         Log::info('=====================');
         $tz      = 'Asia/Jakarta';
         $now     = \Carbon\Carbon::now($tz);
