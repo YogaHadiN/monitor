@@ -3421,9 +3421,9 @@ class WablasController extends Controller
                     $petugas_pemeriksa = $this->petugas_pemeriksa_sekarang($reservasi_online);
                     if ($petugas_pemeriksa->count() === 1) {
                         $this->chatBotLog(__LINE__);
-                        $reservasi_online->staf_id    = $petugas_pemeriksa->first()->staf_id;
-                        $reservasi_online->petugas_pemeriksa_id    = $petugas_pemeriksa->first()->id;
-                        $reservasi_online->ruangan_id = $petugas_pemeriksa->first()->ruangan_id;
+                        $reservasi_online->staf_id              = $petugas_pemeriksa->first()->staf_id;
+                        $reservasi_online->petugas_pemeriksa_id = $petugas_pemeriksa->first()->id;
+                        $reservasi_online->ruangan_id           = $petugas_pemeriksa->first()->ruangan_id;
                         $reservasi_online->save();
                     }
                 }
@@ -3689,10 +3689,6 @@ class WablasController extends Controller
                 $idx = (int)$msg - 1;
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
 
-                Log::info('======================');
-                Log::info('petugas_pemeriksa');
-                Log::info( $pp );
-                Log::info('======================');
                 $this->chatBotLog(__LINE__);
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
@@ -4369,11 +4365,6 @@ class WablasController extends Controller
         /** @var \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $list */
         $list = collect($this->petugas_pemeriksa_sekarang($reservasi_online));
 
-        Log::info('======================');
-        Log::info('list');
-        Log::info($list);
-        Log::info('======================');
-
         // Hindari N+1 saat akses $petugas->staf (jika Eloquent collection)
         if (method_exists($list, 'loadMissing')) {
             $list->loadMissing('staf');
@@ -4387,7 +4378,7 @@ class WablasController extends Controller
                 return 'Tidak ada petugas ' . ucwords($tipe) . ' yang bertugas saat ini';
             }
 
-            $message = 'Silakan pilih Dokter pemeriksa.' . PHP_EOL;
+            $message = 'Silahkan pilih Dokter pemeriksa.' . PHP_EOL;
 
             foreach ($list as $k => $petugas) {
                 $no   = $k + 1;
@@ -5758,9 +5749,12 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $nowTime = $nowJkt->format('H:i:s');
 
         // === KASUS KHUSUS: dokter gigi & antrian online dimatikan ===
+        Log::info(__LINE__);
+        Log::info( $this->tenant->dentist_queue_enabled );
+        Log::info(__LINE__);
         if (
             (int) ($reservasi_online->tipe_konsultasi_id ?? 0) === 2 &&
-            (int) ($this->tenant->dentist_queue_enabled ?? 0) === 0 &&
+            (int) ($this->tenant->dentist_queue_enabled ?? 0) === 1 &&
             $this->no_telp !== '6281381912803'
         ) {
             $today    = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
