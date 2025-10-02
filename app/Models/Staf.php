@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Log;
 
 class Staf extends Model
 {
@@ -13,6 +14,12 @@ class Staf extends Model
     }
     public function getNamaDenganGelarAttribute(){
         $nama = $this->nama_panggilan ?? $this->nama;
+        if (is_null(  $this->titel  )) {
+            Log::info("==================================");
+            Log::info( $this->id );
+            Log::info( $this->titel_id );
+            Log::info("==================================");
+        }
         return tambahkanGelar($this->titel->singkatan, substr($nama, 0, 15));
     }
 }
