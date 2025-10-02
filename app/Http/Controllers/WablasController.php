@@ -5749,42 +5749,37 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $nowTime = $nowJkt->format('H:i:s');
 
         // === KASUS KHUSUS: dokter gigi & antrian online dimatikan ===
-        $this->chatBotLog(__LINE__);
-        Log::info( $this->tenant->dentist_queue_enabled );
-        $this->chatBotLog(__LINE__);
         if (
             (int) ($reservasi_online->tipe_konsultasi_id ?? 0) === 2 &&
+            /* (int) ($this->tenant->dentist_queue_enabled ?? 0) === 1 && */
             (int) ($this->tenant->dentist_queue_enabled ?? 0) === 0 &&
-            $this->no_telp == '6281381912803'
+            $this->no_telp === '6281381912803'
         ) {
-            $this->chatBotLog(__LINE__);
-            $today    = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
-            $tenantId = $reservasi_online->tenant_id
-                ?? ($this->tenant->id ?? 1);
+            $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
 
             $baseNama = \App\Models\PetugasPemeriksa::query()
+                ->with('staf:id,nama,tenant_id') // eager load supaya aman akses nama
                 ->whereDate('petugas_pemeriksas.tanggal', $today)
                 ->where('petugas_pemeriksas.tipe_konsultasi_id', 2)
                 ->where('petugas_pemeriksas.schedulled_booking_allowed', 1)
                 ->where('petugas_pemeriksas.tenant_id', $tenantId);
 
-            Log::info( $base_nama->first()->staf->nama );
+            // log aman (nullsafe)
+            \Log::info($baseNama->first()?->staf?->nama);
 
-            $namaDokter = $baseNama
-                ->join('stafs as stf', 'stf.id', '=', 'petugas_pemeriksas.staf_id')
-                // (opsional) jika kolom stf.tenant_id ada dan harus sama:
-                ->where('stf.tenant_id', $tenantId)
-                ->orderBy('stf.nama', 'asc')
-                ->distinct()
-                ->pluck('stf.nama');
-
-            return $namaDokter;
+            // tetap return KOLEKSI MODEL seperti cabang normal
+            return $baseNama
+                ->whereHas('staf', fn($q) => $q->where('tenant_id', $tenantId))
+                ->orderBy('petugas_pemeriksas.jam_mulai', 'asc')
+                ->get()
+                ->unique('id')
+                ->values();
         }
 
-        // === BEHAVIOR EXISTING ===
-        //
-        $base = PetugasPemeriksa::query()
-            ->where('petugas_pemeriksas.tanggal', $today)
+        // === BEHAVIOR EXISTING (tetap model) ===
+        $base = \App\Models\PetugasPemeriksa::query()
+            ->with('staf:id,nama,tenant_id')
+            ->whereDate('petugas_pemeriksas.tanggal', $today)
             ->where('petugas_pemeriksas.tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id);
 
         if (!empty($reservasi_online->tenant_id)) {
@@ -5795,12 +5790,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         $petugas_pemeriksas = (clone $base)
             ->where(function($q) use ($nowTime) {
-                // A: aktif sekarang
                 $q->where(function($qq) use ($nowTime) {
                     $qq->where('petugas_pemeriksas.jam_mulai', '<=', $nowTime)
                        ->where('petugas_pemeriksas.jam_akhir', '>=', $nowTime);
                 })
-                // C: scheduling-open
                 ->orWhere(function($qq) use ($nowTime) {
                     $qq->where('petugas_pemeriksas.schedulled_booking_allowed', 1)
                        ->where('petugas_pemeriksas.jam_akhir', '>=', $nowTime)
@@ -5808,10 +5801,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                            $qc->where(function($q1) use ($nowTime) {
                                $q1->whereNotNull('petugas_pemeriksas.jam_mulai_booking_online')
                                   ->where('petugas_pemeriksas.jam_mulai_booking_online', '<=', $nowTime)
-                                  ->whereRaw(
-                                      "TIME(?) <= TIME(DATE_SUB(petugas_pemeriksas.jam_mulai, INTERVAL 30 MINUTE))",
-                                      [$nowTime]
-                                  );
+                                  ->whereRaw("TIME(?) <= TIME(DATE_SUB(petugas_pemeriksas.jam_mulai, INTERVAL 30 MINUTE))", [$nowTime]);
                            })
                            ->orWhere(function($q2) use ($nowTime) {
                                $q2->whereNull('petugas_pemeriksas.jam_mulai_booking_online')
@@ -5825,7 +5815,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ->unique('id')
             ->values();
 
-        // … lanjut seperti logic Anda …
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
