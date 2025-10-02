@@ -3689,6 +3689,7 @@ class WablasController extends Controller
                 $idx = (int)$msg - 1;
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
 
+                $this->chatBotLog(__LINE__);
                 // set staf & ruangan
                 $reservasi_online->staf_id    = $pp->staf_id;
                 $reservasi_online->petugas_pemeriksa_id    = $pp->petugas_pemeriksa_id;
@@ -3723,9 +3724,10 @@ class WablasController extends Controller
                 $reservasi_online->save();
 
             } else {
+                $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
             }
-
+            $this->chatBotLog(__LINE__);
         // ===== waitlist (ketika kuota penuh) =====
         } elseif ((int)($reservasi_online->schedulled_booking ?? 0) === 2 && is_null($reservasi_online->waitlist_flag)) {
             if (in_array($msg, ['ya','y','1'], true)) {
