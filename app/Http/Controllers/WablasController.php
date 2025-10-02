@@ -5749,14 +5749,15 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $nowTime = $nowJkt->format('H:i:s');
 
         // === KASUS KHUSUS: dokter gigi & antrian online dimatikan ===
-        Log::info(__LINE__);
+        $this->chatBotLog(__LINE__);
         Log::info( $this->tenant->dentist_queue_enabled );
-        Log::info(__LINE__);
+        $this->chatBotLog(__LINE__);
         if (
             (int) ($reservasi_online->tipe_konsultasi_id ?? 0) === 2 &&
-            (int) ($this->tenant->dentist_queue_enabled ?? 0) === 1 &&
+            (int) ($this->tenant->dentist_queue_enabled ?? 0) === 0 &&
             $this->no_telp !== '6281381912803'
         ) {
+            $this->chatBotLog(__LINE__);
             $today    = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
             $tenantId = $reservasi_online->tenant_id
                 ?? ($this->tenant->id ?? 1);
