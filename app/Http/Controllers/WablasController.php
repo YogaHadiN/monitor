@@ -4616,7 +4616,7 @@ class WablasController extends Controller
                 $jamMulaiGigi   = $this->parseTodayTime($jamMulaiGigiStr, $tz, $now);
                 $jamTerakhirQR  = $jamMulaiGigi->copy()->subMinutes(15)->format('H:i');
 
-                $lines[] = "- Melakukan *scan QR* di klinik * sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktik dimulai) atau reservasi ini otomatis dibatalkan oleh sistem";
+                $lines[] = "- Melakukan *scan QR* di klinik *sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktik dimulai) atau reservasi ini otomatis dibatalkan oleh sistem";
             } else {
                 // Fallback bila jadwal gigi belum di-set
                 $lines[] = '- Melakukan *scan QR* di klinik *paling lambat 15 menit* sebelum jam mulai pemeriksaan gigi.';
