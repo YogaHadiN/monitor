@@ -4590,6 +4590,10 @@ class WablasController extends Controller
 
     private function tanyaSyaratdanKetentuan($reservasi_online): string
     {
+        Log::info('=====================');
+        Log::info('reservasi_online');
+        Log::info($reservasi_online);
+        Log::info('=====================');
         $tz      = 'Asia/Jakarta';
         $now     = \Carbon\Carbon::now($tz);
         $tipe_id = (int) ($reservasi_online->tipe_konsultasi_id ?? 0);
@@ -4608,6 +4612,7 @@ class WablasController extends Controller
             $lines[] = '- Jika antrean terlewat, silakan mengambil antrean kembali.';
             $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
         } elseif ($tipe_id === 2) {
+            ooooooo
             // Dokter gigi
             // Ambil jam mulai dari jadwal gigi bila tersedia (contoh `$this->jadwalGigi['jam_mulai'] = "17:00"`)
             $jamMulaiGigiStr = $reservasi_online->petugas_pemeriksa->jam_mulai_default;
