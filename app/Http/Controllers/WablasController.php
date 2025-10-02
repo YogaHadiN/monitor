@@ -5755,7 +5755,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         if (
             (int) ($reservasi_online->tipe_konsultasi_id ?? 0) === 2 &&
             (int) ($this->tenant->dentist_queue_enabled ?? 0) === 0 &&
-            $this->no_telp !== '6281381912803'
+            $this->no_telp == '6281381912803'
         ) {
             $this->chatBotLog(__LINE__);
             $today    = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
@@ -5780,6 +5780,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         }
 
         // === BEHAVIOR EXISTING ===
+        //
         $base = PetugasPemeriksa::query()
             ->where('petugas_pemeriksas.tanggal', $today)
             ->where('petugas_pemeriksas.tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id);
