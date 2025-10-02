@@ -5761,7 +5761,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
             $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
 
-            $query = \App\Models\PetugasPemeriksa::with('staf') // eager load
+            $query = \App\Models\PetugasPemeriksa::with('staf.titel') // eager load
                 ->whereDate('tanggal', $today)
                 ->where('tipe_konsultasi_id', 2)
                 ->where('schedulled_booking_allowed', 1)
@@ -5780,6 +5780,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         // === BEHAVIOR EXISTING (tetap model) ===
         $base = \App\Models\PetugasPemeriksa::query()
+            ->with('staf.titel')
             ->whereDate('petugas_pemeriksas.tanggal', $today)
             ->where('petugas_pemeriksas.tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id);
 
