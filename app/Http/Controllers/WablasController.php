@@ -5757,23 +5757,29 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         ) {
             $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
 
-            $baseNama = \App\Models\PetugasPemeriksa::query()
-                ->with('staf:id,nama,tenant_id') // eager load supaya aman akses nama
+            $query = \App\Models\PetugasPemeriksa::query()
+                ->with('staf:id,nama,tenant_id') // eager load
                 ->whereDate('petugas_pemeriksas.tanggal', $today)
                 ->where('petugas_pemeriksas.tipe_konsultasi_id', 2)
                 ->where('petugas_pemeriksas.schedulled_booking_allowed', 1)
-                ->where('petugas_pemeriksas.tenant_id', $tenantId);
-
-            // log aman (nullsafe)
-            \Log::info($baseNama->first()?->staf?->nama);
-
-            // tetap return KOLEKSI MODEL seperti cabang normal
-            return $baseNama
+                ->where('petugas_pemeriksas.tenant_id', $tenantId)
                 ->whereHas('staf', fn($q) => $q->where('tenant_id', $tenantId))
-                ->orderBy('petugas_pemeriksas.jam_mulai', 'asc')
-                ->get()
+                ->orderBy('petugas_pemeriksas.jam_mulai', 'asc');
+
+            // === log SQL ===
+            \Log::info("SQL: ".$query->toSql(), $query->getBindings());
+
+            // kalau Laravel ≥9.21 ada toRawSql()
+            if (method_exists($query->getQuery(), 'toRawSql')) {
+                \Log::info("RAW SQL: ".$query->toRawSql());
+            }
+
+            // === eksekusi ===
+            return $query->get()
                 ->unique('id')
                 ->values();
+
+            // buat log untuk return raw sql
         }
 
         // === BEHAVIOR EXISTING (tetap model) ===
