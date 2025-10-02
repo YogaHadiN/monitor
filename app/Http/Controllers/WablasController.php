@@ -4595,6 +4595,8 @@ class WablasController extends Controller
         Log::info('OKE');
         Log::info('reservasi_online');
         Log::info($reservasi_online);
+        Log::info('model');
+        Log::info(class_basename($reservasi_online));
         Log::info('=====================');
         Log::info('=====================');
         $tz      = 'Asia/Jakarta';
