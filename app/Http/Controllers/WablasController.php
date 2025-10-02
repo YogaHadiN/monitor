@@ -5755,6 +5755,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             (int) ($this->tenant->dentist_queue_enabled ?? 0) === 0 &&
             $this->no_telp === '6281381912803'
         ) {
+
+            Log::info("reservasi_online->tenant_id");
+            Log::info( $reservasi_online->tenant_id );
+
             $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
 
             $query = \App\Models\PetugasPemeriksa::query()
