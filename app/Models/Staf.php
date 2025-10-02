@@ -16,8 +16,10 @@ class Staf extends Model
         $nama = $this->nama_panggilan ?? $this->nama;
         if (is_null(  $this->titel  )) {
             Log::info("==================================");
+            Log::info("MODEL STAF");
             Log::info( $this->id );
             Log::info( $this->titel_id );
+            Log::info( $this );
             Log::info("==================================");
         }
         return tambahkanGelar($this->titel->singkatan, substr($nama, 0, 15));
