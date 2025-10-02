@@ -5780,7 +5780,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         // === BEHAVIOR EXISTING (tetap model) ===
         $base = \App\Models\PetugasPemeriksa::query()
-            ->with('staf:id,nama,tenant_id')
             ->whereDate('petugas_pemeriksas.tanggal', $today)
             ->where('petugas_pemeriksas.tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id);
 
