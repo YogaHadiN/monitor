@@ -6257,6 +6257,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     public function waitlistReservationConfirmation()
     {
+        $this->chatBotLog(__LINE__);
         $tz  = 'Asia/Jakarta';
         $now = \Carbon\Carbon::now($tz);
 
