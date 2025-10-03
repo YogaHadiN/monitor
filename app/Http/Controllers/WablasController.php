@@ -6290,6 +6290,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         ->whereBetween('created_at', [$startToday, $endToday])
                         ->orderByDesc('created_at');
 
+            Log::info('QUERY');
+            Log::info( $query->toRawSql() );
             return $query->first();
         };
 
