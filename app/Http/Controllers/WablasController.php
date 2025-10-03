@@ -6289,8 +6289,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         ->lockForUpdate()
                         ->whereBetween('created_at', [$startToday, $endToday])
                         ->orderByDesc('created_at');
-            Log::info('QUERY');
-            Log::info($query->toRawSql());
 
             return $query->first();
         };
@@ -6370,6 +6368,14 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
             } catch (\Throwable $e) {
                 \DB::rollBack();
+
+                // simpan ke laravel.log
+                \Log::error("Waitlist Confirmation gagal", [
+                    'message' => $e->getMessage(),
+                    'file'    => $e->getFile(),
+                    'line'    => $e->getLine(),
+                    'trace'   => $e->getTraceAsString(),
+                ]);
                 $this->autoReply("Terjadi kendala saat konfirmasi. Coba beberapa saat lagi ya, Kak.");
                 return;
             }
