@@ -6341,7 +6341,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $stafNama = optional($waitlist->staf)->nama_dengan_gelar
                             ?? (optional($waitlist->staf)->nama ?? 'dokter');
 
-                $batasScan = Carbon::parse( $waitlist->petugas_pemeriksa->jam_mulai )->subMinutes(15);
+                $batasScan = Carbon::parse( $waitlist->petugas_pemeriksa->jam_mulai )->subMinutes(15)->format('H:i');
                 // Pastikan rute ada; kalau tidak ada, fallback ke placeholder
 
 
@@ -6352,12 +6352,12 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     "Halo {$waitlist->nama},\n\n".
                     "Konfirmasi *waitlist* Kakak berhasil ✅\n\n".
                     "Reservasi untuk *{$stafNama}* sudah didaftarkan.\n\n".
-                    "Jangan lupa *scan QR Code* di klinik paling lambat jam *{$batasScan}* (15 menit sebelum jadwal praktik dimulai).\n\n".
+                    "Jangan lupa *scan QR Code* di klinik sebelum pukul *{$batasScan}* (15 menit sebelum jadwal praktik dimulai).\n\n".
                     "Akses QR Code (simpan nomor WA ini agar tautan bisa diklik):\n{$qrLink}\n\n".
                     "Terima kasih 🙏"
                 );
 
-                /* resetWhatsappRegistration( $this->no_telp ); */
+                resetWhatsappRegistration( $this->no_telp );
                 return;
 
             } catch (\Throwable $e) {
