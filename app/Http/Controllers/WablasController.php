@@ -6284,11 +6284,11 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $query = \App\Models\ReservasiOnline::query()
                         ->with(['staf','petugas_pemeriksa'])
                         ->where('waitlist_flag', 1)
-                        ->where('waitlist_reservation_inquiry_sent', 1)
+                        ->where('waitlist_reservation_inquiry_sent', 0)
                         ->where('no_telp', $this->no_telp)
                         ->lockForUpdate()
-                        ->whereBetween('updated_at', [$startToday, $endToday])
-                        ->orderByDesc('updated_at');
+                        ->whereBetween('created_at', [$startToday, $endToday])
+                        ->orderByDesc('created_at');
 
             return $query->first();
         };
