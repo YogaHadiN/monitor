@@ -6286,58 +6286,17 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
-                // Cari baris petugas hari ini dengan window waktu masih relevan
-                $slotRow = \DB::table('petugas_pemeriksas')
-                    ->where('staf_id', $waitlist->staf_id)
-                    ->whereDate('tanggal', $now->toDateString())
-                    ->where('jam_mulai', '<=', $now->format('H:i'))
-                    ->where('jam_akhir', '>=', $now->format('H:i'))
-                    ->orderByDesc('id')
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$slotRow) {
-                    \DB::rollBack();
-                    $this->autoReply("Jadwal dokter belum aktif saat ini. Kami pertahankan di waitlist ya, Kak.");
-                    return;
-                }
-
-                $maxBooking = (int)($slotRow->max_booking ?? 1);
-
-                // Hitung jumlah booking aktif hari ini utk staf tsb dengan benar-benar mengunci baris
-                $existingIds = \App\Models\ReservasiOnline::query()
-                    ->where('staf_id', $waitlist->staf_id)
-                    ->where('schedulled_booking', 1)
-                    ->where('reservasi_selesai', 0) // aktif (belum selesai)
-                    ->whereBetween('created_at', [$startToday, $endToday])
-                    ->lockForUpdate()
-                    ->pluck('id');
-
-                if ($existingIds->count() >= $maxBooking) {
+                if ($waitlist->petugas_pemeriksa->max_booking_achieved) {
                     \DB::rollBack();
                     $this->autoReply(
                         "Mohon maaf, kuota untuk saat ini *penuh*.\n".
                         "Kakak tetap kami simpan di *waitlist*. Jika ada pembukaan slot, kami akan menghubungi kembali."
                     );
+                    $waitlist->waitlist_reservation_inquiry_sent = 0;
+                    $waitlist->save();
                     return;
                 }
 
-                // Jika sebelumnya sudah terkonfirmasi
-                if ((int)$waitlist->registering_confirmation === 1 || (int)$waitlist->schedulled_booking === 1) {
-                    \DB::commit();
-                    $qrLink = route('schedulled_reservations.qr-view', ['reservasi' => $waitlist->id]);
-                    $this->autoReply(
-                        "Kakak sudah terkonfirmasi sebelumnya ✅\n\n".
-                        "Akses QR Code:\n{$qrLink}\n\n".
-                        "Catatan: simpan nomor WhatsApp ini di kontak agar tautan bisa diklik."
-                    );
-                    return;
-                }
-
-                // Pastikan petugas_pemeriksa_id terisi jika Anda memerlukannya
-                if (empty($waitlist->petugas_pemeriksa_id)) {
-                    $waitlist->petugas_pemeriksa_id = (int)$slotRow->id;
-                }
 
                 // Konversi ke booking aktif, JANGAN tandai selesai
                 $waitlist->waitlist_flag            = 0;
