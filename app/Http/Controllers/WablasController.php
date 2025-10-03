@@ -6330,7 +6330,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
                 // Generate QR & simpan expiry
                 $waitlist->qrcode        = $this->generateQrCodeForOnlineReservation('B', $waitlist);
-                $waitlist->qr_expires_at = $now->copy()->addMinutes(90);
                 $waitlist->save();
 
                 // Optional: batalkan waitlist lain milik nomor yang sama hari ini
