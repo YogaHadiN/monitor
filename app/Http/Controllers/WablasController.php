@@ -427,6 +427,9 @@ class WablasController extends Controller
                         } else if ( $this->cekListMingguanInputExists() ) { // Jika ada cek list bulanan
                             $this->chatBotLog(__LINE__);
                             return $this->prosesCekListMingguanInput(); // proses cek list bulanan
+                        } else if( $this->rekonfirmationWaitlistReservation() ) {
+                            $this->chatBotLog(__LINE__);
+                            $this->waitlistReservationConfirmation(); // buat main menu
                         } else if ( $this->cekListHarianExists() ) { // Jika ada cek list harian
                             $this->chatBotLog(__LINE__);
                             return $this->prosesCekListHarian(); // proses cek list harian
@@ -460,9 +463,6 @@ class WablasController extends Controller
                         } else if( $this->noTelpDalamChatWithAdmin() ) {
                             $this->chatBotLog(__LINE__);
                             $this->createWhatsappChat(); // buat main menu
-                        } else if( $this->rekonfirmationWaitlistReservation() ) {
-                            $this->chatBotLog(__LINE__);
-                            $this->waitlistReservationConfirmation(); // buat main menu
                         } else if( $this->pasienTidakDalamAntrian() ) {
                             $this->chatBotLog(__LINE__);
                             return $this->createWhatsappMainMenu(); // buat main menu
