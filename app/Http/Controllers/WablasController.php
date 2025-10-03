@@ -6351,9 +6351,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     : $now->copy()->addMinutes(90)->format('H:i');
 
                 // Pastikan rute ada; kalau tidak ada, fallback ke placeholder
-                $qrLink = function_exists('route')
-                    ? route('schedulled_reservations.qr-view', ['reservasi' => $waitlist->id])
-                    : 'QR link tidak tersedia';
 
                 $qrLink = url( '/schedulled_reservations/' . $waitlist->id. '/qr-view' );
 
