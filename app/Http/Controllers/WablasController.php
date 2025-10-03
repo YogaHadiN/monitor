@@ -1102,7 +1102,6 @@ class WablasController extends Controller
      */
     private function ulangiRegistrasiWhatsapp($model)
     {
-        $model->registrasi_pembayaran_id          = null;
         $model->nama                              = null;
         $model->tanggal_lahir                     = null;
         $model->register_previously_saved_patient = null;
@@ -3706,7 +3705,7 @@ class WablasController extends Controller
                     if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) {
                         if ($this->kuotaBookingPetugasPenuh($pp, $reservasi_online->tipe_konsultasi_id)) {
                             // penuh → tawarkan waitlist
-                            $reservasi_online->schedulled_booking = 2;    // 2 = penuh
+                            $reservasi_online->schedulled_booking = 1;
                             $reservasi_online->waitlist_flag      = null; // belum memilih
                             $reservasi_online->save();
 

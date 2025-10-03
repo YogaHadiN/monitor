@@ -58,7 +58,7 @@ class FasilitasController extends Controller
 			 'postAntrianPoli'
 		]]);
 	}
-	
+
 	public function antrianPost(){
         $id                 = $this->input_ruangan_id;
         $tipe_konsultasi_id = $this->input_tipe_konsultasi_id;
@@ -78,7 +78,7 @@ class FasilitasController extends Controller
         }
 
         if (
-            is_null( $id ) 
+            is_null( $id )
         ) {
             if (!is_null( $staf_id )) {
                 $petugas = PetugasPemeriksa::where('tanggal', date('Y-m-d'))
@@ -123,7 +123,7 @@ class FasilitasController extends Controller
 		$timestamp = date('Y-m-d H:i:s');
 		return compact('nomor_antrian', 'jenis_antrian', 'timestamp' );
 	}
-	
+
 	public function listAntrian(){
         $antrians = Antrian::with('jenis_antrian')->where('antriable_type', 'App\\Models\\Antrian')
                                                   ->orderBy('sudah_hadir_di_klinik', 'desc')
@@ -154,7 +154,7 @@ class FasilitasController extends Controller
 			$prolanis_dm          = $pasien->prolanis_dm;
 			$prolanis_ht          = $pasien->prolanis_ht;
 		} catch (\Exception $e) {
-			
+
 		}
 
 		$p                                                    = new PasiensController;
@@ -216,10 +216,4 @@ class FasilitasController extends Controller
         }
         return $kode_unik;
     }
-    /**
-     * undocumented function
-     *
-     * @return void
-     */
 }
-
