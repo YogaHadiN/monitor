@@ -6301,6 +6301,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 \DB::beginTransaction();
 
                 $waitlist = $getTodayWaitlist();
+                $this->chatBotLog(__LINE__);
+                Log::info(waitlist->exists);
 
                 if (!$waitlist) {
                     \DB::rollBack();
@@ -6308,6 +6310,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
+                $this->chatBotLog(__LINE__);
+                Log::info(waitlist->exists);
                 // Pastikan relasi ada dan cek kuota
                 $pp = $waitlist->petugas_pemeriksa ?? null;
                 if ($pp && ($pp->max_booking_achieved ?? false)) {
@@ -6334,13 +6338,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $waitlist->qrcode        = $this->generateQrCodeForOnlineReservation('B', $waitlist);
                 $waitlist->save();
 
-                // Optional: batalkan waitlist lain milik nomor yang sama hari ini
-                \App\Models\ReservasiOnline::query()
-                    ->where('id', '<>', $waitlist->id)
-                    ->where('no_telp', $this->no_telp)
-                    ->where('waitlist_flag', 1)
-                    ->whereBetween('created_at', [$startToday, $endToday])
-                    ->update(['waitlist_reservation_inquiry_sent' => 0]);
+                $this->chatBotLog(__LINE__);
+                Log::info(waitlist->exists);
 
                 \DB::commit();
 
@@ -6348,22 +6347,27 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $stafNama = optional($waitlist->staf)->nama_dengan_gelar
                             ?? (optional($waitlist->staf)->nama ?? 'dokter');
 
-                $batasScan = $waitlist->qr_expires_at
-                    ? $waitlist->qr_expires_at->timezone($tz)->format('H:i')
-                    : $now->copy()->addMinutes(90)->format('H:i');
-
+                $batasScan = Carbon::parse( $waitlist->petugas_pemeriksa->jam_mulai )->subMinutes(15);
                 // Pastikan rute ada; kalau tidak ada, fallback ke placeholder
 
-                $qrLink = url( '/schedulled_reservations/' . $waitlist->id. '/qr-view' );
+
+                $qrLink = 'https://www.klinikjatielok.com/schedulled_booking/qr/' . encrypt_string( $waitlist->id );
+
+                $this->chatBotLog(__LINE__);
+                Log::info(waitlist->exists);
 
                 $this->autoReply(
                     "Halo {$waitlist->nama},\n\n".
                     "Konfirmasi *waitlist* Kakak berhasil ✅\n\n".
                     "Reservasi untuk *{$stafNama}* sudah didaftarkan.\n\n".
-                    "Jangan lupa *scan QR Code* di klinik paling lambat jam *{$batasScan}* (±90 menit sejak konfirmasi).\n\n".
+                    "Jangan lupa *scan QR Code* di klinik paling lambat jam *{$batasScan}* (15 menit sebelum jadwal praktik dimulai).\n\n".
                     "Akses QR Code (simpan nomor WA ini agar tautan bisa diklik):\n{$qrLink}\n\n".
                     "Terima kasih 🙏"
                 );
+
+                $this->chatBotLog(__LINE__);
+                Log::info(waitlist->exists);
+                /* resetWhatsappRegistration( $this->no_telp ); */
                 return;
 
             } catch (\Throwable $e) {
