@@ -454,9 +454,6 @@ class WablasController extends Controller
                         } else if ( $this->noTelpAdaDiAntrianPeriksa() ) {
                             $this->chatBotLog(__LINE__);
                             return $this->updateNotifikasPanggilanUntukAntrian(); // notifikasi untuk panggilan
-                        } else if( $this->validasiTanggalDanNamaPasienKeluhan() ) {
-                            $this->chatBotLog(__LINE__);
-                            return $this->balasanValidasiTanggalDanNamaPasienKeluhan();
                         } else if( $this->validasiWaktuPelayanan() ) {
                             $this->chatBotLog(__LINE__);
                             return $this->balasanKonfirmasiWaktuPelayanan();
@@ -5674,43 +5671,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
          return $message;
     }
 
-    public function balasanValidasiTanggalDanNamaPasienKeluhan(){
-        $tanggal = $this->convertToPropperDate( $this->message );
-        $today = Carbon::now();
-        $complain = Complain::where('no_telp', $this->no_telp)
-                             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
-                            ->first();
-        if (
-            !is_null( $complain ) &&
-            is_null( $complain->tanggal_kejadian )
-        ) {
-            if (!is_null( $tanggal )) {
-                $complain->tanggal_kejadian = $tanggal;
-                $complain->save();
-
-                $this->autoReply("Mohon diinfokan nama pasien saat keluhan tersebut terjadi" );
-            } else {
-                $message = $this->tanyaKapanKeluhanTerjadi();
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= "Input yang kakak masukkan tidak dikenali. Mohon diulangi";
-            }
-        } elseif (
-            !is_null( $complain ) &&
-            !is_null( $complain->tanggal_kejadian ) &&
-            is_null( $complain->nama_pasien )
-        )  {
-            $complain->nama_pasien = $this->message;
-            $complain->save();
-            $message = 'Terima kasih atas informasi yang kakak berikan';
-            $message .= PHP_EOL;
-            $message .= 'Kami akan berusaha semaksimal mungkin agar keluhan yang serupa tidak terjadi kembali';
-            $message .= PHP_EOL;
-            $message .= 'Terima kasih telah membantu kami untuk dapat memperbaiki pelayanan kami';
-            $this->whatsapp_bot->delete();
-            $this->autoReply($message );
-        }
-    }
 
     public function tanyaKapanKeluhanTerjadi(){
         $message = 'Mohon dapat diinfokan tanggal keluhan tersebut terjadi';
@@ -6254,7 +6214,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     public function waitlistReservationConfirmation()
     {
-        $this->chatBotLog(__LINE__);
         $tz  = 'Asia/Jakarta';
         $now = \Carbon\Carbon::now($tz);
 
@@ -6290,8 +6249,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         ->whereBetween('created_at', [$startToday, $endToday])
                         ->orderByDesc('created_at');
 
-            Log::info('QUERY');
-            Log::info( $query->toRawSql() );
             return $query->first();
         };
 
