@@ -6301,8 +6301,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 \DB::beginTransaction();
 
                 $waitlist = $getTodayWaitlist();
-                $this->chatBotLog(__LINE__);
-                Log::info(waitlist->exists);
 
                 if (!$waitlist) {
                     \DB::rollBack();
@@ -6310,8 +6308,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
-                $this->chatBotLog(__LINE__);
-                Log::info(waitlist->exists);
                 // Pastikan relasi ada dan cek kuota
                 $pp = $waitlist->petugas_pemeriksa ?? null;
                 if ($pp && ($pp->max_booking_achieved ?? false)) {
@@ -6338,8 +6334,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $waitlist->qrcode        = $this->generateQrCodeForOnlineReservation('B', $waitlist);
                 $waitlist->save();
 
-                $this->chatBotLog(__LINE__);
-                Log::info(waitlist->exists);
 
                 \DB::commit();
 
@@ -6353,8 +6347,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
                 $qrLink = 'https://www.klinikjatielok.com/schedulled_booking/qr/' . encrypt_string( $waitlist->id );
 
-                $this->chatBotLog(__LINE__);
-                Log::info(waitlist->exists);
 
                 $this->autoReply(
                     "Halo {$waitlist->nama},\n\n".
@@ -6365,8 +6357,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     "Terima kasih 🙏"
                 );
 
-                $this->chatBotLog(__LINE__);
-                Log::info(waitlist->exists);
                 /* resetWhatsappRegistration( $this->no_telp ); */
                 return;
 
