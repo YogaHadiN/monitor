@@ -5673,9 +5673,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
          $message .= 'Balas dengan angka *1 atau 2* sesuai dengan informasi di atas';
          return $message;
     }
-    public function validasiTanggalDanNamaPasienKeluhan(){
-        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(15);
-    }
 
     public function balasanValidasiTanggalDanNamaPasienKeluhan(){
         $tanggal = $this->convertToPropperDate( $this->message );
