@@ -6355,6 +6355,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     ? route('schedulled_reservations.qr-view', ['reservasi' => $waitlist->id])
                     : 'QR link tidak tersedia';
 
+                $qrLink = url( '/schedulled_reservations/' . $waitlist->id. '/qr-view' );
+
                 $this->autoReply(
                     "Halo {$waitlist->nama},\n\n".
                     "Konfirmasi *waitlist* Kakak berhasil ✅\n\n".
