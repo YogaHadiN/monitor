@@ -66,7 +66,7 @@ class PetugasPemeriksa extends Model
         }
     }
     public function antrian(){
-        return $this->hasMany('Antrian'::class);
+        return $this->hasMany(Antrian::class);
     }
 
     public function getWaktuTungguAttribute(){
