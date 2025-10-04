@@ -65,18 +65,8 @@ class PetugasPemeriksa extends Model
             return false;
         }
     }
-    public function getAntrianAttribute(){
-        return Antrian::whereDate("created_at",  date('Y-m-d') )
-                                ->whereRaw(
-                                    "
-                                        (
-                                            antriable_type = 'App\\\\\Models\\\\\Antrian' or
-                                            antriable_type = 'App\\\\\Models\\\\\AntrianPoli' or
-                                            antriable_type = 'App\\\\\Models\\\\\AntrianPeriksa'
-                                        )
-                                    "
-                                    )->where('staf_id', $this->staf_id)
-                                ->get();
+    public function antrian(){
+        return $this->hasMany('Antrian'::class);
     }
 
     public function getWaktuTungguAttribute(){
