@@ -6026,7 +6026,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ->where('tipe_konsultasi_id', 2)
             ->whereDate('tanggal', $nowJkt->toDateString())
             ->where('schedulled_booking_allowed', 1)
-            ->orderBy('jam_mulai_booking_online', 'asc');
+            ->orderBy('jam_mulai_default', 'asc');
 
         Log::info('Query');
         Log::info( $query->toRawSql() );
