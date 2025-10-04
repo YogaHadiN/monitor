@@ -2195,7 +2195,8 @@ class WablasController extends Controller
                 ->with(['staf']) // sesuaikan kolom yg ada
                 ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
                 ->whereDate('tanggal', $now->toDateString())
-                ->where('schedulled_booking_allowed', 1)   // ganti ke 'scheduled_booking_allowed' bila itu yg di DB
+                ->where('jam_mulai_default', '>',  $now->toTimeString())
+                ->where('schedulled_booking_allowed', 1)
                 ->orderBy('jam_mulai_default', 'asc')
                 ->get();
 
