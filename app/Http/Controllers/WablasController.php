@@ -6062,7 +6062,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             if ($rowMulaiOnline && !empty($rowMulaiOnline->jam_mulai_default)) {
                 $this->chatBotLog(__LINE__);
                 $jam_mulai_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_default, 'Asia/Jakarta');
-                $jam_akhir_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_akhir_default, 'Asia/Jakarta');
+                $jam_akhir_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_akhir_default, 'Asia/Jakarta')->subMinutes(30);
                 $deadline          = $jam_mulai_default->copy()->subMinutes(30);
                 $tipe_konsultasi = optional($rowMulaiOnline->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi';
                 $tipe_konsultasi = ucwords( $tipe_konsultasi );
