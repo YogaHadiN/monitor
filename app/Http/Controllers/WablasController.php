@@ -6070,12 +6070,19 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 if ($nowJkt->gte($deadline)) {
                     $this->chatBotLog(__LINE__);
                     $message  = "Pendaftaran online terjadwal {$tipe_konsultasi} berakhir pukul {$deadline->format('H:i')}.";
-                    $message .= PHP_EOL . "{$nama_dokter}: " . $jam_mulai_default->format('H:i') . '-' . $jam_akhir_default->format('H:i');
-                    if ( $rowMulaiOnline->slot_pendaftaran ) {
-                        $message .= PHP_EOL . "Silakan daftar secara langsung di klinik (tersisa " . $rowMulaiOnline->slot_pendaftaran . " slot lagi) atau pilih jadwal di hari lain.";
-                    } else {
-                        $message .= PHP_EOL . 'Slot pendaftaran hari ini sudah habis';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= "Jadwal Dokter Gigi hari ini :";
+                    $petugas_pemeriksa_hari_ini = PetugasPemeriksa::where('tipe_konsultasi_id', $rowMulaiOnline->tipe_konsultasi_id)
+                                                                    ->whereDate('tanggal', $nowJkt)
+                                                                    ->get();
+                    foreach ($petugas_pemeriksa_hari_ini as $petugas_hari_ini) {
+                        $message .= PHP_EOL . "{$petugas_hari_ini->staf->nama_dengan_gelar}: " . Carbon::parse( $petugas_hari_ini->jam_mulai_default )->format('H:i') . '-' . Carbon::parse($petugas_hari_ini->jam_akhir_default)->subMinutes(30)->format('H:i');
+                        if ( $petugas_hari_ini->max_booking > 0 ) {
+                            $message .= "(tersisa " . $rowMulaiOnline->slot_pendaftaran . " slot lagi)";
+                        }
                     }
+
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= 'Ketik "Jadwal ' . $tipe_konsultasi. '" untuk melihat jadwal di hari lain';
