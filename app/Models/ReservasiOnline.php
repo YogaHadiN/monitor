@@ -25,6 +25,9 @@ class ReservasiOnline extends Model
     public function pasien(){
         return $this->belongsTo(Pasien::class);
     }
+    public function tipe_konsultasi(){
+        return $this->belongsTo(TipeKonsultasi::class);
+    }
     public function staf(){
         return $this->belongsTo(Staf::class);
     }
