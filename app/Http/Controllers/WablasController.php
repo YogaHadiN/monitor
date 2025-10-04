@@ -6008,6 +6008,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     public function validasiDokterPengambilanAntrianDokterGigi()
     {
         $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
+        $tigaPuluhMenitKeDepan = $nowJkt->copy()->addMinutes(30);
         // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
         if (
             $this->tenant &&
@@ -6019,34 +6020,24 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return $message;
         }
 
-        // 2) Scheduled booking: cari yang paling awal dan paling akhir (hari ini)
-        $rowMulaiOnline = \App\Models\PetugasPemeriksa::query()
+        $petugas_pemeriksa_terjadwal = \App\Models\PetugasPemeriksa::query()
+            ->with(['staf','tipe_konsultasi'])
             ->where('tipe_konsultasi_id', 2)
-            ->whereDate('tanggal', $nowJkt)
+            ->whereDate('tanggal', $nowJkt->toDateString())
+            ->where('jam_mulai_default', '>', $tigaPuluhMenitKeDepan->toTimeString()) // TIME vs Carbon
             ->where('schedulled_booking_allowed', 1)
             ->orderBy('jam_mulai_booking_online', 'asc')
-            ->first();
-
-        $rowMulaiTerakhir = \App\Models\PetugasPemeriksa::query()
-            ->where('tipe_konsultasi_id', 2)
-            ->whereDate('tanggal', $nowJkt)
-            ->where('schedulled_booking_allowed', 1)
-            ->orderBy('jam_mulai', 'desc')
-            ->first();
+            ->get();
 
         $dokter_gigi_q = \App\Models\PetugasPemeriksa::query()
             ->where('tipe_konsultasi_id', 2)
-            ->whereDate('tanggal', $nowJkt);
+            ->whereDate('tanggal', $nowJkt->toDateString());
 
-        if ($rowMulaiOnline || $rowMulaiTerakhir) {
-            $this->chatBotLog(__LINE__);
-            // 2a) Pastikan window scheduled booking sudah dibuka
-            //
-            if ($rowMulaiOnline && !empty($rowMulaiOnline->jam_mulai_booking_online)) {
-                $this->chatBotLog(__LINE__);
-                $jam_mulai_booking_online = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_booking_online, 'Asia/Jakarta');
+        if ($petugas_pemeriksa_terjadwal->isNotEmpty()) {       // ← perbaikan penting
+            $petugas_pemeriksa_terjadwal_awal = $petugas_pemeriksa_terjadwal->first();
+            if ($petugas_pemeriksa_terjadwal_awal && !empty($petugas_pemeriksa_terjadwal_awal->jam_mulai_booking_online)) {
+                $jam_mulai_booking_online = \Carbon\Carbon::parse($petugas_pemeriksa_terjadwal_awal->jam_mulai_booking_online, 'Asia/Jakarta');
                 if ($nowJkt->lt($jam_mulai_booking_online)) {
-                    $this->chatBotLog(__LINE__);
                     $message  = 'Pendaftaran online baru dimulai pada ' . $jam_mulai_booking_online->format('H:i');
                     $message .= PHP_EOL . 'Silakan mendaftar kembali setelah jam tersebut.';
                     $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
@@ -6054,77 +6045,38 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 }
             }
 
-            /**
-             * 2a-baru) Scheduled booking ditutup 30 menit sebelum jam_mulai_default
-             * Catatan: asumsikan kolom jam_mulai_default bertipe TIME/STRING (HH:MM:SS)
-             * Jika bertipe DATETIME, langsung parse tanpa toTimeString().
-             */
-            if ($rowMulaiOnline && !empty($rowMulaiOnline->jam_mulai_default)) {
-                $this->chatBotLog(__LINE__);
-                $jam_mulai_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_default, 'Asia/Jakarta');
-                $jam_akhir_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_akhir_default, 'Asia/Jakarta')->subMinutes(30);
-                $deadline          = $jam_mulai_default->copy()->subMinutes(30);
-                $tipe_konsultasi = optional($rowMulaiOnline->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi';
-                $tipe_konsultasi = ucwords( $tipe_konsultasi );
-                $nama_dokter = $rowMulaiOnline->staf->nama_dengan_gelar;
+            $petugas_pemeriksa_terjadwal_akhir = $petugas_pemeriksa_terjadwal->last();
+            if (!empty($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default)) {
+                $deadline = \Carbon\Carbon::parse($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default, 'Asia/Jakarta')->subMinutes(30);
+                $tipe_konsultasi = ucwords(optional($petugas_pemeriksa_terjadwal_akhir->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi');
+
                 if ($nowJkt->gte($deadline)) {
-                    $this->chatBotLog(__LINE__);
                     $message  = "Pendaftaran online terjadwal {$tipe_konsultasi} berakhir pukul {$deadline->format('H:i')}.";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= "Jadwal Dokter Gigi hari ini :";
-                    $petugas_pemeriksa_hari_ini = PetugasPemeriksa::where('tipe_konsultasi_id', $rowMulaiOnline->tipe_konsultasi_id)
-                                                                    ->whereDate('tanggal', $nowJkt)
-                                                                    ->get();
+                    $message .= PHP_EOL . PHP_EOL . 'Jadwal Dokter Gigi hari ini :';
+
+                    $petugas_pemeriksa_hari_ini = \App\Models\PetugasPemeriksa::query()
+                        ->with('staf')
+                        ->where('tipe_konsultasi_id', $petugas_pemeriksa_terjadwal_akhir->tipe_konsultasi_id)
+                        ->whereDate('tanggal', $nowJkt->toDateString())
+                        ->orderBy('jam_mulai_default')
+                        ->get();
+
                     foreach ($petugas_pemeriksa_hari_ini as $petugas_hari_ini) {
-                        $message .= PHP_EOL . "{$petugas_hari_ini->staf->nama_dengan_gelar}: " . Carbon::parse( $petugas_hari_ini->jam_mulai_default )->format('H:i') . '-' . Carbon::parse($petugas_hari_ini->jam_akhir_default)->subMinutes(30)->format('H:i');
-                        if ( $petugas_hari_ini->max_booking > 0 ) {
-                            $message .= "(tersisa " . $rowMulaiOnline->slot_pendaftaran . " slot lagi)";
+                        $mulai = \Carbon\Carbon::parse($petugas_hari_ini->jam_mulai_default, 'Asia/Jakarta')->format('H:i');
+                        $akhir = \Carbon\Carbon::parse($petugas_hari_ini->jam_akhir_default, 'Asia/Jakarta')->subMinutes(30)->format('H:i');
+                        $nama  = optional($petugas_hari_ini->staf)->nama_dengan_gelar ?? 'Dokter';
+
+                        $message .= PHP_EOL . "{$nama}: {$mulai}-{$akhir}";
+                        if ((int) $petugas_hari_ini->max_booking > 0) {
+                            $message .= " (tersisa {$petugas_hari_ini->slot_pendaftaran} slot)"; // ← perbaikan variabel
                         }
                     }
 
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= 'Ketik "Jadwal ' . $tipe_konsultasi. '" untuk melihat jadwal di hari lain';
+                    $message .= PHP_EOL . PHP_EOL . 'Ketik "Jadwal ' . $tipe_konsultasi . '" untuk melihat jadwal di hari lain';
                     return $message;
                 }
             }
-
-            // 2b) Jika ada jadwal yang berakhir ≤ 1 jam dari sekarang → arahkan offline
-            $oneHour = $nowJkt->copy()->addHour();
-
-            // NOTE: Jika kolom jam_akhir TYPEnya DATETIME, hapus toTimeString() dan pakai $nowJkt/$oneHour langsung.
-            $rowsSisaSejam = \App\Models\PetugasPemeriksa::query()
-                ->where('tipe_konsultasi_id', 2)
-                ->whereDate('tanggal', $nowJkt)
-                ->whereBetween('jam_akhir', [$nowJkt->toTimeString(), $oneHour->toTimeString()])
-                ->orderBy('jam_akhir', 'desc')
-                ->get();
-
-            if ($rowsSisaSejam->isNotEmpty()) {
-                $this->chatBotLog(__LINE__);
-                // Pakai baris paling akhir dari yang masih tersisa ≤ 1 jam
-                $row           = $rowsSisaSejam->first();
-                $jamMulaiRow   = \Carbon\Carbon::parse($row->jam_mulai, 'Asia/Jakarta');
-                $jamAkhirRow   = \Carbon\Carbon::parse($row->jam_akhir, 'Asia/Jakarta');
-
-                // Window: 30 menit sebelum jam_mulai s/d 1 jam sebelum jam_akhir
-                $windowStart = $jamMulaiRow->copy()->subMinutes(30);
-                $windowEnd   = $jamAkhirRow->copy()->subHour(); // batas registrasi langsung
-
-                if ($nowJkt->between($windowStart, $windowEnd, true)) {
-                    $this->chatBotLog(__LINE__);
-                    $message  = 'Reservasi dokter gigi online hari ini sudah berakhir.';
-                    $message .= PHP_EOL . 'Reservasi secara langsung dibuka sampai jam ' . $windowEnd->format('H:i') . '.';
-                    $message .= PHP_EOL . PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
-                    return $message;
-                }
-                // jika tidak berada pada window, lanjut proses normal
-            }
-            // jika tidak ada yang berakhir ≤ 1 jam, lanjut proses normal (online masih jauh dari tutup)
-        } else if(
-            $dokter_gigi_q->exists()
-        ){
+        } elseif ($dokter_gigi_q->exists()) {
             $this->chatBotLog(__LINE__);
             $dokter_gigi_awal  = (clone $dokter_gigi_q)->orderBy('jam_mulai', 'asc')->first();
             $dokter_gigi_akhir = (clone $dokter_gigi_q)->orderBy('jam_akhir', 'desc')->first();
