@@ -41,7 +41,7 @@ class PetugasPemeriksa extends Model
 
         // Hitung reservasi online terjadwal hari ini
         $jumlah_reservasi_schedulled = ReservasiOnline::query()
-            ->whereDate('tanggal', $today)
+            ->whereDate('created_at', $today)
             ->where('petugas_pemeriksa_id', $this->id)
             ->count();
 
