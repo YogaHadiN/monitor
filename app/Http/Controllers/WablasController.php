@@ -6007,6 +6007,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     public function validasiDokterPengambilanAntrianDokterGigi()
     {
+        Log::info('validasiDokterPengambilanAntrianDokterGigi');
         $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
         $tigaPuluhMenitKeDepan = $nowJkt->copy()->addMinutes(30);
         // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
