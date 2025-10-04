@@ -6025,7 +6025,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ->with(['staf','tipe_konsultasi'])
             ->where('tipe_konsultasi_id', 2)
             ->whereDate('tanggal', $nowJkt->toDateString())
-            ->where('jam_mulai_default', '>', $tigaPuluhMenitKeDepan->toTimeString()) // TIME vs Carbon
             ->where('schedulled_booking_allowed', 1)
             ->orderBy('jam_mulai_booking_online', 'asc');
 
