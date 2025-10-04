@@ -2192,7 +2192,7 @@ class WablasController extends Controller
             $msg .= 'Jadwal ' . ucwords($reservasi_online->tipe_konsultasi->tipe_konsultasi) . ' hari ini:' . PHP_EOL;
 
             $petugas_pemeriksas = \App\Models\PetugasPemeriksa::query()
-                ->with(['staf:id,nama,nama_dengan_gelar']) // sesuaikan kolom yg ada
+                ->with(['staf']) // sesuaikan kolom yg ada
                 ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
                 ->whereDate('tanggal', $now->toDateString())
                 ->where('schedulled_booking_allowed', 1)   // ganti ke 'scheduled_booking_allowed' bila itu yg di DB
