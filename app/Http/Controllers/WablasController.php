@@ -6076,7 +6076,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     $tipe_konsultasi = optional($rowMulaiOnline->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
-                    $message .= '. Ketik "Jadwal ' . $tipe_konsultasi. '" untuk melihat jadwal di hari lain';
+                    $message .= 'Ketik "Jadwal ' . ucwords( $tipe_konsultasi ). '" untuk melihat jadwal di hari lain';
                     return $message;
                 }
             }
