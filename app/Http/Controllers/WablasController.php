@@ -6062,6 +6062,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             if ($rowMulaiOnline && !empty($rowMulaiOnline->jam_mulai_default)) {
                 $this->chatBotLog(__LINE__);
                 $jam_mulai_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_default, 'Asia/Jakarta');
+                $jam_akhir_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_akhir_default, 'Asia/Jakarta');
                 $deadline          = $jam_mulai_default->copy()->subMinutes(30);
                 $tipe_konsultasi = optional($rowMulaiOnline->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi';
                 $tipe_konsultasi = ucwords( $tipe_konsultasi );
@@ -6069,7 +6070,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 if ($nowJkt->gte($deadline)) {
                     $this->chatBotLog(__LINE__);
                     $message  = "Pendaftaran online terjadwal {$tipe_konsultasi} berakhir pukul {$deadline->format('H:i')}.";
-                    $message .= PHP_EOL . "Jam mulai {$nama_dokter}: " . $jam_mulai_default->format('H:i');
+                    $message .= PHP_EOL . "{$nama_dokter}: " . $jam_mulai_default->format('H:i') . '-' . $jam_akhir_default->format('H:i');
                     if ( $rowMulaiOnline->slot_pendaftaran ) {
                         $message .= PHP_EOL . "Silakan daftar secara langsung di klinik (tersisa " . $rowMulaiOnline->slot_pendaftaran . " slot lagi) atau pilih jadwal di hari lain.";
                     } else {
