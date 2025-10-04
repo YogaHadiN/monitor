@@ -6080,6 +6080,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         $message .= PHP_EOL . "{$nama}: {$mulai}-{$akhir}";
                         if ((int) $petugas_hari_ini->max_booking > 0) {
                             $message .= " (tersisa {$petugas_hari_ini->slot_pendaftaran} slot)"; // ← perbaikan variabel
+                            $message .= PHP_EOL;
+                            $message .= "Silahkan daftar langsung jika masih ada slot";
                         }
                     }
 
