@@ -6068,7 +6068,12 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     $this->chatBotLog(__LINE__);
                     $message  = 'Pendaftaran online terjadwal sudah selesai 30 menit sebelum jam mulai.';
                     $message .= PHP_EOL . 'Jam mulai dokter: ' . $jam_mulai_default->format('H:i');
-                    $message .= PHP_EOL . "Silakan daftar secara langsung di klinik atau pilih jadwal lain.";
+                    if ( $rowMulaiOnline->sisa_antrian ) {
+                        $message .= PHP_EOL . "Silakan daftar secara langsung di klinik (tersisa " . $rowMulaiOnline->sisa_antrian . " slot lagi) atau pilih jadwal lain.";
+                    } else {
+                        $tipe_konsultasi = optional($rowMulaiOnline->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi';
+                        $message .= PHP_EOL . 'Slot pendaftaran hari ini sudah habis. Ketik "Jadwal ' . $tipe_konsultasi. '" untuk melihat jadwal di hari lain';
+                    }
                     return $message;
                 }
             }
