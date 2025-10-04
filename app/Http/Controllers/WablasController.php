@@ -4430,7 +4430,7 @@ class WablasController extends Controller
                           . ($mulaiRaw
                                 ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->subMinutes(15)->format('H:i')
                                 : '-')
-                          . '. atau reservasi ini otomatis dibatalkan oleh sistem.'
+                          . '. atau reservasi dihapus oleh sistem.'
                           . PHP_EOL;
             }
 
@@ -4612,7 +4612,8 @@ class WablasController extends Controller
                 $jamMulaiGigi   = $this->parseTodayTime($jamMulaiGigiStr, $tz, $now);
                 $jamTerakhirQR  = $jamMulaiGigi->copy()->subMinutes(15)->format('H:i');
 
-                $lines[] = "- Melakukan *scan QR* di klinik *sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktik dimulai) atau reservasi ini otomatis dibatalkan oleh sistem";
+                $lines[] = "- Melakukan *scan QR* di klinik *sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem";
+                $lines[] = "- Nomor Antrian diberikan setelah Scan QR Code dan urutan berdasarkan urutan Scan QR Code";
             } else {
                 // Fallback bila jadwal gigi belum di-set
                 $lines[] = '- Melakukan *scan QR* di klinik *paling lambat 15 menit* sebelum jam mulai pemeriksaan gigi.';
