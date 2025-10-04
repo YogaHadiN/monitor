@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Models\ReservasiOnline;
 use Log;
 
 class PetugasPemeriksa extends Model
@@ -27,6 +28,28 @@ class PetugasPemeriksa extends Model
     }
     public function tipe_konsultasi(){
         return $this->belongsTo(TipeKonsultasi::class);
+    }
+    public function getSlotPendaftaranAttribute(): int
+    {
+        $tz    = 'Asia/Jakarta';
+        $today = now($tz)->toDateString();
+
+        // Hitung antrian hari ini untuk petugas ini (sesuaikan nama kolom tanggal di tabel antrian)
+        $jumlah_antrian = $this->antrian()
+            ->whereDate('tanggal', $today)
+            ->count();
+
+        // Hitung reservasi online terjadwal hari ini
+        $jumlah_reservasi_schedulled = ReservasiOnline::query()
+            ->where('schedulled_booking', 1)
+            ->whereDate('tanggal', $today)
+            ->where('petugas_pemeriksa_id', $this->id)
+            ->count();
+
+        $existing = $jumlah_antrian + $jumlah_reservasi_schedulled;
+        $max      = (int) ($this->max_booking ?? 0);
+
+        return max($max - $existing, 0);
     }
     public function getSisaAntrianAttribute(){
         return $this->antrian->count();
