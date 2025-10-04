@@ -36,7 +36,7 @@ class PetugasPemeriksa extends Model
 
         // Hitung antrian hari ini untuk petugas ini (sesuaikan nama kolom tanggal di tabel antrian)
         $jumlah_antrian = $this->antrian()
-            ->whereDate('tanggal', $today)
+            ->whereDate('created_at', $today)
             ->count();
 
         // Hitung reservasi online terjadwal hari ini
