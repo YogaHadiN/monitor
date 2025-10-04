@@ -6064,6 +6064,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $jam_mulai_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_default, 'Asia/Jakarta');
                 $deadline          = $jam_mulai_default->copy()->subMinutes(30);
                 $tipe_konsultasi = optional($rowMulaiOnline->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi';
+                $tipe_konsultasi = ucwords( $tipe_konsultasi );
                 $nama_dokter = $rowMulaiOnline->staf->nama_dengan_gelar;
                 if ($nowJkt->gte($deadline)) {
                     $this->chatBotLog(__LINE__);
@@ -6076,7 +6077,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     }
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
-                    $message .= 'Ketik "Jadwal ' . ucwords( $tipe_konsultasi ). '" untuk melihat jadwal di hari lain';
+                    $message .= 'Ketik "Jadwal ' . $tipe_konsultasi. '" untuk melihat jadwal di hari lain';
                     return $message;
                 }
             }
