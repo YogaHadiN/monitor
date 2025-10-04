@@ -6021,14 +6021,17 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return $message;
         }
 
-        $petugas_pemeriksa_terjadwal = \App\Models\PetugasPemeriksa::query()
+        $query = \App\Models\PetugasPemeriksa::query()
             ->with(['staf','tipe_konsultasi'])
             ->where('tipe_konsultasi_id', 2)
             ->whereDate('tanggal', $nowJkt->toDateString())
             ->where('jam_mulai_default', '>', $tigaPuluhMenitKeDepan->toTimeString()) // TIME vs Carbon
             ->where('schedulled_booking_allowed', 1)
             ->orderBy('jam_mulai_booking_online', 'asc')
-            ->get();
+
+        Log::info('Query');
+        Log::info( $query->toRawSql() );
+        $petugas_pemeriksa_terjadwal = $query->get();
 
         $dokter_gigi_q = \App\Models\PetugasPemeriksa::query()
             ->where('tipe_konsultasi_id', 2)
