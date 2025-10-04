@@ -3693,10 +3693,10 @@ class WablasController extends Controller
 
                 // ===== window booking terjadwal =====
                 $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
-                $hasOpenTime         = !empty($pp->jam_mulai_booking_online);
+                $hasOpenTime         = !empty( $this->tenant->jam_buka );
 
                 if ($isSchedulingAllowed && $hasOpenTime) {
-                    $open  = \Carbon\Carbon::parse($pp->tanggal.' '.$pp->jam_mulai_booking_online, $tz)->seconds(0);
+                    $open  = \Carbon\Carbon::parse($pp->tanggal.' '. $this->tenant->jam_buka , $tz)->seconds(0);
                     $start = \Carbon\Carbon::parse($pp->tanggal.' '.$pp->jam_mulai,                $tz)->seconds(0);
 
                     if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) {
@@ -5757,13 +5757,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                        ->where('petugas_pemeriksas.jam_akhir', '>=', $nowTime)
                        ->where(function($qc) use ($nowTime) {
                            $qc->where(function($q1) use ($nowTime) {
-                               $q1->whereNotNull('petugas_pemeriksas.jam_mulai_booking_online')
-                                  ->where('petugas_pemeriksas.jam_mulai_booking_online', '<=', $nowTime)
-                                  ->whereRaw("TIME(?) <= TIME(DATE_SUB(petugas_pemeriksas.jam_mulai, INTERVAL 30 MINUTE))", [$nowTime]);
+                               $q1->whereRaw("TIME(?) <= TIME(DATE_SUB(petugas_pemeriksas.jam_mulai, INTERVAL 30 MINUTE))", [$nowTime]);
                            })
                            ->orWhere(function($q2) use ($nowTime) {
-                               $q2->whereNull('petugas_pemeriksas.jam_mulai_booking_online')
-                                  ->where('petugas_pemeriksas.jam_mulai', '<=', $nowTime);
+                               $q2->where('petugas_pemeriksas.jam_mulai', '<=', $nowTime);
                            });
                        });
                 });
@@ -6038,10 +6035,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         if ($petugas_pemeriksa_terjadwal->isNotEmpty()) {       // ← perbaikan penting
             $petugas_pemeriksa_terjadwal_awal = $petugas_pemeriksa_terjadwal->first();
-            if ($petugas_pemeriksa_terjadwal_awal && !empty($petugas_pemeriksa_terjadwal_awal->jam_mulai_booking_online)) {
-                $jam_mulai_booking_online = \Carbon\Carbon::parse($petugas_pemeriksa_terjadwal_awal->jam_mulai_booking_online, 'Asia/Jakarta');
-                if ($nowJkt->lt($jam_mulai_booking_online)) {
-                    $message  = 'Pendaftaran online baru dimulai pada ' . $jam_mulai_booking_online->format('H:i');
+            if ( $this->tenant->jam_buka ) {
+                $jam_buka = \Carbon\Carbon::parse( $this->tenant->jam_buka, 'Asia/Jakarta');
+                if ($nowJkt->lt($jam_buka)) {
+                    $message  = 'Pendaftaran online baru dimulai pada ' . $jam_buka->format('H:i');
                     $message .= PHP_EOL . 'Silakan mendaftar kembali setelah jam tersebut.';
                     $message .= PHP_EOL . 'Mohon maaf atas ketidaknyamanannya.';
                     return $message;
@@ -6149,8 +6146,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $tenantId = optional($this->tenant)->id;
 
         // Tentukan window booking shift ini
-        // Jika jam_mulai_booking_online null → fallback ke jam_mulai (window nol menit)
-        $startJkt = Carbon::parse($pp->tanggal.' '.($pp->jam_mulai_booking_online ?: $pp->jam_mulai), 'Asia/Jakarta')->seconds(0);
+        $startJkt = Carbon::parse( $this->tenant->jam_buka )->seconds(0);
         $endJkt   = Carbon::parse($pp->tanggal.' '.$pp->jam_mulai, 'Asia/Jakarta')->seconds(0);
 
         // Jika DB Anda simpan UTC, konversi ke UTC:
