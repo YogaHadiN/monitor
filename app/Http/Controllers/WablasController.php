@@ -6054,6 +6054,25 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 }
             }
 
+            /**
+             * 2a-baru) Scheduled booking ditutup 30 menit sebelum jam_mulai_default
+             * Catatan: asumsikan kolom jam_mulai_default bertipe TIME/STRING (HH:MM:SS)
+             * Jika bertipe DATETIME, langsung parse tanpa toTimeString().
+             */
+            if ($rowMulaiOnline && !empty($rowMulaiOnline->jam_mulai_default)) {
+                $this->chatBotLog(__LINE__);
+                $jam_mulai_default = \Carbon\Carbon::parse($rowMulaiOnline->jam_mulai_default, 'Asia/Jakarta');
+                $deadline          = $jam_mulai_default->copy()->subMinutes(30);
+
+                if ($nowJkt->gte($deadline)) {
+                    $this->chatBotLog(__LINE__);
+                    $message  = 'Pendaftaran online terjadwal sudah selesai 30 menit sebelum jam mulai.';
+                    $message .= PHP_EOL . 'Jam mulai dokter: ' . $jam_mulai_default->format('H:i');
+                    $message .= PHP_EOL . "Silakan daftar secara langsung di klinik atau pilih jadwal lain.";
+                    return $message;
+                }
+            }
+
             // 2b) Jika ada jadwal yang berakhir ≤ 1 jam dari sekarang → arahkan offline
             $oneHour = $nowJkt->copy()->addHour();
 
