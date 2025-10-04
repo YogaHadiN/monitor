@@ -2182,12 +2182,42 @@ class WablasController extends Controller
      *
      * @return void
      */
-    private function pertanyaanPembayaranPasien()
+    private function pertanyaanPembayaranPasien($reservasi_online = null)
     {
-        $message = 'Bisa dibantu menggunakan pembayaran apa?';
-        $message .= PHP_EOL;
-        $message .= $this->messagePilihanPembayaran();
-        return $message;
+        $tz   = 'Asia/Jakarta';
+        $now  = \Carbon\Carbon::now($tz);
+        $msg  = '';
+
+        if (!is_null($reservasi_online) && (int)$reservasi_online->tipe_konsultasi_id === 2) {
+            $msg .= 'Jadwal ' . ucwords($reservasi_online->tipe_konsultasi->tipe_konsultasi) . ' hari ini:' . PHP_EOL;
+
+            $petugas_pemeriksas = \App\Models\PetugasPemeriksa::query()
+                ->with(['staf:id,nama,nama_dengan_gelar']) // sesuaikan kolom yg ada
+                ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
+                ->whereDate('tanggal', $now->toDateString())
+                ->where('schedulled_booking_allowed', 1)   // ganti ke 'scheduled_booking_allowed' bila itu yg di DB
+                ->orderBy('jam_mulai_default', 'asc')
+                ->get();
+
+            if ($petugas_pemeriksas->isEmpty()) {
+                $msg .= '- Belum ada jadwal yang menerima pasien terjadwal hari ini.' . PHP_EOL . PHP_EOL;
+            } else {
+                foreach ($petugas_pemeriksas as $pp) {
+                    $namaStaf  = $pp->staf->nama_dengan_gelar ?? $pp->staf->nama ?? 'Staf';
+                    $jamMulai  = \Carbon\Carbon::parse($pp->jam_mulai_default, $tz)->format('H:i');
+                    // window tutup pendaftaran 30 menit sebelum jam akhir default
+                    $jamAkhirWindow = \Carbon\Carbon::parse($pp->jam_akhir_default, $tz)->subMinutes(30)->format('H:i');
+
+                    $msg .= $namaStaf . PHP_EOL;
+                    $msg .= '( ' . $jamMulai . ' - ' . $jamAkhirWindow . ' )' . PHP_EOL . PHP_EOL;
+                }
+            }
+        }
+
+        $msg .= 'Bisa dibantu menggunakan pembayaran apa?' . PHP_EOL;
+        $msg .= $this->messagePilihanPembayaran();
+
+        return $msg;
     }
     /**
      * undocumented function
@@ -3759,7 +3789,7 @@ class WablasController extends Controller
                                 ->first();
 
                             if ($ppFinal && $this->kuotaBookingPetugasPenuh($ppFinal, $reservasi_online->tipe_konsultasi_id)) {
-                                $reservasi_online->schedulled_booking = 2;   // penuh
+                                $reservasi_online->schedulled_booking = 1;
                                 $reservasi_online->waitlist_flag      = null;
                                 $reservasi_online->save();
 
@@ -3854,7 +3884,7 @@ class WablasController extends Controller
 
         } elseif ( is_null($reservasi_online->registrasi_pembayaran_id)) {
             $this->chatBotLog(__LINE__);
-            $message = $this->pertanyaanPembayaranPasien();
+            $message = $this->pertanyaanPembayaranPasien($reservasi_online);
 
         } elseif ( !is_null($reservasi_online->registrasi_pembayaran_id) && is_null($reservasi_online->register_previously_saved_patient)) {
             $this->chatBotLog(__LINE__);
