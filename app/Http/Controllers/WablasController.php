@@ -6046,9 +6046,17 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             }
 
             $petugas_pemeriksa_terjadwal_akhir = $petugas_pemeriksa_terjadwal->last();
+
             if (!empty($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default)) {
                 $deadline = \Carbon\Carbon::parse($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default, 'Asia/Jakarta')->subMinutes(30);
                 $tipe_konsultasi = ucwords(optional($petugas_pemeriksa_terjadwal_akhir->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi');
+
+                Log::info('nowJkt');
+                Log::info($nowJkt->toTimeString());
+                Log::info('deadline');
+                Log::info($deadline->toTimeString());
+                Log::info('gte');
+                Log::info($nowJkt->gte($deadline));
 
                 if ($nowJkt->gte($deadline)) {
                     $message  = "Pendaftaran online terjadwal {$tipe_konsultasi} berakhir pukul {$deadline->format('H:i')}.";
@@ -6103,6 +6111,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             // Tidak ada jadwal sama sekali hari ini
             return $this->pelayananPoliGigiLibur();
         }
+
 
         // 4) Fallback berbasis jadwal harian (opsional)
         $tz         = 'Asia/Jakarta';
