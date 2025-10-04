@@ -6068,7 +6068,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     $this->chatBotLog(__LINE__);
                     $message  = 'Pendaftaran online terjadwal sudah selesai 30 menit sebelum jam mulai.';
                     $message .= PHP_EOL . 'Jam mulai dokter: ' . $jam_mulai_default->format('H:i');
-                    if ( $rowMulaiOnline->sisa_antrian ) {
+                    if ( $rowMulaiOnline->slot_pendaftaran ) {
                         $message .= PHP_EOL . "Silakan daftar secara langsung di klinik (tersisa " . $rowMulaiOnline->slot_pendaftaran . " slot lagi) atau pilih jadwal lain.";
                     } else {
                         $tipe_konsultasi = optional($rowMulaiOnline->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi';
