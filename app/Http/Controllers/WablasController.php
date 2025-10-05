@@ -3773,41 +3773,43 @@ class WablasController extends Controller
 
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
         } elseif (!is_null($reservasi_online->staf_id)) {
-
+            $this->chatBotLog(__LINE__);
             if (!$reservasi_online->reservasi_selesai) {
+                $this->chatBotLog(__LINE__);
                 $lanjutByButton = ($msg === 'lanjutkan' && $tenant && $tenant->iphone_whatsapp_button_available);
                 $ulangByButton  = ($msg === 'ulangi'    && $tenant && $tenant->iphone_whatsapp_button_available);
                 $lanjutByText   = ($firstChar === '1'   && $tenant && !$tenant->iphone_whatsapp_button_available);
                 $ulangByText    = ($firstChar === '2'   && $tenant && !$tenant->iphone_whatsapp_button_available);
 
                 if ($lanjutByButton || $lanjutByText) {
+                    $this->chatBotLog(__LINE__);
                     \DB::transaction(function () use ($reservasi_online, $tz) {
-
+                        $this->chatBotLog(__LINE__);
                         if ((int)($reservasi_online->schedulled_booking ?? 0) === 1) {
+                            $this->chatBotLog(__LINE__);
                             // Booking terjadwal: lock kuota saat finalisasi
                             $ppFinal = $reservasi_online->petugas_pemeriksa;
 
                             if ($ppFinal && !$ppFinal->slot_pendaftaran_available) {
-                                $reservasi_online->schedulled_booking = 1;
+                                $this->chatBotLog(__LINE__);
                                 $reservasi_online->waitlist_flag      = null;
                                 $reservasi_online->save();
-
-                                $petugas_pemeriksa = $reservasi_online->petugas_pemeriksa;
-                                $petugas_pemeriksa->max_booking_achieved = 1;
-                                $petugas_pemeriksa->save();
 
                                 $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
                                 return; // keluar tanpa membuat QR / antrian
                             }
 
                             // generate QR booking (tanpa membuat antrian)
+                            $this->chatBotLog(__LINE__);
                             $reservasi_online->qrcode            = $this->generateQrCodeForOnlineReservation('B', $reservasi_online);
                             $reservasi_online->reservasi_selesai = 1;
                             $reservasi_online->save();
 
                             if (method_exists($this, 'getQrCodeMessageBooking')) {
+                                $this->chatBotLog(__LINE__);
                                 $this->autoReply($this->getQrCodeMessageBooking($reservasi_online));
                             } else {
+                                $this->chatBotLog(__LINE__);
                                 $message = "Booking terjadwal sudah tercatat.\nSilakan gunakan QR saat datang.";
                                 $message .= PHP_EOL;
                                 $message .= PHP_EOL;
@@ -3824,6 +3826,7 @@ class WablasController extends Controller
                             }
                             return;
                         }
+                        $this->chatBotLog(__LINE__);
 
                         // === Non-schedulled: buat antrian ===
                         $this->input_nomor_bpjs              = $reservasi_online->nomor_asuransi_bpjs;
@@ -3861,9 +3864,11 @@ class WablasController extends Controller
                     return false;
 
                 } elseif ($ulangByButton || $ulangByText) {
+                    $this->chatBotLog(__LINE__);
                     $this->whatsapp_bot   = $reservasi_online->whatsappBot;
                     $reservasi_online     = $this->createReservasiOnline(true);
                 } else {
+                    $this->chatBotLog(__LINE__);
                     $input_tidak_tepat = true;
                 }
             }
