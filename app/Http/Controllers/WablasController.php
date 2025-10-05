@@ -3941,6 +3941,7 @@ class WablasController extends Controller
         ) {
             $this->chatBotLog(__LINE__);
             $message = $this->pesanWaitlistTercatat();
+            \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
         }
 
         if (!empty(trim($message ?? ''))) {
