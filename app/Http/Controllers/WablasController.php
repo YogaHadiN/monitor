@@ -3786,7 +3786,6 @@ class WablasController extends Controller
                                 $reservasi_online->save();
 
                                 $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
-                                return; // keluar tanpa membuat QR / antrian
                             } else {
                                 // generate QR booking (tanpa membuat antrian)
                                 $this->chatBotLog(__LINE__);
@@ -3812,42 +3811,42 @@ class WablasController extends Controller
                                     $message .= $this->batalkan();
                                     $this->autoReply($message);
                                 }
-                                return;
                             }
+                        } else {
+
+                            $this->chatBotLog(__LINE__);
+
+                            // === Non-schedulled: buat antrian ===
+                            $this->input_nomor_bpjs              = $reservasi_online->nomor_asuransi_bpjs;
+                            $this->input_registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
+
+                            $antrian                        = $this->antrianPost($reservasi_online->ruangan_id);
+                            $antrian->nama                  = $reservasi_online->nama;
+                            $antrian->nomor_bpjs            = $reservasi_online->nomor_asuransi_bpjs;
+                            $antrian->no_telp               = $reservasi_online->no_telp;
+                            $antrian->tanggal_lahir         = $reservasi_online->tanggal_lahir;
+                            $antrian->alamat                = $reservasi_online->alamat;
+                            $antrian->pasien_id             = $reservasi_online->pasien_id;
+                            $antrian->verifikasi_bpjs       = $reservasi_online->verifikasi_bpjs;
+                            $antrian->ruangan_id            = $reservasi_online->ruangan_id;
+                            $antrian->tipe_konsultasi_id    = $reservasi_online->tipe_konsultasi_id;
+                            $antrian->staf_id               = $reservasi_online->staf_id;
+                            $antrian->petugas_pemeriksa_id  = $reservasi_online->petugas_pemeriksa_id;
+                            $antrian->kartu_asuransi_image  = $reservasi_online->kartu_asuransi_image;
+                            $antrian->data_bpjs_cocok       = $reservasi_online->data_bpjs_cocok;
+                            $antrian->reservasi_online      = 1;
+                            $antrian->sudah_hadir_di_klinik = 0;
+                            $antrian->qr_code_path_s3       = $this->generateQrCodeForOnlineReservation('A', $antrian);
+                            $antrian->save();
+                            $antrian->antriable_id          = $antrian->id;
+                            $antrian->save();
+
+                            $reservasi_online->reservasi_selesai = 1;
+                            $reservasi_online->save();
+
+                            $this->autoReply($this->getQrCodeMessage($antrian));
+                            resetWhatsappRegistration( $this->no_telp );
                         }
-                        $this->chatBotLog(__LINE__);
-
-                        // === Non-schedulled: buat antrian ===
-                        $this->input_nomor_bpjs              = $reservasi_online->nomor_asuransi_bpjs;
-                        $this->input_registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
-
-                        $antrian                        = $this->antrianPost($reservasi_online->ruangan_id);
-                        $antrian->nama                  = $reservasi_online->nama;
-                        $antrian->nomor_bpjs            = $reservasi_online->nomor_asuransi_bpjs;
-                        $antrian->no_telp               = $reservasi_online->no_telp;
-                        $antrian->tanggal_lahir         = $reservasi_online->tanggal_lahir;
-                        $antrian->alamat                = $reservasi_online->alamat;
-                        $antrian->pasien_id             = $reservasi_online->pasien_id;
-                        $antrian->verifikasi_bpjs       = $reservasi_online->verifikasi_bpjs;
-                        $antrian->ruangan_id            = $reservasi_online->ruangan_id;
-                        $antrian->tipe_konsultasi_id    = $reservasi_online->tipe_konsultasi_id;
-                        $antrian->staf_id               = $reservasi_online->staf_id;
-                        $antrian->petugas_pemeriksa_id  = $reservasi_online->petugas_pemeriksa_id;
-                        $antrian->kartu_asuransi_image  = $reservasi_online->kartu_asuransi_image;
-                        $antrian->data_bpjs_cocok       = $reservasi_online->data_bpjs_cocok;
-                        $antrian->reservasi_online      = 1;
-                        $antrian->sudah_hadir_di_klinik = 0;
-                        $antrian->qr_code_path_s3       = $this->generateQrCodeForOnlineReservation('A', $antrian);
-                        $antrian->save();
-                        $antrian->antriable_id          = $antrian->id;
-                        $antrian->save();
-
-                        $reservasi_online->reservasi_selesai = 1;
-                        $reservasi_online->save();
-
-                        $this->autoReply($this->getQrCodeMessage($antrian));
-                        \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
-                        \App\Models\ReservasiOnline::where('no_telp', $this->no_telp)->delete();
                     });
 
                     return false;
@@ -3863,12 +3862,11 @@ class WablasController extends Controller
             }
         // ===== waitlist (ketika kuota penuh) =====
         } elseif ($reservasi_online->schedulled_booking === 2 && is_null($reservasi_online->waitlist_flag)) {
+            $this->chatBotLog(__LINE__);
             if (in_array($msg, ['ya','y','1'], true)) {
+                $this->chatBotLog(__LINE__);
                 $reservasi_online->waitlist_flag = 1; // setuju waitlist
                 $reservasi_online->save();
-
-                $this->autoReply($this->pesanWaitlistTercatat());
-                return false;
 
             } else {
                 $input_tidak_tepat = true;
@@ -3922,12 +3920,12 @@ class WablasController extends Controller
         } elseif ( !$reservasi_online->reservasi_selesai) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
-        /* } elseif ( */
-        /*     $reservasi_online->schedulled_booking == 2 && */
-        /*     $reservasi_online->waitlist_flag == 1 */
-        /* ) { */
-        /*     $this->chatBotLog(__LINE__); */
-        /*     $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online); */
+        } elseif (
+            $reservasi_online->schedulled_booking == 2 &&
+            $reservasi_online->waitlist_flag == 1
+        ) {
+            $this->chatBotLog(__LINE__);
+            $message = $this->pesanWaitlistTercatat();
         }
 
         if (!empty(trim($message ?? ''))) {
