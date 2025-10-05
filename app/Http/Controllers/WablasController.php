@@ -3796,7 +3796,7 @@ class WablasController extends Controller
 
                             if ($ppFinal && !$ppFinal->slot_pendaftaran_available) {
                                 $this->chatBotLog(__LINE__);
-                                $reservasi_online->waitlist_flag      = null;
+                                $reservasi_online->waitlist_flag      = 0;
                                 $reservasi_online->schedulled_booking = 2;
                                 $reservasi_online->save();
 
@@ -3876,7 +3876,7 @@ class WablasController extends Controller
                 }
             }
         // ===== waitlist (ketika kuota penuh) =====
-        } elseif ($reservasi_online->schedulled_booking === 2 && is_null($reservasi_online->waitlist_flag)) {
+        } elseif ($reservasi_online->schedulled_booking === 2 && $reservasi_online->waitlist_flag == 0) {
             $this->chatBotLog(__LINE__);
             if (in_array($msg, ['ya','y','1'], true)) {
                 $this->chatBotLog(__LINE__);
