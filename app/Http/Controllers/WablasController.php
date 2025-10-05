@@ -3760,7 +3760,7 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
 
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
-        } elseif (!is_null($reservasi_online->staf_id)) {
+        } elseif (!$reservasi_online->reservasi_selesai) {
             $this->chatBotLog(__LINE__);
             if (!$reservasi_online->reservasi_selesai) {
                 $this->chatBotLog(__LINE__);
@@ -3770,6 +3770,7 @@ class WablasController extends Controller
                 $ulangByText    = ($firstChar === '2'   && $tenant && !$tenant->iphone_whatsapp_button_available);
 
                 if ($lanjutByButton || $lanjutByText) {
+                    $reservasi_online->reservasi_selesai = 1;
                     $this->chatBotLog(__LINE__);
                     \DB::transaction(function () use ($reservasi_online, $tz) {
                         $this->chatBotLog(__LINE__);
@@ -3790,7 +3791,6 @@ class WablasController extends Controller
                                 // generate QR booking (tanpa membuat antrian)
                                 $this->chatBotLog(__LINE__);
                                 $reservasi_online->qrcode            = $this->generateQrCodeForOnlineReservation('B', $reservasi_online);
-                                $reservasi_online->reservasi_selesai = 1;
                                 $reservasi_online->save();
 
                                 if (method_exists($this, 'getQrCodeMessageBooking')) {
@@ -3919,6 +3919,9 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
 
+        /* } elseif ( !is_null($reservasi_online->staf_id)) { */
+        /*     $this->chatBotLog(__LINE__); */
+        /*     $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online); */
         } elseif ( !is_null($reservasi_online->staf_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
