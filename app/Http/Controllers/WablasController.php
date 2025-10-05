@@ -3726,40 +3726,32 @@ class WablasController extends Controller
                 $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
                 $hasOpenTime         = !empty( $this->tenant->jam_buka );
 
-                if ($isSchedulingAllowed && $hasOpenTime) {
-                    $open  = \Carbon\Carbon::parse($pp->tanggal.' '. $this->tenant->jam_buka , $tz)->seconds(0);
-                    $start = \Carbon\Carbon::parse($pp->tanggal.' '.$pp->jam_mulai,                $tz)->seconds(0);
-                    $this->chatBotLog(__LINE__);
+                /* if ($isSchedulingAllowed && $hasOpenTime) { */
+                /*     $open  = \Carbon\Carbon::parse($pp->tanggal.' '. $this->tenant->jam_buka , $tz)->seconds(0); */
+                /*     $start = \Carbon\Carbon::parse($pp->tanggal.' '.$pp->jam_mulai,                $tz)->seconds(0); */
+                /*     $this->chatBotLog(__LINE__); */
 
-                    if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) {
-                        $this->chatBotLog(__LINE__);
-                        Log::info("=====================");
-                        Log::info("pp");
-                        Log::info( $pp );
-                        Log::info("sisa_antrian");
-                        Log::info( $pp->sisa_antrian );
-                        Log::info("slot_pendaftaran");
-                        Log::info( $pp->slot_pendaftaran );
-                        Log::info("=====================");
-                        if ( $pp && !$pp->slot_pendaftaran_available ) {
-                            $this->chatBotLog(__LINE__);
-                            // penuh → tawarkan waitlist
-                            $reservasi_online->schedulled_booking = 1;
-                            $reservasi_online->waitlist_flag      = null; // belum memilih
-                            $reservasi_online->save();
+                /*     if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) { */
+                /*         $this->chatBotLog(__LINE__); */
+                /*         if ( $pp && !$pp->slot_pendaftaran_available ) { */
+                /*             $this->chatBotLog(__LINE__); */
+                /*             // penuh → tawarkan waitlist */
+                /*             $reservasi_online->schedulled_booking = 1; */
+                /*             $reservasi_online->waitlist_flag      = null; // belum memilih */
+                /*             $reservasi_online->save(); */
 
-                            $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($pp));
-                            return false;
-                        }
-                        $reservasi_online->schedulled_booking = 1; // booking terjadwal
-                    } else {
-                        $this->chatBotLog(__LINE__);
-                        $reservasi_online->schedulled_booking = 0; // daftar sekarang
-                    }
-                } else {
-                    $this->chatBotLog(__LINE__);
-                    $reservasi_online->schedulled_booking = 0;
-                }
+                /*             $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($pp)); */
+                /*             return false; */
+                /*         } */
+                /*         $reservasi_online->schedulled_booking = 1; // booking terjadwal */
+                /*     } else { */
+                /*         $this->chatBotLog(__LINE__); */
+                /*         $reservasi_online->schedulled_booking = 0; // daftar sekarang */
+                /*     } */
+                /* } else { */
+                /*     $this->chatBotLog(__LINE__); */
+                /*     $reservasi_online->schedulled_booking = 0; */
+                /* } */
                 $reservasi_online->save();
             } else {
                 $this->chatBotLog(__LINE__);
