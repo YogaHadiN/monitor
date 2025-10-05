@@ -15,6 +15,9 @@ class PetugasPemeriksa extends Model
     public function staf(){
         return $this->belongsTo(Staf::class);
     }
+    public function antrians(){
+        return $this->hasMany(Antrian::class);
+    }
     public function ruangan(){
         return $this->belongsTo(Ruangan::class);
     }
