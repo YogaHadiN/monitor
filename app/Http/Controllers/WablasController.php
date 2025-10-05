@@ -3256,6 +3256,7 @@ class WablasController extends Controller
 
         // ===== jika klinik tutup → hentikan alur =====
         if ($tenant && $tenant->jam_buka && $tenant->jam_tutup) {
+            $this->chatBotLog(__LINE__);
             // pakai tanggal hari ini + TZ supaya perbandingan akurat
             $jam_buka  = $this->todayTime(($tenant->jam_buka),  $tz, $nowJkt);
             // buffer 30 menit sebelum tutup
@@ -3286,6 +3287,9 @@ class WablasController extends Controller
         // cache jadwal gigi hari ini utk fitur lain
         $this->jadwalGigi = $this->jamBukaDokterGigiHariIni();
 
+        $this->chatBotLog(__LINE__);
+        Log::info('reservasi_online');
+        Log::info($reservasi_online);
         // ===== kalau state hilang: hentikan sesi =====
         if (is_null($reservasi_online)) {
             $this->chatBotLog(__LINE__);
