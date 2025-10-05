@@ -3306,6 +3306,7 @@ class WablasController extends Controller
             return false;
         }
 
+        $this->chatBotLog(__LINE__);
         // ===== pilih tipe konsultasi =====
         if (is_null($reservasi_online->tipe_konsultasi_id)) {
             $this->chatBotLog(__LINE__);
@@ -3464,6 +3465,7 @@ class WablasController extends Controller
 
         // ===== pilih metode pembayaran =====
         } elseif (!is_null($reservasi_online->tipe_konsultasi_id) && is_null($reservasi_online->registrasi_pembayaran_id)) {
+            $this->chatBotLog(__LINE__);
             if ($this->validasiRegistrasiPembayaran()) {
                 $reservasi_online = $this->lanjutkanRegistrasiPembayaran($reservasi_online);
                 $data = $this->queryPreviouslySavedPatientRegistry();
@@ -3484,6 +3486,7 @@ class WablasController extends Controller
 
         // ===== pilih pasien tersimpan / input baru =====
         } elseif (!is_null($reservasi_online->tipe_konsultasi_id) && !is_null($reservasi_online->registrasi_pembayaran_id) && is_null($reservasi_online->register_previously_saved_patient)) {
+            $this->chatBotLog(__LINE__);
             $data      = $this->queryPreviouslySavedPatientRegistry();
             $dataCount = count($data);
 
@@ -3580,10 +3583,13 @@ class WablasController extends Controller
             $reservasi_online->save();
 
         // ===== alur input BPJS (jika dipilih BPJS) =====
-        } elseif (!is_null($reservasi_online->tipe_konsultasi_id)
+        } elseif (
+            !is_null($reservasi_online->tipe_konsultasi_id)
             && !is_null($reservasi_online->registrasi_pembayaran_id)
             && !is_null($reservasi_online->register_previously_saved_patient)
-            && is_null($reservasi_online->nomor_asuransi_bpjs)) {
+            && is_null($reservasi_online->nomor_asuransi_bpjs))
+        {
+            $this->chatBotLog(__LINE__);
 
             $this->pesan_error = pesanErrorValidateNomorAsuransiBpjs($rawMsg);
             if (empty($this->pesan_error)) {
@@ -3668,8 +3674,9 @@ class WablasController extends Controller
             !is_null($reservasi_online->tipe_konsultasi_id)
             && !is_null($reservasi_online->registrasi_pembayaran_id)
             && !is_null($reservasi_online->register_previously_saved_patient)
-            && is_null($reservasi_online->nama)) {
-
+            && is_null($reservasi_online->nama))
+        {
+            $this->chatBotLog(__LINE__);
             if (validateName($rawMsg)) {
                 $reservasi_online->nama = ucwords(strtolower($rawMsg));
                 $reservasi_online->save();
@@ -3680,8 +3687,9 @@ class WablasController extends Controller
         } elseif (
             !is_null($reservasi_online->nomor_asuransi_bpjs)
             && !is_null($reservasi_online->nama)
-            && is_null($reservasi_online->tanggal_lahir)) {
-
+            && is_null($reservasi_online->tanggal_lahir))
+        {
+            $this->chatBotLog(__LINE__);
             $tanggal = $this->convertToPropperDate();
             if (!is_null($tanggal)) {
                 $reservasi_online->tanggal_lahir = $tanggal;
@@ -3692,15 +3700,18 @@ class WablasController extends Controller
 
         } elseif (
             !is_null($reservasi_online->tanggal_lahir)
-            && is_null($reservasi_online->alamat)) {
-
+            && is_null($reservasi_online->alamat))
+        {
+            $this->chatBotLog(__LINE__);
             $reservasi_online->alamat = $rawMsg;
             $reservasi_online->save();
 
         } elseif (
             !is_null($reservasi_online->alamat)
-            && is_null($reservasi_online->kartu_asuransi_image)) {
+            && is_null($reservasi_online->kartu_asuransi_image))
+        {
 
+            $this->chatBotLog(__LINE__);
             if ($this->isPicture()) {
                 $reservasi_online->kartu_asuransi_image = $this->uploadImage();
                 $reservasi_online->save();
@@ -3871,8 +3882,8 @@ class WablasController extends Controller
                 $this->chatBotLog(__LINE__);
                 $reservasi_online->waitlist_flag = 1; // setuju waitlist
                 $reservasi_online->save();
-
             } else {
+                $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
             }
         }
