@@ -29,6 +29,10 @@ class PetugasPemeriksa extends Model
     public function tipe_konsultasi(){
         return $this->belongsTo(TipeKonsultasi::class);
     }
+    public function getSlotPendaftaranAvailableAttribute(): int
+    {
+        return $this->slot_pendaftaran > 0 || $this->max_booking == 0;
+    }
     public function getSlotPendaftaranAttribute(): int
     {
         $tz    = 'Asia/Jakarta';
@@ -50,9 +54,6 @@ class PetugasPemeriksa extends Model
 
         return max($max - $existing, 0);
     }
-    public function getSisaAntrianAttribute(){
-        return $this->antrian->count();
-    }
 
     public function getBelumWaktunyaPraktekAttribute(){
         $now = Carbon::now();
@@ -68,6 +69,20 @@ class PetugasPemeriksa extends Model
     public function antrian(){
         return $this->hasMany(Antrian::class);
     }
+
+    public function antrian_menunggus()
+    {
+        return $this->hasMany(\App\Models\Antrian::class, 'antriable_id')
+                    ->whereIn('antriable_type', [
+                        \App\Models\Antrian::class,
+                        \App\Models\AntrianPoli::class,
+                        \App\Models\AntrianPeriksa::class,
+                    ]);
+    }
+    public function getSisaAntrianAttribute(){
+        return $this->antrian_menunggus->count();
+    }
+
 
     public function getWaktuTungguAttribute(){
         $count = $this->sisa_antrian;
