@@ -3919,12 +3919,15 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
 
-        /* } elseif ( !is_null($reservasi_online->staf_id)) { */
-        /*     $this->chatBotLog(__LINE__); */
-        /*     $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online); */
-        } elseif ( !is_null($reservasi_online->staf_id)) {
+        } elseif ( !$reservasi_online->reservasi_selesai) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
+        /* } elseif ( */
+        /*     $reservasi_online->schedulled_booking == 2 && */
+        /*     $reservasi_online->waitlist_flag == 1 */
+        /* ) { */
+        /*     $this->chatBotLog(__LINE__); */
+        /*     $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online); */
         }
 
         if (!empty(trim($message ?? ''))) {
