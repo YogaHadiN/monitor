@@ -6321,6 +6321,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         "Mohon maaf, kuota untuk saat ini *penuh*.\n".
                         "Kakak tetap kami simpan di *waitlist*. Jika ada pembukaan slot, kami akan menghubungi kembali."
                     );
+                    \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
                     return;
                 }
 
