@@ -3794,6 +3794,11 @@ class WablasController extends Controller
                             // Booking terjadwal: lock kuota saat finalisasi
                             $ppFinal = $reservasi_online->petugas_pemeriksa;
 
+                            Log::info('slot_pendaftaran_available');
+                            Log::info($ppFinal->slot_pendaftaran_available);
+                            Log::info('slot_pendaftaran');
+                            Log::info($ppFinal->slot_pendaftaran);
+
                             if ($ppFinal && !$ppFinal->slot_pendaftaran_available) {
                                 $this->chatBotLog(__LINE__);
                                 $reservasi_online->waitlist_flag      = 0;

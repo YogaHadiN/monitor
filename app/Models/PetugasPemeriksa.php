@@ -50,7 +50,7 @@ class PetugasPemeriksa extends Model
         $jumlah_reservasi_schedulled = ReservasiOnline::query()
             ->whereDate('created_at', $today)
             ->where('petugas_pemeriksa_id', $this->id)
-            ->where('waitlist_flag', 0)
+            ->whereNotNull('qrcode')
             ->count();
 
         $existing = $jumlah_antrian + $jumlah_reservasi_schedulled;
