@@ -3731,7 +3731,7 @@ class WablasController extends Controller
                     $start = \Carbon\Carbon::parse($pp->tanggal.' '.$pp->jam_mulai,                $tz)->seconds(0);
 
                     if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) {
-                        if ($this->kuotaBookingPetugasPenuh($pp, $reservasi_online->tipe_konsultasi_id)) {
+                        if ( $pp && !$pp->slot_pendaftaran_available ) {
                             // penuh → tawarkan waitlist
                             $reservasi_online->schedulled_booking = 1;
                             $reservasi_online->waitlist_flag      = null; // belum memilih
@@ -3782,14 +3782,9 @@ class WablasController extends Controller
 
                         if ((int)($reservasi_online->schedulled_booking ?? 0) === 1) {
                             // Booking terjadwal: lock kuota saat finalisasi
-                            $ppFinal = \App\Models\PetugasPemeriksa::query()
-                                ->where('staf_id', $reservasi_online->staf_id)
-                                ->whereDate('tanggal', \Carbon\Carbon::now($tz)->toDateString())
-                                ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
-                                ->lockForUpdate()
-                                ->first();
+                            $ppFinal = $reservasi_online->petugas_pemeriksa;
 
-                            if ($ppFinal && $this->kuotaBookingPetugasPenuh($ppFinal, $reservasi_online->tipe_konsultasi_id)) {
+                            if ($ppFinal && !$ppFinal->slot_pendaftaran_available)) {
                                 $reservasi_online->schedulled_booking = 1;
                                 $reservasi_online->waitlist_flag      = null;
                                 $reservasi_online->save();
