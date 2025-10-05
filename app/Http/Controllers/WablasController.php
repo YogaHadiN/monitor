@@ -3733,6 +3733,10 @@ class WablasController extends Controller
 
                     if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) {
                         $this->chatBotLog(__LINE__);
+                        Log::info("=====================");
+                        Log::info("pp");
+                        Log::info( $pp );
+                        Log::info("=====================");
                         if ( $pp && !$pp->slot_pendaftaran_available ) {
                             $this->chatBotLog(__LINE__);
                             // penuh → tawarkan waitlist
