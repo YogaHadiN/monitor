@@ -3721,6 +3721,7 @@ class WablasController extends Controller
                 $reservasi_online->staf_id              = $pp->staf_id;
                 $reservasi_online->petugas_pemeriksa_id = $pp->id;
                 $reservasi_online->ruangan_id           = $pp->ruangan_id;
+                $reservasi_online->schedulled_booking = $pp->schedulled_booking_allowed;
 
                 // ===== window booking terjadwal =====
                 $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
@@ -3737,7 +3738,6 @@ class WablasController extends Controller
                 /*             $this->chatBotLog(__LINE__); */
                 /*             // penuh → tawarkan waitlist */
                 /*             $reservasi_online->schedulled_booking = 1; */
-                /*             $reservasi_online->waitlist_flag      = null; // belum memilih */
                 /*             $reservasi_online->save(); */
 
                 /*             $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($pp)); */
