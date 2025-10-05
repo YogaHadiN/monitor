@@ -3721,7 +3721,7 @@ class WablasController extends Controller
                 $reservasi_online->staf_id              = $pp->staf_id;
                 $reservasi_online->petugas_pemeriksa_id = $pp->id;
                 $reservasi_online->ruangan_id           = $pp->ruangan_id;
-                $reservasi_online->schedulled_booking = $pp->schedulled_booking_allowed;
+                $reservasi_online->schedulled_booking   = $pp->schedulled_booking_allowed;
 
                 // ===== window booking terjadwal =====
                 $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
@@ -3758,18 +3758,6 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
             }
             $this->chatBotLog(__LINE__);
-        // ===== waitlist (ketika kuota penuh) =====
-        } elseif ((int)($reservasi_online->schedulled_booking ?? 0) === 2 && is_null($reservasi_online->waitlist_flag)) {
-            if (in_array($msg, ['ya','y','1'], true)) {
-                $reservasi_online->waitlist_flag = 1; // setuju waitlist
-                $reservasi_online->save();
-
-                $this->autoReply($this->pesanWaitlistTercatat());
-                return false;
-
-            } else {
-                $input_tidak_tepat = true;
-            }
 
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
         } elseif (!is_null($reservasi_online->staf_id)) {
@@ -3872,6 +3860,18 @@ class WablasController extends Controller
                     $this->chatBotLog(__LINE__);
                     $input_tidak_tepat = true;
                 }
+            }
+        // ===== waitlist (ketika kuota penuh) =====
+        } elseif ($reservasi_online->schedulled_booking === 2 && is_null($reservasi_online->waitlist_flag)) {
+            if (in_array($msg, ['ya','y','1'], true)) {
+                $reservasi_online->waitlist_flag = 1; // setuju waitlist
+                $reservasi_online->save();
+
+                $this->autoReply($this->pesanWaitlistTercatat());
+                return false;
+
+            } else {
+                $input_tidak_tepat = true;
             }
         }
 
