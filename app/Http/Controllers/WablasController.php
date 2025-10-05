@@ -3729,9 +3729,12 @@ class WablasController extends Controller
                 if ($isSchedulingAllowed && $hasOpenTime) {
                     $open  = \Carbon\Carbon::parse($pp->tanggal.' '. $this->tenant->jam_buka , $tz)->seconds(0);
                     $start = \Carbon\Carbon::parse($pp->tanggal.' '.$pp->jam_mulai,                $tz)->seconds(0);
+                    $this->chatBotLog(__LINE__);
 
                     if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) {
+                        $this->chatBotLog(__LINE__);
                         if ( $pp && !$pp->slot_pendaftaran_available ) {
+                            $this->chatBotLog(__LINE__);
                             // penuh → tawarkan waitlist
                             $reservasi_online->schedulled_booking = 1;
                             $reservasi_online->waitlist_flag      = null; // belum memilih
@@ -3742,14 +3745,14 @@ class WablasController extends Controller
                         }
                         $reservasi_online->schedulled_booking = 1; // booking terjadwal
                     } else {
+                        $this->chatBotLog(__LINE__);
                         $reservasi_online->schedulled_booking = 0; // daftar sekarang
                     }
                 } else {
+                    $this->chatBotLog(__LINE__);
                     $reservasi_online->schedulled_booking = 0;
                 }
-
                 $reservasi_online->save();
-
             } else {
                 $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
