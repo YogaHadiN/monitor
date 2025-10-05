@@ -6363,8 +6363,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     "Akses QR Code (simpan nomor WA ini agar tautan bisa diklik):\n{$qrLink}\n\n".
                     "Terima kasih 🙏"
                 );
-
-                resetWhatsappRegistration( $this->no_telp );
+                WhatsappBot::where('no_telp', $this->no_telp )->delete();
                 return;
 
             } catch (\Throwable $e) {
