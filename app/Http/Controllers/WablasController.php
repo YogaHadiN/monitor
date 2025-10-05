@@ -3945,7 +3945,7 @@ class WablasController extends Controller
             $reservasi_online->waitlist_flag == 1
         ) {
             $this->chatBotLog(__LINE__);
-            $message = $this->pesanWaitlistTercatat();
+            $message = $this->pesanWaitlistTercatat( $reservasi_online );
             \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
         }
 
@@ -6248,9 +6248,9 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         return "Kuota booking terjadwal sudah *penuh*.\nBalas *1/ya* untuk masuk *waitlist*, atau *2/tidak*.";
     }
 
-    protected function pesanWaitlistTercatat(): string
+    protected function pesanWaitlistTercatat($reservasi_online): string
     {
-        return "Siap, Kakak sudah kami masukkan ke *waitlist* untuk jadwal ini. Jika ada slot batal, kami hubungi secara *berurutan*. 🙏";
+        return "Siap, Kakak sudah kami masukkan ke *waitlist* untuk jadwal ini. Jika ada slot batal, kami hubungi secara *berurutan*. 🙏. Kode waitlist : " . $reservasi_online->id;
     }
 
     protected function pesanTolakWaitlistTawarkanDaftarSekarang(): string
