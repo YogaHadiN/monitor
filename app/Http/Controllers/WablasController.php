@@ -3288,8 +3288,6 @@ class WablasController extends Controller
         $this->jadwalGigi = $this->jamBukaDokterGigiHariIni();
 
         $this->chatBotLog(__LINE__);
-        Log::info('reservasi_online');
-        Log::info($reservasi_online);
         // ===== kalau state hilang: hentikan sesi =====
         if (is_null($reservasi_online)) {
             $this->chatBotLog(__LINE__);
