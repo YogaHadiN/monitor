@@ -6316,7 +6316,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
                 // Pastikan relasi ada dan cek kuota
                 $pp = $waitlist->petugas_pemeriksa ?? null;
-                if ($pp && ($pp->max_booking_achieved ?? false)) {
+                if (!$pp->slot_pendaftaran_available) {
                     // JANGAN rollback dulu, kita mau update flag agar tidak diproses ulang
                     $waitlist->waitlist_reservation_inquiry_sent = 0;
                     $waitlist->save();
