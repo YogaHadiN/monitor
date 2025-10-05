@@ -1,1 +1,31 @@
-$response = $wablas->sendMessage('085721012351', 'Halo, ini pesan uji coba dari Laravel via Wablas masss.');
+$datas = [
+  ['Andi Wijaya', '6281388880001', '1992-03-15', 'Jl. Anggrek No. 5, Tangerang', 'BX001', 11, 5, 2199, '13:00:00', '14:00:00', 15],
+  ['Dewi Lestari', '6281388880002', '1985-11-22', 'Perum Jati Elok Blok D No. 7', 'BX002', 12, 6, 2200, '14:00:00', '15:00:00', 20],
+  ['Budi Santoso', '6281388880003', '1990-06-10', 'Jl. Melati No. 3, Serpong', 'BX003', 13, 7, 2201, '15:00:00', '16:00:00', 10],
+  ['Siti Aminah', '6281388880004', '1995-08-19', 'Cluster Mawar Blok C No. 9', 'BX004', 14, 8, 2202, '16:00:00', '17:00:00', 25],
+  ['Rudi Hartono', '6281388880005', '1988-12-01', 'Perum Bunga Raya Blok F No. 2', 'BX005', 15, 9, 2203, '17:00:00', '18:00:00', 30],
+];foreach ($datas as $d) {
+    \App\Models\ReservasiOnline::create([
+        'nama' => $d[0],
+        'jenis_antrian_id' => 2,
+        'no_telp' => $d[1],
+        'tanggal_lahir' => $d[2],
+        'alamat' => $d[3],
+        'registrasi_pembayaran_id' => 1,
+        'whatsapp_bot_id' => 70433,
+        'tenant_id' => 1,
+        'qr_code_path_s3' => "image/online_reservation/qr_code/{$d[4]}.png",
+        'tipe_konsultasi_id' => 2,
+        'staf_id' => $d[5],
+        'ruangan_id' => $d[6],
+        'schedulled_booking' => 1,
+        'waitlist_flag' => 0,
+        'qrcode' => $d[4],
+        'petugas_pemeriksa_id' => $d[7],
+        'tanggal' => now('Asia/Jakarta')->toDateString(),
+        'jam_mulai_default' => $d[8],
+        'jam_akhir_default' => $d[9],
+        'schedulled_booking_allowed' => 1,
+        'max_booking' => $d[10],
+    ]);
+}

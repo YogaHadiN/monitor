@@ -6036,7 +6036,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     public function validasiDokterPengambilanAntrianDokterGigi()
     {
-        Log::info('validasiDokterPengambilanAntrianDokterGigi');
         $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
         $tigaPuluhMenitKeDepan = $nowJkt->copy()->addMinutes(30);
         // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
@@ -6057,8 +6056,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ->where('schedulled_booking_allowed', 1)
             ->orderBy('jam_mulai_default', 'asc');
 
-        Log::info('Query');
-        Log::info( $query->toRawSql() );
         $petugas_pemeriksa_terjadwal = $query->get();
 
         $dokter_gigi_q = \App\Models\PetugasPemeriksa::query()
@@ -6083,13 +6080,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $deadline = \Carbon\Carbon::parse($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default, 'Asia/Jakarta')->subMinutes(30);
                 $tipe_konsultasi = ucwords(optional($petugas_pemeriksa_terjadwal_akhir->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi');
 
-                Log::info('nowJkt');
-                Log::info($nowJkt->toTimeString());
-                Log::info('deadline');
-                Log::info($deadline->toTimeString());
-                Log::info('gte');
-                Log::info($nowJkt->gte($deadline));
-
                 if ($nowJkt->gte($deadline)) {
                     $message  = "Pendaftaran online terjadwal {$tipe_konsultasi} berakhir pukul {$deadline->format('H:i')}.";
                     $message .= PHP_EOL . PHP_EOL . 'Jadwal Dokter Gigi hari ini :';
@@ -6110,7 +6100,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         if ((int) $petugas_hari_ini->max_booking > 0) {
                             $message .= " (tersisa {$petugas_hari_ini->slot_pendaftaran} slot)"; // ← perbaikan variabel
                             $message .= PHP_EOL;
-                            $message .= "Silahkan daftar langsung jika masih ada slot";
+                            $message .= "Silahkan daftar di klinik jika masih ada slot";
                         }
                     }
 
