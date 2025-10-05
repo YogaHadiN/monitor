@@ -3793,6 +3793,7 @@ class WablasController extends Controller
                             if ($ppFinal && !$ppFinal->slot_pendaftaran_available) {
                                 $this->chatBotLog(__LINE__);
                                 $reservasi_online->waitlist_flag      = null;
+                                $reservasi_online->schedulled_booking = 2;
                                 $reservasi_online->save();
 
                                 $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
@@ -6408,7 +6409,4 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= 'Mohon maaf atas ketidaknyamanannya';
         return $message;
     }
-
-
-
 }
