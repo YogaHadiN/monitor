@@ -3736,6 +3736,10 @@ class WablasController extends Controller
                         Log::info("=====================");
                         Log::info("pp");
                         Log::info( $pp );
+                        Log::info("sisa_antrian");
+                        Log::info( $pp->sisa_antrian );
+                        Log::info("slot_pendaftaran");
+                        Log::info( $pp->slot_pendaftaran );
                         Log::info("=====================");
                         if ( $pp && !$pp->slot_pendaftaran_available ) {
                             $this->chatBotLog(__LINE__);
