@@ -4671,7 +4671,8 @@ class WablasController extends Controller
                 $jamTerakhirQR  = $jamMulaiGigi->copy()->subMinutes(15)->format('H:i');
 
                 $lines[] = "- Melakukan *scan QR* di klinik *sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem";
-                $lines[] = "- Nomor Antrian diberikan setelah Scan QR Code dan urutan berdasarkan urutan Scan QR Code";
+                $lines[] = "- Nomor Antrian diberikan setelah Scan QR Code dan urutan nomor antrian berdasarkan urutan Scan QR Code";
+                $lines[] = "- Pendaftaran dokter gigi secara langsung dimulai jam {$jamMulaiGigi->format('H:i')} hanya bila slot pendaftaran masih tersedia";
             } else {
                 // Fallback bila jadwal gigi belum di-set
                 $lines[] = '- Melakukan *scan QR* di klinik *paling lambat 15 menit* sebelum jam mulai pemeriksaan gigi.';
@@ -5765,12 +5766,9 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         // === KASUS KHUSUS: dokter gigi & antrian online dimatikan ===
         if (
-            (int) ($reservasi_online->tipe_konsultasi_id ?? 0) === 2 &&
-            /* (int) ($this->tenant->dentist_queue_enabled ?? 0) === 1 && */
-            (int) ($this->tenant->dentist_queue_enabled ?? 0) === 0 &&
-            $this->no_telp === '6281381912803'
+            $reservasi_online->tipe_konsultasi_id == 2 &&
+            (int) ($this->tenant->dentist_queue_enabled ?? 0) === 1
         ) {
-
 
             $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
             $tigaPuluhMenitKeDepan = $nowJkt->copy()->addMinutes(30);
@@ -5789,8 +5787,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return $query->get()
                 ->unique('id')
                 ->values();
-
-            // buat log untuk return raw sql
         }
 
         // === BEHAVIOR EXISTING (tetap model) ===
@@ -6068,8 +6064,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
         if (
             $this->tenant &&
-            (int) $this->tenant->dentist_queue_enabled === 0 &&
-            $this->no_telp !== '6281381912803'
+            (int) $this->tenant->dentist_queue_enabled === 1
         ) {
             $message  = $this->pesanAntrolDokterGigiNonAktif();
             $message .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
