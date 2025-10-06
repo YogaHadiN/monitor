@@ -3830,6 +3830,7 @@ class WablasController extends Controller
                                     $message .= PHP_EOL;
                                     $message .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
                                     $this->autoReply($message);
+                                    WhatsappBot::where('no_telp', $this->no_telp)->delete();
                                 }
                             }
                         } else {
