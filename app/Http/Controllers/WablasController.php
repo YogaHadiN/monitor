@@ -6387,7 +6387,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             if (function_exists('resetWhatsappRegistration')) {
                 resetWhatsappRegistration($this->no_telp);
             }
-
             $this->autoReply("Baik, kami batalkan permintaan waitlist Kakak. Terima kasih.");
             return;
         }
