@@ -6064,7 +6064,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
         if (
             $this->tenant &&
-            (int) $this->tenant->dentist_queue_enabled === 1
+            (int) $this->tenant->dentist_queue_enabled === 0
         ) {
             $message  = $this->pesanAntrolDokterGigiNonAktif();
             $message .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
