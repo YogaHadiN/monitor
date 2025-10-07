@@ -18,9 +18,6 @@ class ReservasiOnline extends Model
     }
     public static function boot(){
         parent::boot();
-        self::creating(function($model){
-            ReservasiOnline::where('no_telp', $model->no_telp )->delete();
-        });
     }
     public function pasien(){
         return $this->belongsTo(Pasien::class);
