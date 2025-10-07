@@ -12,7 +12,6 @@ use App\Models\WhatsappInbox;
 use App\Models\BpjsApiLog;
 use App\Models\Complain;
 use App\Models\SchedulledReservation;
-use App\Models\WaitlistReservation;
 use App\Models\Ruangan;
 use App\Models\PetugasPemeriksa;
 use App\Models\NoTelp;
@@ -3456,6 +3455,7 @@ class WablasController extends Controller
                     $reservasi_online->save();
 
                     $petugas_pemeriksa = $this->petugas_pemeriksa_sekarang($reservasi_online);
+                    // jika hanya ada satu petugas pemeriksa disana
                     if ($petugas_pemeriksa->count() === 1) {
                         $this->chatBotLog(__LINE__);
                         $reservasi_online->staf_id              = $petugas_pemeriksa->first()->staf_id;
@@ -3740,26 +3740,22 @@ class WablasController extends Controller
 
                 // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
                 // hapus reservasi sebelumnya
-                $query = ReservasiOnline::query()
+                $schedulled_reservation_existing = SchedulledReservation::query()
                     ->whereDate('created_at', $nowJkt->format('Y-m-d'))
                     ->where('staf_id', $pp->staf_id)
                     ->where('pasien_id', $reservasi_online->pasien_id)
-                    ->where('tenant_id', $reservasi_online->tenant_id);
+                    ->where('tenant_id', $reservasi_online->tenant_id)
+                    ->first();
 
-                $this->chatBotLog("======================");
-                $this->chatBotLog(__LINE__);
-                $this->chatBotLog('SQL: ' . $query->toRawSql());
-                $this->chatBotLog('Bindings: ' . json_encode($query->getBindings()));
 
-                $reservasi_existing = $query->first();
-                $this->chatBotLog('Result: ' . ($reservasi_existing ? json_encode($reservasi_existing->toArray()) : 'null'));
-                $this->chatBotLog("======================");
-                if ($reservasi_existing) {
+                if (
+                    $schedulled_reservation_existing
+                ) {
                     $this->chatBotLog(__LINE__);
                     //hapus reservasi yang dibuat saat ini
                     $reservasi_online->delete();
                     //kembalikan reservasi yang ada untuk dikirimkan qr code
-                    $this->balasanReservasiTerjadwalDibuat( $reservasi_existing );
+                    $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
                 }
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
@@ -3824,7 +3820,6 @@ class WablasController extends Controller
 
                                 // hapus ketika schedulled_reservation dibuat
                                 $reservasi_online->delete();
-
                                 $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation );
                             }
                         } else {
@@ -3885,7 +3880,10 @@ class WablasController extends Controller
 
                 $data                 = $reservasi_online->toArray();
                 unset($data['id']);
-                $waitlist_reservation = WaitlistReservation::create($data);
+                unset($data['pasien']);
+                unset($data['petugas_pemeriksa']);
+                unset($data['schedulled_reservation']);
+                $schedulled_reservation = SchedulledReservation::create($data);
             } else {
                 $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
@@ -6321,7 +6319,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         // Helper: ambil waitlist kandidat hari ini untuk nomor ini
         $getTodayWaitlist = function () use ($startToday, $endToday) {
             // Jika ada kolom sent_at gunakan itu; kalau belum, fallback ke updated_at
-            $query = \App\Models\WaitlistReservation::query()
+            $query = \App\Models\SchedulledReservation::query()
                         ->with(['staf','petugas_pemeriksa'])
                         ->where('waitlist_flag', 1)
                         ->where('waitlist_reservation_inquiry_sent', 1)
@@ -6343,7 +6341,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $reservasi_online->save();
                 $data = $reservasi_online->toArray();
                 unset($data['id']);
-                $waitlist         = WaitlistReservation::create($data);
+                $waitlist         = SchedulledReservation::create($data);
 
                 if (!$waitlist) {
                     \DB::rollBack();
