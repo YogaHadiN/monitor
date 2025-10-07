@@ -3741,15 +3741,16 @@ class WablasController extends Controller
                     ->whereDate('created_at', $nowJkt->format('Y-m-d'))
                     ->where('staf_id', $pp->staf_id)
                     ->where('pasien_id', $reservasi_online->pasien_id)
-                    ->where('tenant_id', $reservasi_online->tenant_id)
-                    ->first();
+                    ->where('tenant_id', $reservasi_online->tenant_id);
 
                 $this->chatBotLog("======================");
                 $this->chatBotLog(__LINE__);
-                $this->chatBotLog( 'raw' );
-                $this->chatBotLog( $query->toRawSql() );
+                $this->chatBotLog('SQL: ' . $query->toSql());
+                $this->chatBotLog('Bindings: ' . json_encode($query->getBindings()));
+
+                $reservasi_existing = $query->first();
+                $this->chatBotLog('Result: ' . ($reservasi_existing ? json_encode($reservasi_existing->toArray()) : 'null'));
                 $this->chatBotLog("======================");
-                $reservasi_existing->first();
                 if ($reservasi_existing) {
                     $this->chatBotLog(__LINE__);
                     //hapus reservasi yang dibuat saat ini
