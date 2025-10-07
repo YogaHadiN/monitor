@@ -3745,7 +3745,7 @@ class WablasController extends Controller
 
                 $this->chatBotLog("======================");
                 $this->chatBotLog(__LINE__);
-                $this->chatBotLog('SQL: ' . $query->toSql());
+                $this->chatBotLog('SQL: ' . $query->toRawSql());
                 $this->chatBotLog('Bindings: ' . json_encode($query->getBindings()));
 
                 $reservasi_existing = $query->first();
