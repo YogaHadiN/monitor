@@ -3734,6 +3734,22 @@ class WablasController extends Controller
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
 
                 $this->chatBotLog(__LINE__);
+
+                // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
+                // hapus reservasi sebelumnya
+                $reservasi_exists = ReservasiOnline::query()
+                    ->whereDate('tanggal', $nowJkt)
+                    ->where('staf_id', $pp->staf_id)
+                    ->where('pasien_id', $reservasi_online->pasien_id)
+                    ->exists();
+
+                if ($reservasi_exists) {
+                    ReservasiOnline::query()
+                        ->whereDate('tanggal', $nowJkt)
+                        ->where('staf_id', $pp->staf_id)
+                        ->where('pasien_id', $reservasi_online->pasien_id)
+                        ->delete();
+                }
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
                 $reservasi_online->petugas_pemeriksa_id = $pp->id;
@@ -3743,38 +3759,13 @@ class WablasController extends Controller
                 // ===== window booking terjadwal =====
                 $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
                 $hasOpenTime         = !empty( $this->tenant->jam_buka );
-
-                /* if ($isSchedulingAllowed && $hasOpenTime) { */
-                /*     $open  = \Carbon\Carbon::parse($pp->tanggal.' '. $this->tenant->jam_buka , $tz)->seconds(0); */
-                /*     $start = \Carbon\Carbon::parse($pp->tanggal.' '.$pp->jam_mulai,                $tz)->seconds(0); */
-                /*     $this->chatBotLog(__LINE__); */
-
-                /*     if ($nowJkt->betweenIncluded($open, $start->copy()->subSecond())) { */
-                /*         $this->chatBotLog(__LINE__); */
-                /*         if ( $pp && !$pp->slot_pendaftaran_available ) { */
-                /*             $this->chatBotLog(__LINE__); */
-                /*             // penuh → tawarkan waitlist */
-                /*             $reservasi_online->schedulled_booking = 1; */
-                /*             $reservasi_online->save(); */
-
-                /*             $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($pp)); */
-                /*             return false; */
-                /*         } */
-                /*         $reservasi_online->schedulled_booking = 1; // booking terjadwal */
-                /*     } else { */
-                /*         $this->chatBotLog(__LINE__); */
-                /*         $reservasi_online->schedulled_booking = 0; // daftar sekarang */
-                /*     } */
-                /* } else { */
-                /*     $this->chatBotLog(__LINE__); */
-                /*     $reservasi_online->schedulled_booking = 0; */
-                /* } */
                 $reservasi_online->save();
             } else {
                 $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
             }
             $this->chatBotLog(__LINE__);
+
 
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
         } elseif (!$reservasi_online->reservasi_selesai) {
@@ -3795,11 +3786,6 @@ class WablasController extends Controller
                             $this->chatBotLog(__LINE__);
                             // Booking terjadwal: lock kuota saat finalisasi
                             $ppFinal = $reservasi_online->petugas_pemeriksa;
-
-                            Log::info('slot_pendaftaran_available');
-                            Log::info($ppFinal->slot_pendaftaran_available);
-                            Log::info('slot_pendaftaran');
-                            Log::info($ppFinal->slot_pendaftaran);
 
                             if ($ppFinal && !$ppFinal->slot_pendaftaran_available) {
                                 $this->chatBotLog(__LINE__);
@@ -6637,6 +6623,4 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     public function pertanyaanKonfirmasiPilihanPenghapusan(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(16);
     }
-
-
 }
