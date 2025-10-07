@@ -4650,9 +4650,9 @@ class WablasController extends Controller
         $lines   = [];
         $lines[] = '*Dengan melanjutkan berarti Anda setuju dengan ketentuan berikut:*';
 
+        $lines[] = '- Jika antrean terlewat, silakan mengambil antrean kembali.';
         if ($tipe_id === 1) {
             // Poli umum
-            $lines[] = '- Jika antrean terlewat, silakan mengambil antrean kembali.';
             $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
         } elseif ($tipe_id === 2) {
             // Dokter gigi
