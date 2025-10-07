@@ -322,12 +322,13 @@ class WebRegistrationController extends Controller
         }
 
         if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
-            $wb             = new WablasController;
-            $wb->tenant     = $this->tenant;
-            $this->message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi();
-            if (!is_null( $this->message_wablas )) {
-                $this->message    = $this->message_wablas;
-            }
+            $this->message = 'Antrian dokter gigi hanya lewat whatsapp';
+            /* $wb             = new WablasController; */
+            /* $wb->tenant     = $this->tenant; */
+            /* $this->message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi(); */
+            /* if (!is_null( $this->message_wablas )) { */
+            /*     $this->message    = $this->message_wablas; */
+            /* } */
         }
         $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
         return compact(

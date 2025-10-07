@@ -18,6 +18,12 @@ class PetugasPemeriksa extends Model
     public function antrians(){
         return $this->hasMany(Antrian::class);
     }
+    public function schedulled_reservations(){
+        return $this->hasMany(SchedulledReservation::class);
+    }
+    public function waitlist_reservations(){
+        return $this->hasMany(WaitlistReservation::class);
+    }
     public function ruangan(){
         return $this->belongsTo(Ruangan::class);
     }
@@ -36,6 +42,7 @@ class PetugasPemeriksa extends Model
     {
         return $this->slot_pendaftaran > 0 || $this->max_booking == 0;
     }
+
     public function getSlotPendaftaranAttribute(): int
     {
         $tz    = 'Asia/Jakarta';
@@ -47,11 +54,7 @@ class PetugasPemeriksa extends Model
             ->count();
 
         // Hitung reservasi online terjadwal hari ini
-        $jumlah_reservasi_schedulled = ReservasiOnline::query()
-            ->whereDate('created_at', $today)
-            ->where('petugas_pemeriksa_id', $this->id)
-            ->whereNotNull('qrcode')
-            ->count();
+        $jumlah_reservasi_schedulled = $this->schedulled_reservations->count();
 
         $existing = $jumlah_antrian + $jumlah_reservasi_schedulled;
         $max      = (int) ($this->max_booking ?? 0);

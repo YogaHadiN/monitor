@@ -11,6 +11,8 @@ use App\Models\JadwalKonsultasi;
 use App\Models\WhatsappInbox;
 use App\Models\BpjsApiLog;
 use App\Models\Complain;
+use App\Models\SchedulledReservation;
+use App\Models\WaitlistReservation;
 use App\Models\Ruangan;
 use App\Models\PetugasPemeriksa;
 use App\Models\NoTelp;
@@ -3804,18 +3806,19 @@ class WablasController extends Controller
 
                                 $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
                             } else {
-                                // generate QR booking (tanpa membuat antrian)
-                                $this->chatBotLog(__LINE__);
-                                $reservasi_online->qrcode            = $this->generateQrCodeForOnlineReservation('B', $reservasi_online);
+                                // generate QR booking (tanpa membuat antrian tapi buat schedulled_reservations)
                                 $reservasi_online->save();
+                                $data = $reservasi_online->toArray();
+                                unset($data['id']);
+                                $schedulled_reservation         = SchedulledReservation::create($data);
 
-                                if (method_exists($this, 'getQrCodeMessageBooking')) {
-                                    $this->chatBotLog(__LINE__);
-                                    $this->autoReply($this->getQrCodeMessageBooking($reservasi_online));
-                                } else {
-                                    $this->chatBotLog(__LINE__);
-                                    $this->balasanReservasiTerjadwalDibuat( $reservasi_online );
-                                }
+                                $schedulled_reservation->qrcode = $this->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
+                                $schedulled_reservation->save();
+
+                                // hapus ketika schedulled_reservation dibuat
+                                $reservasi_online->delete();
+
+                                $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation );
                             }
                         } else {
 
@@ -6324,7 +6327,12 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             try {
                 \DB::beginTransaction();
 
-                $waitlist = $getTodayWaitlist();
+                $reservasi_online = $getTodayWaitlist();
+
+                $reservasi_online->save();
+                $data = $reservasi_online->toArray();
+                unset($data['id']);
+                $waitlist         = WaitlistReservation::create($data);
 
                 if (!$waitlist) {
                     \DB::rollBack();
@@ -6332,6 +6340,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
+                $reservasi_online->delete();
                 // Pastikan relasi ada dan cek kuota
                 $pp = $waitlist->petugas_pemeriksa ?? null;
                 if (!$pp->slot_pendaftaran_available) {
