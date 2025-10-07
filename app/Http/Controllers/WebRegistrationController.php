@@ -326,6 +326,9 @@ class WebRegistrationController extends Controller
 
         if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
             $this->message = 'Antrian dokter gigi hanya lewat whatsapp';
+            if ( $web_registration ) {
+                $web_registration->delete();
+            }
             /* $wb             = new WablasController; */
             /* $wb->tenant     = $this->tenant; */
             /* $this->message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi(); */
@@ -439,8 +442,20 @@ class WebRegistrationController extends Controller
             $this->message = 'registrasi tidak ditemukan';
         } else {
             $petugas_pemeriksa = PetugasPemeriksa::find($petugas_pemeriksa_id);
-
             if ($petugas_pemeriksa) {
+                if (
+                    !$petugas_pemeriksa->registration_enabled
+                ) {
+                    $web_registration->delete();
+                    $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
+                    $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup";
+                } else if (
+                    !$petugas_pemeriksa->slot_pendaftaran_available
+                ) {
+                    $web_registration->delete();
+                    $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
+                    $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup karena sudah penuh";
+                }
                 $web_registration->staf_id    = $petugas_pemeriksa->staf_id;
                 $web_registration->ruangan_id = $petugas_pemeriksa->ruangan_id;
                 $web_registration->save();

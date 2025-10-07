@@ -3875,6 +3875,10 @@ class WablasController extends Controller
                 $this->chatBotLog(__LINE__);
                 $reservasi_online->waitlist_flag = 1; // setuju waitlist
                 $reservasi_online->save();
+
+                $data                 = $reservasi_online->toArray();
+                unset($data['id']);
+                $waitlist_reservation = WaitlistReservation::create($data);
             } else {
                 $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
@@ -6310,7 +6314,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         // Helper: ambil waitlist kandidat hari ini untuk nomor ini
         $getTodayWaitlist = function () use ($startToday, $endToday) {
             // Jika ada kolom sent_at gunakan itu; kalau belum, fallback ke updated_at
-            $query = \App\Models\ReservasiOnline::query()
+            $query = \App\Models\WaitlistReservation::query()
                         ->with(['staf','petugas_pemeriksa'])
                         ->where('waitlist_flag', 1)
                         ->where('waitlist_reservation_inquiry_sent', 1)
@@ -6319,7 +6323,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         ->whereBetween('created_at', [$startToday, $endToday])
                         ->orderByDesc('created_at');
 
-            return $query->first();
+            return $query->get();
         };
 
         // ====== KONFIRMASI "YA" ======
