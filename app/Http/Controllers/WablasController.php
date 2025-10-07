@@ -8,6 +8,7 @@ use App\Models\AntrianPoli;
 use App\Models\Message;
 use App\Models\KeluhanEstetik;
 use App\Models\JadwalKonsultasi;
+use App\Models\BlokirWa;
 use App\Models\WhatsappInbox;
 use App\Models\BpjsApiLog;
 use App\Models\Complain;
@@ -180,6 +181,9 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
+        if ( BlokirWa::where('no_telp', $this->no_telp)->exists() ) {
+            return;
+        }
 
         if ( !is_null( $this->no_telp ) ) {
             $no_telp = NoTelp::firstOrCreate([
