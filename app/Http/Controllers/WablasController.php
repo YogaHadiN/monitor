@@ -3810,6 +3810,9 @@ class WablasController extends Controller
                                 $reservasi_online->save();
                                 $data = $reservasi_online->toArray();
                                 unset($data['id']);
+                                unset($data['pasien']);
+                                unset($data['petugas_pemeriksa']);
+                                unset($data['schedulled_reservation']);
                                 $this->chatBotLog("====================");
                                 $this->chatBotLog("DAT");
                                 $this->chatBotLog( $data );
