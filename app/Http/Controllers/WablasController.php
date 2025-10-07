@@ -4837,9 +4837,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $a = $antrians->first();
 
         DB::transaction(function () use ($a) {
-            Log::info(class_basename($a));
-            $a->dibatalkan_pasien = 1;
-            $a->save();
+            if ( class_basename( $a ) == 'Antrian' ) {
+                $a->dibatalkan_pasien = 1;
+                $a->save();
+            }
 
             if ($a->antriable) {
                 $a->antriable->delete();
