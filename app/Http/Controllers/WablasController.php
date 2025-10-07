@@ -3813,7 +3813,7 @@ class WablasController extends Controller
                                 $this->chatBotLog("====================");
                                 $this->chatBotLog("DAT");
                                 $this->chatBotLog( $data );
-                                $this->chatBotLog("====================")
+                                $this->chatBotLog("====================");
                                 $schedulled_reservation         = SchedulledReservation::create($data);
 
                                 $schedulled_reservation->qrcode = $this->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
