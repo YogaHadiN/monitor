@@ -1,11 +1,11 @@
-@php /** @var \App\Models\ReservasiOnline $reservasi */ @endphp
+@php /** @var \App\Models\ReservasiOnline $schedulled_reservation */ @endphp
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>QR Reservasi #{{ $reservasi->id }}</title>
+  <title>QR Reservasi #{{ $schedulled_reservation->id }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body{background:#f6f8fb}
@@ -26,20 +26,20 @@
         </div>
 
         <div class="mb-3">
-            <div><strong>Reservasi Id:</strong> {{ $reservasi->id }}</div>
+            <div><strong>Reservasi Id:</strong> {{ $schedulled_reservation->id }}</div>
           <div><strong>Pasien:</strong> {{ $pasienNama }}</div>
           <div><strong>Dokter:</strong> {{ $dokterNama }}</div>
           <div><strong>Jam Mulai:</strong> {{ $jamMulaiStr }} WIB</div>
           <div class="small text-muted mt-1">Pastikan kecerahan layar cukup agar mudah dipindai.</div>
-          <div class="small text-muted mt-1"> <strong><i>Mohon scan qr di klinik sebelum jam {{ $jam_reservasi_dihapus }}. Agar reservasi ini tidak terhapus secara otomatis</i></strong></div>
+          <div class="small text-muted mt-1"> <strong><i>Mohon scan qr di klinik sebelum jam {{ $jam_schedulled_reservation_dihapus }}. Agar reservasi ini tidak terhapus secara otomatis</i></strong></div>
         </div>
 
         <div class="qr-wrap mb-3 text-center">
           {{-- Jika pakai disk publik (URL langsung) --}}
-          <img class="qr" src="{{ $qrUrl }}" alt="QR Reservasi #{{ $reservasi->id }}">
+          <img class="qr" src="{{ $qrUrl }}" alt="QR Reservasi #{{ $schedulled_reservation->id }}">
 
           {{-- Jika disk private, gunakan ini (hapus yang atas):
-          <img class="qr" src="{{ route('schedulled_reservations.qr.image', $reservasi) }}" alt="QR Reservasi #{{ $reservasi->id }}">
+          <img class="qr" src="{{ route('schedulled_reservations.qr.image', $schedulled_reservation) }}" alt="QR Reservasi #{{ $schedulled_reservation->id }}">
           --}}
         </div>
 
@@ -49,7 +49,7 @@
           type="button"
           id="btn-cancel"
           class="btn btn-danger w-100"
-          data-cancel-url="{{ route('reservations.destroy', $reservasi->id) }}">
+          data-cancel-url="{{ route('reservations.destroy', $schedulled_reservation->id) }}">
           Batalkan Reservasi
         </button>
         </div>
