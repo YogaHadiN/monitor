@@ -3737,7 +3737,7 @@ class WablasController extends Controller
 
                 // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
                 // hapus reservasi sebelumnya
-                $reservasi_existing = ReservasiOnline::query()
+                $query = ReservasiOnline::query()
                     ->whereDate('created_at', $nowJkt->format('Y-m-d'))
                     ->where('staf_id', $pp->staf_id)
                     ->where('pasien_id', $reservasi_online->pasien_id)
@@ -3746,8 +3746,10 @@ class WablasController extends Controller
 
                 $this->chatBotLog("======================");
                 $this->chatBotLog(__LINE__);
-                $this->chatBotLog( $reservasi_existing );
+                $this->chatBotLog( 'raw' );
+                $this->chatBotLog( $query->toRawSql() );
                 $this->chatBotLog("======================");
+                $reservasi_existing->first();
                 if ($reservasi_existing) {
                     $this->chatBotLog(__LINE__);
                     //hapus reservasi yang dibuat saat ini
