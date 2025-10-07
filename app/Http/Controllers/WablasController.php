@@ -3280,6 +3280,7 @@ class WablasController extends Controller
         // ===== ambil state reservasi =====
         $reservasi_online = \App\Models\ReservasiOnline::with('pasien')
             ->where('no_telp', $this->no_telp)
+            ->where('reservasi_selesai', 0)
             ->when(isset($this->whatsapp_bot) && $this->whatsapp_bot?->id, function ($q) {
                 $q->where('whatsapp_bot_id', $this->whatsapp_bot->id);
             })
