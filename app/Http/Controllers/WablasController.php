@@ -4837,7 +4837,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $a = $antrians->first();
 
         DB::transaction(function () use ($a) {
-            Log::info(class_basename($a););
+            Log::info(class_basename($a));
             $a->dibatalkan_pasien = 1;
             $a->save();
 
