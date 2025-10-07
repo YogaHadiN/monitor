@@ -3749,7 +3749,7 @@ class WablasController extends Controller
                 $this->chatBotLog( $reservasi_existing );
                 $this->chatBotLog("======================");
                 if ($reservasi_existing) {
-                    $this->chatBotLog(__LINE__)
+                    $this->chatBotLog(__LINE__);
                     //hapus reservasi yang dibuat saat ini
                     $reservasi_online->delete();
                     //kembalikan reservasi yang ada untuk dikirimkan qr code
