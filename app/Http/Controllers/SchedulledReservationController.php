@@ -3,6 +3,24 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Route as RouteFacade;
+use App\Models\ReservasiOnline;
+use App\Models\PetugasPemeriksa;
+use App\Models\SchedulledReservation;
+use Carbon\Carbon;
+
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\SendWhatsappMessageJob;
+use App\Http\Controllers\WablasController;
+use Illuminate\Http\JsonResponse;
+
+// endroid/qr-code
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\Writer\PngWriter;
 
 class SchedulledReservationController extends Controller
 {
