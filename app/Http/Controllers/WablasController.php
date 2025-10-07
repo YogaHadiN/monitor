@@ -4771,8 +4771,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     private function hapusAntrianWhatsappBotReservasiOnline()
     {
-        $antrians = $this->getReservasiOnlineBelumHadirHariIni();
-        $count = $antrians->count();
+        $items = $this->getReservasiOnlineBelumHadirHariIni();
+        $count = $items->count();
 
         // === 0 item: tidak ada yang perlu dihapus ===
         if ($count === 0) {
