@@ -3751,7 +3751,6 @@ class WablasController extends Controller
                 $reservasi_existing = $query->first();
                 $this->chatBotLog('Result: ' . ($reservasi_existing ? json_encode($reservasi_existing->toArray()) : 'null'));
                 $this->chatBotLog("======================");
-                return;
                 if ($reservasi_existing) {
                     $this->chatBotLog(__LINE__);
                     //hapus reservasi yang dibuat saat ini
