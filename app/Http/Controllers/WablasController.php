@@ -407,9 +407,9 @@ class WablasController extends Controller
                         } else if (!is_null( $this->whatsapp_recovery_index  )) {
                             $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
-                        } else if (!is_null( $this->konfirmasiPilihanPenghapusan()  )) {
+                        } else if (!is_null( $this->pertanyaanKonfirmasiPilihanPenghapusan()  )) {
                             $this->chatBotLog(__LINE__);
-                            return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
+                            return $this->konfirmasiPilihanPenghapusan(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
                             $this->chatBotLog(__LINE__);
                             return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
@@ -4837,6 +4837,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $a = $antrians->first();
 
         DB::transaction(function () use ($a) {
+            Log::info(class_basename($a););
             $a->dibatalkan_pasien = 1;
             $a->save();
 
@@ -6518,4 +6519,123 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= 'Mohon maaf atas ketidaknyamanannya';
         return $message;
     }
+    public function konfirmasiPilihanPenghapusan()
+    {
+        $tz       = 'Asia/Jakarta';
+
+        // Ambil angka pilihan dari pesan user
+        $raw = is_string($this->message) ? trim($this->message) : '';
+        // ambil angka pertama di pesan (dukungan untuk 'hapus 2', 'pilih 1', dsb)
+        if (!preg_match('/\b(\d+)\b/u', $raw, $m)) {
+            return $this->autoReply("Format tidak dikenali. Balas dengan angka yang sesuai (misal: 2) atau 0 untuk semua.");
+        }
+        $choice = (int) $m[1];
+
+        $items = $this->getReservasiOnlineBelumHadirHariIni();
+        $count = $items->count();
+
+        if ($count === 0) {
+            resetWhatsappRegistration( $this->no_telp );
+            $this->autoReply(
+                "Tidak ada lagi antrean/reservasi yang bisa dibatalkan.\n" .
+                "Silakan kirim perintah pembatalan lagi untuk memuat daftar terbaru."
+            );
+        }
+
+        // === 0: Hapus semua
+        if ($choice === 0) {
+            DB::transaction(function () use ($items) {
+                foreach ($items as $item) {
+                    if ($item instanceof Antrian) {
+                        // flag batal (jika kolom tersedia)
+                        if (isset($item->dibatalkan_pasien)) {
+                            $item->dibatalkan_pasien = 1;
+                            $item->save();
+                        }
+                        // hapus sumber reservasi jika ada
+                        if ($item->antriable) {
+                            $item->antriable->delete();
+                        }
+                        $item->delete();
+                    } elseif ($item instanceof ReservasiOnline) {
+                        // jika ada antrian yang bersumber dari reservasi ini dan belum hadir → ikut hapus
+                        Antrian::where('antriable_type', ReservasiOnline::class)
+                            ->where('antriable_id', $item->id)
+                            ->where('sudah_hadir_di_klinik', 0)
+                            ->get()
+                            ->each(function ($a) {
+                                if (isset($a->dibatalkan_pasien)) {
+                                    $a->dibatalkan_pasien = 1;
+                                    $a->save();
+                                }
+                                $a->delete();
+                            });
+                        $item->delete();
+                    }
+                }
+            });
+
+            Cache::forget($cacheKey);
+            resetWhatsappRegistration($this->no_telp);
+
+            return $this->autoReply("Semua antrean/reservasi pada daftar tersebut telah dibatalkan.\nSemua fitur WhatsApp telah di-reset.");
+        }
+
+        // === 1..N: Hapus sesuai pilihan
+        if ($choice < 1 || $choice > $count) {
+            return $this->autoReply("Nomor pilihan tidak valid. Balas dengan angka antara 1 dan {$count}, atau 0 untuk semua.");
+        }
+
+        $target = $items->get($choice - 1);
+        if (!$target) {
+            return $this->autoReply("Pilihan tidak ditemukan. Coba kirim perintah pembatalan lagi untuk memuat daftar terbaru.");
+        }
+
+        // Hapus yang dipilih
+        DB::transaction(function () use ($target) {
+            if ($target instanceof Antrian) {
+                if (isset($target->dibatalkan_pasien)) {
+                    $target->dibatalkan_pasien = 1;
+                    $target->save();
+                }
+                if ($target->antriable) {
+                    $target->antriable->delete();
+                }
+                $target->delete();
+            } elseif ($target instanceof ReservasiOnline) {
+                // hapus antrian turunannya jika ada
+                Antrian::where('antriable_type', ReservasiOnline::class)
+                    ->where('antriable_id', $target->id)
+                    ->where('sudah_hadir_di_klinik', 0)
+                    ->get()
+                    ->each(function ($a) {
+                        if (isset($a->dibatalkan_pasien)) {
+                            $a->dibatalkan_pasien = 1;
+                            $a->save();
+                        }
+                        $a->delete();
+                    });
+                $target->delete();
+            }
+        });
+
+        // Info untuk konfirmasi
+        $jam = optional($target->created_at)->setTimezone($tz)->format('H:i');
+        $nm  = $target->nama
+            ?? ($target instanceof Antrian ? (optional($target->antriable)->nama ?? 'pasien') : 'pasien');
+
+        // Bersihkan state sesi
+        Cache::forget($cacheKey);
+        resetWhatsappRegistration($this->no_telp);
+
+        return $this->autoReply(
+            "Reservasi/antrean atas nama {$nm} (dibuat sekitar {$jam} WIB) telah dibatalkan.\n" .
+            "Semua fitur WhatsApp telah di-reset. Jika diperlukan, Anda bisa melakukan pendaftaran kembali."
+        );
+    }
+    public function pertanyaanKonfirmasiPilihanPenghapusan(){
+        return $this->cekListPhoneNumberRegisteredForWhatsappBotService(16);
+    }
+
+
 }
