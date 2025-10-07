@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 use App\Models\AntrianPoli;
 use App\Models\Message;
@@ -406,6 +407,9 @@ class WablasController extends Controller
                         } else if (!is_null( $this->whatsapp_recovery_index  )) {
                             $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
+                        } else if (!is_null( $this->konfirmasiPilihanPenghapusan()  )) {
+                            $this->chatBotLog(__LINE__);
+                            return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
                             $this->chatBotLog(__LINE__);
                             return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
@@ -4739,32 +4743,118 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
      *
      * @return void
      */
-    private function hapusAntrianWhatsappBotReservasiOnline($hapus_antrian = true)
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function getReservasiOnlineBelumHadirHariIni()
     {
-        if ( $hapus_antrian ) {
-            $from = date('Y-m-d 00:00:00');
-            $to   = date('Y-m-d 23:59:59');
-            $antrians = Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
-                ->where('no_telp', $this->no_telp)
-                ->where('sudah_hadir_di_klinik', 0)
-                ->whereRaw("
-                        (
-                            antriable_type = 'App\\\Models\\\Antrian'
-                        )
-                    ")
-                ->get();
+        $tz   = 'Asia/Jakarta';
+        $from = Carbon::now($tz)->startOfDay();
+        $to   = Carbon::now($tz)->endOfDay();
 
-            foreach ($antrians as $antrian) {
-                $antrian->dibatalkan_pasien = 1;
-                $antrian->save();
-                if ($antrian->antriable) {
-                    $antrian->antriable->delete();
-                }
-                $antrian->delete();
-            }
+        // Ambil semua antrian hari ini utk no_telp ini, belum hadir, sumber ReservasiOnline
+        $antrians = Antrian::with(['staf','ruangan','antriable'])
+            ->whereBetween('created_at', [$from, $to])
+            ->where('no_telp', $this->no_telp)
+            ->where('sudah_hadir_di_klinik', 0)
+            ->orderBy('created_at')
+            ->get();
+
+        $reservasi_onlines = ReservasiOnline::with('staf')
+            ->whereBetween('created_at', [$from, $to])
+            ->where('no_telp', $this->no_telp)
+            ->orderBy('created_at')
+            ->get();
+
+        // Gabungkan keduanya
+        $gabungan = $antrians->concat($reservasi_onlines);
+
+        // Urutkan lagi berdasarkan created_at biar rapi
+        return $gabungan->sortBy('created_at')->values();
+    }
+
+    private function opsiAngkaText(int $n): string
+    {
+        if ($n <= 1) return '*1*';
+        $nums = range(1, $n);
+        $last = array_pop($nums);
+        return '*' . implode(', ', $nums) . ' atau ' . $last . '*';
+    }
+
+    private function hapusAntrianWhatsappBotReservasiOnline()
+    {
+        $antrians = $this->getReservasiOnlineBelumHadirHariIni();
+        $count = $antrians->count();
+
+        // === 0 item: tidak ada yang perlu dihapus ===
+        if ($count === 0) {
+            resetWhatsappRegistration($this->no_telp);
+            $this->autoReply('Tidak ada reservasi/antrean aktif hari ini untuk nomor ini. Semua fitur WhatsApp telah di-reset.');
         }
-        resetWhatsappRegistration( $this->no_telp );
-        return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
+
+        // === >1 item: kirim pilihan dulu ===
+        if ($count > 1) {
+            // simpan id ke cache (biar bisa diproses setelah pasien balas angka)
+            $cacheKey = "hapus_antrian_{$this->no_telp}";
+            $map = $items->pluck('id')->toArray();
+            Cache::put($cacheKey, $map, now()->addMinutes(10));
+
+            // bangun pesan
+            $lines   = [];
+            $counter = 1;
+
+            foreach ($items as $item) {
+                $id     = $item->id;
+                $code   = $item instanceof Antrian ? "#A{$id}" : "#R{$id}";
+                $jam    = $item->jam ?? $item->created_at->format('H:i');
+                $nama   = $item->nama ?? '-';
+                $staf   = $item->staf->nama ?? '-';
+                $ruang  = $item->ruangan->nama ?? '-';
+
+                $lines[] = "{$counter}. {$nama} ({$code}) • {$jam} • Staf: {$staf} • Ruangan: {$ruang}";
+                $counter++;
+            }
+
+            $opsi = $this->opsiAngkaText($count);
+
+            $msg = "Terdapat {$count} antrean/reservasi aktif hari ini untuk nomor ini.\n\n"
+                 . implode("\n", $lines) . "\n\n"
+                 . "Balas dengan angka {$opsi} sesuai pilihan yang ingin dibatalkan\n"
+                 . "Ketik *0* untuk membatalkan semua.";
+            $this->autoReply( $msg );
+
+            WhatsappBot::create([
+                'whatsapp_bot_service_id' => 16,
+                'no_telp'                 => $this->no_telp,
+                'staf_id'                 => 0,
+                'prevent_repetition'      => 0
+            ]);
+        }
+
+        // === 1 item: langsung hapus ===
+        $a = $antrians->first();
+
+        DB::transaction(function () use ($a) {
+            $a->dibatalkan_pasien = 1;
+            $a->save();
+
+            if ($a->antriable) {
+                $a->antriable->delete();
+            }
+
+            $a->delete();
+        });
+
+        resetWhatsappRegistration($this->no_telp);
+
+        $jam = optional($a->created_at)->setTimezone($tz)->format('H:i');
+        $nm  = $a->nama ?: (optional($a->antriable)->nama ?? 'pasien');
+
+
+        $msg =  "Reservasi/antrean atas nama {$nm} (dibuat sekitar {$jam} WIB) telah dibatalkan. Semua fitur WhatsApp telah di-reset. Jika diperlukan, Anda bisa melakukan pendaftaran kembali.";
+        $this->autoReply($msg);
     }
 
     public function sudahAdaAntrianUntukTipeKonsultasi($tipe_konsultasi_id){
