@@ -3810,6 +3810,10 @@ class WablasController extends Controller
                                 $reservasi_online->save();
                                 $data = $reservasi_online->toArray();
                                 unset($data['id']);
+                                $this->chatBotLog("====================")
+                                $this->chatBotLog("DAT")
+                                $this->chatBotLog( $data )
+                                $this->chatBotLog("====================")
                                 $schedulled_reservation         = SchedulledReservation::create($data);
 
                                 $schedulled_reservation->qrcode = $this->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
