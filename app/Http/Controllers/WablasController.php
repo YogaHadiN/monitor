@@ -6332,7 +6332,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         ->whereBetween('created_at', [$startToday, $endToday])
                         ->orderByDesc('created_at');
 
-            return $query->get();
+            return $query->first();
         };
 
         // ====== KONFIRMASI "YA" ======
@@ -6340,12 +6340,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             try {
                 \DB::beginTransaction();
 
-                $reservasi_online = $getTodayWaitlist();
-
-                $reservasi_online->save();
-                $data = $reservasi_online->toArray();
-                unset($data['id']);
-                $waitlist         = SchedulledReservation::create($data);
+                $waitlist = $getTodayWaitlist();
 
                 if (!$waitlist) {
                     \DB::rollBack();
@@ -6353,7 +6348,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     return;
                 }
 
-                $reservasi_online->delete();
                 // Pastikan relasi ada dan cek kuota
                 $pp = $waitlist->petugas_pemeriksa ?? null;
                 if (!$pp->slot_pendaftaran_available) {
@@ -6373,8 +6367,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 // Konversi ke booking aktif (idempoten)
                 $waitlist->waitlist_flag                     = 0;
                 $waitlist->schedulled_booking                = 1;
-                $waitlist->registering_confirmation          = 1;
-                $waitlist->reservasi_selesai                 = 0; // tetap aktif sampai visit selesai
+                $waitlist->reservasi_selesai                 = 1; // tetap aktif sampai visit selesai
                 $waitlist->waitlist_reservation_inquiry_sent = 0; // agar tidak diproses ulang
 
                 // Generate QR & simpan expiry
@@ -6425,8 +6418,9 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             try {
                 // Kalau ingin aman, batasi ke hari ini juga
                 \DB::transaction(function () use ($startToday, $endToday) {
-                    \App\Models\ReservasiOnline::query()
+                    \App\Models\SchedulledReservation::query()
                         ->where('no_telp', $this->no_telp)
+                        ->whereDate('created_at', $now)
                         ->delete();
                 });
             } catch (\Throwable $e) { /* ignore */ }
