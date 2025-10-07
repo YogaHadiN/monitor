@@ -4769,97 +4769,30 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         return '*' . implode(', ', $nums) . ' atau ' . $last . '*';
     }
 
-    private function hapusAntrianWhatsappBotReservasiOnline(): void
+    private function hapusAntrianWhatsappBotReservasiOnline($hapus_antrian = true)
     {
-        $tz    = 'Asia/Jakarta';
-        $now   = Carbon::now($tz);
+        $from = date('Y-m-d 00:00:00');
+        $to   = date('Y-m-d 23:59:59');
+        $antrians = Antrian::whereRaw("created_at between '{$from}' and '{$to}'")
+            ->where('no_telp', $this->no_telp)
+            ->where('sudah_hadir_di_klinik', 0)
+            ->whereRaw("
+                    (
+                        antriable_type = 'App\\\Models\\\Antrian'
+                    )
+                ")
+            ->get();
 
-        // Ambil item aktif (gabungan Antrian &/atau ReservasiOnline)
-        $items = $this->getReservasiOnlineBelumHadirHariIni();
-        $count = $items->count();
-
-        // === 0 item: tidak ada yang perlu dihapus ===
-        if ($count === 0) {
-            resetWhatsappRegistration($this->no_telp);
-            $this->autoReply('Tidak ada reservasi/antrean aktif hari ini untuk nomor ini. Semua fitur WhatsApp telah di-reset.');
-            return; // <- WAJIB return supaya tidak lanjut eksekusi
-        }
-
-        // === >1 item: kirim pilihan dulu ===
-        if ($count > 1) {
-            // simpan id ke cache (biar bisa diproses setelah pasien balas angka)
-            $cacheKey = "hapus_antrian_{$this->no_telp}";
-            $map      = $items->pluck('id')->toArray();
-            Cache::put($cacheKey, $map, now()->addMinutes(10));
-
-            // Bangun daftar opsi
-            $lines   = [];
-            $counter = 1;
-            foreach ($items as $item) {
-                $isAntrian = class_basename($item) === 'Antrian';
-                $prefix    = $isAntrian ? '#A' : '#R';
-                $code      = "{$prefix}{$item->id}";
-                $jam       = $item->jam
-                            ?? optional($item->created_at)->setTimezone($tz)?->format('H:i')
-                            ?? '-';
-                // akses relasi secara aman (bisa saja tidak eager loaded)
-                $nama  = $item->nama ?? '-';
-                $staf  = optional($item->staf)->nama ?? '-';
-                $ruang = optional($item->ruangan)->nama ?? '-';
-
-                $lines[] = "{$counter}. {$nama} ({$code}) • {$jam} • Staf: {$staf} • Ruangan: {$ruang}";
-                $counter++;
+        foreach ($antrians as $antrian) {
+            $antrian->dibatalkan_pasien = 1;
+            $antrian->save();
+            if ($antrian->antriable) {
+                $antrian->antriable->delete();
             }
-
-            $opsi = $this->opsiAngkaText($count);
-
-            $msg = "Terdapat {$count} antrean/reservasi aktif hari ini untuk nomor ini.\n\n"
-                 . implode("\n", $lines) . "\n\n"
-                 . "Balas dengan angka {$opsi} sesuai pilihan yang ingin dibatalkan.\n"
-                 . "Ketik *0* untuk membatalkan semua.";
-            $this->autoReply($msg);
-
-            WhatsappBot::create([
-                'whatsapp_bot_service_id' => 16,
-                'no_telp'                 => $this->no_telp,
-                'staf_id'                 => 0,
-                'prevent_repetition'      => 0,
-            ]);
-
-            return; // <- WAJIB return supaya tidak lanjut ke blok "1 item"
+            $antrian->delete();
         }
-
-        // === 1 item: langsung hapus ===
-        $a = $items->first(); // <- perbaiki dari $antrians->first()
-
-        DB::transaction(function () use ($a) {
-            $isAntrian = class_basename($a) === 'Antrian';
-
-            if ($isAntrian) {
-                // tandai dibatalkan oleh pasien
-                $a->dibatalkan_pasien = 1;
-                $a->save();
-
-                // bila Antrian punya antriable (biasanya ReservasiOnline), hapus juga
-                if ($a->antriable) {
-                    $a->antriable->delete();
-                }
-
-                // hapus antreannya
-                $a->delete();
-            } else {
-                // Kalau objeknya ReservasiOnline langsung, cukup delete
-                $a->delete();
-            }
-        });
-
-        resetWhatsappRegistration($this->no_telp);
-
-        $jam = optional($a->created_at)->setTimezone($tz)?->format('H:i') ?? '-';
-        $nm  = $a->nama ?: (optional($a->antriable)->nama ?? 'pasien');
-
-        $msg = "Reservasi/antrean atas nama {$nm} (dibuat sekitar {$jam} WIB) telah dibatalkan. Semua fitur WhatsApp telah di-reset. Jika diperlukan, Anda bisa melakukan pendaftaran kembali.";
-        $this->autoReply($msg);
+        resetWhatsappRegistration( $this->no_telp );
+        return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
     }
 
     public function sudahAdaAntrianUntukTipeKonsultasi($tipe_konsultasi_id){
