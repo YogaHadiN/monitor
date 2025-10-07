@@ -3738,7 +3738,7 @@ class WablasController extends Controller
                 // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
                 // hapus reservasi sebelumnya
                 $reservasi_exists = ReservasiOnline::query()
-                    ->whereDate('tanggal', $nowJkt)
+                    ->whereDate('created_at', $nowJkt->format('Y-m-d'))
                     ->where('staf_id', $pp->staf_id)
                     ->where('pasien_id', $reservasi_online->pasien_id)
                     ->exists();
