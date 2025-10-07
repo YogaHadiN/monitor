@@ -3741,9 +3741,15 @@ class WablasController extends Controller
                     ->whereDate('created_at', $nowJkt->format('Y-m-d'))
                     ->where('staf_id', $pp->staf_id)
                     ->where('pasien_id', $reservasi_online->pasien_id)
+                    ->where('tenant_id', $reservasi_online->tenant_id)
                     ->first();
 
+                $this->chatBotLog("======================");
+                $this->chatBotLog(__LINE__);
+                $this->chatBotLog( $reservasi_existing );
+                $this->chatBotLog("======================");
                 if ($reservasi_existing) {
+                    $this->chatBotLog(__LINE__)
                     //hapus reservasi yang dibuat saat ini
                     $reservasi_online->delete();
                     //kembalikan reservasi yang ada untuk dikirimkan qr code
