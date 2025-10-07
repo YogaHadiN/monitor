@@ -306,7 +306,10 @@ class WebRegistrationController extends Controller
         $cek                = $this->cek( $tipe_konsultasi_id );
         $this->message            = $cek['message'];
         $web_registration   = null;
-        if (empty( $this->message )) {
+        if (
+            empty( $this->message ) &&
+            $tipe_konsultasi_id !== 2
+        ) {
             $web_registration = WebRegistration::whereDate('created_at', date('Y-m-d'))
                                                 ->where('no_telp', $no_telp)
                                                 ->first();
