@@ -407,15 +407,15 @@ class WablasController extends Controller
                         } else if (!is_null( $this->whatsapp_recovery_index  )) {
                             $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappRecoveryIndex(); //register untuk survey kesembuhan pasien
-                        } else if (!is_null( $this->pertanyaanKonfirmasiPilihanPenghapusan()  )) {
-                            $this->chatBotLog(__LINE__);
-                            return $this->konfirmasiPilihanPenghapusan(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->kuesioner_menunggu_obat  )) {
                             $this->chatBotLog(__LINE__);
                             return $this->registerKuesionerMenungguObat(); //register untuk survey kesembuhan pasien
                         } else if (!is_null( $this->whatsapp_bpjs_dentist_registrations  )) {
                             $this->chatBotLog(__LINE__);
                             return $this->registerWhatsappBpjsDentistRegistration(); //register untuk survey kesembuhan pasien
+                        } else if ( $this->pertanyaanKonfirmasiPilihanPenghapusan()  ) {
+                            $this->chatBotLog(__LINE__);
+                            return $this->konfirmasiPilihanPenghapusan(); //register untuk survey kesembuhan pasien
                         } else if ( $this->whatsappMainMenuExists() ) { // jika main menu ada
                             $this->chatBotLog(__LINE__);
                             return $this->prosesMainMenuInquiry(); // proses pertanyaan main menu
