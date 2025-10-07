@@ -3737,18 +3737,17 @@ class WablasController extends Controller
 
                 // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
                 // hapus reservasi sebelumnya
-                $reservasi_exists = ReservasiOnline::query()
+                $reservasi_existing = ReservasiOnline::query()
                     ->whereDate('created_at', $nowJkt->format('Y-m-d'))
                     ->where('staf_id', $pp->staf_id)
                     ->where('pasien_id', $reservasi_online->pasien_id)
-                    ->exists();
+                    ->first();
 
-                if ($reservasi_exists) {
-                    ReservasiOnline::query()
-                        ->whereDate('tanggal', $nowJkt)
-                        ->where('staf_id', $pp->staf_id)
-                        ->where('pasien_id', $reservasi_online->pasien_id)
-                        ->delete();
+                if ($reservasi_existing) {
+                    //hapus reservasi yang dibuat saat ini
+                    $reservasi_online->delete();
+                    //kembalikan reservasi yang ada untuk dikirimkan qr code
+                    $this->balasanReservasiTerjadwalDibuat( $reservasi_existing );
                 }
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
@@ -3805,22 +3804,7 @@ class WablasController extends Controller
                                     $this->autoReply($this->getQrCodeMessageBooking($reservasi_online));
                                 } else {
                                     $this->chatBotLog(__LINE__);
-                                    $message = "Booking terjadwal sudah tercatat.\nSilakan gunakan QR saat datang.";
-                                    $message .= PHP_EOL;
-                                    $message .= PHP_EOL;
-                                    $message .= 'Klik link berikut untuk melihat qr code :';
-                                    $message .= PHP_EOL;
-                                    $message .= PHP_EOL;
-                                    $message .= 'https://www.klinikjatielok.com/schedulled_booking/qr/' . encrypt_string( $reservasi_online->id );
-                                    $message .= PHP_EOL;
-                                    $message .= PHP_EOL;
-                                    $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
-                                    $message .= PHP_EOL;
-                                    $message .= $this->batalkan();
-                                    $message .= PHP_EOL;
-                                    $message .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
-                                    $this->autoReply($message);
-                                    WhatsappBot::where('no_telp', $this->no_telp)->delete();
+                                    $this->balasanReservasiTerjadwalDibuat( $reservasi_online );
                                 }
                             }
                         } else {
@@ -6573,4 +6557,29 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     public function pertanyaanKonfirmasiPilihanPenghapusan(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(16);
     }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function balasanReservasiTerjadwalDibuat($reservasi_online)
+    {
+        $message = "Booking terjadwal sudah tercatat.\nSilakan gunakan QR saat datang.";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Klik link berikut untuk melihat qr code :';
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'https://www.klinikjatielok.com/schedulled_booking/qr/' . encrypt_string( $reservasi_online->id );
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= 'Anda harus menyimpan nomor whatsapp ini agar dapat mengaktifkan link diatas';
+        $message .= PHP_EOL;
+        $message .= $this->batalkan();
+        $message .= PHP_EOL;
+        $message .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
+        $this->autoReply($message);
+        WhatsappBot::where('no_telp', $this->no_telp)->delete();
+    }
+
 }
