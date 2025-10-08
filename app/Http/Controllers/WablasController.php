@@ -4840,7 +4840,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             'whatsapp_bot_service_id' => 16,
             'staf_id'                 => 0,
             'no_telp'                 => $this->no_telp,
-            'prevent_repetition'      => 0;
+            'prevent_repetition'      => 0,
         ]);
         return 'NEED_SELECTION';
     }
