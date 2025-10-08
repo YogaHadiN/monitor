@@ -74,7 +74,55 @@ class SchedulledReservationController extends Controller
             'qrUrl'
         ));
     }
-    public function destroy($id){
 
+    public function destroy($id): JsonResponse
+    {
+        // Ambil reservasi + relasi yang diperlukan
+        $reservasi = SchedulledReservation::with([
+            'pasien:id,nama',
+            'staf:id,nama,titel_id,tenant_id',
+            'staf.titel:id,singkatan',
+        ])->findOrFail($id);
+
+        // Siapkan data lebih dulu (supaya aman jika delete dilakukan)
+        $phone      = $reservasi->no_telp;
+        $pasienNama = $reservasi->nama ?? optional($reservasi->pasien)->nama ?? 'Pasien';
+
+        $dokterNamaObj = $reservasi->staf;
+        $dokterNama = $dokterNamaObj->nama_dengan_gelar
+            ?? $dokterNamaObj->nama
+            ?? 'Dokter';
+
+        // Susun pesan
+        $message  = "Reservasi Anda \n\n";
+        $message .= "Nama : {$pasienNama}\n";
+        $message .= "Dokter : {$dokterNama}\n";
+        $message .= "Pada hari ini\n\n";
+        $message .= "Telah dibatalkan";
+
+        // Hapus QR di S3 (jika ada) - log kalau gagal, tapi lanjutkan
+        try {
+            if (!empty($reservasi->qrcode)) {
+                Storage::disk('s3')->delete($reservasi->qrcode);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Gagal menghapus QR S3', [
+                'reservasi_id' => $reservasi->id,
+                'path'         => $reservasi->qrcode,
+                'error'        => $e->getMessage(),
+            ]);
+        }
+
+        // Hapus record
+        $reservasi->delete();
+
+        // Kirim WA via job (non-blocking)
+        if (!empty($phone)) {
+            $wa = new WablasController;
+               $wa->sendSingle($phone, $message);
+        }
+
+        $pesan = Yoga::suksesFlash('Pendaftaran Terjadwal berhasil dihapus');
+        return redirect('schedulled_reservations')->withPesan($pesan);
     }
 }
