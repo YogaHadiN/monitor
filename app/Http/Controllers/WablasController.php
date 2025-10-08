@@ -6531,11 +6531,11 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
             // pastikan relasi siap dipakai tanpa N+1 berlebihan
             if (method_exists($it, 'loadMissing')) {
-                $it->loadMissing('staf.titel', 'antriable');
+                $it->loadMissing('staf.titel');
             }
 
             $jam   = optional($it->created_at)->setTimezone($tz)->format('H:i');
-            $nama  = $it->nama ?? optional($it->antriable)->nama ?? 'pasien';
+            $nama  = $it->nama;
             $dokter = optional($it->staf)->nama_dengan_gelar ?? optional($it->staf)->nama ?? '-';
 
             return [$tipe, $nama, $dokter, $jam];
