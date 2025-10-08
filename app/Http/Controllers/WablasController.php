@@ -3831,7 +3831,7 @@ class WablasController extends Controller
 
                                 // hapus ketika schedulled_reservation dibuat
                                 $reservasi_online->delete();
-                                $messasge = $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation );
+                                $message = $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation );
                                 $this->autoReply( $message );
                             }
                         } else {
