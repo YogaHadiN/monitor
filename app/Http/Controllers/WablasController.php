@@ -3757,9 +3757,16 @@ class WablasController extends Controller
                 ) {
                     $this->chatBotLog(__LINE__);
                     //hapus reservasi yang dibuat saat ini
-                    $reservasi_online->delete();
                     //kembalikan reservasi yang ada untuk dikirimkan qr code
-                    $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
+                    $message = "Pendaftaran untuk {$reservasi_online->nama} ke {$reservasi_online->staf->nama_dengan_gelar} hari ini sudah dibuat. "
+                    $message .= PHP_EOL;
+                    $message .= 'Sistem akan mengirimkan reservasi yang sudah dibuat';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $reservasi_online->delete();
+
+                    $message .= $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
+                    $this->autoReply( $message );
                 }
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
@@ -3824,7 +3831,8 @@ class WablasController extends Controller
 
                                 // hapus ketika schedulled_reservation dibuat
                                 $reservasi_online->delete();
-                                $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation );
+                                $messasge = $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation );
+                                $this->autoReply( $message );
                             }
                         } else {
 
@@ -6604,8 +6612,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= $this->batalkan();
         $message .= PHP_EOL;
         $message .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
-        $this->autoReply($message);
         WhatsappBot::where('no_telp', $this->no_telp)->delete();
+        return $message;
     }
 
 }
