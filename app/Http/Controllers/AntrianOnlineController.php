@@ -361,24 +361,25 @@ class AntrianOnlineController extends Controller
             return Response::json([json_decode( $response, true )], 202);
         };
 
-        $poli_bpjs                         = PoliBpjs::where('kdPoli', $kodepoli)->first();
-        $this->tipe_konsultasi             = $poli_bpjs->tipe_konsultasi;
-        $ruangan_id                        = $this->tipe_konsultasi->ruangan_id;
-        $fc                                = new FasilitasController;
-        $fc->tipe_konsultasi_id            = $this->tipe_konsultasi->id;
-        $fc->ruangan_id                    = $ruangan_id;
-        $antrian                           = $fc->antrianPost();
-        $antrian->no_telp                  = $request['nohp'];
-        $antrian->antriable_id             = $antrian->id;
-        $antrian->pasien_id                = $this->pasien->id;
-        $antrian->tanggal_lahir            = $this->pasien->tanggal_lahir;
-        $antrian->sudah_hadir_di_klinik    = 0;
-        $antrian->alamat                   = $this->pasien->alamat;
-        $antrian->nama                     = $this->pasien->nama;
-        $antrian->nomor_bpjs               = $nomorkartu;
-        $antrian->reservasi_online         = 1;
-        $antrian->registrasi_pembayaran_id = 2;
-        $antrian->verifikasi_bpjs          = 1;
+        $poli_bpjs                          = PoliBpjs::where('kdPoli', $kodepoli)->first();
+        $this->tipe_konsultasi              = $poli_bpjs->tipe_konsultasi;
+        $ruangan_id                         = $this->tipe_konsultasi->ruangan_id;
+        $fc                                 = new FasilitasController;
+        $fc->tipe_konsultasi_id             = $this->tipe_konsultasi->id;
+        $fc->ruangan_id                     = $ruangan_id;
+        $fc->input_registrasi_pembayaran_id = 2;
+        $antrian                            = $fc->antrianPost();
+        $antrian->no_telp                   = $request['nohp'];
+        $antrian->antriable_id              = $antrian->id;
+        $antrian->pasien_id                 = $this->pasien->id;
+        $antrian->tanggal_lahir             = $this->pasien->tanggal_lahir;
+        $antrian->sudah_hadir_di_klinik     = 0;
+        $antrian->alamat                    = $this->pasien->alamat;
+        $antrian->nama                      = $this->pasien->nama;
+        $antrian->nomor_bpjs                = $nomorkartu;
+        $antrian->reservasi_online          = 1;
+        $antrian->registrasi_pembayaran_id  = 2;
+        $antrian->verifikasi_bpjs           = 1;
         $antrian->save();
 
         if ( empty( trim(   $this->pasien->no_telp   ) ) ) {
