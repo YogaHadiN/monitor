@@ -3763,10 +3763,10 @@ class WablasController extends Controller
                     $message .= 'Sistem akan mengirimkan reservasi yang sudah dibuat';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
-                    $reservasi_online->delete();
 
                     $message .= $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
                     $this->autoReply( $message );
+                    $reservasi_online->delete();
                 }
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
