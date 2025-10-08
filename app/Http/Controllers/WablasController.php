@@ -6585,11 +6585,12 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             });
 
             resetWhatsappRegistration($this->no_telp);
-            return $this->autoReply(
+            $this->autoReply(
                 "Semua antrean/reservasi berikut telah dibatalkan:\n" .
                 implode("\n", $ringkasan) .
                 "\n\nSemua fitur WhatsApp telah di-reset."
             );
+            return;
         }
 
         // === 1..N: Hapus sesuai pilihan ===
