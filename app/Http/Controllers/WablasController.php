@@ -4821,6 +4821,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $item->delete();
             });
 
+            return;
         }
 
         // Jika lebih dari satu, bangun pesan daftar pilihan (nomori & jelaskan tipenya)
