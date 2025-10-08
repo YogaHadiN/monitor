@@ -3760,7 +3760,7 @@ class WablasController extends Controller
                     //kembalikan reservasi yang ada untuk dikirimkan qr code
                     $message = "Pendaftaran untuk {$schedulled_reservation_existing->nama} ke {$schedulled_reservation_existing->staf->nama_dengan_gelar} hari ini sudah dibuat. ";
                     $message .= PHP_EOL;
-                    $message .= 'Sistem akan mengirimkan reservasi yang sudah dibuat';
+                    $message .= 'Sistem akan mengirimkan reservasi yang lama';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
 
