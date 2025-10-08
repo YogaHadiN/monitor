@@ -1385,10 +1385,10 @@ class WablasController extends Controller
             } else if(
                 !$antrians->count()
             ) {
-                WhatsappBot::create([
-                    'no_telp' => $this->no_telp,
-                    'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien
-                ]);
+                /* WhatsappBot::create([ */
+                /*     'no_telp' => $this->no_telp, */
+                /*     'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien */
+                /* ]); */
                 $this->autoReply($this->tanyaKapanKeluhanTerjadi() );
             } else if (
                 $this->lama() &&
@@ -3814,6 +3814,16 @@ class WablasController extends Controller
                                 $reservasi_online->save();
 
                                 $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
+
+                                WhatsappBot::create([
+                                    'whatsapp_bot_service_id' => 15,
+                                    'staf_id'                 => 0,
+                                    'no_telp'                 => $this->no_telp,
+                                    'prevent_repetition'      => 0,
+                                ]);
+
+
+
                             } else {
                                 // generate QR booking (tanpa membuat antrian tapi buat schedulled_reservations)
                                 $reservasi_online->save();

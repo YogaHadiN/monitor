@@ -74,4 +74,7 @@ class SchedulledReservationController extends Controller
             'qrUrl'
         ));
     }
+    public function destroy($id){
+
+    }
 }
