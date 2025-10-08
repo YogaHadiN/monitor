@@ -3767,6 +3767,7 @@ class WablasController extends Controller
                     $message .= $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
                     $this->autoReply( $message );
                     $reservasi_online->delete();
+                    return;
                 }
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
