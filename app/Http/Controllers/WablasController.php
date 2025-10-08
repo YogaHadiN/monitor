@@ -4791,6 +4791,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     private function hapusAntrianWhatsappBotReservasiOnline(bool $hapus_antrian = true)
     {
+
         $items = $this->getReservasiOnlineBelumHadirHariIni();
         // Reset state WA registration (tetap lakukan meski tidak ada item)
         resetWhatsappRegistration($this->no_telp);
@@ -4800,11 +4801,13 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         }
 
         if ($items->count() === 1) {
+            $this->chatBotLog(__LINE__);
             /** @var mixed $item */
             $item = $items->first();
 
             // Pastikan relasi staf.titel termuat tanpa query ulang
             if (method_exists($item, 'load')) {
+                $this->chatBotLog(__LINE__);
                 $item->load('staf.titel');
             }
 
@@ -4818,7 +4821,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $item->delete();
             });
 
-            return 'OK';
         }
 
         // Jika lebih dari satu, bangun pesan daftar pilihan (nomori & jelaskan tipenya)
@@ -4842,7 +4844,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             'no_telp'                 => $this->no_telp,
             'prevent_repetition'      => 0,
         ]);
-        return 'NEED_SELECTION';
     }
 
     public function sudahAdaAntrianUntukTipeKonsultasi($tipe_konsultasi_id){
