@@ -3815,15 +3815,6 @@ class WablasController extends Controller
 
                                 $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($ppFinal));
 
-                                WhatsappBot::create([
-                                    'whatsapp_bot_service_id' => 15,
-                                    'staf_id'                 => 0,
-                                    'no_telp'                 => $this->no_telp,
-                                    'prevent_repetition'      => 0,
-                                ]);
-
-
-
                             } else {
                                 // generate QR booking (tanpa membuat antrian tapi buat schedulled_reservations)
                                 $reservasi_online->save();
@@ -6349,6 +6340,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     public function waitlistReservationConfirmation()
     {
+        // setelah pasien masuk waitlist, tanya lagi ketika ada slot yang kosong apakah mau dimasukkan ke dalam pendaftaran terjadwal
         $tz  = 'Asia/Jakarta';
         $now = \Carbon\Carbon::now($tz);
 
