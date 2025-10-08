@@ -4800,30 +4800,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
         }
 
-        if ($items->count() === 1) {
-            $this->chatBotLog(__LINE__);
-            /** @var mixed $item */
-            $item = $items->first();
-
-            // Pastikan relasi staf.titel termuat tanpa query ulang
-            if (method_exists($item, 'load')) {
-                $this->chatBotLog(__LINE__);
-                $item->load('staf.titel');
-            }
-
-            $nama        = $item->nama ?? '-';
-            $nama_dokter = optional($item->staf)->nama_dengan_gelar ?? optional($item->staf)->nama ?? '-';
-
-            // Kirim notifikasi dulu
-            $this->autoReply("Reservasi $nama antrian ke $nama_dokter dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.");
-
-            DB::transaction(function () use ($item) {
-                $item->delete();
-            });
-
-            return;
-        }
-
         // Jika lebih dari satu, bangun pesan daftar pilihan (nomori & jelaskan tipenya)
         $lines = [];
         foreach ($items as $idx => $it) {
@@ -6692,5 +6668,4 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         WhatsappBot::where('no_telp', $this->no_telp)->delete();
         return $message;
     }
-
 }
