@@ -3758,7 +3758,7 @@ class WablasController extends Controller
                     $this->chatBotLog(__LINE__);
                     //hapus reservasi yang dibuat saat ini
                     //kembalikan reservasi yang ada untuk dikirimkan qr code
-                    $message = "Pendaftaran untuk {$reservasi_online->nama} ke {$reservasi_online->staf->nama_dengan_gelar} hari ini sudah dibuat. ";
+                    $message = "Pendaftaran untuk {$schedulled_reservation_existing->nama} ke {$schedulled_reservation_existing->staf->nama_dengan_gelar} hari ini sudah dibuat. ";
                     $message .= PHP_EOL;
                     $message .= 'Sistem akan mengirimkan reservasi yang sudah dibuat';
                     $message .= PHP_EOL;
