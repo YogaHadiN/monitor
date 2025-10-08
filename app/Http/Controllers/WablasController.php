@@ -4768,7 +4768,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             // ->whereIn('antriable_type', [\App\Models\ReservasiOnline::class, \App\Models\SchedulledReservation::class]) // aktifkan jika ingin exclude walk-in
             ->get();
 
-        $schedulled = \App\Models\SchedulledReservation::with(['staf.titel', 'ruangan']) // load seragam
+        $schedulled = \App\Models\SchedulledReservation::with(['staf.titel']) // load seragam
             ->whereDate('created_at', $today)
             ->where('no_telp', $this->no_telp)
             ->get();
