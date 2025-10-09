@@ -4436,7 +4436,9 @@ class WablasController extends Controller
                     ?? $petugas->staf->nama
                     ?? 'Dokter';
 
-                $message .= PHP_EOL . $no . '. ' . $nama . '(' . $petugas->jam_mulai_default .'-' . $petugas->jam_akhir_default . ')' . PHP_EOL;
+                $jam_mulai = Carbon::parse( $petugas->jam_mulai_default )->format('H:i');
+                $jam_akhir = Carbon::parse( $petugas->jam_akhir_default )->format('H:i');
+                $message .= PHP_EOL . $no . '. ' . $nama . '(' . $jam_mulai .'-' . $jam_akhir . ')' . PHP_EOL;
                 if ( $tipe_konsultasi_id == 1 ) {
                     $sisa = (int) ($petugas->sisa_antrian ?? 0);
                     $message .= PHP_EOL . '(' . $sisa . ' Antrian)' . PHP_EOL;
