@@ -3456,6 +3456,7 @@ class WablasController extends Controller
                 $this->chatBotLog(__LINE__);
                 $this->chatBotLog(" pp->online_registration_enabled ");
                 $this->chatBotLog( $pp->online_registration_enabled );
+
                 if ( !$pp->online_registration_enabled ) {
                     $this->chatBotLog(__LINE__);
                     $message = 'Dokter ' . $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
@@ -3471,6 +3472,7 @@ class WablasController extends Controller
                     $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
                     $this->autoReply( $message );
                     resetWhatsappRegistration( $this->no_telp );
+                    return;
                 }
                 // jika petugas pemeriksa stop pendaftaran gagalkan
                 if ( !$pp->registration_enabled ) {
@@ -3480,6 +3482,7 @@ class WablasController extends Controller
                     $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
                     $this->autoReply( $message );
                     resetWhatsappRegistration( $this->no_telp );
+                    return;
                 }
                 // jika petugas pemeriksa pendaftaran sudah max booking gagalkan
                 if ( !$pp->slot_pendaftaran_available ) {
@@ -3489,6 +3492,7 @@ class WablasController extends Controller
                     $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
                     $this->autoReply( $message );
                     resetWhatsappRegistration( $this->no_telp );
+                    return;
                 }
 
                 $this->chatBotLog(__LINE__);
