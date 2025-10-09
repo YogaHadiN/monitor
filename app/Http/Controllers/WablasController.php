@@ -4428,24 +4428,22 @@ class WablasController extends Controller
 
             $message = 'Silahkan pilih Dokter pemeriksa.' . PHP_EOL;
 
-            foreach ($list as $k => $petugas) {
+            foreach ($list as $k => $petugas) { // list ada 2 kenapa yang paling akhir saja yang muncul?
                 Log::info('STAFc');
                 Log::info( $petugas->staf->nama_dengan_gelar );
                 $no   = $k + 1;
                 $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
                     ?? 'Dokter';
+
+                $message .= PHP_EOL . $no . '. ' . $nama . PHP_EOL
                 if ( $tipe_konsultasi_id == 1 ) {
                     $sisa = (int) ($petugas->sisa_antrian ?? 0);
-                    $message .= PHP_EOL
-                              . $no . '. ' . $nama . PHP_EOL
-                              . '(' . $sisa . ' Antrian)' . PHP_EOL;
+                    $message .= PHP_EOL . '(' . $sisa . ' Antrian)' . PHP_EOL;
                 } else if ( $tipe_konsultasi_id == 2) {
                     if ( $petugas->max_booking > 0 ) {
                         $slot = $petugas->slot_pendaftaran;
-                        $message .= PHP_EOL
-                                  . $no . '. ' . $nama . PHP_EOL
-                                  . '(' . $slot . ' Slot Tersedia)' . PHP_EOL;
+                        $message .= PHP_EOL . '(' . $slot . ' Slot Tersedia)' . PHP_EOL;
                     }
                 }
             }
