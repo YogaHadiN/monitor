@@ -5760,18 +5760,15 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         // === KASUS KHUSUS: dokter gigi & antrian online dimatikan ===
         if (
-            $reservasi_online->tipe_konsultasi_id == 2 &&
-            (int) ($this->tenant->dentist_queue_enabled ?? 0) === 1
+            $reservasi_online->tipe_konsultasi_id == 2
         ) {
 
             $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
-            $tigaPuluhMenitKeDepan = $nowJkt->copy()->addMinutes(30);
 
             $query = \App\Models\PetugasPemeriksa::with('staf.titel') // eager load
                 ->whereDate('tanggal', $today)
                 ->where('tipe_konsultasi_id', 2)
                 ->where('tenant_id', $tenantId)
-                ->whereHas('staf', fn($q) => $q->where('tenant_id', $tenantId))
                 ->orderBy('jam_mulai', 'asc');
 
             // === eksekusi ===
