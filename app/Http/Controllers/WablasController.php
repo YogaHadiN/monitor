@@ -3624,7 +3624,7 @@ class WablasController extends Controller
             }
             $reservasi_online->save();
 
-            if ($this->validasiKalauPermohonanDobel()) {
+            if ($this->validasiKalauPermohonanDobel( $reservasi_online )) {
                 return;
             };
         // ===== alur input BPJS (jika dipilih BPJS) =====
