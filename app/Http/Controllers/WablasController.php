@@ -3459,7 +3459,7 @@ class WablasController extends Controller
 
                 if ( !$pp->online_registration_enabled ) {
                     $this->chatBotLog(__LINE__);
-                    $message = 'Dokter ' . $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
+                    $message = $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
                     $message .= 'Silahkan datang mendaftar pada saat dokter berpraktek';
