@@ -6665,7 +6665,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         ) {
             $schedulled_reservation_existing = SchedulledReservation::query()
                 ->whereDate('created_at', $nowJkt->format('Y-m-d'))
-                ->where('staf_id', $pp->staf_id)
+                ->where('staf_id', $reservasi_online->staf_id)
                 ->where('pasien_id', $reservasi_online->pasien_id)
                 ->where('tenant_id', $reservasi_online->tenant_id)
                 ->first();
