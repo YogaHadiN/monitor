@@ -6657,6 +6657,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     private function validasiKalauPermohonanDobel($reservasi_online){
         // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
         // hapus reservasi sebelumnya
+        //
+        $nowJkt  = Carbon::now('Asia/Jakarta');
         if (
             $reservasi_online->schedulled_booking &&
             !is_null( $reservasi_online->pasien_id )
