@@ -4443,7 +4443,7 @@ class WablasController extends Controller
                 } else if ( $tipe_konsultasi_id == 2) {
                     if ( $petugas->max_booking > 0 ) {
                         $slot = $petugas->slot_pendaftaran;
-                        $message .= PHP_EOL . '(' . $slot . ' Slot Tersedia)' . PHP_EOL;
+                        $message .= '(' . $slot . ' Slot Tersedia)' . PHP_EOL;
                     }
                 }
             }
