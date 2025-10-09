@@ -4445,7 +4445,6 @@ class WablasController extends Controller
             return $message;
         };
 
-
         // === Routing per tipe ===
         $tipeId = (int) ($reservasi_online->tipe_konsultasi_id ?? 0);
         return $formatDefault($list, $tipeId);
