@@ -4414,7 +4414,7 @@ class WablasController extends Controller
         Log::info('======================');
         Log::info('LIST');
         foreach ($list as $l) {
-            Log::info( $list->id );
+            Log::info( $l->id );
         }
         Log::info('======================');
 
