@@ -5769,7 +5769,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 ->whereDate('tanggal', $today)
                 ->where('tipe_konsultasi_id', 2)
                 ->where('tenant_id', $tenantId)
-                ->orderBy('jam_mulai', 'asc');
+                ->orderBy('jam_mulai', 'asc')
                ->get();
         }
 
