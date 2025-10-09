@@ -6654,41 +6654,46 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
      *
      * @return void
      */
-    private function validasiKalauPermohonanDobel($reservasi_online){
-        // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
-        // hapus reservasi sebelumnya
-        //
-        $nowJkt  = Carbon::now('Asia/Jakarta');
-        if (
-            $reservasi_online->schedulled_booking &&
-            !is_null( $reservasi_online->pasien_id )
-        ) {
-            $schedulled_reservation_existing = SchedulledReservation::query()
-                ->whereDate('created_at', $nowJkt->format('Y-m-d'))
-                ->where('staf_id', $reservasi_online->staf_id)
+    private function validasiKalauPermohonanDobel($reservasi_online): bool
+    {
+        $tz      = 'Asia/Jakarta';
+        $today   = Carbon::now($tz)->toDateString();
+
+        // Tentukan "hari yang sama" berbasis TANGGAL KUNJUNGAN, bukan created_at
+        $visitDate = $reservasi_online->tanggal ?? $today;
+
+        if (!($reservasi_online->schedulled_booking && !is_null($reservasi_online->pasien_id))) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($reservasi_online, $visitDate, $tz) {
+            // Lock baris kandidat agar request paralel tidak race
+            $existing = \App\Models\SchedulledReservation::query()
+                ->whereDate('tanggal', $visitDate)
+                ->where('staf_id',   $reservasi_online->staf_id)
                 ->where('pasien_id', $reservasi_online->pasien_id)
                 ->where('tenant_id', $reservasi_online->tenant_id)
+                ->when($reservasi_online->id, fn($q) => $q->where('id', '!=', $reservasi_online->id))
+                ->lockForUpdate()
                 ->first();
 
-            if (
-                $schedulled_reservation_existing
-            ) {
-                $this->chatBotLog(__LINE__);
-                //hapus reservasi yang dibuat saat ini
-                //kembalikan reservasi yang ada untuk dikirimkan qr code
-                $message = "Pendaftaran untuk {$schedulled_reservation_existing->nama} ke {$schedulled_reservation_existing->staf->nama_dengan_gelar} hari ini sudah dibuat. ";
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= 'Sistem akan mengirimkan reservasi yang lama';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-
-                $message .= $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
-                $this->autoReply( $message );
-                $reservasi_online->delete();
-                return true;
+            if (!$existing) {
+                return false;
             }
-        }
-        return false;
+
+            $this->chatBotLog(__LINE__);
+
+            // Kirim balasan dengan reservasi lama
+            $message  = "Pendaftaran untuk {$existing->nama} ke {$existing->staf->nama_dengan_gelar} pada {$existing->tanggal} sudah ada.";
+            $message .= PHP_EOL.PHP_EOL.'Sistem akan memakai reservasi yang lama.'.PHP_EOL.PHP_EOL;
+            $message .= $this->balasanReservasiTerjadwalDibuat($existing);
+            $this->autoReply($message);
+
+            // Hapus yang baru saja dibuat (bukan yang lama)
+            // Pakai soft delete jika tersedia
+            $reservasi_online->delete();
+
+            return true;
+        });
     }
 }
