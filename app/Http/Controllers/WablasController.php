@@ -3453,7 +3453,9 @@ class WablasController extends Controller
                 $idx = (int)$msg - 1;
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
 
+                $this->chatBotLog(__LINE__);
                 if ( !$pp->online_registration_enabled ) {
+                    $this->chatBotLog(__LINE__);
                     $message = 'Dokter ' . $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
@@ -3470,6 +3472,7 @@ class WablasController extends Controller
                 }
                 // jika petugas pemeriksa stop pendaftaran gagalkan
                 if ( !$pp->registration_enabled ) {
+                    $this->chatBotLog(__LINE__);
                     $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup';
                     $message .= PHP_EOL;
                     $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
@@ -3478,6 +3481,7 @@ class WablasController extends Controller
                 }
                 // jika petugas pemeriksa pendaftaran sudah max booking gagalkan
                 if ( !$pp->slot_pendaftaran_available ) {
+                    $this->chatBotLog(__LINE__);
                     $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup karena sudah penuh';
                     $message .= PHP_EOL;
                     $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
