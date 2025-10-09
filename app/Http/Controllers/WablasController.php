@@ -4429,11 +4429,6 @@ class WablasController extends Controller
             $message = 'Silahkan pilih Dokter pemeriksa.' . PHP_EOL;
 
             foreach ($list as $k => $petugas) {
-                Log::info('======================');
-                Log::info('LIST');
-                Log::info( $petugas->id );
-                Log::info( $petugas->staf->nama_dengan_gelar );
-                Log::info('======================');
                 $no   = $k + 1;
                 $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
@@ -4451,8 +4446,9 @@ class WablasController extends Controller
                                   . '(' . $slot . ' Slot Tersedia)' . PHP_EOL;
                     }
                 }
-
             }
+            Log::info('MESSAGE');
+            Log::info($message);
 
             $ops = $this->joinOpsi($list->count());
             $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($ops) . '* sesuai dengan pilihan di atas';
