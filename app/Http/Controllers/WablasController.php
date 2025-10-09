@@ -2195,36 +2195,7 @@ class WablasController extends Controller
     {
         $tz   = 'Asia/Jakarta';
         $now  = \Carbon\Carbon::now($tz);
-        $msg  = '';
-
-        if (!is_null($reservasi_online) && (int)$reservasi_online->tipe_konsultasi_id === 2) {
-            $msg .= 'Jadwal ' . ucwords($reservasi_online->tipe_konsultasi->tipe_konsultasi) . ' hari ini:' . PHP_EOL;
-
-            $petugas_pemeriksas = \App\Models\PetugasPemeriksa::query()
-                ->with(['staf']) // sesuaikan kolom yg ada
-                ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
-                ->whereDate('tanggal', $now->toDateString())
-                ->where('jam_mulai_default', '>',  $now->toTimeString())
-                ->where('schedulled_booking_allowed', 1)
-                ->orderBy('jam_mulai_default', 'asc')
-                ->get();
-
-            if ($petugas_pemeriksas->isEmpty()) {
-                $msg .= '- Belum ada jadwal yang menerima pasien terjadwal hari ini.' . PHP_EOL . PHP_EOL;
-            } else {
-                foreach ($petugas_pemeriksas as $pp) {
-                    $namaStaf  = $pp->staf->nama_dengan_gelar ?? $pp->staf->nama ?? 'Staf';
-                    $jamMulai  = \Carbon\Carbon::parse($pp->jam_mulai_default, $tz)->format('H:i');
-                    // window tutup pendaftaran 30 menit sebelum jam akhir default
-                    $jamAkhirWindow = \Carbon\Carbon::parse($pp->jam_akhir_default, $tz)->subMinutes(30)->format('H:i');
-
-                    $msg .= $namaStaf . PHP_EOL;
-                    $msg .= '( ' . $jamMulai . ' - ' . $jamAkhirWindow . ' )' . PHP_EOL . PHP_EOL;
-                }
-            }
-        }
-
-        $msg .= 'Bisa dibantu menggunakan pembayaran apa?' . PHP_EOL;
+        $msg = 'Bisa dibantu menggunakan pembayaran apa?' . PHP_EOL;
         $msg .= $this->messagePilihanPembayaran();
 
         return $msg;
@@ -3482,8 +3453,39 @@ class WablasController extends Controller
                 $idx = (int)$msg - 1;
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
 
-                $this->chatBotLog(__LINE__);
+                if ( !$pp->online_registration_enabled ) {
+                    $message = 'Dokter ' . $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= 'Silahkan datang mendaftar pada saat dokter berpraktek'
+                    $message .= PHP_EOL;
+                    $message .= 'Jam '. $pp->jadwal_hari_ini . ' pada hari ini';
+                    $message .= PHP_EOL;
+                    $message .= PHP_EOL;
+                    $message .= "Atau ulangi kembali untuk registrasi {$pp->tipe_konsultasi->tipe_konsultasi} lain";
+                    $message .= PHP_EOL;
+                    $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
+                    $this->autoReply( $message );
+                    resetWhatsappRegistration( $this->no_telp );
+                }
+                // jika petugas pemeriksa stop pendaftaran gagalkan
+                if ( !$pp->registration_enabled ) {
+                    $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup';
+                    $message .= PHP_EOL;
+                    $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
+                    $this->autoReply( $message );
+                    resetWhatsappRegistration( $this->no_telp );
+                }
+                // jika petugas pemeriksa pendaftaran sudah max booking gagalkan
+                if ( !$pp->slot_pendaftaran_available ) {
+                    $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup karena sudah penuh';
+                    $message .= PHP_EOL;
+                    $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
+                    $this->autoReply( $message );
+                    resetWhatsappRegistration( $this->no_telp );
+                }
 
+                $this->chatBotLog(__LINE__);
                 // set staf & ruangan
                 $reservasi_online->staf_id              = $pp->staf_id;
                 $reservasi_online->petugas_pemeriksa_id = $pp->id;

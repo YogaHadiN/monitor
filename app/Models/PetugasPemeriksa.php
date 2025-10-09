@@ -38,6 +38,11 @@ class PetugasPemeriksa extends Model
     public function tipe_konsultasi(){
         return $this->belongsTo(TipeKonsultasi::class);
     }
+    public function getJadwalHariIniAvailableAttribute(){
+        $jam_mulai = Carbon::parse( $this->jam_mulai_default )->format('H:i');
+        $jam_akhir = Carbon::parse( $this->jam_akhir_default )->format('H:i');
+        return " ( $jam_mulai - $jam_akhir )";
+    }
     public function getSlotPendaftaranAvailableAttribute(): int
     {
         return $this->slot_pendaftaran > 0 || $this->max_booking == 0;
