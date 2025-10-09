@@ -4422,6 +4422,7 @@ class WablasController extends Controller
         {
             if ($list->count() < 1) {
                 $tipe = TipeKonsultasi::find($tipe_konsultasi_id)?->tipe_konsultasi ?? 'pemeriksa';
+                resetWhatsappRegistration( $this->no_telp );
                 return 'Tidak ada petugas ' . ucwords($tipe) . ' yang bertugas saat ini';
             }
 
@@ -4444,63 +4445,9 @@ class WablasController extends Controller
             return $message;
         };
 
-        // === Formatter gigi: tampilkan window waktu (jam_mulai-30)–(jam_akhir-60) ===
-        $formatGigi = function (Collection $list): string
-        {
-            if ($list->count() < 1) {
-                return 'Tidak ada petugas Dokter Gigi yang bertugas saat ini';
-            }
-
-            $message = 'Silakan pilih Dokter pemeriksa.' . PHP_EOL;
-
-            foreach ($list as $k => $petugas) {
-                $no   = $k + 1;
-                $nama = $petugas->staf->nama_dengan_gelar
-                    ?? $petugas->staf->nama
-                    ?? 'Dokter Gigi';
-
-                $mulaiRaw = $petugas->jam_mulai ?? null;
-                $akhirRaw = $petugas->jam_akhir ?? null;
-
-                $mulai = $mulaiRaw ? Carbon::parse($mulaiRaw, 'Asia/Jakarta') : null;
-                $akhir = $akhirRaw ? Carbon::parse($akhirRaw, 'Asia/Jakarta')->subHour() : null;
-
-                $mulaiStr = $mulai ? $mulai->format('H:i') : '-';
-                $akhirStr = $akhir ? $akhir->format('H:i') : '-';
-
-                // Jika range terbalik, fallback ke jam asli bila ada
-                if ($mulai && $akhir && $akhir->lessThan($mulai) && $mulaiRaw && $akhirRaw) {
-                    $mulaiStr = Carbon::parse($mulaiRaw, 'Asia/Jakarta')->format('H:i');
-                    $akhirStr = Carbon::parse($akhirRaw, 'Asia/Jakarta')->format('H:i');
-                }
-
-                $message .= PHP_EOL
-                          . $no . '. ' . $nama . PHP_EOL
-                          . '(' . $mulaiStr . ' - ' . $akhirStr . ')' . PHP_EOL
-                          . 'Pengambilan antrian online wajib melakukan scan QR CODE di klinik sebelum pukul '
-                          . ($mulaiRaw
-                                ? Carbon::parse($mulaiRaw, 'Asia/Jakarta')->subMinutes(15)->format('H:i')
-                                : '-')
-                          . '. atau reservasi dihapus oleh sistem.'
-                          . PHP_EOL;
-            }
-
-            $ops = $this->joinOpsi($list->count());
-            $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($ops) . '* sesuai dengan pilihan di atas';
-            return $message;
-        };
 
         // === Routing per tipe ===
         $tipeId = (int) ($reservasi_online->tipe_konsultasi_id ?? 0);
-
-        if ($tipeId === 1) {
-            return $formatDefault($list, 1);
-        }
-
-        if ($tipeId === 2) {
-            return $formatGigi($list);
-        }
-
         return $formatDefault($list, $tipeId);
     }
 
@@ -5815,12 +5762,9 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $query = \App\Models\PetugasPemeriksa::with('staf.titel') // eager load
                 ->whereDate('tanggal', $today)
                 ->where('tipe_konsultasi_id', 2)
-                ->where('schedulled_booking_allowed', 1)
-                ->where('jam_mulai_default', '>', $tigaPuluhMenitKeDepan->toTimeString() )
                 ->where('tenant_id', $tenantId)
                 ->whereHas('staf', fn($q) => $q->where('tenant_id', $tenantId))
                 ->orderBy('jam_mulai', 'asc');
-
 
             // === eksekusi ===
             return $query->get()
