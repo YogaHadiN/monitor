@@ -4413,7 +4413,9 @@ class WablasController extends Controller
 
         Log::info('======================');
         Log::info('LIST');
-        Log::info( $list );
+        foreach ($list as $l) {
+            Log::info( $list->id );
+        }
         Log::info('======================');
 
         // Hindari N+1 saat akses $petugas->staf (jika Eloquent collection)
