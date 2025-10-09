@@ -5765,16 +5765,12 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
             $tenantId = $reservasi_online->tenant_id ?? ($this->tenant->id ?? 1);
 
-            $query = \App\Models\PetugasPemeriksa::with('staf.titel') // eager load
+            return \App\Models\PetugasPemeriksa::with('staf.titel') // eager load
                 ->whereDate('tanggal', $today)
                 ->where('tipe_konsultasi_id', 2)
                 ->where('tenant_id', $tenantId)
                 ->orderBy('jam_mulai', 'asc');
-
-            // === eksekusi ===
-            return $query->get()
-                ->unique('id')
-                ->values();
+               ->get();
         }
 
         // === BEHAVIOR EXISTING (tetap model) ===
