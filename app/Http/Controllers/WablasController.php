@@ -3470,9 +3470,42 @@ class WablasController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
+        // ===== pilih staf =====
+        } elseif (
+            !is_null($reservasi_online->tipe_konsultasi_id)
+            && is_null($reservasi_online->staf_id))
+        {
+            $this->chatBotLog(__LINE__);
+
+            $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
+            if (ctype_digit($msg) && (int)$msg > 0 && (int)$msg <= $petugas->count()) {
+                $idx = (int)$msg - 1;
+                $pp  = $petugas->get($idx); // PetugasPemeriksa
+
+                $this->chatBotLog(__LINE__);
+
+                // set staf & ruangan
+                $reservasi_online->staf_id              = $pp->staf_id;
+                $reservasi_online->petugas_pemeriksa_id = $pp->id;
+                $reservasi_online->ruangan_id           = $pp->ruangan_id;
+                $reservasi_online->schedulled_booking   = $pp->schedulled_booking_allowed;
+
+                // ===== window booking terjadwal =====
+                $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
+                $hasOpenTime         = !empty( $this->tenant->jam_buka );
+                $reservasi_online->save();
+            } else {
+                $this->chatBotLog(__LINE__);
+                $input_tidak_tepat = true;
+            }
+            $this->chatBotLog(__LINE__);
+
 
         // ===== pilih metode pembayaran =====
-        } elseif (!is_null($reservasi_online->tipe_konsultasi_id) && is_null($reservasi_online->registrasi_pembayaran_id)) {
+        } elseif (
+            !is_null($reservasi_online->tipe_konsultasi_id)
+            && is_null($reservasi_online->registrasi_pembayaran_id)
+        ) {
             $this->chatBotLog(__LINE__);
             if ($this->validasiRegistrasiPembayaran()) {
                 $reservasi_online = $this->lanjutkanRegistrasiPembayaran($reservasi_online);
@@ -3590,6 +3623,9 @@ class WablasController extends Controller
             }
             $reservasi_online->save();
 
+            if ($this->validasiKalauPermohonanDobel()) {
+                return;
+            };
         // ===== alur input BPJS (jika dipilih BPJS) =====
         } elseif (
             !is_null($reservasi_online->tipe_konsultasi_id)
@@ -3678,6 +3714,10 @@ class WablasController extends Controller
             $reservasi_online->save();
 
         // ===== input identitas + upload kartu + pilih petugas =====
+
+            if ($this->validasiKalauPermohonanDobel( $reservasi_online )) {
+                return;
+            };
         } elseif (
             !is_null($reservasi_online->tipe_konsultasi_id)
             && !is_null($reservasi_online->registrasi_pembayaran_id)
@@ -3726,66 +3766,6 @@ class WablasController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-
-        // ===== pilih staf =====
-        } elseif (
-            !is_null($reservasi_online->kartu_asuransi_image)
-            && is_null($reservasi_online->staf_id))
-        {
-            $this->chatBotLog(__LINE__);
-
-            $petugas = $this->petugas_pemeriksa_sekarang($reservasi_online);
-            if (ctype_digit($msg) && (int)$msg > 0 && (int)$msg <= $petugas->count()) {
-                $idx = (int)$msg - 1;
-                $pp  = $petugas->get($idx); // PetugasPemeriksa
-
-                $this->chatBotLog(__LINE__);
-
-                // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
-                // hapus reservasi sebelumnya
-                $schedulled_reservation_existing = SchedulledReservation::query()
-                    ->whereDate('created_at', $nowJkt->format('Y-m-d'))
-                    ->where('staf_id', $pp->staf_id)
-                    ->where('pasien_id', $reservasi_online->pasien_id)
-                    ->where('tenant_id', $reservasi_online->tenant_id)
-                    ->first();
-
-
-                if (
-                    $schedulled_reservation_existing
-                ) {
-                    $this->chatBotLog(__LINE__);
-                    //hapus reservasi yang dibuat saat ini
-                    //kembalikan reservasi yang ada untuk dikirimkan qr code
-                    $message = "Pendaftaran untuk {$schedulled_reservation_existing->nama} ke {$schedulled_reservation_existing->staf->nama_dengan_gelar} hari ini sudah dibuat. ";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= 'Sistem akan mengirimkan reservasi yang lama';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-
-                    $message .= $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
-                    $this->autoReply( $message );
-                    $reservasi_online->delete();
-                    return;
-                }
-                // set staf & ruangan
-                $reservasi_online->staf_id              = $pp->staf_id;
-                $reservasi_online->petugas_pemeriksa_id = $pp->id;
-                $reservasi_online->ruangan_id           = $pp->ruangan_id;
-                $reservasi_online->schedulled_booking   = $pp->schedulled_booking_allowed;
-
-                // ===== window booking terjadwal =====
-                $isSchedulingAllowed = (int)($pp->schedulled_booking_allowed ?? 0) === 1;
-                $hasOpenTime         = !empty( $this->tenant->jam_buka );
-                $reservasi_online->save();
-            } else {
-                $this->chatBotLog(__LINE__);
-                $input_tidak_tepat = true;
-            }
-            $this->chatBotLog(__LINE__);
-
-
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
         } elseif (!$reservasi_online->reservasi_selesai) {
             $this->chatBotLog(__LINE__);
@@ -3916,6 +3896,9 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $message = $this->pertanyaanPoliYangDituju();
 
+        } elseif ( !is_null($reservasi_online->tipe_konsultasi_id) && is_null($reservasi_online->staf_id)) {
+            $this->chatBotLog(__LINE__);
+            $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
         } elseif ( is_null($reservasi_online->registrasi_pembayaran_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->pertanyaanPembayaranPasien($reservasi_online);
@@ -3943,10 +3926,6 @@ class WablasController extends Controller
         } elseif ( !is_null($reservasi_online->alamat) && is_null($reservasi_online->kartu_asuransi_image)) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaKartuAsuransiImage($reservasi_online);
-
-        } elseif ( !is_null($reservasi_online->kartu_asuransi_image) && is_null($reservasi_online->staf_id)) {
-            $this->chatBotLog(__LINE__);
-            $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
 
         } elseif ( !$reservasi_online->reservasi_selesai) {
             $this->chatBotLog(__LINE__);
@@ -6668,5 +6647,45 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
         WhatsappBot::where('no_telp', $this->no_telp)->delete();
         return $message;
+    }
+    /**
+     * undocumented function
+     *
+     * @return void
+     */
+    private function validasiKalauPermohonanDobel($reservasi_online){
+        // jika sudah ada reservasi_online dengan pasien yang sama dan staf yang sama di hari yang sama
+        // hapus reservasi sebelumnya
+        if (
+            $reservasi_online->schedulled_booking &&
+            !is_null( $reservasi_online->pasien_id )
+        ) {
+            $schedulled_reservation_existing = SchedulledReservation::query()
+                ->whereDate('created_at', $nowJkt->format('Y-m-d'))
+                ->where('staf_id', $pp->staf_id)
+                ->where('pasien_id', $reservasi_online->pasien_id)
+                ->where('tenant_id', $reservasi_online->tenant_id)
+                ->first();
+
+            if (
+                $schedulled_reservation_existing
+            ) {
+                $this->chatBotLog(__LINE__);
+                //hapus reservasi yang dibuat saat ini
+                //kembalikan reservasi yang ada untuk dikirimkan qr code
+                $message = "Pendaftaran untuk {$schedulled_reservation_existing->nama} ke {$schedulled_reservation_existing->staf->nama_dengan_gelar} hari ini sudah dibuat. ";
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= 'Sistem akan mengirimkan reservasi yang lama';
+                $message .= PHP_EOL;
+                $message .= PHP_EOL;
+
+                $message .= $this->balasanReservasiTerjadwalDibuat( $schedulled_reservation_existing );
+                $this->autoReply( $message );
+                $reservasi_online->delete();
+                return true;
+            }
+        }
+        return false;
     }
 }
