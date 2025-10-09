@@ -4433,11 +4433,20 @@ class WablasController extends Controller
                 $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
                     ?? 'Dokter';
-                $sisa = (int) ($petugas->sisa_antrian ?? 0);
+                if ( $tipe_konsultasi_id == 1 ) {
+                    $sisa = (int) ($petugas->sisa_antrian ?? 0);
+                    $message .= PHP_EOL
+                              . $no . '. ' . $nama . PHP_EOL
+                              . '(' . $sisa . ' Antrian)' . PHP_EOL;
+                } else if ( $tipe_konsultasi_id == 2) {
+                    if ( $petugas->max_booking > 0 ) {
+                        $slot = $petugas->slot_pendaftaran;
+                        $message .= PHP_EOL
+                                  . $no . '. ' . $nama . PHP_EOL
+                                  . '(' . $slot . ' Slot Tersedia)' . PHP_EOL;
+                    }
+                }
 
-                $message .= PHP_EOL
-                          . $no . '. ' . $nama . PHP_EOL
-                          . '(' . $sisa . ' Antrian)' . PHP_EOL;
             }
 
             $ops = $this->joinOpsi($list->count());
