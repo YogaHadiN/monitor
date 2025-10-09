@@ -3454,6 +3454,8 @@ class WablasController extends Controller
                 $pp  = $petugas->get($idx); // PetugasPemeriksa
 
                 $this->chatBotLog(__LINE__);
+                $this->chatBotLog(" pp->online_registration_enabled ");
+                $this->chatBotLog( $pp->online_registration_enabled );
                 if ( !$pp->online_registration_enabled ) {
                     $this->chatBotLog(__LINE__);
                     $message = 'Dokter ' . $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
