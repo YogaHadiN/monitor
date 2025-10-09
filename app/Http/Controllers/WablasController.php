@@ -4411,12 +4411,6 @@ class WablasController extends Controller
         /** @var \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection $list */
         $list = collect($this->petugas_pemeriksa_sekarang($reservasi_online));
 
-        Log::info('======================');
-        Log::info('LIST');
-        foreach ($list as $l) {
-            Log::info( $l->id );
-        }
-        Log::info('======================');
 
         // Hindari N+1 saat akses $petugas->staf (jika Eloquent collection)
         if (method_exists($list, 'loadMissing')) {
@@ -4435,6 +4429,11 @@ class WablasController extends Controller
             $message = 'Silahkan pilih Dokter pemeriksa.' . PHP_EOL;
 
             foreach ($list as $k => $petugas) {
+                Log::info('======================');
+                Log::info('LIST');
+                Log::info( $petugas->id );
+                Log::info( $petugas->staf->nama_dengan_gelar );
+                Log::info('======================');
                 $no   = $k + 1;
                 $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
