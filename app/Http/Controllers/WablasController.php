@@ -3457,37 +3457,34 @@ class WablasController extends Controller
                 $this->chatBotLog(" pp->online_registration_enabled ");
                 $this->chatBotLog( $pp->online_registration_enabled );
 
-                if ( !$pp->online_registration_enabled ) {
-                    $this->chatBotLog(__LINE__);
-                    $message = $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
+                if (
+                     !$pp->online_registration_enabled ||
+                     !$pp->registration_enabled ||
+                     !$pp->slot_pendaftaran_available
+                ) {
+                    if ( !$pp->online_registration_enabled ) {
+                        $this->chatBotLog(__LINE__);
+                        $message = $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
+                        $message .= PHP_EOL;
+                        $message .= PHP_EOL;
+                        $message .= 'Silahkan datang mendaftar pada saat dokter berpraktek';
+                        $message .= PHP_EOL;
+                        $message .= 'Jam '. $pp->jadwal_hari_ini . ' pada hari ini';
+                    }
+                    // jika petugas pemeriksa stop pendaftaran gagalkan
+                    if ( !$pp->registration_enabled ) {
+                        $this->chatBotLog(__LINE__);
+                        $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup';
+                    }
+                    // jika petugas pemeriksa pendaftaran sudah max booking gagalkan
+                    if ( !$pp->slot_pendaftaran_available ) {
+                        $this->chatBotLog(__LINE__);
+                        $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup karena sudah penuh';
+                    }
+
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
-                    $message .= 'Silahkan datang mendaftar pada saat dokter berpraktek';
-                    $message .= PHP_EOL;
-                    $message .= 'Jam '. $pp->jadwal_hari_ini . ' pada hari ini';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= "Atau ulangi kembali untuk registrasi {$pp->tipe_konsultasi->tipe_konsultasi} lain";
-                    $message .= PHP_EOL;
-                    $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
-                    $this->autoReply( $message );
-                    resetWhatsappRegistration( $this->no_telp );
-                    return;
-                }
-                // jika petugas pemeriksa stop pendaftaran gagalkan
-                if ( !$pp->registration_enabled ) {
-                    $this->chatBotLog(__LINE__);
-                    $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup';
-                    $message .= PHP_EOL;
-                    $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
-                    $this->autoReply( $message );
-                    resetWhatsappRegistration( $this->no_telp );
-                    return;
-                }
-                // jika petugas pemeriksa pendaftaran sudah max booking gagalkan
-                if ( !$pp->slot_pendaftaran_available ) {
-                    $this->chatBotLog(__LINE__);
-                    $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup karena sudah penuh';
+                    $message .= "Ketik 'daftar' untuk ulangi kembali untuk registrasi";
                     $message .= PHP_EOL;
                     $message .= "Untuk melihat jadwal dokter lain ketik 'Jadwal {$pp->tipe_konsultasi->tipe_konsultasi}'";
                     $this->autoReply( $message );
