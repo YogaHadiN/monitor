@@ -3461,6 +3461,7 @@ class WablasController extends Controller
                      !$pp->online_registration_enabled ||
                      !$pp->registration_enabled ||
                      !$pp->slot_pendaftaran_available
+                     $pp->jam_praktek_terlewat
                 ) {
                     if ( !$pp->online_registration_enabled ) {
                         $this->chatBotLog(__LINE__);
@@ -3472,15 +3473,21 @@ class WablasController extends Controller
                         $message .= 'Jam '. $pp->jadwal_hari_ini . ' pada hari ini';
                     }
                     // jika petugas pemeriksa stop pendaftaran gagalkan
-                    if ( !$pp->registration_enabled ) {
+                    if (
+                        !$pp->registration_enabled
+                        || $pp->jam_praktek_terlewat
+                    ) {
                         $this->chatBotLog(__LINE__);
                         $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup';
                     }
                     // jika petugas pemeriksa pendaftaran sudah max booking gagalkan
-                    if ( !$pp->slot_pendaftaran_available ) {
+                    if (
+                         !$pp->slot_pendaftaran_available
+                    ) {
                         $this->chatBotLog(__LINE__);
                         $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup karena sudah penuh';
                     }
+
 
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;

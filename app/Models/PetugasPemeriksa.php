@@ -38,6 +38,14 @@ class PetugasPemeriksa extends Model
     public function tipe_konsultasi(){
         return $this->belongsTo(TipeKonsultasi::class);
     }
+    public function getJamPraktekTerlewatAttribute(){
+        $jam_akhir = Carbon::parse( $this->jam_akhir_default )->subMinutes(30);
+        $now = Carbon::now();
+        if ($jam_akhir->lt($now)) {
+            return true;
+        }
+        return false;
+    }
     public function getJadwalHariIniAttribute(){
         $jam_mulai = Carbon::parse( $this->jam_mulai_default )->format('H:i');
         $jam_akhir = Carbon::parse( $this->jam_akhir_default )->format('H:i');
