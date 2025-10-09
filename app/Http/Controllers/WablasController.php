@@ -4429,6 +4429,8 @@ class WablasController extends Controller
             $message = 'Silahkan pilih Dokter pemeriksa.' . PHP_EOL;
 
             foreach ($list as $k => $petugas) {
+                Log::info('STAFc');
+                Log::info( $petugas->staf->nama_dengan_gelar );
                 $no   = $k + 1;
                 $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
