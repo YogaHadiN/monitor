@@ -92,13 +92,14 @@ class PetugasPemeriksa extends Model
 
     public function antrian_menunggus()
     {
-        return $this->hasMany(\App\Models\Antrian::class, 'antriable_id')
+        return $this->hasMany(\App\Models\Antrian::class, 'petugas_pemeriksa_id')
                     ->whereIn('antriable_type', [
-                        \App\Models\Antrian::class,
+                        \App\Models\ReservasiOnline::class,
                         \App\Models\AntrianPoli::class,
                         \App\Models\AntrianPeriksa::class,
                     ]);
     }
+
     public function getSisaAntrianAttribute(){
         return $this->antrian_menunggus->count();
     }
