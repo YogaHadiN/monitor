@@ -3460,7 +3460,7 @@ class WablasController extends Controller
                 if (
                      !$pp->online_registration_enabled ||
                      !$pp->registration_enabled ||
-                     !$pp->slot_pendaftaran_available
+                     !$pp->slot_pendaftaran_available ||
                      $pp->jam_praktek_terlewat
                 ) {
                     if ( !$pp->online_registration_enabled ) {
