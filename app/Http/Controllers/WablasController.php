@@ -3457,7 +3457,7 @@ class WablasController extends Controller
                     $message = 'Dokter ' . $pp->staf->nama_dengan_gelar . ' hanya bisa pendaftaran langsung';
                     $message .= PHP_EOL;
                     $message .= PHP_EOL;
-                    $message .= 'Silahkan datang mendaftar pada saat dokter berpraktek'
+                    $message .= 'Silahkan datang mendaftar pada saat dokter berpraktek';
                     $message .= PHP_EOL;
                     $message .= 'Jam '. $pp->jadwal_hari_ini . ' pada hari ini';
                     $message .= PHP_EOL;
