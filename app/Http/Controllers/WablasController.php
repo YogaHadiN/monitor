@@ -6669,7 +6669,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         return DB::transaction(function () use ($reservasi_online, $visitDate, $tz) {
             // Lock baris kandidat agar request paralel tidak race
             $existing = \App\Models\SchedulledReservation::query()
-                ->whereDate('tanggal', $visitDate)
+                ->whereDate('created_at', $visitDate)
                 ->where('staf_id',   $reservasi_online->staf_id)
                 ->where('pasien_id', $reservasi_online->pasien_id)
                 ->where('tenant_id', $reservasi_online->tenant_id)
