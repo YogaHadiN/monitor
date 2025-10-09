@@ -100,6 +100,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
+        Log::info('oke');
         $this->message_reply = '';
         $this->fonnte = false;
         $this->image_url = null;
