@@ -1314,120 +1314,38 @@ class WablasController extends Controller
      */
     private function registerWhatsappComplaint()
     {
-        $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
-        $this->whatsapp_complaint->delete();
-        if (!is_null( $this->message )) {
+        if (is_null($this->message)) {
+            return;
+        }
 
-            $complain = Complain::create([
-                'tanggal'   => $tanggal_berobat,
+        $tz  = 'Asia/Jakarta';
+        $now = \Carbon\Carbon::now($tz);
+
+        $complain = \App\Models\Complain::query()
+            ->where('no_telp', $this->no_telp)
+            ->whereNull('auto_reply_sent_at')
+            ->whereDate('created_at', $now->toDateString())
+            ->first();
+
+        if (is_null($complain)) {
+            \App\Models\Complain::create([
+                'tanggal'   => $now,
                 'media'     => 'Whatsapp Bot',
                 'no_telp'   => $this->no_telp,
                 'tenant_id' => 1,
-                'complain'  => $this->message
+                'complain'  => $this->message,
             ]);
-
-            $messageToBoss = 'Complain dari no wa ' . $this->no_telp;
-            $messageToBoss .=  PHP_EOL;
-            $messageToBoss .=  PHP_EOL;
-            $messageToBoss .=  $this->message;
-            $this->sendSingle('6281381912803', $messageToBoss);
-
-            $antrian = null;
-
-            $carbon = Carbon::parse( $tanggal_berobat );
-            $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
-            $endOfDay = $carbon->endOfDay()->format('Y-m-d H:i:s');
-            $antrians = Antrian::where('no_telp', $this->no_telp)
-                ->whereBetween('created_at', [
-                        $startOfDay,
-                        $endOfDay
-                    ])
-                ->get();
-            if (
-                $this->lama()
-            ) {
-                if ( count( $antrians ) ) {
-
-                }
-
-                $message = 'Sebelumnya kami mohon maaf atas ketidaknyaman yang kakak rasakan. ';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= 'Antrian yang terlalu lama seringkali tidak dapat dihindari apabila antrian pasien sedang banyak atau sedang ada tindakan dokter di ruang UGD. ';
-                $message .= PHP_EOL;
-                $message .= 'Mengenai waktu tunggu pelayanan yg lama kakak dapat menggunakan fitur layanan daftar melalui whatsapp.';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= '- kakak bisa mendaftar dari rumah dan mendapat antrian dari rumah ';
-                $message .= PHP_EOL;
-                $message .= '- kakak akan dapat notifikasi setiap kali ada panggilan antrian ';
-                $message .= PHP_EOL;
-                $message .= '- kakak bisa datang ke klinik apabila sudah dekat waktu panggilan';
-                $message .= PHP_EOL;
-                $message .= '- sehingga kakak tidak perlu menunggu lama2 di Klinik.';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= 'Silahkan dimanfaatkan dengan whatsapp *"daftar"* kirim ke nomor whatsapp ini. ';
-                $message .= PHP_EOL;
-                $message .= 'Semoga dapat memberikan pengalaman berobat yang lebih baik bagi kakak dan keluarga ';
-                $this->autoReply($message );
-
-            } else if ($antrians->count()) {
-                foreach ($antrians as $antrian) {
-                    $antrian->complaint   = $this->message;
-                    $antrian->complain_id = $complain->id;
-                    $antrian->save();
-
-                    $complain->tanggal_kejadian = $antrian->created_at;
-                    $complain->nama_pasien      = $antrian->antriable->pasien?->nama;
-                    $complain->save();
-                }
-            } else if(
-                !$antrians->count()
-            ) {
-                /* WhatsappBot::create([ */
-                /*     'no_telp' => $this->no_telp, */
-                /*     'whatsapp_bot_service_id' => 15, // tanyakan tanggal pelayana dan nama pasien */
-                /* ]); */
-                $this->autoReply($this->tanyaKapanKeluhanTerjadi() );
-            } else if (
-                $this->lama() &&
-                !is_null( $antrian ) &&
-                $antrian->antriable_type == 'App\Models\Periksa'
-            ) {
-                WhatsappBot::create([
-                    'no_telp' => $this->no_telp,
-                    'whatsapp_bot_service_id' => 14,
-                ]);
-
-                $antrian->complain_pelayanan_lama = 1;
-                $antrian->save();
-
-                $this->autoReply($this->tanyaValidasiWaktuPelayanan() );
-            } else {
-                $message = "Terima kasih atas kesediaan memberikan masukan terhadap pelayanan kami";
-                if (
-                    is_null( $antrian ) ||
-                    (
-                        !is_null( $antrian ) &&
-                        $antrian->satisfaction_index == 1
-                    )
-                ) {
-                    $message .= PHP_EOL;
-                    $message .= "Keluhan atas pelayanan yang kakak rasakan akan segera kami tindak lanjuti.";
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= "Untuk respon cepat kakak dapat menghubungi 021-5977529";
-                }
-                $message .= PHP_EOL;
-                $message .= "Kami berharap dapat melayani anda dengan lebih baik lagi.";
-                $this->autoReply($message );
-            }
-            /* https://wa.me/6181381912803?text=hallo%20nama%20saya%20Yoga%20Hadi%20Nugroho */
         } else {
+            $existing = rtrim((string) $complain->complain, " \t\n\r\0\x0B.");
+            $incoming = ltrim((string) $this->message);
+            $complain->complain = $existing === ''
+                ? $incoming
+                : ($existing . PHP_EOL . PHP_EOL . $incoming);
 
+            $complain->save();
         }
 
+        // Tidak kirim balasan di sini — scheduler yang akan mengirim setelah idle > 10 menit
     }
     /**
      * undocumented function
@@ -4639,6 +4557,7 @@ class WablasController extends Controller
 
                 $lines[] = "- Melakukan *scan QR* di klinik *sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem";
                 $lines[] = "- Nomor Antrian diberikan setelah Scan QR Code dan urutan nomor antrian berdasarkan urutan Scan QR Code";
+                $lines[] = "- Pelayanan Dokter Gigi adalah pelayanan tindakan sehingga tidak bisa diperkiran durasi layanan";
                 $lines[] = "- Pendaftaran dokter gigi secara langsung dimulai jam {$jamMulaiGigi->format('H:i')} hanya bila slot pendaftaran masih tersedia";
             } else {
                 // Fallback bila jadwal gigi belum di-set

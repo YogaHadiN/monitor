@@ -59,7 +59,6 @@ class FonnteController extends Controller
         $sender    = $data['sender'];
         $message   = $data['message'];
         $text      = $data['text']; //button text
-        $member    = $data['member']; //group member who send the message
         $name      = $data['name'];
         $location  = $data['location'];
 
@@ -71,9 +70,6 @@ class FonnteController extends Controller
         $filename  = $data['filename'];
         $extension = $data['extension'];
         //end
-
-
-
 
         $wablas               = new WablasController;
         $wablas->room_id      = null;
