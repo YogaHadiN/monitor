@@ -55,12 +55,9 @@ class FonnteController extends Controller
 
         $json      = file_get_contents('php://input');
         $data      = json_decode($json, true);
-        $device    = $data['device'];
         $sender    = $data['sender'];
         $message   = $data['message'];
         $text      = $data['text']; //button text
-        $name      = $data['name'];
-        $location  = $data['location'];
 
         /* $this->handleSunatboyChatbot($sender, strtolower($message)); */
         //data below will only received by device with all feature package
