@@ -4363,8 +4363,6 @@ class WablasController extends Controller
             $message = 'Silahkan pilih Dokter pemeriksa.' . PHP_EOL;
 
             foreach ($list as $k => $petugas) { // list ada 2 kenapa yang paling akhir saja yang muncul?
-                Log::info('STAFc');
-                Log::info( $petugas->staf->nama_dengan_gelar );
                 $no   = $k + 1;
                 $nama = $petugas->staf->nama_dengan_gelar
                     ?? $petugas->staf->nama
@@ -4383,8 +4381,6 @@ class WablasController extends Controller
                     }
                 }
             }
-            Log::info('MESSAGE');
-            Log::info($message);
 
             $ops = $this->joinOpsi($list->count());
             $message .= PHP_EOL . 'Balas dengan angka *' . $this->sanitizeWhatsApp($ops) . '* sesuai dengan pilihan di atas';
