@@ -186,7 +186,7 @@ class AntrianOnlineController extends Controller
                     "keterangan"     => "",
                     "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter,
                     "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->namadokter,
-                    "jampraktek"     => $petugas_pemeriksa->jadwal_hari_ini;
+                    "jampraktek"     => $petugas_pemeriksa->jadwal_hari_ini
                 ];
             }
         }
