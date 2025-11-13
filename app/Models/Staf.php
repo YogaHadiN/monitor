@@ -25,4 +25,7 @@ class Staf extends Model
         }
         return tambahkanGelar($this->titel->singkatan, substr($nama, 0, 15));
     }
+    public function dokter_bpjs(){
+        return $this->belongsTo(DokterBpjs::class);
+    }
 }
