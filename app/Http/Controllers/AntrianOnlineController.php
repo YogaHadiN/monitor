@@ -83,6 +83,7 @@ class AntrianOnlineController extends Controller
     }
     public function status_antrean($kodepoli, $tanggal){
         $poli_bpjs     = PoliBpjs::where('kdPoli', $kodepoli)->first();
+
         if (
             is_null( $poli_bpjs ) ||
             (
@@ -97,7 +98,9 @@ class AntrianOnlineController extends Controller
                 ]
             ], 201);
         }
+
         $tipe_konsultasi = $poli_bpjs->tipe_konsultasi;
+
         try {
             Carbon::createFromFormat('Y-m-d', $tanggal);
         } catch (\Carbon\Exceptions\InvalidFormatException $e) {
@@ -125,6 +128,7 @@ class AntrianOnlineController extends Controller
 
         $startOfDay    = Carbon::parse($tanggal)->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay      = Carbon::parse($tanggal)->endOfDay()->format('Y-m-d H:i:s');
+
         $antrians      = Antrian::where('tipe_konsultasi_id', $tipe_konsultasi->id)
                                     ->whereBetween('created_at', [ $startOfDay, $endOfDay ])
                                     ->where('tenant_id', 1)
@@ -164,9 +168,6 @@ class AntrianOnlineController extends Controller
             $antrian_terakhir = Antrian::where('ruangan_id', $tipe_konsultasi->ruangan_id)->orderBy('id', 'desc')->first();
         }
 
-
-
-
         $response = '{
             "response": [
                 {
@@ -185,6 +186,7 @@ class AntrianOnlineController extends Controller
                 "code": 200
             }
         }';
+
         return Response::json(json_decode( $response, true ), 200);
     }
     public function ambil_antrean(){

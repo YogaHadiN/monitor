@@ -62,10 +62,11 @@ Route::group([
     "middleware" => ["auth.jwt"]
 ], function(){
 
-    Route::get("antrian_online/bpjs/antrean/status/{kode_poli}/{tanggalperiksa}", [
+    Route::get("antrean/status/{kode_poli}/{tanggalperiksa}", [
         \App\Http\Controllers\AntrianOnlineController::class,
         "status_antrean"
     ]);
+
 
     Route::post("antrian_online/bpjs/antrean", [
         \App\Http\Controllers\AntrianOnlineController::class,
