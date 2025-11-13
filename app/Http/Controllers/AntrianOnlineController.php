@@ -179,11 +179,28 @@ class AntrianOnlineController extends Controller
 
         foreach ($petugas_pemeriksas as $petugas_pemeriksa) {
             if (!is_null($petugas_pemeriksa->staf->dokter_bpjs)) {
+
+                $total_antrean = Antrian::where('antriable_type', Antrian::class)
+                                            ->whereDate('tanggal', Carbon::now())
+                                            ->where('petugas_pemeriksa_id', $petugas_pemeriksa->id)
+                                            ->count();
+
+                $total_antrean += AntrianPoli::where('staf_id', $petugas_pemeriksa->staf_id)
+                                            ->whereDate('tanggal', Carbon::now())
+                                            ->count();
+
+                $total_antrean += AntrianPeriksa::where('staf_id', $petugas_pemeriksa->staf_id)
+                                            ->whereDate('tanggal', Carbon::now())
+                                            ->count();
+
+
+
+
                 $response['response'][] = [
                     "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
-                    "totalantrean"   => (string) $petugas_pemeriksa->total_antrean,
-                    "sisaantrean"    => $petugas_pemeriksa->sisa_antrean,
-                    "antreanpanggil" => $petugas_pemeriksa->antrian_panggil,
+                    "totalantrean"   => (string) $total_antrean,
+                    "sisaantrean"    => $total_antrean,
+                    "antreanpanggil" => $petugas_pemeriksa->antrian_panggil->nomor_antrian,
                     "keterangan"     => "",
                     "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter,
                     "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->nama,

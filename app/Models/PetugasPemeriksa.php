@@ -104,6 +104,10 @@ class PetugasPemeriksa extends Model
         return $this->antrian_menunggus->count();
     }
 
+    public function antrian_panggil(){
+        return $this->belongsTo(Antrian::class, 'antrian_panggil_id');
+    }
+
 
     public function getWaktuTungguAttribute(){
         $count = $this->sisa_antrian;
