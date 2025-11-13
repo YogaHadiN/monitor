@@ -41,7 +41,9 @@ class AntrianOnlineController extends Controller
 
         dd( [
             $username,
-            $password
+            $password,
+            $request->headers->all();
+//return semua request header
         ] );
 
         $token = JWTAuth::attempt([
