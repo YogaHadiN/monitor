@@ -181,7 +181,7 @@ class AntrianOnlineController extends Controller
             if (!is_null($petugas_pemeriksa->staf->dokter_bpjs)) {
 
                 $total_antrean = Antrian::where('antriable_type', Antrian::class)
-                                            ->whereDate('tanggal', Carbon::now())
+                                            ->whereDate('created_at', Carbon::now())
                                             ->where('petugas_pemeriksa_id', $petugas_pemeriksa->id)
                                             ->count();
 
