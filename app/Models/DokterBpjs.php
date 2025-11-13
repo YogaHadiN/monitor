@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class DokterBpjs extends Model
 {
     use HasFactory;
+
+    public function staf(){
+        return $this->hasOne(Staf::class);
+    }
 }

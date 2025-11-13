@@ -4,6 +4,7 @@ use App\Models\Antrian;
 use App\Models\Asuransi;
 use App\Models\Pasien;
 use App\Models\Tenant;
+use App\Models\DokterBpjs;
 use App\Models\PetugasPemeriksa;
 
 use App\Models\AntrianPoli;
@@ -163,7 +164,7 @@ class AntrianOnlineController extends Controller
             ];
         }
 
-        $antrian_terakhir_id = $tipe_konsultasi->ruangan->antrian_id;
+        $antrian_terakhir_id = optional($tipe_konsultasi->ruangan)->antrian_id;
         if (!is_null( $antrian_terakhir_id )) {
             $antrian_terakhir = Antrian::find( $antrian_terakhir_id );
             if (is_null( $antrian_terakhir )) {
@@ -204,7 +205,7 @@ class AntrianOnlineController extends Controller
                     "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
                     "totalantrean"   => (string) $total_antrean,
                     "sisaantrean"    => $total_antrean,
-                    "antreanpanggil" => $petugas_pemeriksa->antrian_panggil?->nomor_antrian,
+                    "antreanpanggil" => optional($petugas_pemeriksa->antrian_panggil)->nomor_antrian ?? "-",
                     "keterangan"     => "",
                     "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter,
                     "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->nama,
@@ -220,227 +221,210 @@ class AntrianOnlineController extends Controller
 
 return response()->json($response, 200);
     }
-    public function ambil_antrean(){
+    public function ambil_antrean()
+    {
         $request        = Input::all();
-        $nomorkartu     = $request['nomorkartu'];
-        $nik            = $request['nik'];
-        $kodepoli       = $request['kodepoli'];
-        $kodedokter     = $request['kodedokter'];
-        $tanggalperiksa = $request['tanggalperiksa'];
-        $keluhan        = $request['keluhan'];
+        $nomorkartu     = $request['nomorkartu']     ?? null;
+        $nik            = $request['nik']            ?? null;
+        $kodepoli       = $request['kodepoli']       ?? null;
+        $kodedokter     = $request['kodedokter']     ?? null;
+        $tanggalperiksa = $request['tanggalperiksa'] ?? null;
+        $keluhan        = $request['keluhan']        ?? null;
 
         //==========================
-        //VALIDASI BEROBAT SEKALI
+        // VALIDASI BEROBAT SEKALI
         //==========================
-        if (
-            $this->validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu)
-        ) {
-            $response = '{
-                "metadata": {
-                    "message": "Nomor Antrean Hanya Dapat Diambil 1 Kali Pada Tanggal Yang Sama",
-                    "code": 201
-                }
-            }';
-            return Response::json(json_decode( $response, true ), 201);
-        }
-
-        //==========================
-        //VALIDASI POLI LIBUR
-        //==========================
-
-        if (
-            $this->poliSedangLibur($kodepoli)
-        ) {
-            $response = '{
-                "metadata": {
-                    "message": "Pendaftaran ke Poli Ini Sedang Tutup",
-                    "code": 201
-                }
-            }';
-            return Response::json(json_decode( $response, true ), 201);
-        }
-
-        //==========================
-        //VALIDASI DOKTER TIDAK DITEMUKAN
-        //==========================
-        //
-        if (
-            $this->dokterTidakDitemukan( $kodedokter )
-        ) {
-
-            $response = [
+        if ($this->validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu)) {
+            return Response::json([
                 'metadata' => [
-                    'message' => 'Jadwal Dokter dr. Siti Riani tersebut Belum tersedia, Silahkan Reschedule Tanggal dan Jam Praktek Lainnya',
-                    'code' => 201
-                ]
-            ];
-            return Response::json($response, 201);
-        };
-
+                    'message' => 'Nomor Antrean Hanya Dapat Diambil 1 Kali Pada Tanggal Yang Sama',
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
 
         //==========================
-        //VALIDASI POLI SUDAH TUTUP PENDAFARAN ONLINE
+        // VALIDASI POLI LIBUR
         //==========================
-        //
-        if (
-            $this->registrasiOnlineDitutup( $kodepoli )
-        ) {
-            $response = [
+        if ($this->poliSedangLibur($kodepoli)) {
+            return Response::json([
+                'metadata' => [
+                    'message' => 'Pendaftaran ke Poli Ini Sedang Tutup',
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
+
+        //==========================
+        // VALIDASI DOKTER TIDAK DITEMUKAN
+        //==========================
+        if ($this->dokterTidakDitemukan($kodedokter)) {
+
+            // hati-hati: kalau benar2 tidak ditemukan, jangan akses ->nama tanpa cek
+            $dokter_bpjs  = DokterBpjs::where('kdDokter', $kodedokter)->first();
+            $nama_dokter  = optional($dokter_bpjs)->nama ?? 'yang dipilih';
+
+            return Response::json([
+                'metadata' => [
+                    'message' => 'Jadwal Dokter ' . $nama_dokter . ' tersebut Belum tersedia, Silahkan Reschedule Tanggal dan Jam Praktek Lainnya',
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
+
+        //==========================
+        // VALIDASI POLI SUDAH TUTUP PENDAFARAN ONLINE
+        //==========================
+        if ($this->registrasiOnlineDitutup($kodepoli)) {
+            return Response::json([
                 'metadata' => [
                     'message' => $this->message,
-                    'code' => 201
-                ]
-            ];
-            return Response::json($response, 201);
-        };
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
 
         //==========================
         // VALIDASI PENDAFTARAN POLI GIGI BELUM BUKA
         //==========================
-        //
-        if (
-            $this->pendaftaranPoliGigiBelumDibuka()
-        ) {
-            $response = [
+        if ($this->pendaftaranPoliGigiBelumDibuka()) {
+            return Response::json([
                 'metadata' => [
-                    'message' => 'Pendaftaran Poli Gigi baru dibuka pukul 15:00',
-                    'code' => 201
-                ]
-            ];
-            return Response::json($response, 201);
-        };
-
+                    'message' => 'Pendaftaran Poli Gigi hanya melalui whatsapp +62-882-0151-92532',
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
 
         //==========================
         // VALIDASI PENDAFTARAN POLI GIGI DITUTUP
         //==========================
-        //
-        if (
-            $this->pendaftaranPoliGigiDitutup()
-        ) {
-            $response = [
+        if ($this->pendaftaranPoliGigiDitutup($kodepoli)) {
+            return Response::json([
                 'metadata' => [
-                    'message' => 'Pendaftaran Poli Gigi baru dibuka pukul 15:00',
-                    'code' => 201
-                ]
-            ];
-            return Response::json($response, 201);
-        };
+                    'message' => 'Pendaftaran Poli Gigi hanya melalui whatsapp +62-882-0151-92532',
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
 
         //==========================
-        // VALIDASI PENDAFTARAN HANYA UNTUK POLI UMUM DAN POLI GIGI
+        // VALIDASI PENDAFTARAN HANYA UNTUK POLI UMUM
         //==========================
-        //
-        if (
-            $kodepoli !== '001' &&
-            $kodepoli !== '002'
-        ) {
-            $response = [
+        if ($kodepoli !== '001') {
+            return Response::json([
                 'metadata' => [
-                    'message' => 'Pendaftaran online hanya untuk Poli Umum dan Poli Gigi saja',
-                    'code' => 201
-                ]
-            ];
-            return Response::json($response, 201);
-        };
+                    'message' => 'Pendaftaran online hanya untuk Poli Umum',
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
+
         //==========================
         // VALIDASI PENDAFTARAN HANYA PADA HARI YANG SAMA
         //==========================
-        //
-        if (
-            $tanggalperiksa !== date('Y-m-d')
-        ) {
-            $response = [
+        if ($tanggalperiksa !== date('Y-m-d')) {
+            return Response::json([
                 'metadata' => [
                     'message' => 'Antrian hanya bisa diambil pada hari yang sama',
-                    'code' => 201
-                ]
-            ];
-            return Response::json($response, 201);
-        };
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
 
+        //==========================
+        // VALIDASI DATA PASIEN TIDAK DITEMUKAN
+        //==========================
+        if ($this->dataPasienTidakDitemukan($nomorkartu, $nik)) {
+            return Response::json([
+                'metadata' => [
+                    'message' => 'Data pasien ini tidak ditemukan, silahkan Melakukan Registrasi Pasien Baru',
+                    'code'    => 202,
+                ],
+            ], 202);
+        }
+
+        //==========================
+        // VALIDASI ANTRIAN DOKTER GIGI NON AKTIF (backup kalau nanti 002 dibuka lagi)
+        //==========================
+        if ($kodepoli == '002') {
+            return Response::json([
+                'metadata' => [
+                    'message' => 'Mohon maaf untuk sementara antrian online dokter gigi tidak dapat digunakan. Harap dapat datang secara langsung pada saat jadwal dokter gigi telah dimulai',
+                    'code'    => 202,
+                ],
+            ], 202);
+        }
+
+        //==========================
+        // PROSES BUAT ANTRIAN
+        //==========================
         //
-        //==========================
-        //VALIDASI DATA PASIEN TIDAK DITEMUKAN
-        //==========================
+        $poli_bpjs             = PoliBpjs::where('kdPoli', $kodepoli)->first();
+        $this->tipe_konsultasi = $poli_bpjs->tipe_konsultasi ?? null;
 
+        if (is_null($this->tipe_konsultasi)) {
+            return Response::json([
+                'metadata' => [
+                    'message' => 'Tipe konsultasi untuk poli ini belum di-setting',
+                    'code'    => 201,
+                ],
+            ], 201);
+        }
 
-        if (
-            $this->dataPasienTidakDitemukan($nomorkartu, $nik)
-        ) {
-            $response = '{
-                "metadata": {
-                    "message": "Data pasien ini tidak ditemukan, silahkan Melakukan Registrasi Pasien Baru",
-                    "code": 202
-                }
-            }';
-            return Response::json(json_decode( $response, true ), 202);
-        };
-
-        //==========================
-        //VALIDASI ANTRIAN DOKTER GIGI NON AKTIF
-        //==========================
-        //
-        if (
-            $kodepoli == '002' &&
-            !$this->tenant->dentist_queue_enabled
-        ) {
-            $response = '{
-                "metadata": {
-                    "message": "Mohon maaf untuk sementara antrian online dokter gigi tidak dapat digunakan. Harap dapat datang secara langsung pada saat jadwal dokter gigi telah dimulai",
-                    "code": 202
-                }
-            }';
-            return Response::json([json_decode( $response, true )], 202);
-        };
-
-        $poli_bpjs                          = PoliBpjs::where('kdPoli', $kodepoli)->first();
-        $this->tipe_konsultasi              = $poli_bpjs->tipe_konsultasi;
         $ruangan_id                         = $this->tipe_konsultasi->ruangan_id;
         $fc                                 = new FasilitasController;
         $fc->tipe_konsultasi_id             = $this->tipe_konsultasi->id;
         $fc->ruangan_id                     = $ruangan_id;
         $fc->input_registrasi_pembayaran_id = 2;
-        $antrian                            = $fc->antrianPost();
-        $antrian->no_telp                   = $request['nohp'];
-        $antrian->antriable_id              = $antrian->id;
-        $antrian->pasien_id                 = $this->pasien->id;
-        $antrian->tanggal_lahir             = $this->pasien->tanggal_lahir;
-        $antrian->sudah_hadir_di_klinik     = 0;
-        $antrian->alamat                    = $this->pasien->alamat;
-        $antrian->nama                      = $this->pasien->nama;
-        $antrian->nomor_bpjs                = $nomorkartu;
-        $antrian->reservasi_online          = 1;
-        $antrian->registrasi_pembayaran_id  = 2;
-        $antrian->verifikasi_bpjs           = 1;
+
+        $antrian                        = $fc->antrianPost();
+        $antrian->no_telp               = $request['nohp'] ?? null;
+        $antrian->antriable_id          = $antrian->id;
+        $antrian->pasien_id             = $this->pasien->id;
+        $antrian->tanggal_lahir         = $this->pasien->tanggal_lahir;
+        $antrian->sudah_hadir_di_klinik = 0;
+        $antrian->alamat                = $this->pasien->alamat;
+        $antrian->nama                  = $this->pasien->nama;
+        $antrian->nomor_bpjs            = $nomorkartu;
+        $antrian->reservasi_online      = 1;
+        $antrian->registrasi_pembayaran_id = 2;
+        $antrian->verifikasi_bpjs       = 1;
         $antrian->save();
 
-        if ( empty( trim(   $this->pasien->no_telp   ) ) ) {
-           $this->pasien->no_telp = $request['nohp'] ;
-           $this->pasien->save();
+        // update no telp pasien jika sebelumnya kosong
+        if (empty(trim($this->pasien->no_telp ?? '')) && !empty($request['nohp'] ?? null)) {
+            $this->pasien->no_telp = $request['nohp'];
+            $this->pasien->save();
         }
 
-        $keterangan =  "Apabila antrean terlewat harap mengambil antrean kembali";
+        // pesan keterangan
+        $keterangan = "Apabila antrean terlewat harap mengambil antrean kembali";
         if ($kodepoli == '002') {
-            $keterangan =  "Apabila antrean terlewat harap mengambil antrean kembali. Terakhir penerimaan pasien adalah 1 jam sebelum pelayanan berakhir.";
+            $keterangan .= ". Terakhir penerimaan pasien adalah 1 jam sebelum pelayanan berakhir.";
         }
 
-        $response = '{
-            "response": {
-                    "nomorantrean" : "' . $antrian->nomor_antrian. '",
-                    "angkaantrean" : ' .$antrian->nomor. ',
-                    "namapoli" : "' . $antrian->tipe_konsultasi->poli_bpjs->nmPoli. '",
-                    "sisaantrean" : "'.$antrian->sisa_antrian.'",
-                    "antreanpanggil" : "'.$antrian->ruangan->antrian?->nomor_antrian.'",
-                    "keterangan" : "' . $keterangan. '"
-            },
-            "metadata": {
-                "message": "Ok",
-                "code": 200
-            }
-        }';
-        return Response::json(json_decode( $response, true ), 200);
+        // null-safe untuk ruangan & antrian ruangan
+        $antreanPanggil = optional(optional($antrian->ruangan)->antrian)->nomor_antrian;
+
+        $response = [
+            'response' => [
+                'nomorantrean'   => $antrian->nomor_antrian,
+                'angkaantrean'   => (int) $antrian->nomor,
+                'namapoli'       => optional(optional($antrian->tipe_konsultasi)->poli_bpjs)->nmPoli,
+                'sisaantrean'    => (string) ($antrian->sisa_antrian ?? 0),
+                'antreanpanggil' => $antreanPanggil ? (string) $antreanPanggil : '',
+                'keterangan'     => $keterangan,
+            ],
+            'metadata' => [
+                'message' => 'Ok',
+                'code'    => 200,
+            ],
+        ];
+
+        return Response::json($response, 200);
     }
+
     public function sisa_antrean($nomorkartu_jkn,$kode_poli,$tanggalperiksa){
 
         $startOfDay = Carbon::parse($tanggalperiksa)->startOfDay()->format('Y-m-d H:i:s');
@@ -564,147 +548,130 @@ return response()->json($response, 200);
         }
     }
     public function registrasiOnlineDitutup($kodepoli){
-        if (
-            $kodepoli == '001' &&
-            (
-                date("G") < 6 ||
-                date("G") >=22
-            )
-        ) {
-            $this->message = "Pendaftaran secara online sudah tutup dan akan buka lagi jam 6 pagi";
-            $this->message .= ". Mohon maaf atas ketidaknyamanannya.";
-            return true;
-
-        } else if (
-            $kodepoli == '002'
-        ) {
-            $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
-            $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
-            $jadwal =  JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)
-                ->where('hari_id', date("N"))
-                ->first();
-
-            $now = strtotime("now");
-
-            $jam_akhir_online  = date('H:i', strtotime('-3 hours', strtotime( $jadwal->jam_akhir)));
-            $jam_akhir_offline = date('H:i', strtotime('-1 hours', strtotime( $jadwal->jam_akhir)));
-
-            if (
-                $now < strtotime( $jadwal->jam_mulai )
-            ) {
-                $this->message = 'Pendaftaran ke poli ini baru dimulai jam ' . Carbon::parse($jadwal->jam_mulai)->format('H:i') ;
-            } else if (
-                $now > strtotime($jam_akhir_online)
-            ) {
-                $this->message = "Pengambilan Antrian Poli Gigi Secara Online berakhir jam {$jam_akhir_online}";
-                $this->message .= ". Pengambilan antrian secara langsung ditutup jam {$jam_akhir_offline}";
-                $this->message .= ". Mohon maaf atas ketidaknyamanannya.";
-            }
-
-            $tenant = Tenant::find(1);
-            $this->tenant = $tenant;
-            return !$jadwal->count();
-        } else {
-            return false;
+        $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
+        if (!$poli_bpjs || !$poli_bpjs->poli || !$poli_bpjs->poli->tipe_konsultasi) {
+            $this->message = 'Poli tidak ditemukan / belum di-setting';
+            return true; // anggap registrasi online ditutup
         }
+        $poli            = $poli_bpjs->poli;
+        $tipe_konsultasi = $poli->tipe_konsultasi;
+        $now = Carbon::now();
+        $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', $now)
+                                            ->where('tipe_konsultasi_id', $tipe_konsultasi->id)
+                                            ->where('jam_mulai', '<=', $now)
+                                            ->where('jam_akhir', '>=', $now)
+                                            ->get();
+        $online_dibuka = false;
+        foreach ($petugas_pemeriksas as $petugas_pemeriksa) {
+            if ( $petugas_pemeriksa->online_registration_enabled ) {
+                $online_dibuka = true;
+            }
+        }
+
+        if (
+            !$online_dibuka
+        ) {
+            $this->message = 'registrasi online ditutup';
+        }
+
+        return !$online_dibuka;
     }
-    public function validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu){
-        $startOfDay = Carbon::now()->startOfDay()->format('Y-m-d H:i:s');
-        $endOfDay   = Carbon::now()->endOfDay()->format('Y-m-d H:i:s');
-        $valid = false;
-        if (
-            Antrian::where('nomor_bpjs', $nomorkartu)
-                ->whereBetween('created_at', [
-                    $startOfDay, $endOfDay
-                ])
-                ->where('registrasi_pembayaran_id', 2)
-                ->exists()
-        ) {
-            $valid = true;
+    public function validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu)
+    {
+        $tz        = 'Asia/Jakarta';
+        $startOfDay = Carbon::now($tz)->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay   = Carbon::now($tz)->endOfDay()->format('Y-m-d H:i:s');
+
+        // 1. Cek di tabel antrians (registrasi_pembayaran_id = 2 = BPJS)
+        $sudahAdaAntrian = Antrian::where('nomor_bpjs', $nomorkartu)
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->where('registrasi_pembayaran_id', 2)
+            ->exists();
+
+        if ($sudahAdaAntrian) {
+            return true;
         }
 
-        if (
-            $valid
-        ) {
-            $query  = "SELECT * ";
-            $query .= "FROM periksas as prx ";
-            $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE prx.tenant_id= 1 ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
-            $query .= "AND prx.asuransi_id = 32 ";
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
-            $data = DB::select($query);
-            if (count( $data)) {
-                $valid = true;
-            }
+        // 2. Cek di tabel periksas (join ke pasiens, filter nomor_asuransi_bpjs)
+        $sqlPeriksas = "
+            SELECT prx.id
+            FROM periksas AS prx
+            JOIN pasiens AS psn ON psn.id = prx.pasien_id
+            WHERE prx.tenant_id = 1
+              AND prx.tanggal BETWEEN ? AND ?
+              AND prx.asuransi_id = 32
+              AND psn.nomor_asuransi_bpjs = ?
+            LIMIT 1
+        ";
+
+        $dataPeriksas = DB::select($sqlPeriksas, [$startOfDay, $endOfDay, $nomorkartu]);
+
+        if (count($dataPeriksas) > 0) {
+            return true;
         }
 
-        if (
-            $valid
-        ) {
-            $query  = "SELECT * ";
-            $query .= "FROM antrian_polis as prx ";
-            $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE prx.tenant_id= 1 ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
-            $query .= "AND prx.asuransi_id = 32 ";
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
-            $data = DB::select($query);
-            if (count( $data)) {
-                $valid = true;
-            }
+        // 3. Cek di tabel antrian_polis
+        $sqlAntrianPolis = "
+            SELECT prx.id
+            FROM antrian_polis AS prx
+            JOIN pasiens AS psn ON psn.id = prx.pasien_id
+            WHERE prx.tenant_id = 1
+              AND prx.tanggal BETWEEN ? AND ?
+              AND prx.asuransi_id = 32
+              AND psn.nomor_asuransi_bpjs = ?
+            LIMIT 1
+        ";
+
+        $dataAntrianPolis = DB::select($sqlAntrianPolis, [$startOfDay, $endOfDay, $nomorkartu]);
+
+        if (count($dataAntrianPolis) > 0) {
+            return true;
         }
 
+        // 4. Cek di tabel antrian_periksas
+        $sqlAntrianPeriksas = "
+            SELECT prx.id
+            FROM antrian_periksas AS prx
+            JOIN pasiens AS psn ON psn.id = prx.pasien_id
+            WHERE prx.tenant_id = 1
+              AND prx.tanggal BETWEEN ? AND ?
+              AND prx.asuransi_id = 32
+              AND psn.nomor_asuransi_bpjs = ?
+            LIMIT 1
+        ";
 
-        if (
-            $valid
-        ) {
-            $query  = "SELECT * ";
-            $query .= "FROM antrian_periksas as prx ";
-            $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE prx.tenant_id= 1 ";
-            $query .= "AND tanggal between '{$startOfDay}' and '{$endOfDay}' ";
-            $query .= "AND prx.asuransi_id = 32 ";
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
-            $data = DB::select($query);
-            if (count( $data)) {
-                $valid = true;
-            }
+        $dataAntrianPeriksas = DB::select($sqlAntrianPeriksas, [$startOfDay, $endOfDay, $nomorkartu]);
+
+        if (count($dataAntrianPeriksas) > 0) {
+            return true;
         }
 
-        if (
-            $valid
-        ) {
-            $query  = "SELECT * ";
-            $query .= "FROM antrian_kasirs as aks ";
-            $query .= "JOIN periksas as prx on prx.id = aks.periksa_id ";
-            $query .= "JOIN pasiens as psn on psn.id = prx.pasien_id ";
-            $query .= "WHERE prx.tenant_id= 1 ";
-            $query .= "AND prx.tanggal between '{$startOfDay}' and '{$endOfDay}' ";
-            $query .= "AND prx.asuransi_id = 32 ";
-            $query .= "AND psn.nomor_asuransi_bpjs = '{$nomorkartu}' ";
-            $data = DB::select($query);
-            if (count( $data)) {
-                $valid = true;
-            }
-        }
-        return $valid;
+        // Kalau lolos semua: artinya belum berobat hari ini
+        return false;
     }
     public function poliSedangLibur($kodepoli){
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
-        if ( !is_null( $poli_bpjs ) ) {
-            $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
-            $tenant = Tenant::find(1);
-            return
-                !JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id)->where('hari_id', date("N"))->exists()
-                || ( !$tenant->dentist_available && $kodepoli == '002' );
-        } else {
-            return true;
-        }
+        $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
+
+        return PetugasPemeriksa::whereDate('tanggal', Carbon::now())
+            ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+            ->count() < 1;
     }
 
     public function dokterTidakDitemukan($kodedokter){
-        return false;
+        $dokter_bpjs = DokterBpjs::where('kdDokter', $kodedokter)->first();
+        if (!$dokter_bpjs || !$dokter_bpjs->staf) {
+            // anggap "tidak ditemukan"
+            return true;
+        }
+        $staf = $dokter_bpjs->staf;
+        $now         = Carbon::now();
+        return PetugasPemeriksa::whereDate('tanggal', $now)
+            ->where('staf_id', $staf->id)
+            ->where('jam_mulai', '<=', $now)
+            ->where('jam_akhir', '>=', $now)
+            ->count() < 1;
+
     }
     public function dataPasienTidakDitemukan($nomorkartu, $nik){
         $this->pasien = Pasien::where('nomor_asuransi_bpjs', $nomorkartu)->first();
@@ -736,23 +703,12 @@ return response()->json($response, 200);
             $this->antrian->antriable_type !== 'App\Models\AntrianPeriksa';
     }
     public function pendaftaranPoliGigiBelumDibuka(){
-        $kodepoli           = Input::get('kodepoli');
-        $poli_bpjs          = PoliBpjs::where('kdPoli', $kodepoli)->first();
-        $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
-        $hari_id            = (int) date('N', strtotime( Input::get('tanggalperiksa') ));
-
-        $jadwal_konsultasi = JadwalKonsultasi::where('tipe_konsultasi_id', $tipe_konsultasi_id )
-                                            ->where('hari_id',  $hari_id )
-                                            ->first();
-        $jam_mulai = strtotime( $jadwal_konsultasi->jam_mulai );
-        if (
-            $kodepoli == '002' &&
-            $jam_mulai > strtotime("now")
-        ) {
+        return true;
+    }
+    public function pendaftaranPoliGigiDitutup($kodepoli){
+        if ( $kodepoli == '002' ) {
             return true;
         }
-    }
-    public function pendaftaranPoliGigiDitutup(){
         $tenant = Tenant::find(1);
         return $tenant->dokter_gigi_stop_pelayanan_hari_ini;
     }
