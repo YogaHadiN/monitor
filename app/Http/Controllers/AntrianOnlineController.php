@@ -168,26 +168,35 @@ class AntrianOnlineController extends Controller
             $antrian_terakhir = Antrian::where('ruangan_id', $tipe_konsultasi->ruangan_id)->orderBy('id', 'desc')->first();
         }
 
-        $response = '{
-            "response": [
-                {
-                    "namapoli" : "' . $tipe_konsultasi->poli_bpjs->nmPoli. '",
-                    "totalantrean" : "' . $total_antrean. '",
-                    "sisaantrean" : "' . $sisa_antrean. '",
-                    "antreanpanggil" : "' . $antrian_terakhir->nomor_antrian. '",
-                    "keterangan" : "",
-                    "kodedokter" : 347011,
-                    "namadokter" : "dr. JUNIARTI ELYANI",
-                    "jampraktek" : "08:00-22:00"
-                }
-            ],
-            "metadata": {
-                "message": "Ok",
-                "code": 200
-            }
-        }';
+        $petugas_pemeriksas = PetugasPemeriksa::with('staf.dokter_bpjs')
+                                                ->whereDate('tanggal', Carbon::now())
+                                                ->where('tipe_konsultasi_id', $tipe_konsultasi->id)
+                                                ->where('jam_mulai', '<', Carbon::now())
+                                                ->where('jam_akhir', '>', Carbon::now())
+                                                ->get();
+        $response = [];
 
-        return Response::json(json_decode( $response, true ), 200);
+        foreach ($petugas_pemeriksas as $petugas_pemeriksa) {
+            if (!is_null($petugas_pemeriksa->dokter_bpjs)) {
+                $response['response'][] = [
+                    "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
+                    "totalantrean"   => (string) $petugas_pemeriksa->total_antrean,
+                    "sisaantrean"    => $petugas_pemeriksa->sisa_antrean,
+                    "antreanpanggil" => $petugas_pemeriksa->antrian_panggil,
+                    "keterangan"     => "",
+                    "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter,
+                    "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->namadokter,
+                    "jampraktek"     => $petugas_pemeriksa->jadwal_hari_ini;
+                ];
+            }
+        }
+
+        $response['metadata'] = [
+            'message' => 'Ok',
+            'code'    => 200
+        ];
+
+return response()->json($response, 200);
     }
     public function ambil_antrean(){
         $request        = Input::all();
