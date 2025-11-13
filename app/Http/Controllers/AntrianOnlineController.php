@@ -4,6 +4,7 @@ use App\Models\Antrian;
 use App\Models\Asuransi;
 use App\Models\Pasien;
 use App\Models\Tenant;
+use App\Models\PetugasPemeriksa;
 use Illuminate\Http\Request;
 use Input;
 use Log;
@@ -186,7 +187,7 @@ class AntrianOnlineController extends Controller
                     "keterangan"     => "",
                     "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter,
                     "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->namadokter,
-                    "jampraktek"     => $petugas_pemeriksa->jadwal_hari_ini
+                    /* "jampraktek"     => $petugas_pemeriksa->jadwal_hari_ini */
                 ];
             }
         }
