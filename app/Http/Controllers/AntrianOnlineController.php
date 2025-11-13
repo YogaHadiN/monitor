@@ -57,6 +57,7 @@ class AntrianOnlineController extends Controller
 
         // Default tenant selalu 1 (Klinik Jati Elok)
         $this->tenant_id = 1;
+        session()->put('tenant_id') = 1;
     }
 
     /**
