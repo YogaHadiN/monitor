@@ -176,6 +176,7 @@ class AntrianOnlineController extends Controller
                                                 ->where('jam_akhir', '>', Carbon::now())
                                                 ->get();
         $response = [];
+        dd( $petugas_pemeriksas );
 
         foreach ($petugas_pemeriksas as $petugas_pemeriksa) {
             if (!is_null($petugas_pemeriksa->dokter_bpjs)) {
