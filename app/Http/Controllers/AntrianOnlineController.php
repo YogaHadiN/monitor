@@ -39,11 +39,15 @@ class AntrianOnlineController extends Controller
         $username = $request->header('x-username');
         $password = $request->header('x-password');
 
+        dd( [
+            $username,
+            $password
+        ] );
+
         $token = JWTAuth::attempt([
             "email" => $username,
             "password" => $password
         ]);
-        dd( $token );
 
         if(!empty($token)){
             $secret_key     = "YOUR_SECRET_KEY";
