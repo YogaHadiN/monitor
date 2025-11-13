@@ -42,7 +42,7 @@ class AntrianOnlineController extends Controller
         dd( [
             $username,
             $password,
-            $request->headers->all();
+            $request->headers->all()
 //return semua request header
         ] );
 
