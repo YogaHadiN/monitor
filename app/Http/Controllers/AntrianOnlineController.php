@@ -203,10 +203,10 @@ class AntrianOnlineController extends Controller
                 $total += Antrian::where('petugas_pemeriksa_id', $petugas_pemeriksa->id)
                     ->whereDate('created_at', Carbon::now())->count();
 
-                $total += AntrianPoli::where('staf_id', $petugas_pemeriksas->staf_id)
+                $total += AntrianPoli::where('staf_id', $petugas_pemeriksa->staf_id)
                     ->whereDate('tanggal', Carbon::now())->count();
 
-                $total += AntrianPeriksa::where('staf_id', $petugas_pemeriksas->staf_id)
+                $total += AntrianPeriksa::where('staf_id', $petugas_pemeriksa->staf_id)
                     ->whereDate('tanggal', Carbon::now())->count();
 
                 /**
