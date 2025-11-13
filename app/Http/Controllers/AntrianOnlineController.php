@@ -204,7 +204,7 @@ class AntrianOnlineController extends Controller
                     "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
                     "totalantrean"   => (string) $total_antrean,
                     "sisaantrean"    => $total_antrean,
-                    "antreanpanggil" => $petugas_pemeriksa->antrian_panggil->nomor_antrian,
+                    "antreanpanggil" => $petugas_pemeriksa->antrian_panggil?->nomor_antrian,
                     "keterangan"     => "",
                     "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter,
                     "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->nama,
