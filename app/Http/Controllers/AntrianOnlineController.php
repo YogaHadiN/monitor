@@ -5,6 +5,10 @@ use App\Models\Asuransi;
 use App\Models\Pasien;
 use App\Models\Tenant;
 use App\Models\PetugasPemeriksa;
+
+use App\Models\AntrianPoli;
+use App\Models\AntrianPeriksa;
+
 use Illuminate\Http\Request;
 use Input;
 use Log;
