@@ -43,6 +43,7 @@ class AntrianOnlineController extends Controller
             "email" => $username,
             "password" => $password
         ]);
+        dd( $token );
 
         if(!empty($token)){
             $secret_key     = "YOUR_SECRET_KEY";
