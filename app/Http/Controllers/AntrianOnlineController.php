@@ -122,7 +122,7 @@ class AntrianOnlineController extends Controller
         Log::info('===========================');
         Log::info("HIT STATUS ANTREAN");
 
-        if ( isset($request->header('x-random')) ) {
+        if (!is_null($request->header('x-random'))) {
             Log::info($request->header('x-random'));
         }
 
