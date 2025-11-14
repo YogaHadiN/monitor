@@ -49,7 +49,7 @@ class PetugasPemeriksa extends Model
     public function getJadwalHariIniAttribute(){
         $jam_mulai = Carbon::parse( $this->jam_mulai_default )->format('H:i');
         $jam_akhir = Carbon::parse( $this->jam_akhir_default )->format('H:i');
-        return " ( $jam_mulai - $jam_akhir )";
+        return "$jam_mulai - $jam_akhir";
     }
     public function getSlotPendaftaranAvailableAttribute(): int
     {
