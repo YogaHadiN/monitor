@@ -117,12 +117,12 @@ class AntrianOnlineController extends Controller
      * Mengambil status antrean poli berdasarkan kode poli & tanggal
      * Response format mengikuti standar Mobile JKN
      */
-    public function status_antrean($kodepoli, $tanggal)
+    public function status_antrean(Request $request, $kodepoli, $tanggal)
     {
         Log::info('===========================');
         Log::info("HIT STATUS ANTREAN");
 
-        if (!is_null($request->header('x-random'))) {
+        if ($request->hasHeader('x-random')) {
             Log::info($request->header('x-random'));
         }
 
