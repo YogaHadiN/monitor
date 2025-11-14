@@ -121,6 +121,10 @@ class AntrianOnlineController extends Controller
     {
         Log::info('===========================');
         Log::info("HIT STATUS ANTREAN");
+
+        if ( isset($username = $request->header('x-random')) ) {
+            Log::info('Dari POSTMAN');
+        }
         Log::info('===========================');
         // Ambil poli BPJS berdasarkan kode
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
