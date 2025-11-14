@@ -124,6 +124,8 @@ class AntrianOnlineController extends Controller
 
         if ($request->hasHeader('x-random')) {
             Log::info($request->header('x-random'));
+        } else {
+            Log::info("Dari mjkn");
         }
 
         Log::info('===========================');
