@@ -122,7 +122,7 @@ class AntrianOnlineController extends Controller
         Log::info('===========================');
         Log::info("HIT STATUS ANTREAN");
 
-        if ( isset($username = $request->header('x-random')) ) {
+        if ( isset($request->header('x-random')) ) {
             Log::info('Dari POSTMAN');
         }
         Log::info('===========================');
