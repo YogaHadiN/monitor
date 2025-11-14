@@ -2861,14 +2861,11 @@ class WablasController extends Controller
         return $this->prosesCekListDilakukan(1,1,2); // harian
     }
     public function prosesCekListHarianInput(){
-        Log::info('prosesCekListHarianInput');
         $masihAdaYangBelum =  $this->masihAdaYangBelumCekListHariIni() ;
-        Log::info($masihAdaYangBelum);
         if ($masihAdaYangBelum) {
             $this->prosesCekListDikerjakanInput(1,1,2);
         } else {
             $message_done = 'Semua Cek List HARIAN sudah dikerjakan';
-            Log::info($message_done);
             $this->autoReply($message_done);
         }
     }
