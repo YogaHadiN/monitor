@@ -23,7 +23,6 @@ use App\Models\User;
 use App\Models\PoliBpjs;
 use App\Models\MobileJknUser;
 use App\Models\JenisAntrian;
-use App\Models\JadwalKonsultasi;
 use Carbon\Carbon;
 use App\Models\AntrolJkntoken;
 use DB;
