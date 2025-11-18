@@ -8,7 +8,7 @@ use App\Models\Pasien;
 use App\Models\Tenant;
 use App\Models\DokterBpjs;
 use App\Models\PetugasPemeriksa;
-
+use App\Models\JadwalKonsultasi;
 use App\Models\AntrianPoli;
 use App\Models\AntrianPeriksa;
 
@@ -194,8 +194,8 @@ class AntrianOnlineController extends Controller
         /**
          * Ambil petugas pemeriksa (dokter) yang sedang bertugas saat ini
          */
-        $petugas_pemeriksas = PetugasPemeriksa::with('staf.dokter_bpjs')
-            ->whereDate('tanggal', Carbon::now())
+        $petugas_pemeriksas = JadwalKonsultasi::with('staf.dokter_bpjs')
+            ->whereDate('hari_id', Carbon::now()->dayOfWeekIso)
             ->where('tipe_konsultasi_id', $tipe_konsultasi->id)
             ->where('jam_mulai', '<', Carbon::now())
             ->where('jam_akhir', '>', Carbon::now())
