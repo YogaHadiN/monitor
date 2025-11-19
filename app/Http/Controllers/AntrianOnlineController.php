@@ -8,6 +8,7 @@ use App\Models\Pasien;
 use App\Models\Tenant;
 use App\Models\DokterBpjs;
 use App\Models\PetugasPemeriksa;
+use App\Models\TipeKonsultasi;
 
 use App\Models\AntrianPoli;
 use App\Models\AntrianPeriksa;
