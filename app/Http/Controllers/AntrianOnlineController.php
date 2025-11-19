@@ -281,7 +281,6 @@ class AntrianOnlineController extends Controller
      */
     public function ambil_antrean(Request $request)
     {
-        dd( $request->all() );
         Log::info('================================');
         Log::info('HIT AMBIL ANTRIAN');
 
@@ -290,7 +289,7 @@ class AntrianOnlineController extends Controller
         // Retrieved 2025-11-19, License - CC BY-SA 3.0
         
         $entityBody = file_get_contents('php://input');
-        $request        = Input::all();
+        $request        = json_decode( $entityBody, true);
         $nomorkartu     = $request['nomorkartu'] ?? null;
         $nik            = $request['nik'] ?? null;
         $kodepoli       = $request['kodepoli'] ?? null;
