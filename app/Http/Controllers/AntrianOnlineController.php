@@ -186,10 +186,7 @@ class AntrianOnlineController extends Controller
 
         $tanggalCarbon = Carbon::parse($tanggal);
 
-        dd([
-            $tipe_konsultasi->tipe_konsultasi ,
-            $tanggalCarbon->format('Y-m-d')
-        ]);
+
         $jadwal_konsultasis = JadwalKonsultasi::with('staf.dokter_bpjs', 'petugas_pemeriksa')
             ->where('hari_id', $tanggalCarbon)
             ->where('tipe_konsultasi_id', $tipe_konsultasi->id)
@@ -197,6 +194,11 @@ class AntrianOnlineController extends Controller
 
         $response = [];
 
+        dd([
+            $tipe_konsultasi->tipe_konsultasi ,
+            $tanggalCarbon->format('Y-m-d'),
+            $jadwal_konsultasis
+        ]);
 
 
         foreach ($jadwal_konsultasis as $jadwal_konsultasi) {
