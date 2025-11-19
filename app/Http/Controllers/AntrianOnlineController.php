@@ -8,7 +8,7 @@ use App\Models\Pasien;
 use App\Models\Tenant;
 use App\Models\DokterBpjs;
 use App\Models\PetugasPemeriksa;
-use App\Models\JadwalKonsultasi;
+
 use App\Models\AntrianPoli;
 use App\Models\AntrianPeriksa;
 
@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Models\PoliBpjs;
 use App\Models\MobileJknUser;
 use App\Models\JenisAntrian;
+use App\Models\JadwalKonsultasi;
 use Carbon\Carbon;
 use App\Models\AntrolJkntoken;
 use DB;
@@ -178,65 +179,72 @@ class AntrianOnlineController extends Controller
 
         $total_antrean = $antrians->count();
 
-        /**
-         * Hitung antrean yang belum dilayani (sisa antrean)
-         */
-        $sisa_antrean = 0;
-        $antrian_terakhir_id = optional($tipe_konsultasi->antrian)->id;
-
-        foreach ($antrians as $antrian) {
-            if ($antrian->id > $antrian_terakhir_id) {
-                $sisa_antrean++;
-            }
-        }
 
         /**
          * Ambil petugas pemeriksa (dokter) yang sedang bertugas saat ini
          */
-        $petugas_pemeriksas = JadwalKonsultasi::with('staf.dokter_bpjs')
-            ->whereDate('hari_id', Carbon::now()->dayOfWeekIso)
+
+        $tanggalCarbon = Carbon::parse($tanggal);
+        $jadwal_konsultasis = JadwalKonsultasi::with('staf.dokter_bpjs', 'petugas_pemeriksa')
+            ->where('hari_id', $tanggalCarbon)
             ->where('tipe_konsultasi_id', $tipe_konsultasi->id)
-            ->where('jam_mulai', '<', Carbon::now())
-            ->where('jam_akhir', '>', Carbon::now())
             ->get();
 
         $response = [];
 
-        foreach ($petugas_pemeriksas as $petugas_pemeriksa) {
+
+
+        foreach ($jadwal_konsultasis as $jadwal_konsultasi) {
 
             // Hanya tampilkan jika staf memiliki mapping ke Dokter BPJS
-            if ($petugas_pemeriksas->isNotEmpty() && !is_null($petugas_pemeriksa->staf->dokter_bpjs)) {
+            $petugas_pemeriksa = $jadwal_konsultasi->petugas_pemeriksa;
+
+            if ($petugas_pemeriksa && !is_null($petugas_pemeriksa->staf->dokter_bpjs)) {
 
                 /**
                  * Hitung total antrean milik dokter tersebut
                  */
-                $total = 0;
-
+                $total  = 0;
                 $total += Antrian::where('antriable_type', Antrian::class)
                     ->where('petugas_pemeriksa_id', $petugas_pemeriksa->id)
-                    ->whereDate('created_at', Carbon::now())
+                    ->whereDate('created_at', $tanggalCarbon)
                     ->count();
 
                 $total += AntrianPoli::where('staf_id', $petugas_pemeriksa->staf_id)
-                    ->whereDate('tanggal', Carbon::now())->count();
+                    ->whereDate('tanggal', $tanggalCarbon)
+                    ->count();
 
                 $total += AntrianPeriksa::where('staf_id', $petugas_pemeriksa->staf_id)
-                    ->whereDate('tanggal', Carbon::now())->count();
+                    ->whereDate('tanggal', $tanggalCarbon)
+                    ->count();
 
                 /**
                  * Format response sesuai spesifikasi JKN
                  */
-                $response['response'][] = [
+                $populate_data = [
                     "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
                     "totalantrean"   => (string)$total,
                     "sisaantrean"    => $total,
-                    "antreanpanggil" => optional($petugas_pemeriksa->antrian_panggil)->nomor_antrian ?? "-",
+                    "antreanpanggil" => optional(optional($petugas_pemeriksa)->antrian_panggil)->nomor_antrian ?? "-",
                     "keterangan"     => "",
-                    "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter,
-                    "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->nama,
+                    "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter ?? null,
+                    "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->nama ?? null,
                     "jampraktek"     => $petugas_pemeriksa->jadwal_hari_ini
                 ];
+            } else {
+                $populate_data = [
+                    "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
+                    "totalantrean"   => '0',
+                    "sisaantrean"    => 0,
+                    "antreanpanggil" => "-",
+                    "keterangan"     => "Dokter hari ini izin",
+                    "kodedokter"     => $jadwal_konsultasi->staf->dokter_bpjs?->kdDokter,
+                    "namadokter"     => $jadwal_konsultasi->staf->dokter_bpjs?->nama,
+                    "jampraktek"     => $jadwal_konsultasi->jadwal_hari_ini
+                ];
             }
+
+            $response['response'][] = $populate_data;
         }
 
         $response['metadata'] = [

@@ -19,6 +19,9 @@ class JadwalKonsultasi extends Model
     public function hari(){
         return $this->belongsTo(Hari::class);
     }
+    public function petugas_pemeriksa(){
+        return $this->belongsTo(PetugasPemeriksa::class);
+    }
     public function staf(){
         return $this->belongsTo(Staf::class);
     }
@@ -42,5 +45,11 @@ class JadwalKonsultasi extends Model
     }
     public function setJamAkhirAttribute( $value ) {
       $this->attributes['jam_akhir'] = (new Carbon($value))->format('H:i');
+    }
+
+    public function getJadwalHariIniAttribute(){
+        $jam_mulai = Carbon::parse( $this->jam_mulai_default )->format('H:i');
+        $jam_akhir = Carbon::parse( $this->jam_akhir_default )->format('H:i');
+        return "$jam_mulai - $jam_akhir";
     }
 }
