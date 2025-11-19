@@ -254,15 +254,15 @@ class AntrianOnlineController extends Controller
         $tipe_konsultasi = TipeKonsultasi::find(4);
 
         $response['response'][] = [
-                    "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
-                    "totalantrean"   => '0',
-                    "sisaantrean"    => 0,
-                    "antreanpanggil" => optional(optional($petugas_usg)->antrian_panggil)->nomor_antrian ?? "-",
-                    "keterangan"     => "",
-                    "kodedokter"     => $petugas_usg->staf->dokter_bpjs->kdDokter ?? null,
-                    "namadokter"     => $petugas_usg->staf->dokter_bpjs->nama ?? null,
-                    "jampraktek"     => $petugas_usg->jadwal_hari_ini
-                ];
+            "namapoli"       => 'POLI UMUM',
+            "totalantrean"   => '0',
+            "sisaantrean"    => 0,
+            "antreanpanggil" => optional(optional($petugas_usg)->antrian_panggil)->nomor_antrian ?? "-",
+            "keterangan"     => "",
+            "kodedokter"     => $petugas_usg->staf->dokter_bpjs->kdDokter ?? null,
+            "namadokter"     => $petugas_usg->staf->dokter_bpjs->nama ?? null,
+            "jampraktek"     => $petugas_usg->jadwal_hari_ini
+        ];
 
         $response['metadata'] = [
             'message' => 'Ok',
