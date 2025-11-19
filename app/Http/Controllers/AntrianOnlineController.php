@@ -296,6 +296,7 @@ class AntrianOnlineController extends Controller
         $kodedokter     = $req['kodedokter'] ?? null;
         $tanggalperiksa = $req['tanggalperiksa'] ?? null;
 
+        Log::info($entityBody);
         Log::info($req);
         Log::info($nomorkartu);
         Log::info($nik);
