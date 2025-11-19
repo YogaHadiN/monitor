@@ -194,13 +194,6 @@ class AntrianOnlineController extends Controller
 
         $response = [];
 
-        dd([
-            $tipe_konsultasi->tipe_konsultasi ,
-            $tanggalCarbon->format('Y-m-d'),
-            $jadwal_konsultasis
-        ]);
-
-
         foreach ($jadwal_konsultasis as $jadwal_konsultasi) {
 
             // Hanya tampilkan jika staf memiliki mapping ke Dokter BPJS
