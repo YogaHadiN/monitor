@@ -188,7 +188,7 @@ class AntrianOnlineController extends Controller
 
 
         $jadwal_konsultasis = JadwalKonsultasi::with('staf.dokter_bpjs', 'petugas_pemeriksa')
-            ->where('hari_id', $tanggalCarbon)
+            ->where('hari_id', $tanggalCarbon->dayOfWeekIso)
             ->where('tipe_konsultasi_id', $tipe_konsultasi->id)
             ->get();
 
