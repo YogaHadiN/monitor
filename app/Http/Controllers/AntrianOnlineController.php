@@ -281,6 +281,9 @@ class AntrianOnlineController extends Controller
      */
     public function ambil_antrean()
     {
+        Log::info('================================');
+        Log::info('HIT AMBIL ANTRIAN');
+        Log::info('================================');
         $request        = Input::all();
         $nomorkartu     = $request['nomorkartu'] ?? null;
         $nik            = $request['nik'] ?? null;
