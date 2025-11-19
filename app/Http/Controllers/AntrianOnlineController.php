@@ -243,9 +243,24 @@ class AntrianOnlineController extends Controller
                     "jampraktek"     => $jadwal_konsultasi->jadwal_hari_ini
                 ];
             }
-
             $response['response'][] = $populate_data;
         }
+
+        $petugas_usg = PetugasPemeriksa::where('tipe_konsultasi_id', 4)
+                                        ->whereDate('tanggal', Carbon::now())
+                                        ->first();
+
+        $tipe_konsultasi = TipeKonsultasi::find(4);
+        $response['response'] = [
+                    "namapoli"       => $tipe_konsultasi->poli_bpjs->nmPoli,
+                    "totalantrean"   => '0',
+                    "sisaantrean"    => 0,
+                    "antreanpanggil" => optional(optional($petugas_pemeriksa)->antrian_panggil)->nomor_antrian ?? "-",
+                    "keterangan"     => "",
+                    "kodedokter"     => $petugas_pemeriksa->staf->dokter_bpjs->kdDokter ?? null,
+                    "namadokter"     => $petugas_pemeriksa->staf->dokter_bpjs->nama ?? null,
+                    "jampraktek"     => $petugas_pemeriksa->jadwal_hari_ini
+                ];
 
         $response['metadata'] = [
             'message' => 'Ok',
