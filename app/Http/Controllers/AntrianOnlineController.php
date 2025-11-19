@@ -298,6 +298,7 @@ class AntrianOnlineController extends Controller
 
         Log::info($request);
         Log::info($entityBody);
+        Log::info($entityBody['nomorkartu']);
         Log::info($nomorkartu);
         Log::info($nik);
         Log::info($kodepoli);
