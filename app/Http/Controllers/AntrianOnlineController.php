@@ -237,7 +237,7 @@ class AntrianOnlineController extends Controller
                     "totalantrean"   => '0',
                     "sisaantrean"    => 0,
                     "antreanpanggil" => "-",
-                    "keterangan"     => "Dokter hari ini izin",
+                    "keterangan"     => "-",//"Dokter hari ini izin",
                     "kodedokter"     => $jadwal_konsultasi->staf->dokter_bpjs?->kdDokter,
                     "namadokter"     => $jadwal_konsultasi->staf->dokter_bpjs?->nama,
                     "jampraktek"     => $jadwal_konsultasi->jadwal_hari_ini
