@@ -250,7 +250,7 @@ class AntrianOnlineController extends Controller
         $petugas_usg = PetugasPemeriksa::where('tipe_konsultasi_id', 4)
                                         ->whereDate('tanggal', Carbon::now())
                                         ->first();
-        if ($petugas_usg->isNotEmpty) {
+        if (!is_null( $petugas_usg )) {
             $tipe_konsultasi = TipeKonsultasi::find(4);
 
             $response['response'][] = [
