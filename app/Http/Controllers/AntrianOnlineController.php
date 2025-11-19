@@ -283,6 +283,12 @@ class AntrianOnlineController extends Controller
     {
         Log::info('================================');
         Log::info('HIT AMBIL ANTRIAN');
+
+        // Source - https://stackoverflow.com/a
+        // Posted by user895378, modified by community. See post 'Timeline' for change history
+        // Retrieved 2025-11-19, License - CC BY-SA 3.0
+        
+        $entityBody = file_get_contents('php://input');
         $request        = Input::all();
         $nomorkartu     = $request['nomorkartu'] ?? null;
         $nik            = $request['nik'] ?? null;
@@ -291,6 +297,7 @@ class AntrianOnlineController extends Controller
         $tanggalperiksa = $request['tanggalperiksa'] ?? null;
 
         Log::info($request);
+        Log::info($entityBody);
         Log::info($nomorkartu);
         Log::info($nik);
         Log::info($kodepoli);
