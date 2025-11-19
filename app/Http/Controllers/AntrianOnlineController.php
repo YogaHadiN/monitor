@@ -283,13 +283,20 @@ class AntrianOnlineController extends Controller
     {
         Log::info('================================');
         Log::info('HIT AMBIL ANTRIAN');
-        Log::info('================================');
         $request        = Input::all();
         $nomorkartu     = $request['nomorkartu'] ?? null;
         $nik            = $request['nik'] ?? null;
         $kodepoli       = $request['kodepoli'] ?? null;
         $kodedokter     = $request['kodedokter'] ?? null;
         $tanggalperiksa = $request['tanggalperiksa'] ?? null;
+
+        Log::info($request);
+        Log::info($nomorkartu);
+        Log::info($nik);
+        Log::info($kodepoli);
+        Log::info($kodedokter);
+        Log::info($tanggalperiksa);
+        Log::info('================================');
 
         /**
          * VALIDASI: Pasien BPJS hanya boleh berobat sekali per hari
