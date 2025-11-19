@@ -48,8 +48,8 @@ class JadwalKonsultasi extends Model
     }
 
     public function getJadwalHariIniAttribute(){
-        $jam_mulai = Carbon::parse( $this->jam_mulai_default )->format('H:i');
-        $jam_akhir = Carbon::parse( $this->jam_akhir_default )->format('H:i');
+        $jam_mulai = Carbon::parse( $this->jam_mulai )->format('H:i');
+        $jam_akhir = Carbon::parse( $this->jam_akhir )->format('H:i');
         return "$jam_mulai - $jam_akhir";
     }
 }
