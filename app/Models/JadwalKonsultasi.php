@@ -48,6 +48,10 @@ class JadwalKonsultasi extends Model
     }
 
     public function getJadwalHariIniAttribute(){
+        dd( [
+             $this->jam_mulai ,
+             $this->jam_akhir
+        ] );
         $jam_mulai = Carbon::parse( $this->jam_mulai )->format('H:i');
         $jam_akhir = Carbon::parse( $this->jam_akhir )->format('H:i');
         return "$jam_mulai - $jam_akhir";
