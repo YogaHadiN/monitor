@@ -3265,8 +3265,6 @@ class WablasController extends Controller
                     $this->chatBotLog( $tipeDbInt );
                     $this->chatBotLog("jadwal_usg");
                     $this->chatBotLog( $jadwal_usg );
-                    $this->chatBotLog("jadwal_usg_query");
-                    $this->chatBotLog( $jadwal_usg_query );
 
                     if ($jadwal_usg) {
                         if ($tenant && !$tenant->usg_available) {
