@@ -3259,12 +3259,17 @@ class WablasController extends Controller
                     $jadwal_usg = \App\Models\JadwalKonsultasi::where('hari_id', $nowJkt->isoWeekday())
                         ->where('tipe_konsultasi_id', $tipeDbInt)
                         ->first();
+                    $jadwal_usg_query = \App\Models\JadwalKonsultasi::where('hari_id', $nowJkt->isoWeekday())
+                        ->where('tipe_konsultasi_id', $tipeDbInt)
+                        ->toRawSql();
 
                     $this->chatBotLog(__LINE__);
                     $this->chatBotLog("tipeDbInt");
                     $this->chatBotLog( $tipeDbInt );
                     $this->chatBotLog("jadwal_usg");
                     $this->chatBotLog( $jadwal_usg );
+                    $this->chatBotLog("jadwal_usg_query");
+                    $this->chatBotLog( $jadwal_usg_query );
 
                     if ($jadwal_usg) {
                         if ($tenant && !$tenant->usg_available) {
