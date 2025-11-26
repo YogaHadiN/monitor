@@ -281,23 +281,25 @@ class AntrianOnlineController extends Controller
      */
     public function ambil_antrean(Request $request)
     {
+        dd( $request->all() );
         Log::info('================================');
-        Log::info('HIT AMBIL ANTRIANzzzzzz');
+        Log::info('HIT AMBIL ANTRIAN');
 
         // Source - https://stackoverflow.com/a
         // Posted by user895378, modified by community. See post 'Timeline' for change history
         // Retrieved 2025-11-19, License - CC BY-SA 3.0
         
         $entityBody = file_get_contents('php://input');
-        $req = json_decode( $entityBody, true);
-        $nomorkartu     = $req['nomorkartu'] ?? null;
-        $nik            = $req['nik'] ?? null;
-        $kodepoli       = $req['kodepoli'] ?? null;
-        $kodedokter     = $req['kodedokter'] ?? null;
-        $tanggalperiksa = $req['tanggalperiksa'] ?? null;
+        $request        = Input::all();
+        $nomorkartu     = $request['nomorkartu'] ?? null;
+        $nik            = $request['nik'] ?? null;
+        $kodepoli       = $request['kodepoli'] ?? null;
+        $kodedokter     = $request['kodedokter'] ?? null;
+        $tanggalperiksa = $request['tanggalperiksa'] ?? null;
 
+        Log::info($request);
         Log::info($entityBody);
-        Log::info($req);
+        Log::info($entityBody['nomorkartu']);
         Log::info($nomorkartu);
         Log::info($nik);
         Log::info($kodepoli);

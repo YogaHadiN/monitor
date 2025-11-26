@@ -3260,6 +3260,12 @@ class WablasController extends Controller
                         ->where('tipe_konsultasi_id', $tipeDbInt)
                         ->first();
 
+                    $this->chatBotLog(__LINE__);
+                    $this->chatBotLog("tipeDbInt");
+                    $this->chatBotLog( $tipeDbInt );
+                    $this->chatBotLog("jadwal_usg");
+                    $this->chatBotLog( $jadwal_usg );
+
                     if ($jadwal_usg) {
                         if ($tenant && !$tenant->usg_available) {
                             $message  = 'Karena satu dan lain hal, pelayanan USG hari ini ditiadakan.';
