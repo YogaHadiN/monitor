@@ -3257,11 +3257,8 @@ class WablasController extends Controller
                 // === USG ===
                 } elseif ($tipeMsg === '3') {
                     $jadwal_usg = \App\Models\JadwalKonsultasi::where('hari_id', $nowJkt->isoWeekday())
-                        ->where('tipe_konsultasi_id', $tipeDbInt)
+                        ->where('tipe_konsultasi_id', 4)
                         ->first();
-                    $jadwal_usg_query = \App\Models\JadwalKonsultasi::where('hari_id', $nowJkt->isoWeekday())
-                        ->where('tipe_konsultasi_id', $tipeDbInt)
-                        ->toRawSql();
 
                     $this->chatBotLog(__LINE__);
                     $this->chatBotLog("tipeDbInt");
