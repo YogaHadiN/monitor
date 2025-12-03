@@ -1314,8 +1314,10 @@ class WablasController extends Controller
      */
     private function registerWhatsappComplaint()
     {
+        $this->chatBotLog(__LINE__);
         if (is_null($this->message)) {
             return;
+            $this->chatBotLog(__LINE__);
         }
 
         $tz  = 'Asia/Jakarta';
@@ -1328,6 +1330,7 @@ class WablasController extends Controller
             ->first();
 
         if (is_null($complain)) {
+            $this->chatBotLog(__LINE__);
             \App\Models\Complain::create([
                 'tanggal'   => $now,
                 'media'     => 'Whatsapp Bot',
@@ -1336,6 +1339,7 @@ class WablasController extends Controller
                 'complain'  => $this->message,
             ]);
         } else {
+            $this->chatBotLog(__LINE__);
             $existing = rtrim((string) $complain->complain, " \t\n\r\0\x0B.");
             $incoming = ltrim((string) $this->message);
             $complain->complain = $existing === ''

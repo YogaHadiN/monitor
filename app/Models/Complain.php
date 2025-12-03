@@ -11,10 +11,6 @@ class Complain extends Model
     protected $guarded = [];
     public static function boot(){
         parent::boot();
-        self::created(function($complain){
-            resetWhatsappRegistration($complain->no_telp);
-        });
     }
-    
 }
 
