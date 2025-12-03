@@ -1344,7 +1344,7 @@ class WablasController extends Controller
             $incoming = ltrim((string) $this->message);
             $complain->complain = $existing === ''
                 ? $incoming
-                : ($existing . PHP_EOL . PHP_EOL . $incoming);
+                : ($existing .  '. ' . ucfirst( strtolower( $incoming ) ));
 
             $complain->save();
         }
