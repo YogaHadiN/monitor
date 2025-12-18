@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\KommoWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,9 +15,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::post('/wablas/webhook', [KommoWebhookController::class, 'handle']);
+
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
-Route::get('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
-Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']);
+/* Route::get('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
+/* Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
 
 /* Route::get('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhookGet']); */
 /* Route::post('qiscus/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
