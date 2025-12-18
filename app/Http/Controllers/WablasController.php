@@ -181,7 +181,7 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
-        Log::info( Input::all() );
+        Log::info('ada webhook disini');
         if ( BlokirWa::where('no_telp', $this->no_telp)->exists() ) {
             return;
         }
