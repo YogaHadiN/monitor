@@ -16,6 +16,7 @@ use App\Http\Controllers\KommoWebhookController;
 */
 
 Route::post('/wablas/webhook', [KommoWebhookController::class, 'handle']);
+Route::get('/wablas/webhook', [KommoWebhookController::class, 'handle']);
 
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
 /* Route::get('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
