@@ -9,7 +9,6 @@ class KommoWebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        return 1;
         // Raw body (penting untuk debug form-urlencoded)
         Log::info('KOMMO_WEBHOOK_RAW', [
             'content_type' => $request->header('Content-Type'),
