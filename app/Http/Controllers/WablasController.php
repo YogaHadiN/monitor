@@ -142,6 +142,8 @@ class WablasController extends Controller
             $this->no_telp      = Input::get('phone');
             $this->message_type = Input::get('messageType');
             $this->image_url    = Input::get('url');
+            Log::info('message');
+            Log::info( Input::get('message') );
             $this->message = !is_null( Input::get('message') ) ? strtolower((string) Input::get('message')) : null;
         }
 	}
