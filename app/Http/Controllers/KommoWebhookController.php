@@ -160,7 +160,7 @@ class KommoWebhookController extends Controller
         $wablasCtrl->message       = $text;
         $wablasCtrl->fonnte        = false;
 
-        Log::info( [
+        Log::info('WABLAS_PARAMETER' [
             $wablasCtrl->room_id,
             $wablasCtrl->kommo_chat_id,
             $wablasCtrl->no_telp,
