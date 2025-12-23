@@ -43,15 +43,7 @@ class KommoWebhookController extends Controller
                 continue;
             }
 
-            try {
-                $this->processIncomingMessage($msg, $kommo);
-            } catch (\Throwable $e) {
-                // Jangan sampai webhook dianggap gagal oleh Kommo
-                Log::error('KOMMO_PROCESSING_FAILED', [
-                    'error' => $e->getMessage(),
-                    'msg'   => $msg,
-                ]);
-            }
+            $this->processIncomingMessage($msg, $kommo);
         }
 
         // =========================
