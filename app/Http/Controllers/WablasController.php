@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -10,6 +9,7 @@ use App\Services\KommoClient;
 use App\Models\KeluhanEstetik;
 use App\Models\JadwalKonsultasi;
 use App\Models\BlokirWa;
+use App\Services\KommoReplyService;
 use App\Models\WhatsappInbox;
 use App\Models\BpjsApiLog;
 use App\Models\Complain;
@@ -5889,33 +5889,55 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     // QISCUS
 
+
     public function autoReply(string $message): void
     {
-        // chat_id WAJIB untuk Kommo
-        if (empty($this->kommo_chat_id)) {
-            Log::warning('KOMMO_AUTO_REPLY_SKIPPED_NO_CHAT_ID', [
-                'message' => $message,
-            ]);
-            return;
-        }
-
         $text = trim($message);
+
         if ($text === '') {
             Log::warning('KOMMO_AUTO_REPLY_SKIPPED_EMPTY_TEXT', [
-                'chat_id' => $this->kommo_chat_id,
+                'chat_id' => $this->kommo_chat_id ?? null,
             ]);
             return;
         }
 
-        /** @var KommoClient $kommo */
-        $kommo = app(KommoClient::class);
+        // phone WAJIB untuk membangun conversation_id
+        if (empty($this->no_telp)) {
+            Log::warning('KOMMO_AUTO_REPLY_SKIPPED_NO_PHONE', [
+                'chat_id' => $this->kommo_chat_id ?? null,
+            ]);
+            return;
+        }
 
-        // Kirim via Amojo Chats API (bukan amocrm.com)
-        $kommo->sendMessageToChat($this->kommo_chat_id, $text);
+        // context minimum untuk KommoReplyService
+        $ctx = [
+            'origin'              => $this->origin ?? 'waba',
+            'kommo_chat_id'       => $this->kommo_chat_id ?? null,
+            'kommo_contact_id'    => $this->kommo_contact_id ?? null,
+            'phone_normalized'    => $this->no_telp,
+            'message_type'        => $this->message_type ?? 'text',
+        ];
+
+        /** @var KommoReplyService $replyService */
+        $replyService = app(KommoReplyService::class);
+
+        $result = $replyService->replyText($ctx, $text);
+
+        if (!$result['ok']) {
+            Log::warning('KOMMO_AUTO_REPLY_FAILED', [
+                'reason' => $result['reason'] ?? 'unknown',
+                'ctx'    => [
+                    'chat_id' => $this->kommo_chat_id ?? null,
+                    'phone'   => $this->no_telp,
+                ],
+            ]);
+            return;
+        }
 
         Log::info('KOMMO_AUTO_REPLY_SENT', [
-            'chat_id' => $this->kommo_chat_id,
-            'text'    => $text,
+            'chat_id' => $this->kommo_chat_id ?? null,
+            'phone'   => $this->no_telp,
+            'text'    => mb_substr($text, 0, 100),
         ]);
     }
 

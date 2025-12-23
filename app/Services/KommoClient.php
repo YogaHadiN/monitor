@@ -134,29 +134,33 @@ class KommoClient
      * Kirim pesan text ke chat Kommo (Amojo).
      * Mengatasi error 404 "Cannot POST ...amocrm.com/chats/..."
      */
-    public function sendMessageToChat(string $chatId, string $text): array
+    public function sendMessageToConversation(string $conversationId, string $text): array
     {
-        $chatId = trim($chatId);
-        $text   = trim($text);
+        $conversationId = trim($conversationId);
+        $text = trim($text);
 
-        if ($chatId === '' || $text === '') {
-            throw new \RuntimeException('sendMessageToChat: chatId/text kosong');
+        if ($conversationId === '' || $text === '') {
+            throw new \RuntimeException('sendMessageToConversation: conversationId/text kosong');
         }
 
         $scopeId = $this->amojoScopeOrFail();
 
-        // Endpoint amojo (domain beda dari CRM)
-        $url = $this->amojoBaseUrl . "/v2/{$scopeId}/chats/{$chatId}/messages";
+        // ✅ Endpoint yang benar untuk chats API custom channel
+        $url = $this->amojoBaseUrl . "/v2/origin/custom/{$scopeId}";
 
         $payload = [
-            'message' => [
-                'type' => 'text',
-                'text' => $text,
+            'event_type' => 'new_message',
+            'payload' => [
+                'conversation_id' => $conversationId,
+                'message' => [
+                    'type' => 'text',
+                    'text' => $text,
+                ],
             ],
         ];
 
         $res = $this->request('POST', $url, $payload);
-        $this->assertOk($res, 'Kommo sendMessageToChat');
+        $this->assertOk($res, 'Kommo sendMessageToConversation');
 
         return $res->json() ?? [];
     }
