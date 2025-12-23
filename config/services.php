@@ -29,5 +29,11 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'kommo' => [
+        'subdomain' => env('KOMMO_SUBDOMAIN'),
+        'token'     => env('KOMMO_LONG_LIVED_TOKEN'),
+        'client_id' => env('KOMMO_CLIENT_ID'),
+        'secret'    => env('KOMMO_CLIENT_SECRET'),
+    ],
 
 ];

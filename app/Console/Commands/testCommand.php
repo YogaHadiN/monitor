@@ -5,12 +5,12 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Http\Controllers\WablasController;
 use App\Http\Controllers\BpjsApiController;
+use Illuminate\Support\Facades\Http;
 use App\Models\WhatsappBpjsDentistRegistration;
 use App\Models\WhatsappMainMenu;
 use App\Models\CekListDikerjakan;
 use App\Models\WhatsappBot;
 use App\Models\ReservasiOnline;
-use Http;
 
 class testCommand extends Command
 {
@@ -45,15 +45,26 @@ class testCommand extends Command
      */
     public function handle()
     {
-        \App\Models\NoTelp::create([
-            'no_telp' => '6285721012351',
-            'tenant_id' => 1,
-            'saved_by_other' => 0,
-            'room_id' => null,
-            'updated_at_qiscus' => now(),
-            'fonnte' => 0,
-            'disimpan_di_android' => 0,
-        ]);
+        $subdomain = config('services.kommo.subdomain');
+        $token     = config('services.kommo.token');
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Accept'        => 'application/hal+json',
+        ])->get("https://{$subdomain}.kommo.com/api/v4/contacts/13844454");
+
+        if (!$response->successful()) {
+            dd('Kommo error', $response->status(), $response->body());
+        }
+
+        // ⬇️ INI YANG KURANG
+        $contact = $response->json();
+
+        $phone = collect($contact['custom_fields_values'] ?? [])
+            ->firstWhere('field_code', 'PHONE')['values'][0]['value']
+            ?? null;
+
+        dd($phone);
     }
     public function refreshAntrianOnline(){
         WhatsappBot::where('no_telp', '6281381912803')->delete();
