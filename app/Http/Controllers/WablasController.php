@@ -144,7 +144,7 @@ class WablasController extends Controller
             $this->image_url    = Input::get('url');
             Log::info('message');
             Log::info( Input::get('message') );
-            $this->message = !is_null( Input::get('message') ) ? strtolower((string) Input::get('message')) : null;
+            $this->message = !is_array( Input::get('message') ) ? strtolower((string) Input::get('message')) : null;
         }
 	}
 
