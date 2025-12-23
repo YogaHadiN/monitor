@@ -124,7 +124,7 @@ class KommoWebhookController extends Controller
         // =========================
         // Bentuk objek forward "wablas-like"
         // =========================
-        $wablas =  [
+        $wablas = (object) [
             // identitas percakapan
             'room_id'          => $chatId,          // samakan dengan konsep room_id dulu
             'kommo_chat_id'    => $chatId,
