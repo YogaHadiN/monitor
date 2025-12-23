@@ -106,31 +106,29 @@ class KommoWebhookController extends Controller
      * GET CONTACT PHONE FROM KOMMO
      * ===============================
      */
-    protected function getContactPhone(array $message): ?string
+    protected function getContactPhone(string|int|null $contactId): ?string
     {
-        $contactId = data_get($message, 'contact_id');
-
-        if (!$contactId) {
+        if (empty($contactId)) {
             return null;
         }
 
         try {
             $contact = $this->kommoClient->getContactById($contactId);
 
-            $phones = data_get($contact, 'custom_fields_values', []);
-            foreach ($phones as $field) {
+            $fields = data_get($contact, 'custom_fields_values', []);
+            foreach ($fields as $field) {
                 if (($field['field_code'] ?? '') === 'PHONE') {
-                    return $field['values'][0]['value'] ?? null;
+                    $val = $field['values'][0]['value'] ?? null;
+                    return $val ? (string) $val : null;
                 }
             }
         } catch (\Throwable $e) {
-            Log::error('KOMMO_GET_CONTACT_PHONE_FAILED', [
+            \Log::error('KOMMO_GET_CONTACT_PHONE_FAILED', [
                 'contact_id' => $contactId,
-                'error' => $e->getMessage(),
+                'error'      => $e->getMessage(),
             ]);
         }
 
-        // ⬅️ INI YANG SEBELUMNYA HILANG
         return null;
     }
 
