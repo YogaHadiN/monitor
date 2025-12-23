@@ -157,10 +157,20 @@ class KommoWebhookController extends Controller
         $wablasCtrl->no_telp       = $phoneNormalized;
         $wablasCtrl->message_type  = $messageType;
         $wablasCtrl->image_url     = $payload->image_url;  // ✅
-        $wablasCtrl->message       = $payload->message;    // ✅
+        $wablasCtrl->message       = $text;
         $wablasCtrl->fonnte        = false;
 
-        $wablasCtrl->webhook();
+        Log::info( [
+            $wablasCtrl->room_id,
+            $wablasCtrl->kommo_chat_id,
+            $wablasCtrl->no_telp,
+            $wablasCtrl->message_type,
+            $wablasCtrl->image_url,
+            $wablasCtrl->message,
+            $wablasCtrl->fonnte,
+        ] );
+
+        /* $wablasCtrl->webhook(); */
 
     }
 
