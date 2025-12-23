@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\KommoClient;
+use App\Http\Controllers\WablasController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -123,7 +124,7 @@ class KommoWebhookController extends Controller
         // =========================
         // Bentuk objek forward "wablas-like"
         // =========================
-        $wablas = (object) [
+        $wablas =  [
             // identitas percakapan
             'room_id'          => $chatId,          // samakan dengan konsep room_id dulu
             'kommo_chat_id'    => $chatId,
@@ -169,7 +170,17 @@ class KommoWebhookController extends Controller
         // - trigger auto-reply
         // - lempar ke pipeline chatbot
         // =========================
-        // $this->forwardToYourChatPipeline($wablas);
+        $wablas               = new WablasController;
+
+        $wablas->room_id       = null;
+        $wablas->kommo_chat_id = $chatId;
+        $wablas->no_telp       = $phoneNormalized;
+        $wablas->message_type  = $messageType;
+        $wablas->image_url     = $wablas['image_url'];
+        $wablas->message       = $wablas['message'];
+        $wablas->fonnte        = false;
+        $wablas->webhook();
+
     }
 
     /**
