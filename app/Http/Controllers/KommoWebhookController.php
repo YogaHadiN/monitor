@@ -171,7 +171,7 @@ class KommoWebhookController extends Controller
             'fonnte'        => $wablasCtrl->fonnte,
         ]);
 
-        /* $wablasCtrl->webhook(); */
+        $wablasCtrl->webhook();
 
     }
 
