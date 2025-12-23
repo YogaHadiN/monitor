@@ -5907,24 +5907,16 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return;
         }
 
-        try {
-            /** @var KommoClient $kommo */
-            $kommo = app(KommoClient::class);
+        /** @var KommoClient $kommo */
+        $kommo = app(KommoClient::class);
 
-            // Kirim via Amojo Chats API (bukan amocrm.com)
-            $kommo->sendMessageToChat($this->kommo_chat_id, $text);
+        // Kirim via Amojo Chats API (bukan amocrm.com)
+        $kommo->sendMessageToChat($this->kommo_chat_id, $text);
 
-            Log::info('KOMMO_AUTO_REPLY_SENT', [
-                'chat_id' => $this->kommo_chat_id,
-                'text'    => $text,
-            ]);
-
-        } catch (\Throwable $e) {
-            Log::error('KOMMO_AUTO_REPLY_FAILED', [
-                'chat_id' => $this->kommo_chat_id,
-                'error'   => $e->getMessage(),
-            ]);
-        }
+        Log::info('KOMMO_AUTO_REPLY_SENT', [
+            'chat_id' => $this->kommo_chat_id,
+            'text'    => $text,
+        ]);
     }
 
     public function createReservasiOnline($konfirmasi_sdk = false){
