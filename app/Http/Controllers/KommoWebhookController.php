@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Services\KommoClient;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class KommoWebhookController extends Controller
 {
-    public function handle(Request $request, KommoClient $kommo): \Illuminate\Http\JsonResponse
+    public function handle(Request $request, KommoClient $kommo): JsonResponse
     {
         // =========================
         // 1) LOG RAW
@@ -29,7 +30,7 @@ class KommoWebhookController extends Controller
         Log::info('KOMMO_WEBHOOK_PARSED', $payload);
 
         // =========================
-        // 3) PROSES EVENT: message.add
+        // 3) PROSES EVENT: message.add[]
         // =========================
         $adds = data_get($payload, 'message.add', []);
         if (!is_array($adds)) {
@@ -41,64 +42,78 @@ class KommoWebhookController extends Controller
                 continue;
             }
 
-            $chatId    = (string) data_get($msg, 'chat_id', '');
-            $talkId    = (string) data_get($msg, 'talk_id', '');
-            $contactId = (string) data_get($msg, 'contact_id', '');
-            $text      = (string) data_get($msg, 'text', '');
-            $origin    = (string) data_get($msg, 'origin', '');
-            $author    = (array)  data_get($msg, 'author', []);
-
-            Log::info('KOMMO_INCOMING_MESSAGE', [
-                'chat_id'     => $chatId,
-                'talk_id'     => $talkId,
-                'contact_id'  => $contactId,
-                'text'        => $text,
-                'origin'      => $origin,
-                'author_name' => (string) data_get($author, 'name', ''),
-                'author_type' => (string) data_get($author, 'type', ''),
-            ]);
-
-            // =========================
-            // 4) AMBIL PHONE VIA API (BISA NULL)
-            // =========================
-            $phone = null;
-            if ($contactId !== '') {
-                try {
-                    $phone = $kommo->getContactPrimaryPhone($contactId);
-                } catch (\Throwable $e) {
-                    Log::error('KOMMO_GET_CONTACT_PHONE_FAILED', [
-                        'contact_id' => $contactId,
-                        'error'      => $e->getMessage(),
-                    ]);
-                }
-            }
-
-            // =========================
-            // 5) DISINI ANDA LANJUTKAN: SIMPAN KE DB / KIRIM KE WABLAS/FONNTE
-            //    (Saya buat placeholder aman, tidak crash)
-            // =========================
             try {
-                $normalizedPhone = $phone ? $this->normalizePhone($phone) : null;
-
-                // Contoh variabel yang dokter minta dulu:
-                // $wablas->room_id      = null;
-                // $wablas->no_telp      = $normalizedPhone;
-                // $wablas->message_type = 'text';
-                // $wablas->image_url    = null;
-                // $wablas->message      = 'Halo dokter, kami menerima update dari Kommo.';
-                // $wablas->fonnte       = true;
-                // + simpan kommo_contact_id
-
-                Log::info('KOMMO_READY_FOR_FORWARD', [
-                    'contact_id'       => $contactId,
-                    'phone_raw'        => $phone,
-                    'phone_normalized' => $normalizedPhone,
-                    'text'             => $text,
-                ]);
-
+                $this->processIncomingMessage($msg, $kommo);
             } catch (\Throwable $e) {
-                // Penting: jangan bikin webhook gagal
+                // Jangan sampai webhook dianggap gagal oleh Kommo
                 Log::error('KOMMO_PROCESSING_FAILED', [
+                    'error' => $e->getMessage(),
+                    'msg'   => $msg,
+                ]);
+            }
+        }
+
+        // =========================
+        // 4) SELALU BALAS 200 OK
+        // =========================
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Proses 1 message.add item (text / image / unknown)
+     */
+    protected function processIncomingMessage(array $msg, KommoClient $kommo): void
+    {
+        $chatId    = (string) data_get($msg, 'chat_id', '');
+        $talkId    = (string) data_get($msg, 'talk_id', '');
+        $contactId = (string) data_get($msg, 'contact_id', '');
+        $origin    = (string) data_get($msg, 'origin', '');
+        $createdAt = (string) data_get($msg, 'created_at', '');
+        $type      = (string) data_get($msg, 'type', ''); // incoming / outgoing
+        $textRaw   = data_get($msg, 'text');              // bisa null
+        $text      = is_string($textRaw) ? $textRaw : '';
+
+        $author = (array) data_get($msg, 'author', []);
+        $authorName = (string) data_get($author, 'name', '');
+        $authorType = (string) data_get($author, 'type', '');
+
+        $attachment = (array) data_get($msg, 'attachment', []);
+        $attachmentType = (string) data_get($attachment, 'type', '');
+        $attachmentLink = (string) data_get($attachment, 'link', '');
+        $attachmentName = (string) data_get($attachment, 'file_name', '');
+
+        $messageType = $this->kommoMessageType($msg);
+
+        Log::info('KOMMO_INCOMING_MESSAGE', [
+            'chat_id'          => $chatId,
+            'talk_id'          => $talkId,
+            'contact_id'       => $contactId,
+            'origin'           => $origin,
+            'type'             => $type,
+            'created_at'       => $createdAt,
+            'author_name'      => $authorName,
+            'author_type'      => $authorType,
+            'message_type'     => $messageType,
+            'text'             => $text,
+            'attachment_type'  => $attachmentType,
+            'attachment_link'  => $attachmentLink,
+            'attachment_name'  => $attachmentName,
+        ]);
+
+        // =========================
+        // Ambil nomor HP dari Kommo contact (opsional)
+        // =========================
+        $phoneRaw = null;
+        $phoneNormalized = null;
+
+        if ($contactId !== '') {
+            try {
+                $phoneRaw = $kommo->getContactPrimaryPhone($contactId); // string|null
+                if (is_string($phoneRaw) && $phoneRaw !== '') {
+                    $phoneNormalized = $this->normalizePhone($phoneRaw);
+                }
+            } catch (\Throwable $e) {
+                Log::error('KOMMO_GET_CONTACT_PHONE_FAILED', [
                     'contact_id' => $contactId,
                     'error'      => $e->getMessage(),
                 ]);
@@ -106,24 +121,78 @@ class KommoWebhookController extends Controller
         }
 
         // =========================
-        // 6) SELALU BALAS 200 OK
+        // Bentuk objek forward "wablas-like"
         // =========================
-        return response()->json(['ok' => true]);
+        $wablas = (object) [
+            // identitas percakapan
+            'room_id'          => $chatId,          // samakan dengan konsep room_id dulu
+            'kommo_chat_id'    => $chatId,
+            'talk_id'          => $talkId,
+            'kommo_contact_id' => $contactId,
+
+            // pengirim
+            'author_name'      => $authorName,
+            'author_type'      => $authorType,
+            'origin'           => $origin,
+
+            // nomor
+            'no_telp'          => $phoneNormalized,
+
+            // konten
+            'message_type'     => $messageType,     // text|image|unknown
+            'message'          => $this->buildDefaultMessage($messageType, $text),
+            'image_url'        => $messageType === 'image' ? $attachmentLink : null,
+            'filename'         => $messageType === 'image' ? $attachmentName : null,
+
+            // flags
+            'fonnte'           => false,
+
+            // metadata
+            'kommo_message_id' => (string) data_get($msg, 'id', ''),
+            'created_at_unix'  => ctype_digit($createdAt) ? (int) $createdAt : null,
+            'entity_type'      => (string) data_get($msg, 'entity_type', ''),
+            'entity_id'        => (string) data_get($msg, 'entity_id', ''),
+        ];
+
+        Log::info('KOMMO_READY_FOR_FORWARD', [
+            'contact_id'       => $contactId,
+            'phone_raw'        => $phoneRaw,
+            'phone_normalized' => $phoneNormalized,
+            'message_type'     => $messageType,
+            'text'             => $text,
+            'image_url'        => $wablas->image_url,
+        ]);
+
+        // =========================
+        // TODO: Lanjutkan sesuai arsitektur dokter
+        // - simpan ke DB (chat log)
+        // - trigger auto-reply
+        // - lempar ke pipeline chatbot
+        // =========================
+        // $this->forwardToYourChatPipeline($wablas);
     }
 
     /**
-     * Kommo webhook sering mengirim x-www-form-urlencoded.
-     * Laravel biasanya sudah parse ke $request->all(), tapi kita buat robust:
+     * Kommo bisa kirim x-www-form-urlencoded atau json.
+     * Laravel biasanya sudah parse, tapi kita bikin robust.
      */
     protected function parseKommoPayload(Request $request, string $rawBody): array
     {
-        // Kalau Laravel sudah dapat array besar, pakai itu.
         $all = $request->all();
         if (is_array($all) && !empty($all)) {
             return $all;
         }
 
-        // Fallback parse raw querystring
+        // kalau json mentah
+        $ct = (string) $request->header('Content-Type', '');
+        if (str_contains($ct, 'application/json')) {
+            $decoded = json_decode($rawBody, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        // fallback querystring
         $parsed = [];
         if ($rawBody !== '') {
             parse_str($rawBody, $parsed);
@@ -134,13 +203,11 @@ class KommoWebhookController extends Controller
 
     /**
      * Normalisasi nomor HP Indonesia -> format E.164 (+62...)
-     * Silakan sesuaikan dengan fungsi normalizePhone dokter yang sudah ada.
+     * Sesuaikan jika dokter sudah punya helper yang lebih lengkap.
      */
     protected function normalizePhone(string $phone): string
     {
         $p = trim($phone);
-
-        // Buang spasi, tanda -, ()
         $p = preg_replace('/[^0-9\+]/', '', $p) ?? $p;
 
         // 08xxx -> +628xxx
@@ -150,14 +217,50 @@ class KommoWebhookController extends Controller
 
         // 62xxx -> +62xxx
         if (preg_match('/^62[0-9]+$/', $p)) {
-            $p = '+'.$p;
+            $p = '+' . $p;
         }
 
-        // Pastikan diawali +
         if ($p !== '' && $p[0] !== '+') {
             $p = '+' . $p;
         }
 
         return $p;
+    }
+
+    /**
+     * Deteksi tipe message dari payload Kommo.
+     */
+    private function kommoMessageType(array $event): string
+    {
+        $attType = (string) data_get($event, 'attachment.type', '');
+
+        if ($attType === 'picture') {
+            return 'image';
+        }
+
+        $text = data_get($event, 'text');
+        if (is_string($text) && trim($text) !== '') {
+            return 'text';
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * Buat message default (kalau text null / kosong).
+     */
+    private function buildDefaultMessage(string $messageType, string $text): string
+    {
+        $t = trim($text);
+
+        if ($t !== '') {
+            return $t;
+        }
+
+        return match ($messageType) {
+            'image'   => 'Halo dokter, kami menerima gambar dari Kommo.',
+            'text'    => 'Halo dokter, kami menerima pesan dari Kommo.',
+            default   => 'Halo dokter, kami menerima update dari Kommo.',
+        };
     }
 }
