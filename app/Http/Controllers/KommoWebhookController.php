@@ -106,38 +106,32 @@ class KommoWebhookController extends Controller
      * GET CONTACT PHONE FROM KOMMO
      * ===============================
      */
-    protected function getContactPhone(int|string $contactId): ?string
+    protected function getContactPhone(array $message): ?string
     {
-        $no_telp = NoTelp::where('kommo_contact_id', $contactId)->first();
-        if (is_null( $no_telp )) {
-            $subdomain = config('services.kommo.subdomain');
-            $token     = config('services.kommo.token');
+        $contactId = data_get($message, 'contact_id');
 
-            $res = Http::withToken($token)
-                ->accept('application/hal+json')
-                ->get("https://{$subdomain}.kommo.com/api/v4/contacts/{$contactId}");
-
-            if (!$res->successful()) {
-                Log::error('KOMMO_CONTACT_FETCH_FAIL', [
-                    'contact_id' => $contactId,
-                    'body'       => $res->body(),
-                ]);
-                return null;
-            }
-
-            $contact = $res->json();
-
-            $phone_number = collect($contact['custom_fields_values'] ?? [])
-                ->firstWhere('field_code', 'PHONE')['values'][0]['value']
-                ?? null;
-
-            NoTelp::where('no_telp', $phone_number)->update([
-                'kommo_contact_id' => $contactId
-            ]);
-
-        } else {
-            return $no_telp->no_telp;
+        if (!$contactId) {
+            return null;
         }
+
+        try {
+            $contact = $this->kommoClient->getContactById($contactId);
+
+            $phones = data_get($contact, 'custom_fields_values', []);
+            foreach ($phones as $field) {
+                if (($field['field_code'] ?? '') === 'PHONE') {
+                    return $field['values'][0]['value'] ?? null;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('KOMMO_GET_CONTACT_PHONE_FAILED', [
+                'contact_id' => $contactId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // ⬅️ INI YANG SEBELUMNYA HILANG
+        return null;
     }
 
     /**
