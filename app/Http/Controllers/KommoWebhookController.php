@@ -141,6 +141,7 @@ class KommoWebhookController extends Controller
 
         Log::info(__LINE__);
         Log::info('KOMMO_READY_FOR_FORWARD', [
+            'chat_id'          => $chatId,
             'contact_id'       => $contactId,
             'phone_raw'        => $phoneRaw,
             'phone_normalized' => $phoneNormalized,
@@ -150,7 +151,6 @@ class KommoWebhookController extends Controller
         ]);
 
 
-        Log::info(__LINE__);
         $wablasCtrl = new WablasController;
 
         $wablasCtrl->room_id       = null;
