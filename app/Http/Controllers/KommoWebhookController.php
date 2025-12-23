@@ -139,7 +139,8 @@ class KommoWebhookController extends Controller
             'entity_id'        => (string) data_get($msg, 'entity_id', ''),
         ];
 
-        Log::info(__LINE__);
+        Log::info('KOMMO_FORWARD_START', ['line' => __LINE__]);
+
         Log::info('KOMMO_READY_FOR_FORWARD', [
             'chat_id'          => $chatId,
             'contact_id'       => $contactId,
@@ -150,27 +151,25 @@ class KommoWebhookController extends Controller
             'image_url'        => $payload->image_url,
         ]);
 
-
         $wablasCtrl = new WablasController;
 
         $wablasCtrl->room_id       = null;
         $wablasCtrl->kommo_chat_id = $chatId;
         $wablasCtrl->no_telp       = $phoneNormalized;
         $wablasCtrl->message_type  = $messageType;
-        $wablasCtrl->image_url     = $payload->image_url;  // ✅
+        $wablasCtrl->image_url     = $payload->image_url;
         $wablasCtrl->message       = $text;
         $wablasCtrl->fonnte        = false;
 
-        Log::info(__LINE__);
-        Log::info('WABLAS_PARAMETER' ,[
-            $wablasCtrl->room_id,
-            $wablasCtrl->kommo_chat_id,
-            $wablasCtrl->no_telp,
-            $wablasCtrl->message_type,
-            $wablasCtrl->image_url,
-            $wablasCtrl->message,
-            $wablasCtrl->fonnte,
-        ] );
+        Log::info('WABLAS_PARAMETER', [
+            'room_id'       => $wablasCtrl->room_id,
+            'kommo_chat_id' => $wablasCtrl->kommo_chat_id,
+            'no_telp'       => $wablasCtrl->no_telp,
+            'message_type'  => $wablasCtrl->message_type,
+            'image_url'     => $wablasCtrl->image_url,
+            'message'       => $wablasCtrl->message,
+            'fonnte'        => $wablasCtrl->fonnte,
+        ]);
 
         /* $wablasCtrl->webhook(); */
 
