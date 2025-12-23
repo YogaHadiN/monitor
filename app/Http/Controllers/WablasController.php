@@ -5962,8 +5962,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     public function chatBotLog($line){
         if (
-            $this->tenant->chatbot_log_enabled &&
-            $this->no_telp == '6281381912803'
+            $this->tenant->chatbot_log_enabled
         ) {
             Log::info( $line );
         }
