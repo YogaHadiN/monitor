@@ -57,6 +57,8 @@ class KommoWebhookController extends Controller
      */
     protected function processIncomingMessage(array $msg, KommoClient $kommo): void
     {
+
+        Log::info(__LINE__);
         $chatId    = (string) data_get($msg, 'chat_id', '');
         $talkId    = (string) data_get($msg, 'talk_id', '');
         $contactId = (string) data_get($msg, 'contact_id', '');
@@ -77,6 +79,7 @@ class KommoWebhookController extends Controller
 
         $messageType = $this->kommoMessageType($msg);
 
+        Log::info(__LINE__);
         Log::info('KOMMO_INCOMING_MESSAGE', [
             'chat_id'          => $chatId,
             'talk_id'          => $talkId,
@@ -99,6 +102,7 @@ class KommoWebhookController extends Controller
         $phoneRaw = null;
         $phoneNormalized = null;
 
+        Log::info(__LINE__);
         if ($contactId !== '') {
             $phoneRaw = $kommo->getContactPrimaryPhone($contactId); // string|null
             if (is_string($phoneRaw) && $phoneRaw !== '') {
@@ -109,6 +113,7 @@ class KommoWebhookController extends Controller
         // =========================
         // Bentuk objek forward "wablas-like"
         // =========================
+        Log::info(__LINE__);
         $payload = (object) [
             'room_id'          => $chatId,
             'kommo_chat_id'    => $chatId,
@@ -134,6 +139,7 @@ class KommoWebhookController extends Controller
             'entity_id'        => (string) data_get($msg, 'entity_id', ''),
         ];
 
+        Log::info(__LINE__);
         Log::info('KOMMO_READY_FOR_FORWARD', [
             'contact_id'       => $contactId,
             'phone_raw'        => $phoneRaw,
@@ -144,6 +150,7 @@ class KommoWebhookController extends Controller
         ]);
 
 
+        Log::info(__LINE__);
         $wablasCtrl = new WablasController;
 
         $wablasCtrl->room_id       = null;
@@ -154,6 +161,7 @@ class KommoWebhookController extends Controller
         $wablasCtrl->message       = $text;
         $wablasCtrl->fonnte        = false;
 
+        Log::info(__LINE__);
         Log::info('WABLAS_PARAMETER' ,[
             $wablasCtrl->room_id,
             $wablasCtrl->kommo_chat_id,
