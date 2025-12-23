@@ -100,16 +100,9 @@ class KommoWebhookController extends Controller
         $phoneNormalized = null;
 
         if ($contactId !== '') {
-            try {
-                $phoneRaw = $kommo->getContactPrimaryPhone($contactId); // string|null
-                if (is_string($phoneRaw) && $phoneRaw !== '') {
-                    $phoneNormalized = $this->normalizePhone($phoneRaw);
-                }
-            } catch (\Throwable $e) {
-                Log::error('KOMMO_GET_CONTACT_PHONE_FAILED', [
-                    'contact_id' => $contactId,
-                    'error'      => $e->getMessage(),
-                ]);
+            $phoneRaw = $kommo->getContactPrimaryPhone($contactId); // string|null
+            if (is_string($phoneRaw) && $phoneRaw !== '') {
+                $phoneNormalized = $this->normalizePhone($phoneRaw);
             }
         }
 
@@ -149,6 +142,7 @@ class KommoWebhookController extends Controller
             'text'             => $text,
             'image_url'        => $payload->image_url,
         ]);
+
 
         $wablasCtrl = new WablasController;
 
