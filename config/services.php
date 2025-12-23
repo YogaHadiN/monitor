@@ -34,6 +34,7 @@ return [
         'token'     => env('KOMMO_LONG_LIVED_TOKEN'),
         'client_id' => env('KOMMO_CLIENT_ID'),
         'secret'    => env('KOMMO_CLIENT_SECRET'),
+        'amojo_scope_id' => env('KOMMO_AMOJO_SCOPE_ID'),
     ],
 
 ];

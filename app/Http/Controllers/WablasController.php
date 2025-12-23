@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 use App\Models\AntrianPoli;
 use App\Models\Message;
+use App\Services\KommoClient;
 use App\Models\KeluhanEstetik;
 use App\Models\JadwalKonsultasi;
 use App\Models\BlokirWa;
@@ -5898,34 +5899,24 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return;
         }
 
+        $text = trim($message);
+        if ($text === '') {
+            Log::warning('KOMMO_AUTO_REPLY_SKIPPED_EMPTY_TEXT', [
+                'chat_id' => $this->kommo_chat_id,
+            ]);
+            return;
+        }
+
         try {
-            $subdomain = config('services.kommo.subdomain');
-            $token     = config('services.kommo.token');
+            /** @var KommoClient $kommo */
+            $kommo = app(KommoClient::class);
 
-            $url = "https://{$subdomain}.amocrm.com/api/v4/chats/{$this->kommo_chat_id}/messages";
-
-            $payload = [
-                'event_type' => 'message',
-                'payload' => [
-                    'type' => 'text',
-                    'text' => $message,
-                ],
-            ];
-
-            $response = Http::withToken($token)
-                ->acceptJson()
-                ->timeout(15)
-                ->post($url, $payload);
-
-            if (!$response->ok()) {
-                throw new \RuntimeException(
-                    "HTTP {$response->status()} : " . $response->body()
-                );
-            }
+            // Kirim via Amojo Chats API (bukan amocrm.com)
+            $kommo->sendMessageToChat($this->kommo_chat_id, $text);
 
             Log::info('KOMMO_AUTO_REPLY_SENT', [
                 'chat_id' => $this->kommo_chat_id,
-                'text'    => $message,
+                'text'    => $text,
             ]);
 
         } catch (\Throwable $e) {
