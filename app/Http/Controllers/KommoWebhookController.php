@@ -124,31 +124,25 @@ class KommoWebhookController extends Controller
         // =========================
         // Bentuk objek forward "wablas-like"
         // =========================
-        $wablas = (object) [
-            // identitas percakapan
-            'room_id'          => $chatId,          // samakan dengan konsep room_id dulu
+        $payload = (object) [
+            'room_id'          => $chatId,
             'kommo_chat_id'    => $chatId,
             'talk_id'          => $talkId,
             'kommo_contact_id' => $contactId,
 
-            // pengirim
             'author_name'      => $authorName,
             'author_type'      => $authorType,
             'origin'           => $origin,
 
-            // nomor
             'no_telp'          => $phoneNormalized,
 
-            // konten
-            'message_type'     => $messageType,     // text|image|unknown
+            'message_type'     => $messageType,
             'message'          => $this->buildDefaultMessage($messageType, $text),
             'image_url'        => $messageType === 'image' ? $attachmentLink : null,
             'filename'         => $messageType === 'image' ? $attachmentName : null,
 
-            // flags
             'fonnte'           => false,
 
-            // metadata
             'kommo_message_id' => (string) data_get($msg, 'id', ''),
             'created_at_unix'  => ctype_digit($createdAt) ? (int) $createdAt : null,
             'entity_type'      => (string) data_get($msg, 'entity_type', ''),
@@ -161,25 +155,20 @@ class KommoWebhookController extends Controller
             'phone_normalized' => $phoneNormalized,
             'message_type'     => $messageType,
             'text'             => $text,
-            'image_url'        => $wablas->image_url,
+            'image_url'        => $payload->image_url,
         ]);
 
-        // =========================
-        // TODO: Lanjutkan sesuai arsitektur dokter
-        // - simpan ke DB (chat log)
-        // - trigger auto-reply
-        // - lempar ke pipeline chatbot
-        // =========================
-        $wablas               = new WablasController;
+        $wablasCtrl = new WablasController;
 
-        $wablas->room_id       = null;
-        $wablas->kommo_chat_id = $chatId;
-        $wablas->no_telp       = $phoneNormalized;
-        $wablas->message_type  = $messageType;
-        $wablas->image_url     = $wablas['image_url'];
-        $wablas->message       = $wablas['message'];
-        $wablas->fonnte        = false;
-        $wablas->webhook();
+        $wablasCtrl->room_id       = null;
+        $wablasCtrl->kommo_chat_id = $chatId;
+        $wablasCtrl->no_telp       = $phoneNormalized;
+        $wablasCtrl->message_type  = $messageType;
+        $wablasCtrl->image_url     = $payload->image_url;  // ✅
+        $wablasCtrl->message       = $payload->message;    // ✅
+        $wablasCtrl->fonnte        = false;
+
+        $wablasCtrl->webhook();
 
     }
 
