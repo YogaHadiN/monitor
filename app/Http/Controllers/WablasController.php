@@ -88,6 +88,7 @@ class WablasController extends Controller
 	public $pesan_error;
 	public $failed_therapy;
 	public $whatsapp_bot;
+	public $kommo_chat_id;
 	public $attachment_id;
 	public $random_string;
 	public $no_telp;
@@ -5883,43 +5884,53 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     /* } */
 
     // QISCUS
-    public function autoReply($message){
 
-        $fonnte = new FonnteController;
-        $reply = [
-            'message' => $message,
-            'url' => null,
-            'filename' => null
-        ];
-        $fonnte->sendFonnte( $this->no_telp, $reply );
+    public function autoReply(string $message): void
+    {
+        // chat_id WAJIB untuk Kommo
+        if (empty($this->kommo_chat_id)) {
+            Log::warning('KOMMO_AUTO_REPLY_SKIPPED_NO_CHAT_ID', [
+                'message' => $message,
+            ]);
+            return;
+        }
 
-        /* if (!is_null( $this->room_id )) { */
-        /*     $app_id   = env('QISCUS_APP_ID'); */
-        /*     $url      = "https://omnichannel.qiscus.com/$app_id/bot"; */
-        /*     $agent_id = $app_id . '_admin@qismo.com'; */
-        /*      $data = [ */
-        /*        "sender_email" => $agent_id, */
-        /*        "message"      => $message, */
-        /*        "type"         => "text", */
-        /*        "room_id"      => $this->room_id */
-        /*     ]; */
+        try {
+            $subdomain = config('services.kommo.subdomain');
+            $token     = config('services.kommo.token');
 
-        /*     $response = Http::withHeaders([ */
-        /*                     'QISCUS_SDK_SECRET' => env('QISCUS_SDK_SECRET'), */
-        /*                 ])->post( $url, $data); */
-        /* } else if ( */
-        /*     $this->fonnte */
-        /* ) { */
-        /*     $fonnte = new FonnteController; */
-        /*     $reply = [ */
-        /*         'message' => $message, */
-        /*         'url' => null, */
-        /*         'filename' => null */
-        /*     ]; */
-        /*     $fonnte->sendFonnte( $this->no_telp, $reply ); */
-        /* } else { */
-        /*     echo $message; */
-        /* } */
+            $url = "https://{$subdomain}.amocrm.com/api/v4/chats/{$this->kommo_chat_id}/messages";
+
+            $payload = [
+                'event_type' => 'message',
+                'payload' => [
+                    'type' => 'text',
+                    'text' => $message,
+                ],
+            ];
+
+            $response = Http::withToken($token)
+                ->acceptJson()
+                ->timeout(15)
+                ->post($url, $payload);
+
+            if (!$response->ok()) {
+                throw new \RuntimeException(
+                    "HTTP {$response->status()} : " . $response->body()
+                );
+            }
+
+            Log::info('KOMMO_AUTO_REPLY_SENT', [
+                'chat_id' => $this->kommo_chat_id,
+                'text'    => $message,
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('KOMMO_AUTO_REPLY_FAILED', [
+                'chat_id' => $this->kommo_chat_id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
     }
 
     public function createReservasiOnline($konfirmasi_sdk = false){
