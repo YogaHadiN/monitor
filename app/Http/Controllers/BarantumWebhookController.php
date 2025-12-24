@@ -18,6 +18,10 @@ class BarantumWebhookController extends Controller
         /* =========================
          * EXTRACT SEMUA FIELD
          * ========================= */
+        Log::info('======================');
+        Log::info('PAYLOAD');
+        Log::info($payload);
+        Log::info('======================');
 
         $data = [
             // kontak
@@ -60,16 +64,8 @@ class BarantumWebhookController extends Controller
         $wablas->image_url    = data_get($payload, 'file_url');
         $wablas->message      = data_get($payload, 'message_text');
         $wablas->fonnte       = false;
-        /* $wablas->webhook(); */
+        $wablas->webhook();
 
-        Log::info(__LINE__);
-        Log::info([
-            $wablas->room_id,
-            $wablas->no_telp,
-            $wablas->message_type,
-            $wablas->image_url,
-            $wablas->message,
-        ]);
 
         /* Log::info('BARANTUM_WEBHOOK_EXTRACTED', $data); */
         /* Log::info('BARANTUM_WABLAS', $wablas); */

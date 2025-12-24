@@ -5902,7 +5902,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         }
 
         // chats_users_id WAJIB untuk Barantum send-message
-        if (empty($this->barantum_users_id)) {
+        if (empty($this->no_telp)) {
             Log::warning('BARANTUM_AUTO_REPLY_SKIPPED_NO_USERS_ID', [
                 'room_id' => $this->room_id ?? null,
                 'phone'   => $this->no_telp ?? null,
