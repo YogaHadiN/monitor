@@ -18,16 +18,13 @@ class BarantumWebhookController extends Controller
         $msgId   = (string) data_get($payload, 'message_id', '');
 
 
-        Log::info('BARANTUM_WEBHOOK_PAYLOAD', [
-            'users_id'   => $usersId,
-            'text_in'    => $textIn,
-            'channel'    => $channel,
-            'message_id' => $msgId,
+       Log::info('BARANTUM_WEBHOOK_PAYLOAD', [
+           $payload
         ]);
 
         /* $wablas               = new WablasController; */
         /* $wablas->room_id      = null; */
-        /* $wablas->no_telp      = $sender; */
+        /* $wablas->no_telp      = $usersId; */
         /* $wablas->message_type = !empty( $url ) ? 'image' : 'text'; */
         /* $wablas->image_url    = !empty($url) ? $url : null; */
         /* $wablas->message      = strtolower($message); */
