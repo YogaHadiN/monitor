@@ -10,70 +10,51 @@ class BarantumWebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        $payload = $request->all();
+        $raw = $request->all();
 
-        $usersId = (string) data_get($payload, 'message_users_id', '');
-        $textIn  = (string) data_get($payload, 'message_text', '');
-        $channel = (string) data_get($payload, 'channel', 'wa');
-        $msgId   = (string) data_get($payload, 'message_id', '');
+        // Barantum webhook datang sebagai ARRAY [ { ... } ]
+        $payload = is_array($raw) && isset($raw[0]) ? $raw[0] : $raw;
 
+        /* =========================
+         * EXTRACT SEMUA FIELD
+         * ========================= */
 
-       Log::info('BARANTUM_WEBHOOK_PAYLOAD', [
-           $payload
-        ]);
+        $data = [
+            // kontak
+            'contacts_uuid' => data_get($payload, 'contacts_uuid'),
+            'contacts_name' => data_get($payload, 'contacts_name'),
 
-        /* $wablas               = new WablasController; */
-        /* $wablas->room_id      = null; */
-        /* $wablas->no_telp      = $usersId; */
-        /* $wablas->message_type = !empty( $url ) ? 'image' : 'text'; */
-        /* $wablas->image_url    = !empty($url) ? $url : null; */
-        /* $wablas->message      = strtolower($message); */
-        /* $wablas->fonnte       = true; */
-        /* $wablas->webhook(); */
+            // room
+            'room_id'            => data_get($payload, 'room_id'),
+            'room_status'        => data_get($payload, 'room_status'),
+            'room_date_created'  => data_get($payload, 'room_date_created'),
 
+            // company (WEBHOOK UUID, bukan company key)
+            'company_uuid_hook'  => data_get($payload, 'company_uuid'),
 
-        /* if ($usersId === '') { */
-        /*     Log::warning('BARANTUM_WEBHOOK_MISSING_USERS_ID', ['payload' => $payload]); */
-        /*     return response()->json(['ok' => false, 'error' => 'missing message_users_id'], 422); */
-        /* } */
+            // message
+            'chats_users_id' => data_get($payload, 'message_users_id'),
+            'message_id'     => data_get($payload, 'message_id'),
+            'message_text'   => data_get($payload, 'message_text'),
+            'message_type'   => data_get($payload, 'type_file'),
 
-        /* // contoh reply */
-        /* $replyText = "Halo 👋 Kami terima pesan: {$textIn}"; */
+            // file
+            'file_name'      => data_get($payload, 'file_name'),
+            'file_url'       => data_get($payload, 'file_url'),
+            'file_mime_type' => data_get($payload, 'file_mime_type'),
 
-        /* $sendUrl    = config('services.barantum.send_url'); */
-        /* $companyKey = config('services.barantum.company_key'); */
+            // meta
+            'owner'      => data_get($payload, 'owner'),
+            'name_owner' => data_get($payload, 'name_owner'),
 
-        /* // body minimal yang terbukti jalan di akun Anda */
-        /* $body = [ */
-        /*     'chats_users_id'     => $usersId, */
-        /*     'channel'            => $channel, */
-        /*     'chats_message_text' => $replyText, */
-        /*     'company_uuid'       => $companyKey, */
-        /* ]; */
+            // routing
+            'channel' => data_get($payload, 'channel'),
+            'bot_id'  => data_get($payload, 'bot_id'),
+        ];
 
-        /* // OPTIONAL: reply ke message tertentu */
-        /* if ($msgId !== '') { */
-        /*     $body['context'] = ['message_id' => $msgId]; */
-        /* } */
-
-        /* // chats_bot_id optional: pilih salah satu style: */
-        /* // (A) tidak dikirim sama sekali -> paling bersih */
-        /* // (B) kirim string kosong -> kalau Anda ingin selalu ada fieldnya */
-        /* // $body['chats_bot_id'] = ""; */
-
-        /* $resp = Http::withHeaders([ */
-        /*         'Content-Type' => 'application/json', */
-        /*         'Accept'       => 'application/json', */
-        /*     ]) */
-        /*     ->post($sendUrl, $body); */
-
-        /* Log::info('BARANTUM_SEND_MESSAGE', [ */
-        /*     'request_body' => $body, */
-        /*     'status'       => $resp->status(), */
-        /*     'ok'           => $resp->ok(), */
-        /*     'response_raw' => $resp->body(), */
-        /* ]); */
+        Log::info('BARANTUM_WEBHOOK_EXTRACTED', $data);
 
         return response()->json(['ok' => true]);
     }
+}
 }
