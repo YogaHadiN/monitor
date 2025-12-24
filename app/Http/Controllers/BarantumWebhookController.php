@@ -62,7 +62,7 @@ class BarantumWebhookController extends Controller
         /* $wablas->webhook(); */
 
         Log::info('BARANTUM_WEBHOOK_EXTRACTED', $data);
-        Log::info('BARANTUM_WABLAS', $wablas);
+        /* Log::info('BARANTUM_WABLAS', $wablas); */
 
         return response()->json(['ok' => true]);
     }
