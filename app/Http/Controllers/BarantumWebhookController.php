@@ -19,10 +19,10 @@ class BarantumWebhookController extends Controller
 
 
         Log::info('BARANTUM_WEBHOOK_PAYLOAD', [
-            $usersId,
-            $textIn,
-            $channel,
-            $msgId,
+            'users_id'   => $usersId,
+            'text_in'    => $textIn,
+            'channel'    => $channel,
+            'message_id' => $msgId,
         ]);
 
         /* if ($usersId === '') { */
