@@ -62,6 +62,7 @@ class BarantumWebhookController extends Controller
         $wablas->no_telp      = data_get($payload, 'message_users_id');
         $wablas->message_type = data_get($payload, 'type_file');
         $wablas->image_url    = data_get($payload, 'file_url');
+        $wablas->channel    = data_get($payload, 'channel');
         $wablas->message      = data_get($payload, 'message_text');
         $wablas->fonnte       = false;
         $wablas->webhook();

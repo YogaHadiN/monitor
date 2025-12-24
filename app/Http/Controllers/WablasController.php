@@ -97,6 +97,7 @@ class WablasController extends Controller
 	public $essage_type;
 	public $image_url;
 	public $fonnte;
+	public $channel;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
     public $jadwalGigi;
@@ -5914,15 +5915,18 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $ctx = [
             'origin'          => $this->origin ?? 'barantum',
             'room_id'         => $this->room_id ?? null,
-            'chats_users_id'  => (string) $this->barantum_users_id,          // dari webhook message_users_id
+            'chats_users_id'  => (string) $this->no_telp,          // dari webhook message_users_id
             'channel'         => $this->channel ?? 'wa',                     // dari webhook channel
-            'message_id'      => $this->message_id ?? null,                  // dari webhook message_id (opsional untuk reply)
+            'message_id'      => $this->message_id ?? '',                  // dari webhook message_id (opsional untuk reply)
             'message_type'    => $this->message_type ?? 'text',
             // company_key SEND (hash panjang) sebaiknya dari config, bukan dari webhook
             'company_key'     => config('services.barantum.company_key'),
             // chats_bot_id optional => boleh null / "" / tidak dikirim sama sekali di service
-            'chats_bot_id'    => $this->chats_bot_id ?? null,
+            'chats_bot_id'    => $this->chats_bot_id ?? '',
         ];
+
+        Log::info( $ctx );
+        return false;
 
         /** @var BarantumReplyService $replyService */
         $replyService = app(\App\Services\BarantumReplyService::class);
