@@ -52,7 +52,17 @@ class BarantumWebhookController extends Controller
             'bot_id'  => data_get($payload, 'bot_id'),
         ];
 
+        $wablas               = new WablasController;
+        $wablas->room_id      = data_get($payload, 'room_id');
+        $wablas->no_telp      = data_get($payload, 'message_users_id');
+        $wablas->message_type = data_get($payload, 'type_file');
+        $wablas->image_url    = data_get($payload, 'file_url');
+        $wablas->message      = data_get($payload, 'message_text');
+        $wablas->fonnte       = false;
+        /* $wablas->webhook(); */
+
         Log::info('BARANTUM_WEBHOOK_EXTRACTED', $data);
+        Log::info('BARANTUM_WABLAS', $wablas);
 
         return response()->json(['ok' => true]);
     }
