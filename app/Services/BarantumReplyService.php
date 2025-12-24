@@ -69,19 +69,19 @@ class BarantumReplyService
         Log::info('body');
         Log::info($body);
         Log::info('=====================');
-        $resp = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'Accept'       => 'application/json',
-            ])
-            ->timeout(20)
-            ->post($sendUrl, $body);
+        /* $resp = Http::withHeaders([ */
+        /*         'Content-Type' => 'application/json', */
+        /*         'Accept'       => 'application/json', */
+        /*     ]) */
+        /*     ->timeout(20) */
+        /*     ->post($sendUrl, $body); */
 
-        return [
-            'ok'     => $resp->ok(),
-            'status' => $resp->status(),
-            'body'   => $body,
-            'resp'   => $this->safeJson($resp->body()),
-            'reason' => $resp->ok() ? null : 'http_' . $resp->status(),
+        /* return [ */
+        /*     'ok'     => $resp->ok(), */
+        /*     'status' => $resp->status(), */
+        /*     'body'   => $body, */
+        /*     'resp'   => $this->safeJson($resp->body()), */
+        /*     'reason' => $resp->ok() ? null : 'http_' . $resp->status(), */
         ];
     }
 
