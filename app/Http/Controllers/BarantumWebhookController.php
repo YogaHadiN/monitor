@@ -59,6 +59,7 @@ class BarantumWebhookController extends Controller
 
         $wablas               = new WablasController;
         $wablas->room_id      = data_get($payload, 'room_id');
+        $wablas->message_id      = data_get($payload, 'message_id');
         $wablas->no_telp      = data_get($payload, 'message_users_id');
         $wablas->message_type = data_get($payload, 'type_file');
         $wablas->image_url    = data_get($payload, 'file_url');

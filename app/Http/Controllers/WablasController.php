@@ -97,6 +97,7 @@ class WablasController extends Controller
 	public $essage_type;
 	public $image_url;
 	public $fonnte;
+	public $message_id;
 	public $channel;
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
