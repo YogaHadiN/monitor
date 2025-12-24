@@ -5929,7 +5929,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         Log::info("CTX");
         Log::info( $ctx );
         Log::info("=====================");
-        return false;
+        return ;
 
         /** @var BarantumReplyService $replyService */
         $replyService = app(\App\Services\BarantumReplyService::class);
