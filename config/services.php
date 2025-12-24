@@ -36,5 +36,8 @@ return [
         'secret'    => env('KOMMO_CLIENT_SECRET'),
         'amojo_scope_id' => env('KOMMO_AMOJO_SCOPE_ID'),
     ],
-
+    'barantum' => [
+        'send_url'    => env('BARANTUM_SEND_URL', 'https://api-chat.barantum.com/api/v1/send-message'),
+        'company_key' => env('BARANTUM_COMPANY_KEY'),
+    ],
 ];
