@@ -82,7 +82,7 @@ class BarantumReplyService
         /*     'body'   => $body, */
         /*     'resp'   => $this->safeJson($resp->body()), */
         /*     'reason' => $resp->ok() ? null : 'http_' . $resp->status(), */
-        ];
+        /* ]; */
     }
 
     private function safeJson(string $raw)
