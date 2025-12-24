@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KommoWebhookController;
+use App\Http\Controllers\BarantumWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +17,7 @@ use App\Http\Controllers\KommoWebhookController;
 */
 
 Route::post('/kommo/webhook', [KommoWebhookController::class, 'handle']);
+Route::post('/barantum/webhook', [BarantumWebhookController::class, 'handle']);
 
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
 /* Route::get('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */

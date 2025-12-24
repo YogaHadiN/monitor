@@ -200,4 +200,84 @@ class KommoClient
 
         return $res->json() ?? [];
     }
+
+    public function sendOutgoingTextViaChatsApi(string $conversationId, string $receiverPhone, string $text): array
+    {
+        $scopeId = (string) config('services.kommo.amojo_scope_id');
+        if ($scopeId === '') {
+            throw new \RuntimeException('KOMMO_AMOJO_SCOPE_ID belum di-set');
+        }
+
+        // IMPORTANT: endpoint yang benar (bukan amocrm.com)
+        $url = "https://amojo.kommo.com/v2/origin/custom/{$scopeId}";
+
+        $now = now();
+        $timestamp = $now->timestamp;
+        $msec = (int) round(microtime(true) * 1000);
+
+        // msgid HARUS unik per pesan
+        $msgid = 'kje-' . $msec . '-' . bin2hex(random_bytes(4));
+
+        $payload = [
+            'event_type' => 'new_message',
+            'payload' => [
+                'timestamp'      => $timestamp,
+                'msec_timestamp' => $msec,
+                'msgid'          => $msgid,
+                'conversation_id'=> $conversationId,
+
+                // OUTGOING: isi sender + receiver
+                'sender' => [
+                    'id'   => 'kje-bot',
+                    'name' => 'KJE Bot',
+                    // kalau kamu punya bot ref_id dari registrasi channel, taruh di sini
+                    // 'ref_id' => '...'
+                ],
+                'receiver' => [
+                    'id' => 'client-' . preg_replace('/\D+/', '', $receiverPhone),
+                    'name' => 'Client',
+                    'profile' => [
+                        'phone' => $receiverPhone,
+                    ],
+                ],
+
+                'message' => [
+                    'type' => 'text',
+                    'text' => $text,
+                ],
+
+                // kalau mau tanpa notifikasi (bulk import), bisa true
+                'silent' => false,
+            ],
+        ];
+
+        /**
+         * PENTING BANGET:
+         * Chats API (amojo/origin/custom) TIDAK memakai Bearer token long-lived seperti CRM v4.
+         * Dia butuh header signature (HMAC-SHA1) pakai channel secret.
+         * Kalau kamu belum punya channel_id + channel_secret (dari Kommo Support),
+         * request akan gagal (bisa 401/403/404 tergantung).
+         */
+        $channelSecret = (string) env('KOMMO_CHANNEL_SECRET', '');
+        if ($channelSecret === '') {
+            throw new \RuntimeException('KOMMO_CHANNEL_SECRET belum di-set (Chats API butuh signature)');
+        }
+
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $signature = hash_hmac('sha1', $body, $channelSecret);
+
+        $res = \Illuminate\Support\Facades\Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'X-Signature'  => $signature,
+            ])
+            ->timeout(20)
+            ->post($url, $payload);
+
+        if (!$res->successful()) {
+            throw new \RuntimeException("Kommo Chats API HTTP {$res->status()} : {$res->body()}");
+        }
+
+        return $res->json() ?? [];
+    }
 }
