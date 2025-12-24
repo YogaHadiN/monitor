@@ -67,4 +67,3 @@ class BarantumWebhookController extends Controller
         return response()->json(['ok' => true]);
     }
 }
-}
