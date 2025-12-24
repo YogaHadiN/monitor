@@ -25,6 +25,16 @@ class BarantumWebhookController extends Controller
             'message_id' => $msgId,
         ]);
 
+        /* $wablas               = new WablasController; */
+        /* $wablas->room_id      = null; */
+        /* $wablas->no_telp      = $sender; */
+        /* $wablas->message_type = !empty( $url ) ? 'image' : 'text'; */
+        /* $wablas->image_url    = !empty($url) ? $url : null; */
+        /* $wablas->message      = strtolower($message); */
+        /* $wablas->fonnte       = true; */
+        /* $wablas->webhook(); */
+
+
         /* if ($usersId === '') { */
         /*     Log::warning('BARANTUM_WEBHOOK_MISSING_USERS_ID', ['payload' => $payload]); */
         /*     return response()->json(['ok' => false, 'error' => 'missing message_users_id'], 422); */
