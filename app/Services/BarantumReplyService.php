@@ -26,7 +26,12 @@ class BarantumReplyService
         }
 
         $sendUrl    = config('services.barantum.send_url', 'https://api-chat.barantum.com/api/v1/send-message');
-        $companyKey = $ctx['company_key'] ?? config('services.barantum.company_key');
+        $companyKey = config('services.barantum.company_key');
+
+        Log::info('-----------------');
+        Log::info('company key');
+        Log::info($companyKey);
+        Log::info('-----------------');
 
         $usersId = (string)($ctx['chats_users_id'] ?? '');
         if ($usersId === '') {
