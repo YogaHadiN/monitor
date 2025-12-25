@@ -5914,16 +5914,17 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         // context minimum untuk BarantumReplyService
         $ctx = [
-            'origin'          => $this->origin ?? 'barantum',
-            'room_id'         => $this->room_id ?? null,
-            'chats_users_id'  => (string) $this->no_telp,          // dari webhook message_users_id
-            'channel'         => $this->channel ?? 'wa',                     // dari webhook channel
-            'message_id'      => $this->message_id ?? '',                  // dari webhook message_id (opsional untuk reply)
-            'message_type'    => $this->message_type ?? 'text',
+            'origin'         => $this->origin ?? 'barantum',
+            'room_id'        => $this->room_id ?? null,
+            'chats_users_id' => (string) $this->no_telp,          // dari webhook message_users_id
+            'channel'        => $this->channel ?? 'wa',                     // dari webhook channel
+            'message_id'     => $this->message_id ?? '',                  // dari webhook message_id (opsional untuk reply)
+            'message_type'   => $this->message_type ?? 'text',
+            'image_url'      => $this->image_url;
             // company_key SEND (hash panjang) sebaiknya dari config, bukan dari webhook
-            'company_key'     => config('services.barantum.company_key'),
+            'company_key'    => config('services.barantum.company_key'),
             // chats_bot_id optional => boleh null / "" / tidak dikirim sama sekali di service
-            'chats_bot_id'    => $this->chats_bot_id ?? '',
+            'chats_bot_id'   => $this->chats_bot_id ?? '',
         ];
 
         Log::info("=====================");
