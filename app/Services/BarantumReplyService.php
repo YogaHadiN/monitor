@@ -7,18 +7,6 @@ use Log;
 
 class BarantumReplyService
 {
-    /**
-     * Kirim pesan text via Barantum Chat API.
-     *
-     * $ctx minimal:
-     * - chats_users_id (WA target)  => dari webhook: message_users_id
-     * - channel (default 'wa')      => dari webhook: channel
-     * - message_id (optional)       => dari webhook: message_id (untuk reply/context)
-     *
-     * Config:
-     * - services.barantum.send_url
-     * - services.barantum.company_key  (hash panjang, dipasang ke field company_uuid)
-     */
     public function replyText(array $ctx, string $text): array
     {
         $text = trim($text);
@@ -29,10 +17,6 @@ class BarantumReplyService
         $sendUrl    = config('services.barantum.send_url', 'https://api-chat.barantum.com/api/v1/send-message');
         $companyKey = config('services.barantum.company_key');
 
-        Log::info('-----------------');
-        Log::info('company key');
-        Log::info($companyKey);
-        Log::info('-----------------');
 
         $usersId = (string)($ctx['chats_users_id'] ?? '');
         if ($usersId === '') {
@@ -68,13 +52,6 @@ class BarantumReplyService
             }
         }
 
-        Log::info('=====================');
-        Log::info('Parameter');
-        Log::info('sendUrl');
-        Log::info($sendUrl);
-        Log::info('body');
-        Log::info($body);
-        Log::info('=====================');
         $resp = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',

@@ -266,8 +266,8 @@ class WablasController extends Controller
                     $this->chatBotLog(__LINE__);
                     return false;
                 } else if (
-                     str_contains($this->message ,'akhiri') ||
-                     str_contains($this->message ,'ahiri')
+                    $this->message == 'akhiri' ||
+                    $this->message == 'ahiri'
                 ) {
                     $this->chatBotLog(__LINE__);
                     $this->autoReply($this->akhiriChatWithAdmin() );
