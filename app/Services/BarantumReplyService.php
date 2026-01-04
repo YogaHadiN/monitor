@@ -72,8 +72,6 @@ class BarantumReplyService
             'company_uuid'       => $companyUuid,
         ];
 
-        Log::info('Body', $body);
-
         // context.message_id (optional)
         $msgId = (string)($ctx['message_id'] ?? '');
         if ($msgId !== '') {
