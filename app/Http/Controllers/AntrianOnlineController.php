@@ -508,7 +508,7 @@ class AntrianOnlineController extends Controller
                 'nomorantrean'   => $antrian->nomor_antrian,
                 'namapoli'       => $antrian->tipe_konsultasi->poli_bpjs->nmPoli,
                 'sisaantrean'    => $antrian->sisa_antrian,
-                'antreanpanggil' => $antrian->ruangan->antrian->nomor_antrian,
+                'antreanpanggil' => $antrian->ruangan->antrian->nomor_antrian ?? null,
                 'keterangan'     => 'Apabila antrean terlewat harap mengambil antrean kembali.'
             ],
             'metadata' => [
