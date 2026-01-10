@@ -49,9 +49,9 @@
 		width: 30%;
 	}
 	.row {
-		display: flex; 
+		display: flex;
 		align-items: stretch;
-		overflow: hidden; 
+		overflow: hidden;
 		padding:  0px 15px;
 	}
 
@@ -177,7 +177,7 @@
 		</div>
 	</div>
 <p id="hitung">
-	
+
 </p>
 <audio id="myAudio">
   <source src="{{ secure_url('sound/bel.mp3') }}" type="audio/mpeg">
@@ -348,7 +348,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 <script src="https://js.pusher.com/5.1/pusher.min.js"></script>
 
-
 <script>
 	setInterval(function(){
 		var d = new Date();
@@ -381,7 +380,7 @@
             //untuk antrian monitor
             console.log("data.panggil");
             console.log(data.panggil);
-            if( 
+            if(
                 !isNumber(data.panggil)
                 {{-- data.panggil == 1 || --}}
                 {{-- data.panggil == 0 --}}
@@ -451,7 +450,7 @@
                             $("#timbang_tensi").html(temp);
                         }
                         if(
-                            typeof ruangan !== 'undefined' 
+                            typeof ruangan !== 'undefined'
                             && ruangan !== ''
                             && ruangan !== null
                         ){

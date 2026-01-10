@@ -13,11 +13,13 @@ function fadeContent() {
 }
 
 var timer = 0;
+
 if (menangani_gawat_darurat) {
     startEmergencyNotification();
 } else {
     clearInterval(timer);
 }
+
 channel.bind(event_name, function (data) {
     console.log(data);
     if (

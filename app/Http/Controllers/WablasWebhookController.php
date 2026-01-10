@@ -24,7 +24,6 @@ class WablasWebhookController extends Controller
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
             ]);
-            $no_telp->room_id = $this->room_id;
             $no_telp->save();
             $no_telp->touch();
         }

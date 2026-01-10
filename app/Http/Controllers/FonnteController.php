@@ -51,6 +51,7 @@ class FonnteController extends Controller
      */
     private function webhook()
     {
+        Log::info('WEBHOOK 54');
         header('Content-Type: application/json; charset=utf-8');
 
         $json      = file_get_contents('php://input');
