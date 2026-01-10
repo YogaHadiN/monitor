@@ -78,14 +78,6 @@ class FonnteController extends Controller
 
         $last = $no_telp->last_contacted_kje_bot_2; // datetime/timestamp nullable
 
-        Log::info([
-            $senderNorm,
-            $no_telp_stafs,
-            $last,
-            Carbon::parse($last)->lte(now()->subHours(24))
-        ]);
-
-
         $shouldRedirect = (
             !in_array($senderNorm, $no_telp_stafs, true) &&
             (is_null($last) ||
@@ -94,6 +86,17 @@ class FonnteController extends Controller
                 )
             )
         );
+
+        Log::info([
+            $senderNorm,
+            $no_telp_stafs,
+            $last,
+            !in_array($senderNorm, $no_telp_stafs, true),
+            Carbon::parse($last)->lte(now()->subHours(24)),
+            $shouldRedirect
+        ]);
+
+
 
         if ($shouldRedirect) {
 
