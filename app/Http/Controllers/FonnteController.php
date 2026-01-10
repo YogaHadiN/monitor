@@ -82,7 +82,7 @@ class FonnteController extends Controller
             $senderNorm,
             $no_telp_stafs,
             $last,
-            Carbon::parse($last)->lte(now()->subHours(24)
+            Carbon::parse($last)->lte(now()->subHours(24))
         ]);
 
 
