@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Log;
+use Carbon\Carbon;
 use App\Http\Controllers\WablasController;
 use App\Models\NoTelp;
 use App\Models\Staf;
@@ -61,27 +62,37 @@ class FonnteController extends Controller
 
         $senderNorm = preg_replace('/\D/', '', $sender);
 
-        $no_telp_stafs = Staf::pluck('no_telp')
+        $no_telp_stafs = Staf::pluck('no_hp')
             ->map(fn($n) => preg_replace('/\D/', '', (string)$n))
             ->filter()
             ->unique()
             ->values()
             ->toArray();
 
-        // Simpan nomor kalau belum ada (TIDAK mengubah last_received_message_time)
-        NoTelp::firstOrCreate([
+        // ambil / buat no_telp dulu (tanpa mengubah last_received_message_time)
+        $no_telp = NoTelp::firstOrCreate([
             'tenant_id' => 1,
             'no_telp'   => $senderNorm,
         ]);
 
-        if (!in_array($senderNorm, $no_telp_stafs, true)) {
+        $last = $no_telp->last_contacted_kje_bot_2; // datetime/timestamp nullable
+
+        $shouldRedirect = (
+            !in_array($senderNorm, $no_telp_stafs, true) &&
+            (is_null($last) || Carbon::parse($last)->lte(now()->subHours(24)))
+        );
+
+        if ($shouldRedirect) {
+
             $msg  = 'Mohon maaf saat ini fasilitas whatsapp bot dialihkan ke nomor +62 821-1378-1271.';
             $msg .= PHP_EOL . 'Silahkan klik link di bawah ini untuk diarahkan ke nomor tersebut:';
             $msg .= PHP_EOL . PHP_EOL;
             $msg .= 'https://wa.me/6282113781271?text=' . urlencode('halo klinik jati elok');
 
-            // ✅ pakai replyFonnte (atau sendFonnte dengan array)
             $this->replyFonnte($senderNorm, $msg);
+
+            // Kalau Anda ingin “menandai” sudah dikontak sekarang:
+            $no_telp->update(['last_contacted_kje_bot_2' => now()]);
 
             return response()->json(['ok' => true, 'redirected' => true]);
         }
