@@ -5930,11 +5930,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             'chats_bot_id'   => $this->chats_bot_id ?? '',
         ];
 
-        Log::info("=====================");
-        Log::info("CTX");
-        Log::info( $ctx );
-        Log::info("=====================");
-
         /** @var BarantumReplyService $replyService */
         $replyService = app(\App\Services\BarantumReplyService::class);
 

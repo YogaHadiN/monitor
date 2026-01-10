@@ -75,6 +75,13 @@ class FonnteController extends Controller
             'no_telp'   => $senderNorm,
         ]);
 
+
+        Log::info([
+            $senderNorm,
+            $no_telp_stafs,
+            $last
+        ]);
+
         $last = $no_telp->last_contacted_kje_bot_2; // datetime/timestamp nullable
 
         $shouldRedirect = (
