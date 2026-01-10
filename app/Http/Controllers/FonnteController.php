@@ -81,13 +81,18 @@ class FonnteController extends Controller
         Log::info([
             $senderNorm,
             $no_telp_stafs,
-            $last
+            $last,
+            Carbon::parse($last)->lte(now()->subHours(24)
         ]);
 
 
         $shouldRedirect = (
             !in_array($senderNorm, $no_telp_stafs, true) &&
-            (is_null($last) || Carbon::parse($last)->lte(now()->subHours(24)))
+            (is_null($last) ||
+                (
+                    !is_null( $last ) && Carbon::parse($last)->lte(now()->subHours(24))
+                )
+            )
         );
 
         if ($shouldRedirect) {
