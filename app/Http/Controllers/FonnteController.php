@@ -87,15 +87,6 @@ class FonnteController extends Controller
             )
         );
 
-        Log::info([
-            $senderNorm,
-            $no_telp_stafs,
-            $last,
-            !in_array($senderNorm, $no_telp_stafs, true),
-            Carbon::parse($last)->lte(now()->subHours(24)),
-            $shouldRedirect
-        ]);
-
         if ($shouldRedirect) {
 
             $msg  = 'Mohon maaf saat ini fasilitas whatsapp bot dialihkan ke nomor +62 821-1378-1271.';
