@@ -62,12 +62,12 @@ class FonnteController extends Controller
 
         $senderNorm = preg_replace('/\D/', '', $sender);
 
-        $no_telp_stafs = Staf::pluck('no_hp')
-            ->map(fn($n) => preg_replace('/\D/', '', (string)$n))
+        $no_telp_stafs = Staf::pluck('no_telp')
+            ->map(fn($n) => $this->normalizePhone((string)$n))
             ->filter()
             ->unique()
             ->values()
-            ->toArray();
+            ->all();
 
         // ambil / buat no_telp dulu (tanpa mengubah last_received_message_time)
         $no_telp = NoTelp::firstOrCreate([
@@ -266,5 +266,20 @@ class FonnteController extends Controller
     private function replyFonnte($target, $message)
     {
         return $this->sendFonnte($target, ['message' => $message]);
+    }
+
+    private function normalizePhone(string $no): string
+    {
+        $no = preg_replace('/\D/', '', $no); // buang +, spasi, -
+
+        if (str_starts_with($no, '08')) {
+            return '62' . substr($no, 1); // 08xxx → 628xxx
+        }
+
+        if (str_starts_with($no, '8')) {
+            return '62' . $no; // 8xxx → 628xxx (jaga-jaga)
+        }
+
+        return $no; // sudah 62xxx
     }
 }
