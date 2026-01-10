@@ -62,7 +62,7 @@ class FonnteController extends Controller
 
         $senderNorm = preg_replace('/\D/', '', $sender);
 
-        $no_telp_stafs = Staf::pluck('no_telp')
+        $no_telp_stafs = Staf::pluck('no_hp')
             ->map(fn($n) => $this->normalizePhone((string)$n))
             ->filter()
             ->unique()
@@ -95,8 +95,6 @@ class FonnteController extends Controller
             Carbon::parse($last)->lte(now()->subHours(24)),
             $shouldRedirect
         ]);
-
-
 
         if ($shouldRedirect) {
 
