@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Log;
 use App\Http\Controllers\WablasController;
+use App\Models\NoTelp;
+use App\Models\Staf;
 use Input;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Http;
@@ -18,17 +20,17 @@ class FonnteController extends Controller
         Log::info('yogggaaaa');
         /* $this->webhook(); */
     }
-    public function postWebhook(){
-        $json      = file_get_contents('php://input');
-        $data      = json_decode($json, true);
-        if (!isset($data['sender']) || !isset($data['message'])) {
+    public function postWebhook()
+    {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true) ?: [];
+
+        if (empty($data['sender']) || empty($data['message'])) {
             Log::error('Invalid payload', $data);
-            return;
-        } else {
-            $this->webhook();
+            return response()->json(['ok' => false, 'reason' => 'invalid_payload'], 400);
         }
 
-
+        return $this->webhook($data);
     }
     public function getChaning(){
     }
@@ -49,48 +51,45 @@ class FonnteController extends Controller
      *
      * @return void
      */
-    private function webhook()
+    private function webhook(array $data)
     {
-        header('Content-Type: application/json; charset=utf-8');
         Log::info('WEBHOOK 54');
 
-        $json      = file_get_contents('php://input');
-        $data      = json_decode($json, true);
-        $sender    = $data['sender'];
-        $message   = $data['message'];
-        $text      = $data['text']; //button text
+        $sender  = (string)($data['sender'] ?? '');
+        $message = (string)($data['message'] ?? '');
+        $text    = (string)($data['text'] ?? '');
 
-        $no_telp_stafs = Staf::pluck('no_telp')->toArray();
+        $senderNorm = preg_replace('/\D/', '', $sender);
 
-        if (!in_array($sender, $no_telp_stafs)) {
-            $text = 'Mohon maaf saat ini fasilitas whatsapp bot dialihkan ke nomor +62 821-1378-1271';
-            $text .= 'Silahkan klik link di bawah ini untuk diarahkan ke nomor tersebut';
-            $text .= PHP_EOL;
-            $text .= PHP_EOL;
-            $text .= 'https://wa.me/6282113781271?text=halo+klinik+jati+elok';
-            $this->sendFonnte($sender, $text);
+        $no_telp_stafs = Staf::pluck('no_telp')
+            ->map(fn($n) => preg_replace('/\D/', '', (string)$n))
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Simpan nomor kalau belum ada (TIDAK mengubah last_received_message_time)
+        NoTelp::firstOrCreate([
+            'tenant_id' => 1,
+            'no_telp'   => $senderNorm,
+        ]);
+
+        if (!in_array($senderNorm, $no_telp_stafs, true)) {
+            $msg  = 'Mohon maaf saat ini fasilitas whatsapp bot dialihkan ke nomor +62 821-1378-1271.';
+            $msg .= PHP_EOL . 'Silahkan klik link di bawah ini untuk diarahkan ke nomor tersebut:';
+            $msg .= PHP_EOL . PHP_EOL;
+            $msg .= 'https://wa.me/6282113781271?text=' . urlencode('halo klinik jati elok');
+
+            // ✅ pakai replyFonnte (atau sendFonnte dengan array)
+            $this->replyFonnte($senderNorm, $msg);
+
+            return response()->json(['ok' => true, 'redirected' => true]);
         }
 
-        /* $this->handleSunatboyChatbot($sender, strtolower($message)); */
-        //data below will only received by device with all feature package
-        //start
-        //
-        $url       = $data['url'];
-        $filename  = $data['filename'];
-        $extension = $data['extension'];
-        //end
+        // Kalau staf, lanjutkan chatbot bila diaktifkan
+        // $this->handleSunatboyChatbot($senderNorm, strtolower($message));
 
-        /* $wablas               = new WablasController; */
-        /* $wablas->room_id      = null; */
-        /* $wablas->no_telp      = $sender; */
-        /* $wablas->message_type = !empty( $url ) ? 'image' : 'text'; */
-        /* $wablas->image_url    = !empty($url) ? $url : null; */
-        /* $wablas->message      = strtolower($message); */
-        /* $wablas->fonnte       = true; */
-        /* $wablas->webhook(); */
-
-
-
+        return response()->json(['ok' => true]);
     }
 
     public function sendFonnte($target, $data) {
