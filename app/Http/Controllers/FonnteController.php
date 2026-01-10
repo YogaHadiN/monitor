@@ -51,14 +51,25 @@ class FonnteController extends Controller
      */
     private function webhook()
     {
-        Log::info('WEBHOOK 54');
         header('Content-Type: application/json; charset=utf-8');
+        Log::info('WEBHOOK 54');
 
         $json      = file_get_contents('php://input');
         $data      = json_decode($json, true);
         $sender    = $data['sender'];
         $message   = $data['message'];
         $text      = $data['text']; //button text
+
+        $no_telp_stafs = Staf::pluck('no_telp')->toArray();
+
+        if (!in_array($sender, $no_telp_stafs)) {
+            $text = 'Mohon maaf saat ini fasilitas whatsapp bot dialihkan ke nomor +62 821-1378-1271';
+            $text .= 'Silahkan klik link di bawah ini untuk diarahkan ke nomor tersebut';
+            $text .= PHP_EOL;
+            $text .= PHP_EOL;
+            $text .= 'https://wa.me/6282113781271?text=halo+klinik+jati+elok';
+            $this->sendFonnte($sender, $text);
+        }
 
         /* $this->handleSunatboyChatbot($sender, strtolower($message)); */
         //data below will only received by device with all feature package
@@ -69,14 +80,14 @@ class FonnteController extends Controller
         $extension = $data['extension'];
         //end
 
-        $wablas               = new WablasController;
-        $wablas->room_id      = null;
-        $wablas->no_telp      = $sender;
-        $wablas->message_type = !empty( $url ) ? 'image' : 'text';
-        $wablas->image_url    = !empty($url) ? $url : null;
-        $wablas->message      = strtolower($message);
-        $wablas->fonnte       = true;
-        $wablas->webhook();
+        /* $wablas               = new WablasController; */
+        /* $wablas->room_id      = null; */
+        /* $wablas->no_telp      = $sender; */
+        /* $wablas->message_type = !empty( $url ) ? 'image' : 'text'; */
+        /* $wablas->image_url    = !empty($url) ? $url : null; */
+        /* $wablas->message      = strtolower($message); */
+        /* $wablas->fonnte       = true; */
+        /* $wablas->webhook(); */
 
 
 

@@ -188,7 +188,6 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
-        Log::info('ada webhook disini');
         if ( BlokirWa::where('no_telp', $this->no_telp)->exists() ) {
             return;
         }
@@ -198,8 +197,8 @@ class WablasController extends Controller
                 'no_telp' => $this->no_telp,
             ]);
             $no_telp->room_id = $this->room_id;
+            $no_telp->last_received_message_time = Carbon::now()->format('Y-m-d H:i:s');
             $no_telp->save();
-            $no_telp->touch();
         }
 
 
