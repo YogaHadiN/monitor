@@ -24,6 +24,8 @@ class WablasWebhookController extends Controller
         Log::info( Input::get('sender') );
         Log::info("message");
         Log::info( Input::get('message') );
+        Log::info("all");
+        Log::info( Input::all() );
         Log::info("=========================================================");
     }
 }
