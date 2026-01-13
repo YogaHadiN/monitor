@@ -9,27 +9,17 @@ use Log;
 
 class WablasWebhookController extends Controller
 {
-    /**
-     * @param
-     */
     public $no_telp;
 
     public function __construct()
     {
-        $this->no_telp = Input::get('phone');
     }
 
-    public function wablas(){
-        if ( !is_null( $this->no_telp ) ) {
-            $no_telp = NoTelp::firstOrCreate([
-                'no_telp' => $this->no_telp,
-            ]);
-            $no_telp->save();
-            $no_telp->touch();
-        }
-
-        if ( $this->no_telp !== '6281381912803' ) {
-            return;
-        }
+    public function wablas()
+    {
+        Log::info("=========================================================");
+        Log::info( Input::all() );
+        Log::info("DIA DATANG LAGI");
+        Log::info("=========================================================");
     }
 }

@@ -16,7 +16,6 @@ use App\Http\Controllers\BarantumWebhookController;
 |
 */
 
-Route::post('/kommo/webhook', [KommoWebhookController::class, 'handle']);
 Route::post('/barantum/webhook', [BarantumWebhookController::class, 'handle']);
 
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
@@ -35,7 +34,6 @@ Route::post('/barantum/webhook', [BarantumWebhookController::class, 'handle']);
 
 Route::get('webhook/wablas', [\App\Http\Controllers\WablasWebhookController::class, 'wablas']);
 Route::post('webhook/wablas', [\App\Http\Controllers\WablasWebhookController::class, 'wablas']);
-
 
 Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']);
 Route::get('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'getStatus']);
