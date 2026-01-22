@@ -33,7 +33,10 @@ channel.bind(event_name, function (data) {
                 var panggil_pasien = 0;
             }
             var ruangan = data.ruangan;
-            var antrian_id = data.ruangan;
+            var antrian_id = data.antrian_id;
+            console.log("==============================");
+            console.log(data);
+            console.log("==============================");
             $.get(
                 base +
                     "/antrianperiksa/monitor/getDataBaru/" +
