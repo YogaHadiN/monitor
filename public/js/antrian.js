@@ -44,6 +44,10 @@ channel.bind(event_name, function (data) {
                     ruangan: ruangan,
                 },
                 function (data, textStatus, jqXHR) {
+                    console.log("=======================");
+                    console.log("data");
+                    console.log(data);
+                    console.log("=======================");
                     if (panggil_pasien == 1) {
                         if (data.antrian_dipanggil.nomor_antrian !== null) {
                             var nomor_panggilan =
