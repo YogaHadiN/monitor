@@ -214,7 +214,7 @@ class AntrianController extends Controller
 
 	}
 
-	public function updateJumlahAntrianBaru( $panggil_pasien = true ){
+	public function updateJumlahAntrianBaru( $antrian_id, $panggil_pasien = true ){
         $ruangan = Input::get('ruangan');
         $ruangans = Ruangan::with('antrian')
                             ->where('ruang_periksa', 1)
@@ -226,13 +226,9 @@ class AntrianController extends Controller
         if ( !empty( $ruangan ) ) {
             $ruangan_id = $ruangan['id'] ;
             $today = date('Y-m-d');
-            $antrian_dipanggil       = Antrian::with(
-                                        'antriable',
-                                    )
-                                    ->where('antriable_type', 'not like', 'App\Models\Periksa')
-                                    ->where('tenant_id',1)
-                                    ->orderBy('updated_at', 'desc')
-                                    ->first();
+            $antrian_dipanggil       = Antrian::with('antriable')
+                                        ->where('id', $antrian_id)
+                                        ->first();
             if (!is_null( $antrian_dipanggil )) {
                 Ruangan::where('antrian_id', $antrian_dipanggil->id)->update([
                     'antrian_id' => null

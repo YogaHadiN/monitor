@@ -390,12 +390,13 @@
                 } else {
                     var panggil_pasien = 0;
                 }
+                var antrian_id = data.antrian_id;
                 console.log('dipanggil');
                 console.log('data');
                 console.log(data);
                 var ruangan = data.ruangan;
 
-                $.get(base + '/antrianperiksa/monitor/getData/' + panggil_pasien,
+                $.get(base + '/antrianperiksa/monitor/getData/' + antrian_id +'/' + panggil_pasien,
                     {
                         ruangan : ruangan
                     },
