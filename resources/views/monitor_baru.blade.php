@@ -108,11 +108,11 @@
         border-left: none;
         border-right: none;
     }
-    .table>tbody>tr>td, 
-    .table>tbody>tr>th, 
-    .table>tfoot>tr>td, 
-    .table>tfoot>tr>th, 
-    .table>thead>tr>td, 
+    .table>tbody>tr>td,
+    .table>tbody>tr>th,
+    .table>tfoot>tr>td,
+    .table>tfoot>tr>th,
+    .table>thead>tr>td,
     .table>thead>tr>th {
         border-left: none;
         border-right: none;
@@ -406,7 +406,7 @@
           </div>
         <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 waktu">
             <span id="hari">
-            Minggu, 24 September 2023 
+            Minggu, 24 September 2023
             </span>
             <span id="jam">
                 13:35
@@ -487,7 +487,7 @@
                             <td class="text-left">
                                 Yoga Hadi Nugroho
                             </td>
-                            <td> 
+                            <td>
                                 <span class="badge badge-primary">
                                     Selesai
                                 </span>
@@ -539,7 +539,7 @@
                             <td class="text-left">
                                 Yoga Hadi Nugroho
                             </td>
-                            <td> 
+                            <td>
                                 <span class="badge badge-primary">
                                     Selesai
                                 </span>
@@ -589,7 +589,7 @@
                     <div class="carousel-inner">
                       <div class="item active">
                             <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
-                                Keluhan Atas Pelayanan Ketik "Komplain" Whatsapp Ke 
+                                Keluhan Atas Pelayanan Ketik "Komplain" Whatsapp Ke
                             </div>
                             <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
                                 <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
@@ -603,14 +603,14 @@
                         <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
                             Waktu Tunggu Obat Jadi <br>
                             <span class="waktu_tunggu">15 - 30 Menit</span>
-                            
+
                         </div>
                         <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
                             Waktu Tunggu Obat Racikan</br>
                             <span class="waktu_tunggu">30 - 45 Menit</span>
                         </div>
                         <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_waktu_tunggu text-center">
-                            Kesabaran Anda<br> 
+                            Kesabaran Anda<br>
                             <span class="waktu_tunggu">Ketelitian Kami</span>
                         </div>
                     </div>
@@ -633,7 +633,7 @@
     </div>
 </div>
 <p id="hitung">
-	
+
 </p>
 <div>
 <audio id="ding">
@@ -822,7 +822,7 @@
     $('#carousel1').carousel({
       interval: 7000,
       cycle: true
-    }); 
+    });
     moment.locale('id')
     window.setInterval(function () {
         $('#hari').html(moment().format('dddd, DD MMMM YYYY'))
@@ -863,7 +863,7 @@
 
 </script>
 
-<script src="{!! secure_url("js/antrian.js?ver=23") !!}"></script>
+<script src="{!! secure_url("js/antrian.js?ver=24") !!}"></script>
 {{-- <script src="{!!secure_url("js/inspinia.js") !!}"></script> --}}
 </body>
 </html>
