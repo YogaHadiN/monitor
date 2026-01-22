@@ -192,76 +192,48 @@ function clear(panggilan) {
 }
 function pglPasien(sound) {
     var x = document.getElementById("myAudio");
-    var m = [];
-    for (var i = 0, len = sound.length; i < len; i++) {
-        m[i] = document.getElementById("audio_" + sound[i]);
+    if (!x) {
+        console.warn("Audio base #myAudio tidak ditemukan");
+        return;
     }
-    if (typeof m[0] !== "undefined") {
-        x.onended = function () {
-            m[0].play();
+
+    // pastikan sound array
+    if (!Array.isArray(sound)) {
+        console.warn("sound bukan array:", sound);
+        return;
+    }
+
+    // ambil element audio per token sound (yang tidak ada akan null)
+    var m = sound.map(function (s) {
+        return document.getElementById("audio_" + s);
+    });
+
+    // filter hanya yang benar-benar ada (bukan null)
+    m = m.filter(Boolean);
+
+    if (m.length === 0) {
+        console.warn("Tidak ada audio_* yang ditemukan untuk:", sound);
+        return;
+    }
+
+    // putus rantai onended lama biar gak numpuk
+    x.onended = null;
+    m.forEach(function (el) {
+        el.onended = null;
+    });
+
+    // chain: myAudio -> m[0] -> m[1] -> ...
+    x.onended = function () {
+        m[0].play();
+    };
+
+    for (let i = 0; i < m.length - 1; i++) {
+        m[i].onended = function () {
+            m[i + 1].play();
         };
     }
 
-    if (typeof m[1] !== "undefined") {
-        m[0].onended = function () {
-            m[1].play();
-        };
-    }
-    if (typeof m[2] !== "undefined") {
-        m[1].onended = function () {
-            m[2].play();
-        };
-    }
-    if (typeof m[3] !== "undefined") {
-        m[2].onended = function () {
-            m[3].play();
-        };
-    }
-    if (typeof m[4] !== "undefined") {
-        m[3].onended = function () {
-            m[4].play();
-        };
-    }
-    if (typeof m[5] !== "undefined") {
-        m[4].onended = function () {
-            m[5].play();
-        };
-    }
-    if (typeof m[6] !== "undefined") {
-        m[5].onended = function () {
-            m[6].play();
-        };
-    }
-    if (typeof m[7] !== "undefined") {
-        m[6].onended = function () {
-            m[7].play();
-        };
-    }
-    if (typeof m[8] !== "undefined") {
-        m[7].onended = function () {
-            m[8].play();
-        };
-    }
-    if (typeof m[9] !== "undefined") {
-        m[8].onended = function () {
-            m[9].play();
-        };
-    }
-    if (typeof m[10] !== "undefined") {
-        m[9].onended = function () {
-            m[10].play();
-        };
-    }
-    if (typeof m[11] !== "undefined") {
-        m[10].onended = function () {
-            m[11].play();
-        };
-    }
-    if (typeof m[12] !== "undefined") {
-        m[11].onended = function () {
-            m[12].play();
-        };
-    }
+    // mulai
     x.play();
 }
 function panggilPasien(ruangan) {
