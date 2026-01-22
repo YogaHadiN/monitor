@@ -192,48 +192,76 @@ function clear(panggilan) {
 }
 function pglPasien(sound) {
     var x = document.getElementById("myAudio");
-    if (!x) {
-        console.warn("Audio base #myAudio tidak ditemukan");
-        return;
+    var m = [];
+    for (var i = 0, len = sound.length; i < len; i++) {
+        m[i] = document.getElementById("audio_" + sound[i]);
     }
-
-    // pastikan sound array
-    if (!Array.isArray(sound)) {
-        console.warn("sound bukan array:", sound);
-        return;
-    }
-
-    // ambil element audio per token sound (yang tidak ada akan null)
-    var m = sound.map(function (s) {
-        return document.getElementById("audio_" + s);
-    });
-
-    // filter hanya yang benar-benar ada (bukan null)
-    m = m.filter(Boolean);
-
-    if (m.length === 0) {
-        console.warn("Tidak ada audio_* yang ditemukan untuk:", sound);
-        return;
-    }
-
-    // putus rantai onended lama biar gak numpuk
-    x.onended = null;
-    m.forEach(function (el) {
-        el.onended = null;
-    });
-
-    // chain: myAudio -> m[0] -> m[1] -> ...
-    x.onended = function () {
-        m[0].play();
-    };
-
-    for (let i = 0; i < m.length - 1; i++) {
-        m[i].onended = function () {
-            m[i + 1].play();
+    if (m[0]) {
+        x.onended = function () {
+            m[0].play();
         };
     }
 
-    // mulai
+    if (m[1] && m[0]) {
+        m[0].onended = function () {
+            m[1].play();
+        };
+    }
+    if (m[2] && m[1]) {
+        m[1].onended = function () {
+            m[2].play();
+        };
+    }
+    if (m[3] && m[2]) {
+        m[2].onended = function () {
+            m[3].play();
+        };
+    }
+    if (m[4] && m[3]) {
+        m[3].onended = function () {
+            m[4].play();
+        };
+    }
+    if (m[5] && m[4]) {
+        m[4].onended = function () {
+            m[5].play();
+        };
+    }
+    if (m[6] && m[5]) {
+        m[5].onended = function () {
+            m[6].play();
+        };
+    }
+    if (m[7] && m[6]) {
+        m[6].onended = function () {
+            m[7].play();
+        };
+    }
+    if (m[8] && m[7]) {
+        m[7].onended = function () {
+            m[8].play();
+        };
+    }
+    if (m[9] && m[8]) {
+        m[8].onended = function () {
+            m[9].play();
+        };
+    }
+    if (m[10] && m[9]) {
+        m[9].onended = function () {
+            m[10].play();
+        };
+    }
+    if (m[11] && m[10]) {
+        m[10].onended = function () {
+            m[11].play();
+        };
+    }
+    if (m[12] && m[11]) {
+        m[11].onended = function () {
+            m[12].play();
+        };
+    }
     x.play();
 }
 function panggilPasien(ruangan) {
