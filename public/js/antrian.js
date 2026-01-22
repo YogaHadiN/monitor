@@ -21,7 +21,6 @@ if (menangani_gawat_darurat) {
 }
 
 channel.bind(event_name, function (data) {
-    console.log(data);
     if (
         typeof data.panggil !== "undefined" &&
         typeof data.ruangan !== "undefined"
@@ -150,7 +149,8 @@ function prosesAntrianObat(data) {
                 } else if (data[i].status == "Menunggu") {
                     temp += '<span class="badge badge-danger">Menunggu</span>';
                 } else if (data[i].status == "Selesai") {
-                    temp += '<span class="badge badge-primary">Selesai</span>';
+                    temp +=
+                        '<span class="badge badge-primary">Akan dipanggil</span>';
                 }
                 temp += "</td>";
                 temp += "</tr>";
