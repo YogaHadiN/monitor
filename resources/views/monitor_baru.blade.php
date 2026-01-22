@@ -863,7 +863,7 @@
 
 </script>
 
-<script src="{!! secure_url("js/antrian.js?ver=24") !!}"></script>
+<script src="{!! secure_url("js/antrian.js?ver=4") !!}"></script>
 {{-- <script src="{!!secure_url("js/inspinia.js") !!}"></script> --}}
 </body>
 </html>
