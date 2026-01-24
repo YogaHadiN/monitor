@@ -215,7 +215,10 @@ class AntrianController extends Controller
 	}
 
 	public function updateJumlahAntrianBaru( $antrian_id, $panggil_pasien = true ){
-        $ruangan = Input::get('ruangan');
+        $antrian_dipanggil       = Antrian::with('antriable')
+                                    ->where('id', $antrian_id)
+                                    ->first();
+        $ruangan = $antrian_dipanggil->ruangan;
         $ruangans = Ruangan::with('antrian')
                             ->where('ruang_periksa', 1)
                             ->get();
@@ -224,11 +227,7 @@ class AntrianController extends Controller
             $antrian_terakhir[$ruang->id] = is_null( $ruang->antrian )? '-' :$ruang->antrian->nomor_antrian;
         }
         if ( !empty( $ruangan ) ) {
-            $ruangan_id = $ruangan['id'] ;
             $today = date('Y-m-d');
-            $antrian_dipanggil       = Antrian::with('antriable')
-                                        ->where('id', $antrian_id)
-                                        ->first();
             Log::info("===========================");
             Log::info('$antrian_id');
             Log::info($antrian_id);
@@ -241,7 +240,6 @@ class AntrianController extends Controller
                 Ruangan::where('antrian_id', $antrian_dipanggil->id)->update([
                     'antrian_id' => null
                 ]);
-                $ruangan             = Ruangan::find( $ruangan_id );
                 $ruangan->antrian_id = $antrian_dipanggil->id;
                 $ruangan->save();
 

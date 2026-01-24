@@ -33,19 +33,13 @@ channel.bind(event_name, function (data) {
             }
             var ruangan = data.ruangan;
             var antrian_id = data.antrian_id;
-            console.log("==============================");
-            console.log("data get data baru");
-            console.log(data);
-            console.log("==============================");
             $.get(
                 base +
                     "/antrianperiksa/monitor/getDataBaru/" +
                     antrian_id +
                     "/" +
                     panggil_pasien,
-                {
-                    ruangan: ruangan,
-                },
+                {},
                 function (data, textStatus, jqXHR) {
                     console.log("=======================");
                     console.log("data");
