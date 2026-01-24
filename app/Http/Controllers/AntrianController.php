@@ -113,9 +113,10 @@ class AntrianController extends Controller
 		));
     }
 
-	public function convertSoundToArray(){
-		$nomor_antrian = Input::get('nomor_antrian');
-		$ruangan       = Input::get('ruangan');
+	public function convertSoundToArray($antrian_id){
+        $antrian = Antrian::find( $antrian_id );
+		$nomor_antrian = $antrian->nomor_antrian;
+		$ruangan       = $antrian->antriable->ruangan;
 		$huruf         = strtolower(str_split($nomor_antrian)[0]);
 		$angka         = substr($nomor_antrian, 1);
 
@@ -209,7 +210,7 @@ class AntrianController extends Controller
 			}
 		}
 		$result[] =	'silahkanmenuju';
-		$result[] = $ruangan['file_panggilan'];
+		$result[] = $ruangan->file_panggilan;
 		return $result;
 
 	}

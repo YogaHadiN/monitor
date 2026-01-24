@@ -32,8 +32,8 @@ Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
 Route::get('antrianperiksa/monitor_baru', [AntrianController::class, 'monitor_baru']);
 Route::get('fingerprint/register', [AntrianController::class, 'register']);
-Route::get('antrianperiksa/monitor/convert_sound_to_array', [AntrianController::class, 'convertSoundToArray']);
-Route::get('/antrianperiksa/monitor/convert_sound_to_array/mobile', [AntrianController::class, 'convertSoundToArrayMobile']);
+Route::get('antrianperiksa/monitor/convert_sound_to_array/{antrian_id}', [AntrianController::class, 'convertSoundToArray']);
+Route::get('/antrianperiksa/monitor/convert_sound_to_array/mobile/{antrian_id}', [AntrianController::class, 'convertSoundToArrayMobile']);
 
 Route::get('validasi/antigen/{id}', [ValidateController::class, 'antigen']);
 Route::get('validasi/tanda_tangan_staf/{id}', [ValidateController::class, 'tandaTanganStaf']);

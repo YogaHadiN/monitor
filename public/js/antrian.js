@@ -99,7 +99,7 @@ channel.bind(event_name, function (data) {
                         ruangan_panggilan !== "" &&
                         ruangan_panggilan !== null
                     ) {
-                        panggilPasien(ruangan_panggilan);
+                        panggilPasien(antrian_id);
                     }
 
                     console.log(
@@ -263,13 +263,10 @@ function pglPasien(sound) {
     }
     x.play();
 }
-function panggilPasien(ruangan) {
+function panggilPasien(antrian_id) {
     $.get(
-        base + "/antrianperiksa/monitor/convert_sound_to_array",
-        {
-            nomor_antrian: $("#nomor_panggilan").html(),
-            ruangan: ruangan,
-        },
+        base + "/antrianperiksa/monitor/convert_sound_to_array/" + antrian_id,
+        {},
         function (data, textStatus, jqXHR) {
             console.log("========================");
             console.log("data sound panggilan");
