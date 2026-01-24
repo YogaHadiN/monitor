@@ -218,7 +218,7 @@ class AntrianController extends Controller
         $antrian_dipanggil       = Antrian::with('antriable')
                                     ->where('id', $antrian_id)
                                     ->first();
-        $ruangan = $antrian_dipanggil->ruangan;
+        $ruangan = $antrian_dipanggil->antriable->ruangan;
         $ruangans = Ruangan::with('antrian')
                             ->where('ruang_periksa', 1)
                             ->get();

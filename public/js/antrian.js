@@ -21,10 +21,11 @@ if (menangani_gawat_darurat) {
 }
 
 channel.bind(event_name, function (data) {
-    if (
-        typeof data.panggil !== "undefined" &&
-        typeof data.ruangan !== "undefined"
-    ) {
+    if (typeof data.panggil !== "undefined") {
+        console.log("=====================================");
+        console.log("data");
+        console.log(data);
+        console.log("=====================================");
         if (!isNumber(data.panggil)) {
             if (data.panggil) {
                 var panggil_pasien = 1;
