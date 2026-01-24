@@ -90,16 +90,16 @@ channel.bind(event_name, function (data) {
                     );
 
                     console.log("=========================");
-                    console.log("ruangan");
-                    console.log(ruangan);
+                    console.log("ruangan_panggilan");
+                    console.log(ruangan_panggilan);
                     console.log("=========================");
 
                     if (
-                        typeof ruangan !== "undefined" &&
-                        ruangan !== "" &&
-                        ruangan !== null
+                        typeof ruangan_panggilan !== "undefined" &&
+                        ruangan_panggilan !== "" &&
+                        ruangan_panggilan !== null
                     ) {
-                        panggilPasien(ruangan);
+                        panggilPasien(ruangan_panggilan);
                     }
 
                     console.log(
