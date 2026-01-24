@@ -23,7 +23,7 @@ if (menangani_gawat_darurat) {
 channel.bind(event_name, function (data) {
     if (typeof data.panggil !== "undefined") {
         console.log("=====================================");
-        console.log("data antrian js");
+        console.log("data antrian js 1234");
         console.log(data);
         console.log("=====================================");
         if (!isNumber(data.panggil)) {

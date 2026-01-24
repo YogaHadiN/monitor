@@ -238,14 +238,6 @@ class AntrianController extends Controller
         ) {
             $ruangan = $antrian_dipanggil->antriable->ruangan;
             $today = date('Y-m-d');
-            Log::info("===========================");
-            Log::info('$antrian_id');
-            Log::info($antrian_id);
-            Log::info("===========================");
-            Log::info("===========================");
-            Log::info('$antrian_dipanggil');
-            Log::info($antrian_dipanggil);
-            Log::info("===========================");
             if (!is_null( $antrian_dipanggil )) {
                 Ruangan::where('antrian_id', $antrian_dipanggil->id)->update([
                     'antrian_id' => null
