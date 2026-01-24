@@ -224,7 +224,6 @@ class AntrianController extends Controller
         Log::info( $antrian_id );
         Log::info('============================');
 
-        $ruangan = $antrian_dipanggil->antriable->ruangan;
         $ruangans = Ruangan::with('antrian')
                             ->where('ruang_periksa', 1)
                             ->get();
@@ -232,7 +231,8 @@ class AntrianController extends Controller
         foreach ($ruangans as $ruang) {
             $antrian_terakhir[$ruang->id] = is_null( $ruang->antrian )? '-' :$ruang->antrian->nomor_antrian;
         }
-        if ( !empty( $ruangan ) ) {
+        if ( !is_null( $antrian_dipanggil ) ) {
+            $ruangan = $antrian_dipanggil->antriable->ruangan;
             $today = date('Y-m-d');
             Log::info("===========================");
             Log::info('$antrian_id');
