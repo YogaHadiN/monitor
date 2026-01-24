@@ -1,5 +1,4 @@
 var interval;
-console.log(new Date().toLocaleString());
 $("#text_notifikasi").fadeOut();
 fadeContent();
 function fadeContent() {
@@ -22,10 +21,6 @@ if (menangani_gawat_darurat) {
 
 channel.bind(event_name, function (data) {
     if (typeof data.panggil !== "undefined") {
-        console.log("=====================================");
-        console.log("data antrian js 1234");
-        console.log(data);
-        console.log("=====================================");
         if (!isNumber(data.panggil)) {
             if (data.panggil) {
                 var panggil_pasien = 1;
@@ -42,10 +37,6 @@ channel.bind(event_name, function (data) {
                     panggil_pasien,
                 {},
                 function (data, textStatus, jqXHR) {
-                    console.log("=======================");
-                    console.log("data");
-                    console.log(data);
-                    console.log("=======================");
                     if (panggil_pasien == 1) {
                         if (data.antrian_dipanggil.nomor_antrian !== null) {
                             var nomor_panggilan =
@@ -97,6 +88,11 @@ channel.bind(event_name, function (data) {
                     $("#container_antrian_obat_racikan").html(
                         prosesAntrianObat(data.antrian_obat_racikan)
                     );
+
+                    console.log("=========================");
+                    console.log("ruangan");
+                    console.log(ruangan);
+                    console.log("=========================");
 
                     if (
                         typeof ruangan !== "undefined" &&
