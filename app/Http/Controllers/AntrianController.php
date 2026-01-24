@@ -231,7 +231,11 @@ class AntrianController extends Controller
         foreach ($ruangans as $ruang) {
             $antrian_terakhir[$ruang->id] = is_null( $ruang->antrian )? '-' :$ruang->antrian->nomor_antrian;
         }
-        if ( !is_null( $antrian_dipanggil ) ) {
+        if (
+             !is_null( $antrian_dipanggil ) &&
+             !is_null( $antrian_dipanggil->antriable ) &&
+             !is_null( $antrian_dipanggil->antriable->ruangan )
+        ) {
             $ruangan = $antrian_dipanggil->antriable->ruangan;
             $today = date('Y-m-d');
             Log::info("===========================");
