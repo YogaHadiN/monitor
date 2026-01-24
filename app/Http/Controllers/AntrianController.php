@@ -117,6 +117,14 @@ class AntrianController extends Controller
         $antrian = Antrian::find( $antrian_id );
 		$nomor_antrian = $antrian->nomor_antrian;
 		$ruangan       = $antrian->antriable->ruangan;
+        Log::info('=======================================');
+        Log::info('antrian');
+        Log::info($antrian);
+        Log::info('antrian->antriable');
+        Log::info($antrian->antriable);
+        Log::info('antrian->antriable->ruangan');
+        Log::info($antrian->antriable->ruangan);
+        Log::info('=======================================');
 		$huruf         = strtolower(str_split($nomor_antrian)[0]);
 		$angka         = substr($nomor_antrian, 1);
 
