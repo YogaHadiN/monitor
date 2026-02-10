@@ -98,7 +98,7 @@ class SchedulledReservationController extends Controller
         $message .= "Nama : {$pasienNama}\n";
         $message .= "Dokter : {$dokterNama}\n";
         $message .= "Pada hari ini\n\n";
-        $message .= "Telah dibatalkan";
+        $message .= "Telah Anda dibatalkan secara mandiri";
 
         // Hapus QR di S3 (jika ada) - log kalau gagal, tapi lanjutkan
         try {
