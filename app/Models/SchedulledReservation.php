@@ -14,42 +14,48 @@ use Illuminate\Support\Facades\Request;
 class SchedulledReservation extends Model
 {
     use BelongsToTenant, HasFactory, SoftDeletes;
+    protected $casts = [
+        'deleted_meta' => 'array',
+        'deleted_at'   => 'datetime',
+    ];
 
     protected $guarded = [];
 
+
     protected static function booted()
     {
-        // Sebelum delete → isi audit
         static::deleting(function (SchedulledReservation $reservasi) {
 
-            // kalau forceDelete, skip audit soft-delete
             if (method_exists($reservasi, 'isForceDeleting') && $reservasi->isForceDeleting()) {
                 return;
             }
 
             $action = null;
-
             try {
-                $route = Request::route();
+                $route = request()->route();
                 $action = $route ? $route->getActionName() : null;
             } catch (\Throwable $e) {}
 
             $reservasi->deleted_by  = Auth::id();
-            $reservasi->deleted_via = $action ?: 'unknown';
+            $reservasi->deleted_via = $action ?: (app()->runningInConsole() ? 'console' : 'unknown');
 
-            // optional meta (hapus kalau tidak perlu)
+            // meta aman (optional)
             $meta = null;
-            if (!app()->runningInConsole()) {
-                $meta = [
-                    'ip'  => Request::ip(),
-                    'url' => Request::fullUrl(),
-                ];
+            try {
+                if (!app()->runningInConsole()) {
+                    $meta = [
+                        'ip'  => request()->ip(),
+                        'url' => request()->fullUrl(),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $meta = null;
             }
+
             $reservasi->deleted_meta = $meta;
         });
 
-        // Setelah delete → logic kamu tetap jalan
-        static::deleted(function ($reservasi) {
+        static::deleted(function (SchedulledReservation $reservasi) {
             $second_int = (int) date('s');
 
             if ($reservasi->schedulled_booking && $second_int < 30) {
@@ -57,6 +63,7 @@ class SchedulledReservation extends Model
             }
         });
     }
+
 
     public function whatsappBot(){
         return $this->belongsTo(WhatsappBot::class);
