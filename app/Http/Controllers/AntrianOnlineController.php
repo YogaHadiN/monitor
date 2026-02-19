@@ -618,8 +618,52 @@ class AntrianOnlineController extends Controller
     {
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
 
-        Log::info('POLI BPJS');
-        Log::info($poli_bpjs);
+        Log::info('========== DEBUG POLI BPJS ==========');
+
+        // cek poli_bpjs
+        if (!$poli_bpjs) {
+            Log::warning('POLI_BPJS NULL');
+        } else {
+            Log::info('POLI_BPJS FOUND', [
+                'id'      => $poli_bpjs->id,
+                'kdPoli'  => $poli_bpjs->kdPoli,
+                'nmPoli'  => $poli_bpjs->nmPoli ?? null,
+            ]);
+        }
+
+        // cek relasi poli
+        $poli = optional($poli_bpjs)->poli;
+
+        if (!$poli) {
+            Log::warning('RELATION POLI NULL');
+        } else {
+            Log::info('RELATION POLI OK', [
+                'id'     => $poli->id ?? null,
+                'kdPoli' => $poli->kdPoli ?? null,
+                'nama'   => $poli->nama ?? null,
+            ]);
+        }
+
+        // cek tipe konsultasi (pivot)
+        $tipe = null;
+        if ($poli) {
+            try {
+                // kalau pakai helper tipe_konsultasi()
+                $tipe = $poli->tipe_konsultasi();
+
+                Log::info('RELATION TIPE KONSULTASI', [
+                    'exists' => (bool)$tipe,
+                    'id'     => optional($tipe)->id,
+                    'nama'   => optional($tipe)->nama,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('ERROR RELATION TIPE KONSULTASI', [
+                    'msg' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        Log::info('========== END DEBUG POLI BPJS ==========');
 
         // Jika poli atau tipe konsultasi belum disetting → otomatis dianggap tertutup
         if (!$poli_bpjs || !$poli_bpjs->poli || !$poli_bpjs->poli->tipe_konsultasi) {
