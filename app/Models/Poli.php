@@ -38,6 +38,11 @@ class Poli extends Model
         );
     }
 
+    public function tipeKonsultasiDefault()
+    {
+        return $this->tipe_konsultasis()->orderBy('tipe_konsultasis.id')->first();
+    }
+
     // helper: ambil 1 (default pertama)
     public function tipe_konsultasi()
     {

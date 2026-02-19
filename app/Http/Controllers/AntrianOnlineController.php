@@ -666,8 +666,8 @@ class AntrianOnlineController extends Controller
         Log::info('========== END DEBUG POLI BPJS ==========');
 
         // Jika poli atau tipe konsultasi belum disetting → otomatis dianggap tertutup
-        if (!$poli_bpjs || !$poli_bpjs->poli || !$poli_bpjs->poli->tipe_konsultasi) {
-            $this->message = 'Poli tidak ditemukan / belum di-setting';
+        if (!$poli_bpjs || !$poli_bpjs->poli || !$poli_bpjs->poli->tipeKonsultasiDefault()) {
+            $this->message = 'Poli atau tipe konsultasi belum disetting';
             return true;
         }
 
