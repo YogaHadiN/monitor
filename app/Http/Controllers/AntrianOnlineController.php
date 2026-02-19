@@ -278,7 +278,7 @@ class AntrianOnlineController extends Controller
      * Hanya untuk poli umum (001)
      * Banyak validasi aturan BPJS & operasional klinik
      */
-    public function ambil_antrean(Request $request)
+    public function ambil_antrean(\Illuminate\Http\Request $req)
     {
         Log::info('================================');
         Log::info('HIT AMBIL ANTRIAN');
