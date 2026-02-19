@@ -31,10 +31,17 @@ class Poli extends Model
     public function tipe_konsultasis()
     {
         return $this->belongsToMany(
-            TipeKonsultasi::class,
+            \App\Models\TipeKonsultasi::class,
             'tipe_konsultasi_poli',
             'poli_id',
             'tipe_konsultasi_id'
         );
     }
+
+    // helper: ambil 1 (default pertama)
+    public function tipe_konsultasi()
+    {
+        return $this->tipe_konsultasis()->orderBy('tipe_konsultasis.id')->first();
+    }
+
 }
