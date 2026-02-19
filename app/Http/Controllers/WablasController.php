@@ -2675,7 +2675,7 @@ class WablasController extends Controller
                 // - staf pada baris ini TIDAK ada di roster petugas_pemeriksas hari ini
                 if (strcasecmp($hari, $hariIniStr) === 0) {
                     if (!in_array($d['staf_id'], $stafHariIni, true)) {
-                        $message .= ' (izin hari ini)';
+                        $message .= ' (Izin Tidak Masuk)';
                     }
                 }
 
