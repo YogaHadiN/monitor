@@ -618,6 +618,9 @@ class AntrianOnlineController extends Controller
     {
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
 
+        Log::info('POLI BPJS');
+        Log::info($poli_bpjs);
+
         // Jika poli atau tipe konsultasi belum disetting → otomatis dianggap tertutup
         if (!$poli_bpjs || !$poli_bpjs->poli || !$poli_bpjs->poli->tipe_konsultasi) {
             $this->message = 'Poli tidak ditemukan / belum di-setting';

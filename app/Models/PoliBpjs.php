@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class PoliBpjs extends Model
 {
     use HasFactory;
-    public function poli(){
-        return $this->hasOne(Poli::class);
+    public function poli()
+    {
+        return $this->hasOne(Poli::class, 'kdPoli', 'kdPoli');
     }
     public function tipe_konsultasi(){
         return $this->hasOne(TipeKonsultasi::class);
