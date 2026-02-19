@@ -671,7 +671,7 @@ class AntrianOnlineController extends Controller
             return true;
         }
 
-        $tipe_konsultasi = $poli_bpjs->poli->tipe_konsultasi;
+        $tipe_konsultasi = $tipe;
         $now = Carbon::now();
 
         // Ambil semua petugas pemeriksa hari ini
