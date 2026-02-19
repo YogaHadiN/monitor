@@ -283,26 +283,27 @@ class AntrianOnlineController extends Controller
         Log::info('================================');
         Log::info('HIT AMBIL ANTRIAN');
 
-        // Source - https://stackoverflow.com/a
-        // Posted by user895378, modified by community. See post 'Timeline' for change history
-        // Retrieved 2025-11-19, License - CC BY-SA 3.0
-        
-        $entityBody = file_get_contents('php://input');
-        $request        = Input::all();
-        $nomorkartu     = $request['nomorkartu'] ?? null;
-        $nik            = $request['nik'] ?? null;
-        $kodepoli       = $request['kodepoli'] ?? null;
-        $kodedokter     = $request['kodedokter'] ?? null;
-        $tanggalperiksa = $request['tanggalperiksa'] ?? null;
+        $rawBody = $req->getContent();              // raw request body (string)
+        $json    = json_decode($rawBody, true);     // array|null
 
-        Log::info($request);
-        Log::info($entityBody);
-        Log::info($entityBody['nomorkartu']);
-        Log::info($nomorkartu);
-        Log::info($nik);
-        Log::info($kodepoli);
-        Log::info($kodedokter);
-        Log::info($tanggalperiksa);
+        // Jika body JSON valid, pakai itu; kalau tidak, fallback ke input biasa
+        $data = (json_last_error() === JSON_ERROR_NONE && is_array($json))
+        ? $json
+        : $req->all();
+
+        $nomorkartu     = $data['nomorkartu'] ?? null;
+        $nik            = $data['nik'] ?? null;
+        $kodepoli       = $data['kodepoli'] ?? null;
+        $kodedokter     = $data['kodedokter'] ?? null;
+        $tanggalperiksa = $data['tanggalperiksa'] ?? null;
+
+        Log::info('payload_array', $data);          // aman untuk array
+        Log::info('raw_body', ['raw' => $rawBody]); // aman untuk string
+        Log::info('nomorkartu', ['nomorkartu' => $nomorkartu]);
+        Log::info('nik', ['nik' => $nik]);
+        Log::info('kodepoli', ['kodepoli' => $kodepoli]);
+        Log::info('kodedokter', ['kodedokter' => $kodedokter]);
+        Log::info('tanggalperiksa', ['tanggalperiksa' => $tanggalperiksa]);
         Log::info('================================');
 
         /**
