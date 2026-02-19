@@ -9,10 +9,8 @@ use App\Models\Tenant;
 use App\Models\DokterBpjs;
 use App\Models\PetugasPemeriksa;
 use App\Models\TipeKonsultasi;
-
 use App\Models\AntrianPoli;
 use App\Models\AntrianPeriksa;
-
 use Illuminate\Http\Request;
 use Input;
 use Log;
@@ -41,6 +39,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  * - Pembatalan antrean
  * - Validasi berbagai kondisi (dokter tidak ditemukan, poli libur, dsb)
  */
+
 class AntrianOnlineController extends Controller
 {
     public $base_url;
@@ -281,7 +280,6 @@ class AntrianOnlineController extends Controller
      */
     public function ambil_antrean(Request $request)
     {
-        dd( $request->all() );
         Log::info('================================');
         Log::info('HIT AMBIL ANTRIAN');
 
