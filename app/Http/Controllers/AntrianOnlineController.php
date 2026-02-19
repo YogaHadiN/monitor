@@ -121,6 +121,7 @@ class AntrianOnlineController extends Controller
     {
         Log::info('===========================');
         Log::info("HIT STATUS ANTREAN");
+        Log::info('request', ['request' => $request]);
 
         if ($request->hasHeader('x-random')) {
             Log::info($request->header('x-random'));
@@ -321,6 +322,7 @@ class AntrianOnlineController extends Controller
         /**
          * VALIDASI: Poli sedang libur
          */
+
         if ($this->poliSedangLibur($kodepoli)) {
             return Response::json([
                 'metadata' => [
@@ -726,7 +728,6 @@ class AntrianOnlineController extends Controller
     public function poliSedangLibur($kodepoli)
     {
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
-
         $tipe_konsultasi_id = $poli_bpjs->tipe_konsultasi->id;
 
         // Jika PetugasPemeriksa tidak ada yg bertugas hari ini → poli libur
