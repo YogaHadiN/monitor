@@ -46,6 +46,7 @@ class FasilitasController extends Controller
 	public $input_nomor_bpjs;
 	public $input_ruangan_id;
     public $input_tipe_konsultasi_id;
+    public $input_registrasi_pembayaran_id;
     public $input_staf_id;
 
 	public function __construct(){
@@ -95,15 +96,15 @@ class FasilitasController extends Controller
             }
         }
 
-        $antrian                     = new Antrian;
-        $antrian->tenant_id          = 1 ;
-        $antrian->nomor_bpjs         = $this->input_nomor_bpjs;
-        $antrian->tipe_konsultasi_id = $tipe_konsultasi_id;
-        $antrian->staf_id            = $this->input_staf_id;
-        $antrian->ruangan_id         = $id ;
-		$antrian->antriable_id       = $antrian->id;
-		$antrian->antriable_id       = $antrian->id;
-		$antrian->antriable_type     = 'App\\Models\\Antrian';
+        $antrian                           = new Antrian;
+        $antrian->tenant_id                = 1 ;
+        $antrian->nomor_bpjs               = $this->input_nomor_bpjs;
+        $antrian->tipe_konsultasi_id       = $tipe_konsultasi_id;
+        $antrian->staf_id                  = $this->input_staf_id;
+        $antrian->ruangan_id               = $id ;
+		$antrian->antriable_id             = $antrian->id;
+		$antrian->registrasi_pembayaran_id = $this->input_registrasi_pembayaran_id;
+		$antrian->antriable_type           = 'App\\Models\\Antrian';
 		$antrian->save();
 
 		$apc                     = new AntrianPoliController;
