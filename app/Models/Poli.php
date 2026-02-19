@@ -28,7 +28,13 @@ class Poli extends Model
     public static function estetik(){
         return Poli::where('poli', 'Poli Estetika')->first();
     }
-    public function tipe_konsultasi(){
-        return $this->hasOne(TipeKonsultasi::class);
+    public function tipe_konsultasis()
+    {
+        return $this->belongsToMany(
+            TipeKonsultasi::class,
+            'tipe_konsultasi_poli',
+            'poli_id',
+            'tipe_konsultasi_id'
+        );
     }
 }
