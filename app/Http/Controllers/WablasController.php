@@ -104,7 +104,7 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        Log::info('masuk WABLA');
+        $this->chagBotLog('masuk WABLA');
         $this->message_reply = '';
         $this->fonnte = false;
         $this->image_url = null;
@@ -145,8 +145,8 @@ class WablasController extends Controller
             $this->no_telp      = Input::get('phone');
             $this->message_type = Input::get('messageType');
             $this->image_url    = Input::get('url');
-            Log::info('message');
-            Log::info( Input::get('message') );
+            $this->chagBotLog('message');
+            $this->chagBotLog( Input::get('message') );
             $this->message = !is_array( Input::get('message') ) ? strtolower((string) Input::get('message')) : null;
         }
 	}
@@ -797,10 +797,10 @@ class WablasController extends Controller
         if (
             is_array( $param )
         ) {
-            Log::info("===================================");
-            Log::info("ISI LOG ERROR ARRAY");
-            Log::info("===================================");
-            Log::info($param);
+            $this->chagBotLog("===================================");
+            $this->chagBotLog("ISI LOG ERROR ARRAY");
+            $this->chagBotLog("===================================");
+            $this->chagBotLog($param);
         } else {
             if (
                 empty( trim($param) ) &&
@@ -2772,14 +2772,14 @@ class WablasController extends Controller
                                                         ->whereNotNull('image')
                                                         ->groupBy('cek_list_ruangan_id')
                                                         ->get();
-        Log::info('masihAdaYangBelumCekListHariIni');
-        Log::info([
+        $this->chagBotLog('masihAdaYangBelumCekListHariIni');
+        $this->chagBotLog([
             $cek_list_ruangan_harian_ids->count() ,  // ini hasilnya 87
             $cek_list_dikerjakan_hari_ini->count() // ini hasilnya 1
         ]);
         $result = !( $cek_list_ruangan_harian_ids->count() == $cek_list_dikerjakan_hari_ini->count() );
-        Log::info("resutl");
-        Log::info( $result ); // kenapa result hasilnya true?
+        $this->chagBotLog("resutl");
+        $this->chagBotLog( $result ); // kenapa result hasilnya true?
         return $result;
     }
     public function cekListBelumDilakukan( $frekuensi_cek_id, $whatsapp_bot_service_id, $whatsapp_bot_service_id_input ){
@@ -4963,7 +4963,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         /*         ]; */
         /*     $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data); */
         /* } else { */
-        /*     Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $phone); */
+        /*     $this->chagBotLog('Tidak bisa kirim ke yang belum kirim hari ini ' . $phone); */
         /* } */
     }
 
@@ -5888,7 +5888,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     /*             ]; */
     /*         $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data); */
     /*     } else { */
-    /*         Log::info('Tidak bisa kirim ke yang belum kirim hari ini ' . $this->no_telp); */
+    /*         $this->chagBotLog('Tidak bisa kirim ke yang belum kirim hari ini ' . $this->no_telp); */
     /*     } */
     /* } */
 
@@ -5948,7 +5948,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return;
         }
 
-        Log::info('BARANTUM_AUTO_REPLY_SENT', [
+        $this->chagBotLog('BARANTUM_AUTO_REPLY_SENT', [
             'room_id'        => $this->room_id ?? null,
             'chats_users_id' => $this->barantum_users_id ?? null,
             'text'           => mb_substr($text, 0, 100),
