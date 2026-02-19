@@ -649,7 +649,7 @@ class AntrianOnlineController extends Controller
         if ($poli) {
             try {
                 // kalau pakai helper tipe_konsultasi()
-                $tipe = $poli->tipe_konsultasi();
+                $tipe = $poli->tipeKonsultasiDefault();
 
                 Log::info('RELATION TIPE KONSULTASI', [
                     'exists' => (bool)$tipe,
@@ -666,7 +666,7 @@ class AntrianOnlineController extends Controller
         Log::info('========== END DEBUG POLI BPJS ==========');
 
         // Jika poli atau tipe konsultasi belum disetting → otomatis dianggap tertutup
-        if (!$poli_bpjs || !$poli_bpjs->poli || !$poli_bpjs->poli->tipeKonsultasiDefault()) {
+        if (!$poli_bpjs || !$poli || !$tipe) {
             $this->message = 'Poli atau tipe konsultasi belum disetting';
             return true;
         }
