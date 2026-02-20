@@ -1149,7 +1149,6 @@ class BpjsApiController extends Controller
 
     public function apiBpjsGetRequest($parameter, $returnResponse = false)
     {
-        dd( env('BPJS_CONSID') );
         $tenant = Tenant::find(1);
 		$uri        = $this->base_url . $parameter; //url web service bpjs;
 
