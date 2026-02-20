@@ -37,7 +37,7 @@ class testCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp/';
+        $this->base_url = "https://apijkn.bpjs-kesehatan.go.id/pcare-rest/";
     }
 
     /**
