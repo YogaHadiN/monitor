@@ -53,7 +53,7 @@ class AntrianOnlineController extends Controller
     public function __construct()
     {
         // Base URL API BPJS DEV
-        $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp';
+        $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp/';
 
         // Default tenant selalu 1 (Klinik Jati Elok)
         $this->tenant_id = 1;
