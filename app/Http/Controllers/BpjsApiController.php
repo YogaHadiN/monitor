@@ -694,6 +694,7 @@ class BpjsApiController extends Controller
     public function returnDecryptedResponse($data)
     {
         $data = json_decode($data, true);
+        dd( $data );
         if (!is_null( $data )) {
             if (
                 $data['metaData']['code'] >= 200 &&
