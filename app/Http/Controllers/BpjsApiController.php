@@ -697,18 +697,39 @@ class BpjsApiController extends Controller
         dd( $data );
         if (!is_null( $data )) {
             if (
-                $data['metaData']['code'] >= 200 &&
-                $data['metaData']['code'] <= 299
+                isset( $data['metaData'] )
             ) {
-                return [
-                    'code'     => $data['metaData']['code'],
-                    'response' => json_decode( $this->decompress( $this->stringDecrypt(  $data['response']  ) ), true )
-                ];
-            } else {
-                return [
-                    'code'     => $data['metaData']['code'],
-                    'response' => $data['metaData']['message']
-                ];
+                if (
+                    $data['metaData']['code'] >= 200 &&
+                    $data['metaData']['code'] <= 299
+                ) {
+                    return [
+                        'code'     => $data['metaData']['code'],
+                        'response' => json_decode( $this->decompress( $this->stringDecrypt(  $data['response']  ) ), true )
+                    ];
+                } else {
+                    return [
+                        'code'     => $data['metaData']['code'],
+                        'response' => $data['metaData']['message']
+                    ];
+                }
+            } else if (
+                isset( $data['metadata'] )
+            ) {
+                if (
+                    $data['metadata']['code'] >= 200 &&
+                    $data['metadata']['code'] <= 299
+                ) {
+                    return [
+                        'code'     => $data['metadata']['code'],
+                        'response' => json_decode( $this->decompress( $this->stringDecrypt(  $data['response']  ) ), true )
+                    ];
+                } else {
+                    return [
+                        'code'     => $data['metadata']['code'],
+                        'response' => $data['metadata']['message']
+                    ];
+                }
             }
         } else {
             return [
