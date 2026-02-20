@@ -45,26 +45,13 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $subdomain = config('services.kommo.subdomain');
-        $token     = config('services.kommo.token');
+        $this->getDataReferensiDokter();
+    }
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $token,
-            'Accept'        => 'application/hal+json',
-        ])->get("https://{$subdomain}.kommo.com/api/v4/contacts/13844454");
-
-        if (!$response->successful()) {
-            dd('Kommo error', $response->status(), $response->body());
-        }
-
-        // ⬇️ INI YANG KURANG
-        $contact = $response->json();
-
-        $phone = collect($contact['custom_fields_values'] ?? [])
-            ->firstWhere('field_code', 'PHONE')['values'][0]['value']
-            ?? null;
-
-        dd($phone);
+    public function getDataReferensiDokter(){
+        $bpjs = new BpjsApiController;
+        $bpjs->base_url = $this->base_url;
+        dd( $bpjs->apiBpjsGetRequest('ref/dokter/kodepoli/001/tanggal/2026-02-20') );
     }
     public function refreshAntrianOnline(){
         WhatsappBot::where('no_telp', '6281381912803')->delete();

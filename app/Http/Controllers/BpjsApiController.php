@@ -15,10 +15,12 @@ class BpjsApiController extends Controller
     public $tglDaftar;
     public $noKartu;
     public $when;
+    public $base_url;
     public function __construct(){
         $this->when = 'today';
+        $this->base_url = "https://apijkn.bpjs-kesehatan.go.id/pcare-rest/";
     }
-    
+
     public function pencarianDiagnosa(){
         $this->apiBpjsGetRequest('diagnosa/A0/1/1');
     }
@@ -286,7 +288,7 @@ class BpjsApiController extends Controller
         $noUrut = $response['message'];
         $this->apiBpjsDeleteRequest('pendaftaran/peserta/'.$noKartu.'/tglDaftar/'.$this->tglDaftar.'/noUrut/'.$noUrut.'/kdPoli/' . $kdPoli);
     }
-    
+
     public function hapusPendaftaranKunjunganSakit(){
         $data            = $this->apiBpjsGetRequest('peserta/' . $this->noKartu(), true);
         $kdProvider      = $data['kdProviderPst']['kdProvider'];
@@ -407,7 +409,7 @@ class BpjsApiController extends Controller
                 "kdDiag2": null,
                 "kdDiag3": null,
                 "kdPoliRujukInternal": null,
-                "rujukLanjut": {	
+                "rujukLanjut": {
                 "tglEstRujuk":"' . $tommorow . '",
                 "kdppk": "0221R014",
                 "subSpesialis": null,
@@ -422,7 +424,7 @@ class BpjsApiController extends Controller
         }';
         $this->apiBpjsPostRequest('kunjungan');
     }
-    
+
     public function entryDataPelayananStatusPulangPulangPaksa(){
 
         $response      = $this->apiBpjsGetRequest('peserta/' . $this->noKartu(), true);
@@ -491,7 +493,7 @@ class BpjsApiController extends Controller
         $kdPoli = '001';
         $this->apiBpjsDeleteRequest('pendaftaran/peserta/'.$noKartu.'/tglDaftar/'.$yesterday.'/noUrut/'.$noUrut.'/kdPoli/'.$kdPoli);
     }
-    
+
 
     public function entryPelayananDenganStatusPulangRujukInternal(){
 
@@ -655,22 +657,22 @@ class BpjsApiController extends Controller
             dd( 'no Kunjungan belum dibuat' );
         }
     }
-    
+
 
 
     public function getClubProlanis($noKegiatan){
         $data = $this->apiBpjsGetRequest('kelompok/club/' . $noKegiatan);
         return $this->returnDecryptedResponse( $data );
     }
-    
+
     public function tambahKegiatanKelompok(){
         $tglDaftar = date('d-m-Y');
         $post = '{ "eduId": null, "clubId": 17496, "tglPelayanan": "'.$tglDaftar.'", "kdKegiatan": "01", "kdKelompok": "03", "materi": "materi", "pembicara": "pembicara", "lokasi": "lokasi", "keterangan": "keterangan", "biaya": 20000 }';
 
         dd( $this->apiBpjsPostRequest('kelompok/kegiatan', $post) );
     }
-    
-    
+
+
     public function deleteAllPendaftaran()
     {
         foreach ($this->getPendaftaran() as $pendaftaran) {
@@ -683,7 +685,7 @@ class BpjsApiController extends Controller
     {
         $this->apiBpjsGetRequest('pendaftaran/tglDaftar/'. date('d-m-Y', strtotime( $this->when )) .'/0/10');
     }
-    
+
     public function returnKdDokter()
     {
         $response      = $this->apiBpjsGetRequest('dokter/1/1', true);
@@ -1125,7 +1127,7 @@ class BpjsApiController extends Controller
     {
         return $this->returnDecryptedResponse( $this->apiBpjsGetRequest('kunjungan/peserta/' .$noKartu) );
     }
-    
+
 
     /**
      * undocumented function
@@ -1143,12 +1145,12 @@ class BpjsApiController extends Controller
             ]
         ]);
     }
-    
-    
+
+
     public function apiBpjsGetRequest($parameter, $returnResponse = false)
     {
         $tenant = Tenant::find(1);
-		$uri        = "https://apijkn.bpjs-kesehatan.go.id/pcare-rest/" . $parameter; //url web service bpjs;
+		$uri        = $this->base_url . $parameter; //url web service bpjs;
 		$this->url  = $uri;
 		$consID     = $tenant->bpjs_consid;
 		$secretKey  = $tenant->bpjs_secret_key; //secretKey anda
@@ -1166,21 +1168,21 @@ class BpjsApiController extends Controller
 		$encodedSignature     = base64_encode($signature);
 		$encodedAuthorization = base64_encode($pcareUname.':'.$pcarePWD.':'.$kdAplikasi);
 
-		$headers = array( 
-					"Accept: application/json", 
-					"X-cons-id:".$consID, 
-					"X-timestamp: ".$stamp, 
-					"X-signature: ".$encodedSignature, 
+		$headers = array(
+					"Accept: application/json",
+					"X-cons-id:".$consID,
+					"X-timestamp: ".$stamp,
+					"X-signature: ".$encodedSignature,
                     "X-authorization: Basic " .$encodedAuthorization ,
                     "user_key: ".$user_key ,
 
-				); 
+				);
 
 		$ch = curl_init($uri);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); 
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$data = curl_exec($ch);
 		curl_close($ch);
         return $this->returnDecryptedResponse($data, $returnResponse);
@@ -1203,14 +1205,14 @@ class BpjsApiController extends Controller
 		$encodedSignature     = base64_encode($signature);
 		$encodedAuthorization = base64_encode($pcareUname.':'.$pcarePWD.':'.$kdAplikasi);
 
-		$headers = array( 
-					"Accept: application/json", 
-					"X-cons-id:".$consID, 
-					"X-timestamp: ".$stamp, 
-					"X-signature: ".$encodedSignature, 
+		$headers = array(
+					"Accept: application/json",
+					"X-cons-id:".$consID,
+					"X-timestamp: ".$stamp,
+					"X-signature: ".$encodedSignature,
                     "X-authorization: Basic " .$encodedAuthorization ,
                     "user_key: ".$user_key ,
-				); 
+				);
         $this->request_type = "POST";
 		$ch = curl_init($uri);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 5);
@@ -1218,7 +1220,7 @@ class BpjsApiController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST,true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $this->post);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); 
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$data = curl_exec($ch);
 		curl_close($ch);
         return $this->returnDecryptedResponse($data, $returnResponse);
@@ -1241,14 +1243,14 @@ class BpjsApiController extends Controller
 		$encodedSignature     = base64_encode($signature);
 		$encodedAuthorization = base64_encode($pcareUname.':'.$pcarePWD.':'.$kdAplikasi);
 
-		$headers = array( 
-					"Accept: application/json", 
-					"X-cons-id:".$consID, 
-					"X-timestamp: ".$stamp, 
-					"X-signature: ".$encodedSignature, 
+		$headers = array(
+					"Accept: application/json",
+					"X-cons-id:".$consID,
+					"X-timestamp: ".$stamp,
+					"X-signature: ".$encodedSignature,
                     "X-authorization: Basic " .$encodedAuthorization ,
                     "user_key: ".$user_key ,
-				); 
+				);
 
 
 		$ch = curl_init($uri);
@@ -1256,7 +1258,7 @@ class BpjsApiController extends Controller
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); 
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$data = curl_exec($ch);
 		curl_close($ch);
         return $this->returnDecryptedResponse($data, $returnResponse);
@@ -1279,15 +1281,15 @@ class BpjsApiController extends Controller
 		$encodedSignature     = base64_encode($signature);
 		$encodedAuthorization = base64_encode($pcareUname.':'.$pcarePWD.':'.$kdAplikasi);
 
-		$headers = array( 
-					"Accept: application/json", 
-					"X-cons-id:".$consID, 
-					"X-timestamp: ".$stamp, 
-					"X-signature: ".$encodedSignature, 
+		$headers = array(
+					"Accept: application/json",
+					"X-cons-id:".$consID,
+					"X-timestamp: ".$stamp,
+					"X-signature: ".$encodedSignature,
                     "X-authorization: Basic " .$encodedAuthorization ,
                     "user_key: ".$user_key ,
-				); 
-        
+				);
+
         $this->request_type = "DELETE";
 		$ch = curl_init($uri);
 
@@ -1295,7 +1297,7 @@ class BpjsApiController extends Controller
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->request_type);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); 
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$data = curl_exec($ch);
 		curl_close($ch);
 
@@ -1311,19 +1313,19 @@ class BpjsApiController extends Controller
 
         $stamp = $this->stamp;
         $key = $consID . $secretKey . $stamp;
-            
+
         $encrypt_method = 'AES-256-CBC';
         // hash
         $key_hash = hex2bin(hash('sha256', $key));
-  
+
         // iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning
         $iv = substr(hex2bin(hash('sha256', $key)), 0, 16);
 
         $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key_hash, OPENSSL_RAW_DATA, $iv);
-  
+
         return $output;
     }
-        // function lzstring decompress 
+        // function lzstring decompress
         // download libraries lzstring : https://github.com/nullpunkt/lz-string-php
     public function decompress($string){
         return \LZCompressor\LZString::decompressFromEncodedURIComponent($string);

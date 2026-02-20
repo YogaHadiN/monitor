@@ -53,7 +53,7 @@ class AntrianOnlineController extends Controller
     public function __construct()
     {
         // Base URL API BPJS DEV
-        $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp_dev';
+        $this->base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/antreanfktp';
 
         // Default tenant selalu 1 (Klinik Jati Elok)
         $this->tenant_id = 1;
@@ -281,8 +281,6 @@ class AntrianOnlineController extends Controller
      */
     public function ambil_antrean(\Illuminate\Http\Request $req)
     {
-        Log::info('================================');
-        Log::info('HIT AMBIL ANTRIAN');
 
         $rawBody = $req->getContent();              // raw request body (string)
         $json    = json_decode($rawBody, true);     // array|null
@@ -297,15 +295,6 @@ class AntrianOnlineController extends Controller
         $kodepoli       = $data['kodepoli'] ?? null;
         $kodedokter     = $data['kodedokter'] ?? null;
         $tanggalperiksa = $data['tanggalperiksa'] ?? null;
-
-        Log::info('payload_array', $data);          // aman untuk array
-        Log::info('raw_body', ['raw' => $rawBody]); // aman untuk string
-        Log::info('nomorkartu', ['nomorkartu' => $nomorkartu]);
-        Log::info('nik', ['nik' => $nik]);
-        Log::info('kodepoli', ['kodepoli' => $kodepoli]);
-        Log::info('kodedokter', ['kodedokter' => $kodedokter]);
-        Log::info('tanggalperiksa', ['tanggalperiksa' => $tanggalperiksa]);
-        Log::info('================================');
 
         /**
          * VALIDASI: Pasien BPJS hanya boleh berobat sekali per hari
@@ -821,6 +810,12 @@ class AntrianOnlineController extends Controller
         }
 
         return is_null($this->pasien);
+    }
+
+    public function getDataReferensiDokter(){
+        $bpjs = new BpjsApiController;
+        $bpjs->base_url = $this->base_url;
+        dd( $bpjs->apiBpjsGetRequest('ref/dokter/kodepoli/001/tanggal/2026-02-20') );
     }
 
     /**
