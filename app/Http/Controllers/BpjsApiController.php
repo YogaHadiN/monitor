@@ -1153,7 +1153,6 @@ class BpjsApiController extends Controller
 		$uri        = $this->base_url . $parameter; //url web service bpjs;
 
 		$this->url  = $uri;
-        dd( $uri );
 		$consID     = $tenant->bpjs_consid;
 		$secretKey  = $tenant->bpjs_secret_key; //secretKey anda
 		$pcareUname = $tenant->pcare_uname; //username pcare
