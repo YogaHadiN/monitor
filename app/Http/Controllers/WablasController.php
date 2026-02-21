@@ -111,6 +111,10 @@ class WablasController extends Controller
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
         $this->tenant = Tenant::find( $tenant_id );
+        Log::info(__LINE__);
+        Log::info('tenant_id');
+        Log::info($tenant_id);
+        Log::info($tenant);
 
 
         if ( !is_null( Input::get('payload') ) ) {
