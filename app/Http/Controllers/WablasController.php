@@ -5983,6 +5983,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     }
 
     public function chatBotLog($line){
+        Log::info('=====================================');
+        Log::info('tenant_id');
+        Log::info( $this->tenant );
+        Log::info('=====================================');
         if (
             $this->tenant->chatbot_log_enabled
         ) {
