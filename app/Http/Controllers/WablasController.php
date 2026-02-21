@@ -104,17 +104,13 @@ class WablasController extends Controller
     public $jadwalGigi;
 
 	public function __construct(){
-        $this->chatBotLog('masuk WABLA');
         $this->message_reply = '';
         $this->fonnte = false;
         $this->image_url = null;
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
         $this->tenant = Tenant::find( $tenant_id );
-        Log::info(__LINE__);
-        Log::info('tenant_id');
-        Log::info($tenant_id);
-        Log::info($tenant);
+        $this->chatBotLog('masuk WABLA');
 
 
         if ( !is_null( Input::get('payload') ) ) {
