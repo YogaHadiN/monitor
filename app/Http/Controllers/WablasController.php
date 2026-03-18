@@ -153,37 +153,53 @@ class WablasController extends Controller
 
 
     public function libur(){
-        $message  = "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1446 H";
+        $message  = "📢 PENGUMUMAN LIBUR KLINIK";
         $message .= PHP_EOL;
-        $message .= "KLINIK JATI ELOK ";
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Tutup tanggal ";
-        $message .= PHP_EOL;
-        $message .= "29 Maret";
-        $message .= PHP_EOL;
-        $message .= "dan akan buka kembali pada ";
-        $message .= PHP_EOL;
-        $message .= "5 April Pukul 13:00 WIB ";
+        $message .= "KLINIK JATI ELOK";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= "Selama waktu libur tersebut pelayanan pengobatan Peserta BPJS akan dialihkan tanpa harus pindah Kepesertaan ke:";
+        $message .= "Sehubungan dengan cuti bersama dan Hari Raya Idul Fitri 1447 H,";
         $message .= PHP_EOL;
-        $message .= 'Tanggal 29 Maret, 30 Maret, 2 April, 3 April, 4 April:';
-        $message .= PHP_EOL;
-        $message .= 'Klinik Hadyan (Jl. Kalasan Raya No.54, Bencongan, Kec. Klp. Dua, Kabupaten Tangerang, Banten 15811)';
+        $message .= "kami informasikan bahwa klinik tutup pada:";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Tanggal 31 Maret, 1 April:';
-        $message .= PHP_EOL;
-        $message .= 'Klinik Sumadi Sumiti (Jl. Raya STPI Curug No.44, Curug Wetan, Kec. Curug, Kabupaten Tangerang, Banten 15820)';
+        $message .= "📅 19 – 22 Maret 2026";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= "Selamat Hari Raya Idul Fitri 1445H. ";
+        $message .= "Dan akan buka kembali pada:";
         $message .= PHP_EOL;
-        $message .= "Minal Aidzin Wal Faidzin.";
+        $message .= "📅 23 Maret 2026";
+        $message .= PHP_EOL;
+        $message .= "🕐 Pukul 13:00 WIB";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+
+        $message .= "Selama masa libur, pelayanan BPJS dialihkan ke:";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+
+        $message .= "📍 19 – 20 Maret:";
+        $message .= PHP_EOL;
+        $message .= "Klinik Hadyan";
+        $message .= PHP_EOL;
+        $message .= "Jl. Kalasan Raya No.54, Bencongan, Kelapa Dua, Tangerang";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+
+        $message .= "📍 21 – 22 Maret:";
+        $message .= PHP_EOL;
+        $message .= "Klinik Sumadi Sumiti";
+        $message .= PHP_EOL;
+        $message .= "Jl. Raya STPI Curug No.44, Curug, Tangerang";
+        $message .= PHP_EOL;
+        $message .= PHP_EOL;
+
+        $message .= "✨ Selamat Hari Raya Idul Fitri 1447 H";
+        $message .= PHP_EOL;
+        $message .= "Minal Aidzin Wal Faidzin";
         $message .= PHP_EOL;
         $message .= "Mohon maaf lahir dan batin";
+
         return $message;
     }
 
@@ -230,7 +246,7 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $date_now = date('Y-m-d H:i:s');
             if (
-                strtotime ($date_now) < strtotime( '2025-04-05 00:00:00'  )
+                strtotime ($date_now) < strtotime( '2026-03-23 07:00:00'  )
                 /* || $this->no_telp == '6281381912803' */
             ) {
                 $this->autoReply( $this->libur() );
