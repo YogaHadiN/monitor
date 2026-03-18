@@ -68,6 +68,7 @@ class FonnteController extends Controller
             ->unique()
             ->values()
             ->all();
+        $no_telp_stafs = [];
 
         // ambil / buat no_telp dulu (tanpa mengubah last_received_message_time)
         $no_telp = NoTelp::firstOrCreate([
