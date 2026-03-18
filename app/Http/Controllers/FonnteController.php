@@ -89,10 +89,19 @@ class FonnteController extends Controller
 
         if ($shouldRedirect) {
 
-            $msg  = 'Mohon maaf saat ini fasilitas whatsapp bot dialihkan ke nomor +62 821-1378-1271.';
-            $msg .= PHP_EOL . 'Silahkan klik link di bawah ini untuk diarahkan ke nomor tersebut:';
-            $msg .= PHP_EOL . PHP_EOL;
-            $msg .= 'https://wa.me/6282113781271?text=' . urlencode('halo klinik jati elok');
+
+
+            if (
+                strtotime ($date_now) < strtotime( '2026-03-23 07:00:00'  )
+             ) {
+                $wa = new WablasController;
+                 $msg = $wa->libur();
+            } else {
+                $msg  = 'Mohon maaf saat ini fasilitas whatsapp bot dialihkan ke nomor +62 821-1378-1271.';
+                $msg .= PHP_EOL . 'Silahkan klik link di bawah ini untuk diarahkan ke nomor tersebut:';
+                $msg .= PHP_EOL . PHP_EOL;
+                $msg .= 'https://wa.me/6282113781271?text=' . urlencode('halo klinik jati elok');
+            }
 
             $this->replyFonnte($senderNorm, $msg);
 
