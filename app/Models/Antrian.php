@@ -70,56 +70,33 @@ class Antrian extends Model
             $model->save();
         });
 
-        self::deleted(function($model){
-            // Hapus relasi terkait (kode Anda)
-            WhatsappRegistration::where('antrian_id', $model->id)->delete();
+        self::deleted(function ($model) {
+            if ((int) $model->registrasi_pembayaran_id !== 2) {
+                return;
+            }
 
-            // <<<<< MASUKKAN delete_source KE salah satu kolom di deleted_antrians
-            DeletedAntrian::create([
-                'timestamp_antrian_dibuat'                      => $model->created_at,
-                'ruangan_id'                                    => $model->ruangan_id,
-                'url'                                           => $model->url,
-                'deleting_antrian_id'                           => $model->deleting_antrian_id,
-                'nomor'                                         => $model->nomor,
-                'antrian_id'                                    => $model->id,
-                'antriable_id'                                  => $model->antriable_id,
-                'antriable_type'                                => $model->antriable_type,
-                'dipanggil'                                     => $model->dipanggil,
-                'no_telp'                                       => $model->no_telp,
-                'nama'                                          => $model->nama,
-                'tanggal_lahir'                                 => $model->tanggal_lahir,
-                'kode_unik'                                     => $model->kode_unik,
-                'registrasi_pembayaran_id'                      => $model->registrasi_pembayaran_id,
-                'nomor_bpjs'                                    => $model->nomor_bpjs,
-                'satisfaction_index'                            => $model->satisfaction_index,
-                'complaint'                                     => $model->complaint,
-                'register_previously_saved_patient'             => $model->register_previously_saved_patient,
-                'pasien_id'                                     => $model->pasien_id,
-                'recovery_index_id'                             => $model->recovery_index_id,
-                'informasi_terapi_gagal'                        => $model->informasi_terapi_gagal,
-                'menunggu'                                      => $model->menunggu,
-                'notifikasi_panggilan_aktif'                    => $model->notifikasi_panggilan_aktif,
-                'alamat'                                        => $model->alamat,
-                'notifikasi_resep_terkirim'                     => $model->notifikasi_resep_terkirim,
-                'jam_panggil_pasien_di_pendaftaran'             => $model->jam_panggil_pasien_di_pendaftaran,
-                'jam_selesai_didaftarkan_dan_status_didapatkan' => $model->jam_selesai_didaftarkan_dan_status_didapatkan,
-                'jam_mulai_pemeriksaan_fisik'                   => $model->jam_mulai_pemeriksaan_fisik,
-                'jam_selesai_pemeriksaan_fisik'                 => $model->jam_selesai_pemeriksaan_fisik,
-                'kartu_asuransi_image'                          => $model->kartu_asuransi_image,
-                'existing_antrian_ids'                          => $model->existing_antrian_ids,
-                'complain_id'                                   => $model->complain_id,
-                'qr_code_path_s3'                               => $model->qr_code_path_s3,
-                'reservasi_online'                              => $model->reservasi_online,
-                'sudah_hadir_di_klinik'                         => $model->sudah_hadir_di_klinik,
-                'data_bpjs_cocok'                               => $model->data_bpjs_cocok,
-                'jam_pasien_mulai_mengantri'                    => $model->jam_pasien_mulai_mengantri,
-                'customer_satisfaction_survey_sent'             => $model->customer_satisfaction_survey_sent,
-                'terakhir_dipanggil'                            => $model->terakhir_dipanggil,
-                'dibatalkan_pasien'                             => $model->dibatalkan_pasien,
+            try {
+                $kodepoli   = $model->tipe_konsultasi?->poli_bpjs?->kdPoli;
+                $nomorkartu = $model->nomor_asuransi ?: $model->pasien?->nomor_asuransi_bpjs;
 
-                // <<<<< tambahkan kolom baru ini
-                'delete_source'                                 => $model->delete_source ?? null,
-            ]);
+                if (!$kodepoli || !$nomorkartu) {
+                    \Log::warning('Batal antrean BPJS dilewati karena data tidak lengkap', [
+                        'id' => $model->id ?? null,
+                        'kodepoli' => $kodepoli,
+                        'nomorkartu' => $nomorkartu,
+                    ]);
+                    return;
+                }
+
+                $fktp = new AntrianOnlineController;
+                $fktp->batal_antrean();
+            } catch (\Throwable $e) {
+                \Log::error('Gagal batal antrean BPJS otomatis', [
+                    'id' => $model->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        });
         });
     }
 
