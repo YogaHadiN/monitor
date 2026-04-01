@@ -97,7 +97,6 @@ class Antrian extends Model
                 ]);
             }
         });
-        });
     }
 
     protected $guarded = ['nomor'];
