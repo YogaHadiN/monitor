@@ -18,10 +18,6 @@ class BarantumWebhookController extends Controller
         /* =========================
          * EXTRACT SEMUA FIELD
          * ========================= */
-        Log::info('======================');
-        Log::info('PAYLOAD');
-        Log::info($payload);
-        Log::info('======================');
 
         $data = [
             // kontak
