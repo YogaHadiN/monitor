@@ -37,10 +37,7 @@ Route::get('/watzap-test', function () {
         'body'   => $response->json() ?? $response->body(),
     ]);
 
-    $this->info('HTTP Status: ' . $response->status());
-    $this->line($response->body());
-
-    return self::SUCCESS;
+    dd( $response );
 });
 
 
