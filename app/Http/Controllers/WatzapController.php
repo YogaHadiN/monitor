@@ -47,6 +47,15 @@ class WatzapController extends Controller
 
         dd( $response->body() );
     }
+    public function get_webhook(){
+        $response = Http::post('https://api.watzap.id/get_webhook', [
+            'api_key' => env('WATZAP_TOKEN'),
+            'waba_id' => env('WATZAP_NUMBER_KEY'),
+        ]);
+
+        dd($response->json());
+    }
+
 
 
     public function webhook(Request $request)
