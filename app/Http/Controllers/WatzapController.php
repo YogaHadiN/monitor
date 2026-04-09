@@ -17,6 +17,14 @@ class WatzapController extends Controller
      * - inject ke request saat ini
      * - teruskan ke WablasController->webhook()
      */
+    /**
+     * @param
+     */
+    public function __construct()
+    {
+        Log::info('oke masuk nomor ini');
+    }
+
     public function webhook(Request $request)
     {
         $raw = $request->all();
