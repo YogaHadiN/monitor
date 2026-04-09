@@ -26,7 +26,7 @@ class WatzapController extends Controller
         Log::info('==================================');
         Log::info('==================================');
         Log::info('==================================');
-        Log::info('oke masuk nomor ini');
+        Log::info('WEBHOOK WATZAP TRIGERRED');
         Log::info('==================================');
         Log::info('==================================');
         Log::info('==================================');

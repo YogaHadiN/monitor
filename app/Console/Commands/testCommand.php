@@ -47,7 +47,6 @@ class testCommand extends Command
      */
     public function handle()
     {
-        $this->getDataReferensiDokter();
     }
 
     public function getDataReferensiDokter(){
