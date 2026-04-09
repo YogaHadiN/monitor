@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class WatzapController extends Controller
 {
@@ -32,6 +33,21 @@ class WatzapController extends Controller
         Log::info('==================================');
         Log::info('==================================');
     }
+
+    public function cek_api(){
+        $response = Http::acceptJson()
+            ->post('https://api.watzap.id/v1/checking_key', [
+                'api_key' => env('WATZAP_TOKEN'),
+            ]);
+
+        Log::info('WATZAP_CHECKING_KEY', [
+            'status' => $response->status(),
+            'body'   => $response->json() ?? $response->body(),
+        ]);
+
+        dd( $response->json() );
+    }
+
 
     public function webhook(Request $request)
     {
@@ -301,4 +317,5 @@ class WatzapController extends Controller
     {
         return true;
     }
+
 }

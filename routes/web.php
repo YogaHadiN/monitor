@@ -26,19 +26,6 @@ Route::get('/redis-test', function () {
     return \Illuminate\Support\Facades\Redis::get('cek');
 });
 
-Route::get('/watzap-test', function () {
-    $response = Http::acceptJson()
-        ->post('https://api.watzap.id/v1/checking_key', [
-            'api_key' => env('WATZAP_TOKEN'),
-        ]);
-
-    Log::info('WATZAP_CHECKING_KEY', [
-        'status' => $response->status(),
-        'body'   => $response->json() ?? $response->body(),
-    ]);
-
-    dd( $response->json() );
-});
 
 
 Route::get('/', [AntrianController::class, 'index']);
@@ -91,6 +78,8 @@ Route::get('/reservasi/{id}/checkin', [\App\Http\Controllers\ReservasiOnlineCont
     ->name('reservations.checkin');
 Route::delete('/reservasi/{reservasi}', [\App\Http\Controllers\ReservasiOnlineController::class, 'destroy'])
     ->name('reservations.destroy');
+
+Route::get('watzap/cek-api', [\App\Http\Controllers\WatzapController::class, 'cek_api']);
 
 
 // routes/web.php
