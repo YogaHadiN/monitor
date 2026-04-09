@@ -22,7 +22,15 @@ class WatzapController extends Controller
      */
     public function __construct()
     {
+        Log::info('==================================');
+        Log::info('==================================');
+        Log::info('==================================');
+        Log::info('==================================');
         Log::info('oke masuk nomor ini');
+        Log::info('==================================');
+        Log::info('==================================');
+        Log::info('==================================');
+        Log::info('==================================');
     }
 
     public function webhook(Request $request)
