@@ -6,6 +6,8 @@ use App\Http\Controllers\PasienController;
 use App\Http\Controllers\WebRegistrationController;
 use App\Jobs\TestJob;
 use App\Http\Controllers\ReservationQrController;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,9 +26,23 @@ Route::get('/redis-test', function () {
     return \Illuminate\Support\Facades\Redis::get('cek');
 });
 
-Route::get('/pif', function () {
-    phpinfo();
+Route::get('/watzap-test', function () {
+    $response = Http::acceptJson()
+        ->post('https://api.watzap.id/v1/checking_key', [
+            'api_key' => env('WATZAP_TOKEN'),
+        ]);
+
+    Log::info('WATZAP_CHECKING_KEY', [
+        'status' => $response->status(),
+        'body'   => $response->json() ?? $response->body(),
+    ]);
+
+    $this->info('HTTP Status: ' . $response->status());
+    $this->line($response->body());
+
+    return self::SUCCESS;
 });
+
 
 Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
