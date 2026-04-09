@@ -37,7 +37,7 @@ Route::get('/watzap-test', function () {
         'body'   => $response->json() ?? $response->body(),
     ]);
 
-    dd( $response );
+    dd( $response->json() );
 });
 
 
