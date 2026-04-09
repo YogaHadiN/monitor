@@ -23,6 +23,11 @@ return [
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
+    'watzap' => [
+        'base_url'      => env('WATZAP_BASE_URL'),
+        'token'         => env('WATZAP_TOKEN'),
+        'webhook_token' => env('WATZAP_WEBHOOK_TOKEN'),
+    ],
 
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
