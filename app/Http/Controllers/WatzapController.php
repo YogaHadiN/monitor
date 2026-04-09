@@ -45,7 +45,7 @@ class WatzapController extends Controller
             'body'   => $response->json() ?? $response->body(),
         ]);
 
-        dd( $response->json() );
+        dd( $response->body() );
     }
 
 
