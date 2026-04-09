@@ -5914,63 +5914,63 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     public function autoReply(string $message): void
     {
 
-        app(\App\Services\WatzapService::class)->sendText($this->no_telp, $message);
-        /*$text = trim($message); */
+        /* app(\App\Services\WatzapService::class)->sendText($this->no_telp, $message); */
+        $text = trim($message);
 
-        /*if ($text === '') { */
-        /*    Log::warning('BARANTUM_AUTO_REPLY_SKIPPED_EMPTY_TEXT', [ */
-        /*        'room_id' => $this->room_id ?? null, */
-        /*    ]); */
-        /*    return; */
-        /*} */
+        if ($text === '') {
+            Log::warning('BARANTUM_AUTO_REPLY_SKIPPED_EMPTY_TEXT', [
+                'room_id' => $this->room_id ?? null,
+            ]);
+            return;
+        }
 
-        /*// chats_users_id WAJIB untuk Barantum send-message */
-        /*if (empty($this->no_telp)) { */
-        /*    Log::warning('BARANTUM_AUTO_REPLY_SKIPPED_NO_USERS_ID', [ */
-        /*        'room_id' => $this->room_id ?? null, */
-        /*        'phone'   => $this->no_telp ?? null, */
-        /*    ]); */
-        /*    return; */
-        /*} */
+        // chats_users_id WAJIB untuk Barantum send-message
+        if (empty($this->no_telp)) {
+            Log::warning('BARANTUM_AUTO_REPLY_SKIPPED_NO_USERS_ID', [
+                'room_id' => $this->room_id ?? null,
+                'phone'   => $this->no_telp ?? null,
+            ]);
+            return;
+        }
 
-        /*// context minimum untuk BarantumReplyService */
-        /*$ctx = [ */
-        /*    'origin'         => $this->origin ?? 'barantum', */
-        /*    'room_id'        => $this->room_id ?? null, */
-        /*    'chats_users_id' => (string) $this->no_telp,          // dari webhook message_users_id */
-        /*    'channel'        => $this->channel ?? 'wa',                     // dari webhook channel */
-        /*    'message_id'     => $this->message_id ?? '',                  // dari webhook message_id (opsional untuk reply) */
-        /*    'message_type'   => $this->message_type ?? 'text', */
-        /*    'image_url'      => $this->image_url, */
-        /*    // company_key SEND (hash panjang) sebaiknya dari config, bukan dari webhook */
-        /*    'company_key'    => config('services.barantum.company_key'), */
-        /*    // chats_bot_id optional => boleh null / "" / tidak dikirim sama sekali di service */
-        /*    'chats_bot_id'   => $this->chats_bot_id ?? '', */
-        /*]; */
+        // context minimum untuk BarantumReplyService
+        $ctx = [
+            'origin'         => $this->origin ?? 'barantum',
+            'room_id'        => $this->room_id ?? null,
+            'chats_users_id' => (string) $this->no_telp,          // dari webhook message_users_id
+            'channel'        => $this->channel ?? 'wa',                     // dari webhook channel
+            'message_id'     => $this->message_id ?? '',                  // dari webhook message_id (opsional untuk reply)
+            'message_type'   => $this->message_type ?? 'text',
+            'image_url'      => $this->image_url,
+            // company_key SEND (hash panjang) sebaiknya dari config, bukan dari webhook
+            'company_key'    => config('services.barantum.company_key'),
+            // chats_bot_id optional => boleh null / "" / tidak dikirim sama sekali di service
+            'chats_bot_id'   => $this->chats_bot_id ?? '',
+        ];
 
-        /*/1** @var BarantumReplyService $replyService *1/ */
-        /*$replyService = app(\App\Services\BarantumReplyService::class); */
+        /** @var BarantumReplyService $replyService */
+        $replyService = app(\App\Services\BarantumReplyService::class);
 
-        /*$result = $replyService->replyText($ctx, $text); */
+        $result = $replyService->replyText($ctx, $text);
 
-        /*if (!($result['ok'] ?? false)) { */
-        /*    Log::warning('BARANTUM_AUTO_REPLY_FAILED', [ */
-        /*        'reason' => $result['reason'] ?? 'unknown', */
-        /*        'ctx'    => [ */
-        /*            'room_id'        => $this->room_id ?? null, */
-        /*            'chats_users_id' => $this->barantum_users_id ?? null, */
-        /*            'channel'        => $this->channel ?? null, */
-        /*        ], */
-        /*        'resp'   => $result['resp'] ?? null, */
-        /*    ]); */
-        /*    return; */
-        /*} */
+        if (!($result['ok'] ?? false)) {
+            Log::warning('BARANTUM_AUTO_REPLY_FAILED', [
+                'reason' => $result['reason'] ?? 'unknown',
+                'ctx'    => [
+                    'room_id'        => $this->room_id ?? null,
+                    'chats_users_id' => $this->barantum_users_id ?? null,
+                    'channel'        => $this->channel ?? null,
+                ],
+                'resp'   => $result['resp'] ?? null,
+            ]);
+            return;
+        }
 
-        /*$this->chatBotLog('BARANTUM_AUTO_REPLY_SENT', [ */
-        /*    'room_id'        => $this->room_id ?? null, */
-        /*    'chats_users_id' => $this->barantum_users_id ?? null, */
-        /*    'text'           => mb_substr($text, 0, 100), */
-        /*]); */
+        $this->chatBotLog('BARANTUM_AUTO_REPLY_SENT', [
+            'room_id'        => $this->room_id ?? null,
+            'chats_users_id' => $this->barantum_users_id ?? null,
+            'text'           => mb_substr($text, 0, 100),
+        ]);
     }
 
     public function createReservasiOnline($konfirmasi_sdk = false){
