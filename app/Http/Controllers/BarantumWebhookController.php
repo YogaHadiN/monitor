@@ -53,15 +53,33 @@ class BarantumWebhookController extends Controller
         ];
 
 
-        $wablas               = new WablasController;
-        $wablas->room_id      = data_get($payload, 'room_id');
-        $wablas->message_id   = data_get($payload, 'message_id');
+        $wablas = new WablasController;
+
+        // 🔥 PENANDA PROVIDER
+        $wablas->provider = 'barantum';
+        $wablas->origin   = 'barantum';
+
+        // IDENTITAS CHAT
+        $wablas->room_id        = data_get($payload, 'room_id');
+        $wablas->message_id     = data_get($payload, 'message_id');
+        $wablas->channel        = data_get($payload, 'channel', 'wa');
+
+        // 🔥 INI YANG PALING PENTING UNTUK BARANTUM
+        $wablas->chats_users_id = data_get($payload, 'message_users_id'); // WAJIB
+        $wablas->chats_bot_id   = data_get($payload, 'bot_id'); // optional
+        $wablas->company_key    = config('services.barantum.company_key'); // ambil dari config
+
+        // MESSAGE
         $wablas->no_telp      = data_get($payload, 'message_users_id');
-        $wablas->message_type = data_get($payload, 'type_file');
+        $wablas->message_type = data_get($payload, 'type_file', 'text');
         $wablas->image_url    = data_get($payload, 'file_url');
-        $wablas->channel      = data_get($payload, 'channel');
-        $wablas->message      = strtolower( data_get($payload, 'message_text') );
-        $wablas->fonnte       = false;
+        $wablas->filename     = data_get($payload, 'file_name');
+        $wablas->message      = strtolower((string) data_get($payload, 'message_text'));
+
+        // FLAGS
+        $wablas->fonnte = false;
+
+        // 🚀 PROCESS
         $wablas->webhook();
 
 

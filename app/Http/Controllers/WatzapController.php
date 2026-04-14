@@ -137,14 +137,14 @@ class WatzapController extends Controller
         $roomId      = $this->resolveRoomId($raw);
 
         return [
-            // format fallback yang sudah didukung constructor WablasController
+            'provider'    => 'watzap',
+            'origin'      => 'watzap',
             'phone'       => $phone,
             'messageType' => $messageType,
             'message'     => $message,
             'url'         => $url,
             'room_id'     => $roomId,
-
-            // simpan raw jika suatu saat ingin dipakai
+            'channel'     => 'wa',
             'watzap_raw'  => $raw,
         ];
     }

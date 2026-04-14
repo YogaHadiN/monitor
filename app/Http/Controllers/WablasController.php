@@ -102,54 +102,79 @@ class WablasController extends Controller
     public $whatsapp_satisfaction_survey;
     public $whatsapp_bpjs_dentist_registrations;
     public $jadwalGigi;
+    protected $replyHandler = null;
 
-	public function __construct(){
+    public $provider = 'wablas';
+    public $origin = null;
+    public $room_id = null;
+    public $company_key = null;
+    public $chats_users_id = null;
+    public $chats_bot_id = null;
+    public $filename = null;
+
+    public function __construct()
+    {
         $this->message_reply = '';
         $this->fonnte = false;
         $this->image_url = null;
+        $this->provider = 'wablas';
+        $this->origin = null;
+        $this->room_id = null;
+        $this->company_key = null;
+        $this->chats_users_id = null;
+        $this->chats_bot_id = null;
+        $this->filename = null;
+
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
-        $this->tenant = Tenant::find( $tenant_id );
+        $this->tenant = Tenant::find($tenant_id);
         $this->chatBotLog('masuk WABLA');
 
+        if (!is_null(Input::get('payload'))) {
+            // qiscus / provider lama
+            $this->provider     = 'qiscus';
+            $this->origin       = 'qiscus';
+            $this->room_id      = Input::get('payload')['room']['id'] ?? null;
+            $this->no_telp      = Input::get('payload')['from']['email'] ?? null;
+            $this->message_type = Input::get('payload')['message']['type'] ?? 'text';
+            $this->channel      = 'wa';
+            $this->message_id   = Input::get('payload')['message']['id'] ?? null;
 
-        if ( !is_null( Input::get('payload') ) ) {
-            $this->room_id      = Input::get('payload')['room']['id'];
-            $no_telp            = Input::get('payload')['from']['email'];
-            $this->message_type = Input::get('payload')['message']['type'];
-            $this->no_telp      = $no_telp;
-            $this->image_url    = null;
-            if (
-                $this->message_type == 'file_attachment'
-            ) {
+            if ($this->message_type === 'file_attachment') {
                 $this->message_type = 'image';
-                $this->image_url = Input::get('payload')['message']['payload']['url'];
-                if (isset(
-                    Input::get('payload')['message']['payload']['caption']
-                )) {
-                    $this->message       = Input::get('payload')['message']['payload']['caption'];
-                } else {
-                    $this->message       = "";
-                }
-            } else if (
-                $this->message_type == 'text'
-            ) {
-                $this->message = $this->clean(Input::get('payload')['message']['text']);
+                $this->image_url = Input::get('payload')['message']['payload']['url'] ?? null;
+                $this->message = Input::get('payload')['message']['payload']['caption'] ?? '';
+            } elseif ($this->message_type === 'text') {
+                $this->message = $this->clean(Input::get('payload')['message']['text'] ?? '');
             } else {
                 $this->message = null;
             }
-            $this->message = strtolower( $this->message );
 
-        } else {
-            $this->room_id      = null;
-            $this->no_telp      = Input::get('phone');
-            $this->message_type = Input::get('messageType');
-            $this->image_url    = Input::get('url');
-            $this->chatBotLog('message');
-            $this->chatBotLog( Input::get('message') );
-            $this->message = !is_array( Input::get('message') ) ? strtolower((string) Input::get('message')) : null;
+            $this->message = strtolower((string) $this->message);
+            return;
         }
-	}
+
+        // fallback: watzap / barantum / provider sederhana lain
+        $this->provider     = Input::get('provider', 'wablas');
+        $this->origin       = Input::get('origin', $this->provider);
+        $this->room_id      = Input::get('room_id');
+        $this->no_telp      = Input::get('phone');
+        $this->message_type = Input::get('messageType', 'text');
+        $this->image_url    = Input::get('url');
+        $this->channel      = Input::get('channel', 'wa');
+        $this->message_id   = Input::get('message_id');
+        $this->company_key  = Input::get('company_key');
+        $this->chats_users_id = Input::get('chats_users_id');
+        $this->chats_bot_id = Input::get('chats_bot_id');
+        $this->filename     = Input::get('filename');
+
+        $this->chatBotLog('message');
+        $this->chatBotLog(Input::get('message'));
+
+        $this->message = !is_array(Input::get('message'))
+            ? strtolower((string) Input::get('message'))
+            : null;
+    }
 
 
     public function libur(){
@@ -5913,64 +5938,77 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     public function autoReply(string $message): void
     {
-
-        /* app(\App\Services\WatzapService::class)->sendText($this->no_telp, $message); */
         $text = trim($message);
 
         if ($text === '') {
-            Log::warning('BARANTUM_AUTO_REPLY_SKIPPED_EMPTY_TEXT', [
-                'room_id' => $this->room_id ?? null,
+            Log::warning('AUTO_REPLY_SKIPPED_EMPTY_TEXT', [
+                'provider' => $this->provider ?? null,
+                'room_id'  => $this->room_id ?? null,
             ]);
             return;
         }
 
-        // chats_users_id WAJIB untuk Barantum send-message
-        if (empty($this->no_telp)) {
-            Log::warning('BARANTUM_AUTO_REPLY_SKIPPED_NO_USERS_ID', [
-                'room_id' => $this->room_id ?? null,
-                'phone'   => $this->no_telp ?? null,
+        if ($this->provider === 'barantum' && empty($this->chats_users_id)) {
+            Log::warning('AUTO_REPLY_SKIPPED_NO_CHATS_USERS_ID', [
+                'provider' => $this->provider ?? null,
+                'room_id'  => $this->room_id ?? null,
             ]);
             return;
         }
 
-        // context minimum untuk BarantumReplyService
-        $ctx = [
-            'origin'         => $this->origin ?? 'barantum',
-            'room_id'        => $this->room_id ?? null,
-            'chats_users_id' => (string) $this->no_telp,          // dari webhook message_users_id
-            'channel'        => $this->channel ?? 'wa',                     // dari webhook channel
-            'message_id'     => $this->message_id ?? '',                  // dari webhook message_id (opsional untuk reply)
-            'message_type'   => $this->message_type ?? 'text',
-            'image_url'      => $this->image_url,
-            // company_key SEND (hash panjang) sebaiknya dari config, bukan dari webhook
-            'company_key'    => config('services.barantum.company_key'),
-            // chats_bot_id optional => boleh null / "" / tidak dikirim sama sekali di service
-            'chats_bot_id'   => $this->chats_bot_id ?? '',
-        ];
-
-        /** @var BarantumReplyService $replyService */
-        $replyService = app(\App\Services\BarantumReplyService::class);
-
-        $result = $replyService->replyText($ctx, $text);
-
-        if (!($result['ok'] ?? false)) {
-            Log::warning('BARANTUM_AUTO_REPLY_FAILED', [
-                'reason' => $result['reason'] ?? 'unknown',
-                'ctx'    => [
-                    'room_id'        => $this->room_id ?? null,
-                    'chats_users_id' => $this->barantum_users_id ?? null,
-                    'channel'        => $this->channel ?? null,
-                ],
-                'resp'   => $result['resp'] ?? null,
+        if ($this->provider !== 'barantum' && empty($this->no_telp)) {
+            Log::warning('AUTO_REPLY_SKIPPED_NO_PHONE', [
+                'provider' => $this->provider ?? null,
+                'room_id'  => $this->room_id ?? null,
             ]);
             return;
         }
 
-        $this->chatBotLog('BARANTUM_AUTO_REPLY_SENT', [
-            'room_id'        => $this->room_id ?? null,
-            'chats_users_id' => $this->barantum_users_id ?? null,
-            'text'           => mb_substr($text, 0, 100),
-        ]);
+        try {
+            switch ($this->provider) {
+                case 'barantum':
+                    $ctx = [
+                        'origin'         => $this->origin ?? 'barantum',
+                        'room_id'        => $this->room_id ?? null,
+                        'chats_users_id' => (string) ($this->chats_users_id ?: $this->no_telp),
+                        'channel'        => $this->channel ?? 'wa',
+                        'message_id'     => $this->message_id ?? '',
+                        'message_type'   => $this->message_type ?? 'text',
+                        'image_url'      => '',
+                        'filename'       => '',
+                        'chats_bot_id'   => $this->chats_bot_id ?? '',
+                        'company_key'    => $this->company_key ?? config('services.barantum.company_key'),
+                    ];
+
+                    $result = app(\App\Services\BarantumReplyService::class)->replyText($ctx, $text);
+
+                    if (!($result['ok'] ?? false)) {
+                        Log::error('AUTO_REPLY_BARANTUM_FAILED', $result);
+                    }
+                    return;
+
+                case 'watzap':
+                    $result = app(\App\Services\WatzapService::class)
+                        ->sendText($this->no_telp, $text);
+
+                    if (!($result['ok'] ?? false)) {
+                        Log::error('AUTO_REPLY_WATZAP_FAILED', $result);
+                    }
+                    return;
+
+                case 'wablas':
+                default:
+                    $this->sendSingleWablas($this->no_telp, $text);
+                    return;
+            }
+        } catch (\Throwable $e) {
+            Log::error('AUTO_REPLY_EXCEPTION', [
+                'provider' => $this->provider ?? null,
+                'phone'    => $this->no_telp ?? null,
+                'error'    => $e->getMessage(),
+                'line'     => $e->getLine(),
+            ]);
+        }
     }
 
     public function createReservasiOnline($konfirmasi_sdk = false){
@@ -6632,5 +6670,25 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
             return true;
         });
+    }
+    protected function normalizeIncomingPayload(array $raw): array
+    {
+        $phone       = $this->resolvePhone($raw);
+        $messageType = $this->resolveMessageType($raw);
+        $message     = $this->resolveMessage($raw, $messageType);
+        $url         = $this->resolveMediaUrl($raw, $messageType);
+        $roomId      = $this->resolveRoomId($raw);
+
+        return [
+            'provider'    => 'watzap',
+            'origin'      => 'watzap',
+            'phone'       => $phone,
+            'messageType' => $messageType,
+            'message'     => $message,
+            'url'         => $url,
+            'room_id'     => $roomId,
+            'channel'     => 'wa',
+            'watzap_raw'  => $raw,
+        ];
     }
 }
