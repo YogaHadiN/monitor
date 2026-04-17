@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Antrian Obat | {{ config('app.name') }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,600,900" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style type="text/css">
         html, body {
             background-color: #3AA6B9;
             color: #636b6f;
-            font-family: 'Nunito', sans-serif;
-            font-weight: 200;
+            font-family: 'Balsamiq Sans', sans-serif;
+            font-weight: 400;
             margin: 0;
         }
         * { box-sizing: border-box; text-align: center; }
@@ -33,7 +35,7 @@
             padding: 10px 5px;
             margin: 0px 0px 15px 0px;
         }
-        .container_antrian_farmasi { height: 80vh; }
+        .container_antrian_farmasi { height: 72vh; }
 
         .title_antrian_farmasi {
             border-radius: 200px;
@@ -84,6 +86,28 @@
 
         .row-no-padding [class*="col-"] { padding-left: 10px; padding-right: 0; }
         .mr-10 { margin-right: 15px !important; }
+
+        .disclaimer {
+            background-color: #ffffff;
+            border-radius: 17px;
+            margin: 0 10px;
+            padding: 10px 20px;
+            color: #3AA6B9;
+            text-align: center;
+        }
+        .disclaimer .note {
+            font-size: 13px;
+            color: #555;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+        .disclaimer .tagline {
+            font-size: 18px;
+            font-weight: 900;
+            color: #3B6345;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -135,6 +159,17 @@
                         <tr class="empty-row"><td colspan="4">Memuat data...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-no-padding">
+        <div class="col-xs-12">
+            <div class="disclaimer">
+                <div class="note">
+                    Waktu tunggu yang ditampilkan merupakan <b>perkiraan</b> dan dapat berubah sewaktu-waktu tergantung situasi dan kondisi pelayanan.
+                </div>
+                <div class="tagline">Kesabaran Anda, Ketelitian Kami</div>
             </div>
         </div>
     </div>
