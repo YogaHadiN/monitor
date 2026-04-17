@@ -5,15 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Antrian Obat | {{ config('app.name') }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" crossorigin="anonymous">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,600,900" rel="stylesheet">
     <style type="text/css">
         html, body {
             background-color: #3AA6B9;
             color: #636b6f;
-            font-family: 'Balsamiq Sans', sans-serif;
-            font-weight: 400;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 200;
             margin: 0;
         }
         * { box-sizing: border-box; text-align: center; }
@@ -66,11 +64,43 @@
         .badge-tunggu_dipanggil { background-color: #3AA6B9; }
         .badge-siap_diambil     { background-color: #3B6345; }
 
-        .wt-box { font-weight: 900; font-size: 16px; }
+        .wt-box { font-weight: 700; font-size: 16px; }
         .wt-ok      { color: #3B6345; }
         .wt-warn    { color: #D97706; }
         .wt-over    { color: #C63D2F; }
         .wt-sub     { font-size: 11px; color: #777; font-weight: 400; display: block; }
+
+        tr.row-over td { background-color: #FFE4E1 !important; }
+        tr.row-over td:first-child { border-left: 4px solid #C63D2F; }
+        .wt-alert {
+            display: inline-block;
+            margin-top: 3px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background-color: #C63D2F;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            animation: blink 1.2s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.45; }
+        }
+
+        .alert-banner {
+            background-color: #C63D2F;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 12px;
+            margin: 0 12px 8px;
+            text-align: left;
+            display: none;
+            animation: blink 1.6s infinite;
+        }
+        .alert-banner.show { display: block; }
 
         .std-info {
             color: #ffffff;
@@ -127,6 +157,7 @@
             <div class="container_antrian container_antrian_farmasi">
                 <div class="title_antrian_farmasi">Antrian Obat Jadi</div>
                 <div class="std-info">Standar waktu tunggu obat jadi: &le; 30 menit (Permenkes 129/2008)</div>
+                <div id="alert_jadi" class="alert-banner"></div>
                 <table class="table bw table-farmasi">
                     <thead>
                         <tr>
@@ -146,6 +177,7 @@
             <div class="container_antrian mr-10 container_antrian_farmasi">
                 <div class="title_antrian_farmasi">Antrian Obat Racikan</div>
                 <div class="std-info">Standar waktu tunggu obat racikan: &le; 60 menit (Permenkes 129/2008)</div>
+                <div id="alert_racikan" class="alert-banner"></div>
                 <table class="table bw table-farmasi">
                     <thead>
                         <tr>
@@ -198,12 +230,15 @@
         var batas  = Number(r.estimasi_menit || 0);
         var cls    = 'wt-ok';
         var sub    = '';
+        var alert  = '';
 
         if (r.selesai) {
             sub = 'total layanan';
         } else if (menit >= batas) {
-            cls = 'wt-over';
-            sub = 'melebihi standar ' + batas + ' mnt';
+            cls    = 'wt-over';
+            var lewat = menit - batas;
+            sub    = 'melebihi standar ' + batas + ' mnt';
+            alert  = '<span class="wt-alert">! MELEBIHI ' + lewat + ' MNT</span>';
         } else if (menit >= Math.round(batas * 0.75)) {
             cls = 'wt-warn';
             sub = 'estimasi selesai ' + Math.max(0, batas - menit) + ' mnt lagi';
@@ -212,7 +247,12 @@
         }
 
         return '<span class="wt-box ' + cls + '">' + menit + ' mnt</span>'
-             + '<span class="wt-sub">' + escapeHtml(sub) + '</span>';
+             + '<span class="wt-sub">' + escapeHtml(sub) + '</span>'
+             + alert;
+    }
+
+    function isOverdue(r) {
+        return !r.selesai && Number(r.waktu_tunggu_menit || 0) >= Number(r.estimasi_menit || 0);
     }
 
     function renderRows(rows) {
@@ -222,7 +262,8 @@
         var html = '';
         for (var i = 0; i < rows.length; i++) {
             var r = rows[i];
-            html += '<tr>'
+            var trCls = isOverdue(r) ? ' class="row-over"' : '';
+            html += '<tr' + trCls + '>'
                  +   '<td>' + escapeHtml(r.nomor_antrian) + '</td>'
                  +   '<td>' + escapeHtml(r.nama_pasien) + '</td>'
                  +   '<td><span class="badge badge-' + escapeHtml(r.status_kode) + '">'
@@ -234,11 +275,25 @@
         return html;
     }
 
+    function renderAlertBanner($el, rows, label) {
+        var over = (rows || []).filter(isOverdue);
+        if (over.length === 0) {
+            $el.removeClass('show').html('');
+            return;
+        }
+        var nomor = over.map(function (r) { return r.nomor_antrian; }).join(', ');
+        $el.addClass('show').html(
+            '&#9888; ' + over.length + ' antrian ' + label + ' melebihi standar: ' + escapeHtml(nomor)
+        );
+    }
+
     function refresh() {
         $.ajax({ url: dataUrl, cache: false, dataType: 'json' })
             .done(function (data) {
                 $('#container_antrian_obat_jadi').html(renderRows(data.jadi));
                 $('#container_antrian_obat_racikan').html(renderRows(data.racikan));
+                renderAlertBanner($('#alert_jadi'), data.jadi, 'obat jadi');
+                renderAlertBanner($('#alert_racikan'), data.racikan, 'obat racikan');
             });
     }
 
