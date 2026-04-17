@@ -128,7 +128,6 @@ class WablasController extends Controller
         $tenant_id = 1;
         session()->put('tenant_id', $tenant_id);
         $this->tenant = Tenant::find($tenant_id);
-        $this->chatBotLog('masuk WABLA');
 
         if (!is_null(Input::get('payload'))) {
             // qiscus / provider lama
@@ -167,9 +166,6 @@ class WablasController extends Controller
         $this->chats_users_id = Input::get('chats_users_id');
         $this->chats_bot_id = Input::get('chats_bot_id');
         $this->filename     = Input::get('filename');
-
-        $this->chatBotLog('message');
-        $this->chatBotLog(Input::get('message'));
 
         $this->message = !is_array(Input::get('message'))
             ? strtolower((string) Input::get('message'))
