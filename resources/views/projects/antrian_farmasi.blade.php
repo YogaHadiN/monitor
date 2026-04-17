@@ -64,6 +64,22 @@
         .badge-tunggu_dipanggil { background-color: #3AA6B9; }
         .badge-siap_diambil     { background-color: #3B6345; }
 
+        .wt-box { font-weight: 900; font-size: 16px; }
+        .wt-ok      { color: #3B6345; }
+        .wt-warn    { color: #D97706; }
+        .wt-over    { color: #C63D2F; }
+        .wt-sub     { font-size: 11px; color: #777; font-weight: 400; display: block; }
+
+        .std-info {
+            color: #ffffff;
+            font-size: 12px;
+            padding: 6px 16px;
+            background-color: rgba(0,0,0,0.15);
+            border-radius: 12px;
+            margin: 4px 12px 10px;
+            text-align: left;
+        }
+
         .empty-row td { text-align: center !important; color: #999; font-style: italic; font-weight: 200; }
 
         .row-no-padding [class*="col-"] { padding-left: 10px; padding-right: 0; }
@@ -86,16 +102,18 @@
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <div class="container_antrian container_antrian_farmasi">
                 <div class="title_antrian_farmasi">Antrian Obat Jadi</div>
-                <br>
+                <div class="std-info">Standar waktu tunggu obat jadi: &le; 30 menit (Permenkes 129/2008)</div>
                 <table class="table bw table-farmasi">
                     <thead>
                         <tr>
-                            <th class="text-center">No Antrian</th>
+                            <th class="text-center">No</th>
+                            <th class="text-center">Nama Pasien</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center">Waktu Tunggu</th>
                         </tr>
                     </thead>
                     <tbody id="container_antrian_obat_jadi">
-                        <tr class="empty-row"><td colspan="2">Memuat data...</td></tr>
+                        <tr class="empty-row"><td colspan="4">Memuat data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -103,16 +121,18 @@
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <div class="container_antrian mr-10 container_antrian_farmasi">
                 <div class="title_antrian_farmasi">Antrian Obat Racikan</div>
-                <br>
+                <div class="std-info">Standar waktu tunggu obat racikan: &le; 60 menit (Permenkes 129/2008)</div>
                 <table class="table bw table-farmasi">
                     <thead>
                         <tr>
-                            <th class="text-center">No Antrian</th>
+                            <th class="text-center">No</th>
+                            <th class="text-center">Nama Pasien</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center">Waktu Tunggu</th>
                         </tr>
                     </thead>
                     <tbody id="container_antrian_obat_racikan">
-                        <tr class="empty-row"><td colspan="2">Memuat data...</td></tr>
+                        <tr class="empty-row"><td colspan="4">Memuat data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -138,18 +158,42 @@
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function renderWaktuTunggu(r) {
+        var menit  = Number(r.waktu_tunggu_menit || 0);
+        var batas  = Number(r.estimasi_menit || 0);
+        var cls    = 'wt-ok';
+        var sub    = '';
+
+        if (r.selesai) {
+            sub = 'total layanan';
+        } else if (menit >= batas) {
+            cls = 'wt-over';
+            sub = 'melebihi standar ' + batas + ' mnt';
+        } else if (menit >= Math.round(batas * 0.75)) {
+            cls = 'wt-warn';
+            sub = 'estimasi selesai ' + Math.max(0, batas - menit) + ' mnt lagi';
+        } else {
+            sub = 'estimasi selesai ' + Math.max(0, batas - menit) + ' mnt lagi';
+        }
+
+        return '<span class="wt-box ' + cls + '">' + menit + ' mnt</span>'
+             + '<span class="wt-sub">' + escapeHtml(sub) + '</span>';
+    }
+
     function renderRows(rows) {
         if (!rows || rows.length === 0) {
-            return '<tr class="empty-row"><td colspan="2">Tidak ada antrian obat saat ini</td></tr>';
+            return '<tr class="empty-row"><td colspan="4">Tidak ada antrian obat saat ini</td></tr>';
         }
         var html = '';
         for (var i = 0; i < rows.length; i++) {
             var r = rows[i];
             html += '<tr>'
                  +   '<td>' + escapeHtml(r.nomor_antrian) + '</td>'
+                 +   '<td>' + escapeHtml(r.nama_pasien) + '</td>'
                  +   '<td><span class="badge badge-' + escapeHtml(r.status_kode) + '">'
                  +     escapeHtml(r.status_label)
                  +   '</span></td>'
+                 +   '<td>' + renderWaktuTunggu(r) + '</td>'
                  + '</tr>';
         }
         return html;

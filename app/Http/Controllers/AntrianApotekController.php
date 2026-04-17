@@ -10,7 +10,7 @@ class AntrianApotekController extends Controller
 {
     public function monitorData()
     {
-        $antrianapoteks = AntrianApotek::with('antrian.ruangan', 'periksa.terapii')
+        $antrianapoteks = AntrianApotek::with('antrian.ruangan', 'periksa.terapii', 'periksa.pasien')
             ->whereDate('tanggal', date('Y-m-d'))
             ->orderBy('id', 'asc')
             ->get();
@@ -23,21 +23,54 @@ class AntrianApotekController extends Controller
                 continue;
             }
 
+            $isRacikan = $a->obat_racikan;
+            $estimasi  = $isRacikan ? 60 : 30;
+
+            $mulai = optional($a->antrian)->created_at ?? $a->created_at;
+            $akhir = AntrianApotek::hasTs(optional($a->periksa)->jam_selesai_obat)
+                ? \Carbon\Carbon::parse($a->periksa->jam_selesai_obat)
+                : now();
+
+            $waktuTunggu = $mulai ? max(0, $mulai->diffInMinutes($akhir)) : 0;
+
             $row = [
-                'nomor_antrian' => optional($a->antrian)->nomor_antrian ?? '-',
-                'status'        => (int) $a->status,
-                'status_kode'   => $a->status_kode,
-                'status_label'  => $a->status_label,
+                'nomor_antrian'       => optional($a->antrian)->nomor_antrian ?? '-',
+                'nama_pasien'         => $this->samarkanNama(optional(optional($a->periksa)->pasien)->nama),
+                'status'              => (int) $a->status,
+                'status_kode'         => $a->status_kode,
+                'status_label'        => $a->status_label,
+                'waktu_tunggu_menit'  => $waktuTunggu,
+                'estimasi_menit'      => $estimasi,
+                'selesai'             => $a->status_kode === 'siap_diambil' || $a->status_kode === 'tunggu_dipanggil',
             ];
 
-            if ($a->obat_racikan) {
+            if ($isRacikan) {
                 $racikan[] = $row;
             } else {
                 $jadi[] = $row;
             }
         }
 
-        return response()->json(compact('jadi', 'racikan'));
+        return response()->json([
+            'jadi'             => $jadi,
+            'racikan'          => $racikan,
+            'estimasi_jadi'    => 30,
+            'estimasi_racikan' => 60,
+        ]);
+    }
+
+    protected function samarkanNama($nama)
+    {
+        $nama = trim((string) $nama);
+        if ($nama === '') {
+            return '-';
+        }
+        $parts = preg_split('/\s+/', $nama);
+        $hasil = [array_shift($parts)];
+        foreach ($parts as $p) {
+            $hasil[] = mb_strtoupper(mb_substr($p, 0, 1)) . '.';
+        }
+        return implode(' ', $hasil);
     }
 
     public function lookup()
