@@ -129,7 +129,7 @@
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <div class="container_antrian container_antrian_farmasi">
                 <div class="title_antrian_farmasi">Antrian Obat Jadi</div>
-                <div class="std-info">Standar waktu tunggu obat jadi: &le; 30 menit (Permenkes 129/2008)</div>
+                <div class="std-info">Standar waktu tunggu obat jadi: &le; 30 menit</div>
                 <table class="table bw table-farmasi">
                     <thead>
                         <tr>
@@ -148,7 +148,7 @@
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <div class="container_antrian mr-10 container_antrian_farmasi">
                 <div class="title_antrian_farmasi">Antrian Obat Racikan</div>
-                <div class="std-info">Standar waktu tunggu obat racikan: &le; 60 menit (Permenkes 129/2008)</div>
+                <div class="std-info">Standar waktu tunggu obat racikan: &le; 60 menit</div>
                 <table class="table bw table-farmasi">
                     <thead>
                         <tr>
