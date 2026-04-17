@@ -4,6 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Services\AntrianNumberService;
 use App\Traits\BelongsToTenant;
+use App\Http\Controllers\AntrianOnlineController;
 use App\Models\Asuransi;
 use App\Models\Ruangan;
 use App\Models\DeletedAntrian;
