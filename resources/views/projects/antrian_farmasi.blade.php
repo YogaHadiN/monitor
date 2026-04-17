@@ -210,6 +210,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="{!! secure_url('js/moment.locale.js') !!}"></script>
+<script src="https://js.pusher.com/5.1/pusher.min.js"></script>
 <script>
     moment.locale('id');
     window.setInterval(function () {
@@ -217,7 +218,8 @@
         $('#jam').html(moment().format('HH:mm:ss'));
     }, 1000);
 
-    var dataUrl = "{{ url('project/antrian_farmasi/data') }}";
+    var dataUrl  = "{{ url('project/antrian_farmasi/data') }}";
+    var lastData = { jadi: [], racikan: [] };
 
     function escapeHtml(s) {
         return String(s == null ? '' : s)
@@ -225,8 +227,15 @@
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function hitungMenit(r) {
+        if (!r.waktu_mulai_iso) return Number(r.waktu_tunggu_menit || 0);
+        var mulai  = moment(r.waktu_mulai_iso);
+        var akhir  = r.waktu_selesai_iso ? moment(r.waktu_selesai_iso) : moment();
+        return Math.max(0, akhir.diff(mulai, 'minutes'));
+    }
+
     function renderWaktuTunggu(r) {
-        var menit  = Number(r.waktu_tunggu_menit || 0);
+        var menit  = hitungMenit(r);
         var batas  = Number(r.estimasi_menit || 0);
         var cls    = 'wt-ok';
         var sub    = '';
@@ -252,7 +261,7 @@
     }
 
     function isOverdue(r) {
-        return !r.selesai && Number(r.waktu_tunggu_menit || 0) >= Number(r.estimasi_menit || 0);
+        return !r.selesai && hitungMenit(r) >= Number(r.estimasi_menit || 0);
     }
 
     function renderRows(rows) {
@@ -287,19 +296,37 @@
         );
     }
 
+    function renderAll() {
+        $('#container_antrian_obat_jadi').html(renderRows(lastData.jadi));
+        $('#container_antrian_obat_racikan').html(renderRows(lastData.racikan));
+        renderAlertBanner($('#alert_jadi'), lastData.jadi, 'obat jadi');
+        renderAlertBanner($('#alert_racikan'), lastData.racikan, 'obat racikan');
+    }
+
     function refresh() {
         $.ajax({ url: dataUrl, cache: false, dataType: 'json' })
             .done(function (data) {
-                $('#container_antrian_obat_jadi').html(renderRows(data.jadi));
-                $('#container_antrian_obat_racikan').html(renderRows(data.racikan));
-                renderAlertBanner($('#alert_jadi'), data.jadi, 'obat jadi');
-                renderAlertBanner($('#alert_racikan'), data.racikan, 'obat racikan');
+                lastData = { jadi: data.jadi || [], racikan: data.racikan || [] };
+                renderAll();
             });
     }
 
     $(function () {
         refresh();
-        setInterval(refresh, 5000);
+        setInterval(refresh, 20000);
+        setInterval(renderAll, 1000);
+
+        try {
+            var pusher  = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
+                cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
+                forceTLS: true
+            });
+            var channel = pusher.subscribe('my-channel');
+            channel.bind('farmasi-updated', function () { refresh(); });
+            channel.bind('form-submitted',  function () { refresh(); });
+        } catch (e) {
+            console.warn('Pusher tidak aktif, fallback ke polling:', e);
+        }
     });
 </script>
 </body>

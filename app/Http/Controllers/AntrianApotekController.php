@@ -27,9 +27,10 @@ class AntrianApotekController extends Controller
             $estimasi  = $isRacikan ? 60 : 30;
 
             $mulai = optional($a->antrian)->created_at ?? $a->created_at;
-            $akhir = AntrianApotek::hasTs(optional($a->periksa)->jam_selesai_obat)
+            $selesai = AntrianApotek::hasTs(optional($a->periksa)->jam_selesai_obat)
                 ? \Carbon\Carbon::parse($a->periksa->jam_selesai_obat)
-                : now();
+                : null;
+            $akhir = $selesai ?? now();
 
             $waktuTunggu = $mulai ? max(0, $mulai->diffInMinutes($akhir)) : 0;
 
@@ -42,6 +43,8 @@ class AntrianApotekController extends Controller
                 'waktu_tunggu_menit'  => $waktuTunggu,
                 'estimasi_menit'      => $estimasi,
                 'selesai'             => $a->status_kode === 'siap_diambil' || $a->status_kode === 'tunggu_dipanggil',
+                'waktu_mulai_iso'     => $mulai ? $mulai->toIso8601String() : null,
+                'waktu_selesai_iso'   => $selesai ? $selesai->toIso8601String() : null,
             ];
 
             if ($isRacikan) {
