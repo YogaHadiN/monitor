@@ -6,11 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class AntrianApotek extends Model
 {
-    const STATUS_MENUNGGU         = 1;
-    const STATUS_DIPROSES         = 2;
-    const STATUS_TUNGGU_DIPANGGIL = 3;
-    const STATUS_SIAP_DIAMBIL     = 4;
-
     public function periksa(){
         return $this->belongsTo('App\Models\Periksa');
     }
@@ -38,26 +33,34 @@ class AntrianApotek extends Model
     }
 
     public function getStatusKodeAttribute(){
-        switch ((int) $this->status) {
-            case self::STATUS_DIPROSES:         return 'diproses';
-            case self::STATUS_TUNGGU_DIPANGGIL: return 'tunggu_dipanggil';
-            case self::STATUS_SIAP_DIAMBIL:     return 'siap_diambil';
-            case self::STATUS_MENUNGGU:
-            default:                            return 'menunggu';
-        }
+        $p = $this->periksa;
+        if (is_null($p))                                  return 'menunggu';
+        if (self::hasTs($p->jam_penyerahan_obat))         return 'siap_diambil';
+        if (self::hasTs($p->jam_selesai_obat))            return 'tunggu_dipanggil';
+        if (self::hasTs($p->jam_obat_mulai_diracik))      return 'diproses';
+        return 'menunggu';
     }
 
     public function getStatusLabelAttribute(){
-        switch ((int) $this->status) {
-            case self::STATUS_DIPROSES:
+        switch ($this->status_kode) {
+            case 'diproses':
                 return $this->obat_racikan ? 'Sedang Diracik' : 'Sedang Disiapkan';
-            case self::STATUS_TUNGGU_DIPANGGIL:
+            case 'tunggu_dipanggil':
                 return 'Menunggu Panggilan';
-            case self::STATUS_SIAP_DIAMBIL:
+            case 'siap_diambil':
                 return 'Siap Diambil';
-            case self::STATUS_MENUNGGU:
+            case 'menunggu':
             default:
                 return 'Menunggu';
         }
+    }
+
+    public static function hasTs($value){
+        if (is_null($value))                return false;
+        $s = trim((string) $value);
+        if ($s === '')                      return false;
+        if (str_starts_with($s, '0000-00-00')) return false;
+        if ($s === '00:00:00')              return false;
+        return true;
     }
 }
