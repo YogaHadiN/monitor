@@ -104,19 +104,19 @@ class WatzapController extends Controller
         app()->instance('request', $request);
 
         /** @var \App\Http\Controllers\WablasController $wablas */
-        $wablas = app(\App\Http\Controllers\WablasController::class);
+        /* $wablas = app(\App\Http\Controllers\WablasController::class); */
 
-        $response = $wablas->webhook();
+        /* $response = $wablas->webhook(); */
 
         // Banyak method lama return null/void
-        if (!is_null($response)) {
-            return $response;
-        }
+        /* if (!is_null($response)) { */
+        /*     return $response; */
+        /* } */
 
-        return response()->json([
-            'status'  => true,
-            'message' => 'Webhook diproses',
-        ]);
+        /* return response()->json([ */
+        /*     'status'  => true, */
+        /*     'message' => 'Webhook diproses', */
+        /* ]); */
     }
 
     /**
