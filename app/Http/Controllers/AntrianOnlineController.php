@@ -119,17 +119,6 @@ class AntrianOnlineController extends Controller
      */
     public function status_antrean(Request $request, $kodepoli, $tanggal)
     {
-        Log::info('===========================');
-        Log::info("HIT STATUS ANTREAN");
-        Log::info('request', ['request' => $request]);
-
-        if ($request->hasHeader('x-random')) {
-            Log::info($request->header('x-random'));
-        } else {
-            Log::info("Dari mjkn");
-        }
-
-        Log::info('===========================');
         // Ambil poli BPJS berdasarkan kode
         $poli_bpjs = PoliBpjs::where('kdPoli', $kodepoli)->first();
 
