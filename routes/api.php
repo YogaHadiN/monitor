@@ -36,6 +36,7 @@ Route::get('webhook/wablas', [\App\Http\Controllers\WablasWebhookController::cla
 Route::post('webhook/wablas', [\App\Http\Controllers\WablasWebhookController::class, 'wablas']);
 
 Route::post('watzap/webhook', [\App\Http\Controllers\WatzapController::class, 'webhook']);
+Route::get('watzap/webhook', [\App\Http\Controllers\WatzapController::class, 'webhook']);
 
 Route::get('fonnte/webhook', [\App\Http\Controllers\FonnteController::class, 'getWebhook']);
 Route::get('fonnte/webhook/status', [\App\Http\Controllers\FonnteController::class, 'getStatus']);
