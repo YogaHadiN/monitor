@@ -22,60 +22,66 @@
         table tr td, table tr th { background-color: #fff; }
         .bw { background-color: #ffffff !important; }
 
-        .header { font-size: 30px; font-weight: 900; text-align: left; height: 40px; }
-        .logo { width: 100%; background-color: #C1ECE4; border-radius: 20px; margin: 10px auto; padding: 0px 15px; }
-        .waktu { color: #fff; text-align: right; font-weight: 1200; padding: 0px 20px 0px 0; }
-        #jam { font-size: 50px; margin-left: 20px; }
+        .header { font-size: 22px; font-weight: 900; text-align: left; height: 50px; }
+        .logo { width: 100%; background-color: #C1ECE4; border-radius: 14px; margin: 4px auto; padding: 0px 12px; max-height: 42px; }
+        .waktu { color: #fff; text-align: right; font-weight: 1200; padding: 0 18px 0 0; }
+        #jam { font-size: 32px; margin-left: 14px; }
 
         .container_antrian {
             background-color: #ffffff;
             border-radius: 17px;
-            padding: 10px 5px;
-            margin: 0px 0px 15px 0px;
+            padding: 6px 4px;
+            margin: 0px 0px 8px 0px;
         }
-        .container_antrian_farmasi { height: 72vh; }
+        .container_antrian_farmasi { height: 82vh; }
 
         .title_antrian_farmasi {
             border-radius: 200px;
-            padding: 10px 30px;
-            margin: 0px 20px;
+            padding: 4px 24px;
+            margin: 0px 14px;
             color: #ffffff;
             font-weight: 900;
-            font-size: 22px;
+            font-size: 18px;
             background-color: #3AA6B9;
         }
 
-        .table-farmasi { font-size: 18px; }
-        .table>thead>tr>th,
-        .table>tbody>tr>td { border: none; }
+        .table-farmasi { font-size: 14px; margin-bottom: 0; }
+        .table-farmasi > thead > tr > th,
+        .table-farmasi > tbody > tr > td {
+            border: none;
+            padding: 3px 6px;
+            vertical-align: middle;
+        }
+        .table-farmasi > thead > tr > th { font-size: 12px; padding: 4px 6px; }
         table tr td:nth-child(1) { text-align: center; font-weight: 900; }
         table tr th { text-align: center; }
 
         .badge {
             display: inline-block;
-            padding: 5px 14px;
+            padding: 3px 10px;
             border-radius: 20px;
             font-weight: 900;
-            font-size: 14px;
+            font-size: 11px;
             color: #fff;
+            line-height: 1.2;
         }
         .badge-menunggu         { background-color: #C63D2F; }
         .badge-diproses         { background-color: #FFBB5C; color: #222; }
         .badge-tunggu_dipanggil { background-color: #3AA6B9; }
         .badge-siap_diambil     { background-color: #3B6345; }
 
-        .wt-box { font-weight: 700; font-size: 16px; }
+        .wt-box { font-weight: 700; font-size: 13px; }
         .wt-ok      { color: #3B6345; }
         .wt-warn    { color: #D97706; }
-        .wt-sub     { font-size: 11px; color: #777; font-weight: 400; display: block; }
+        .wt-sub     { font-size: 10px; color: #777; font-weight: 400; display: block; line-height: 1.1; }
 
         .std-info {
             color: #ffffff;
-            font-size: 12px;
-            padding: 6px 16px;
+            font-size: 11px;
+            padding: 3px 12px;
             background-color: rgba(0,0,0,0.15);
-            border-radius: 12px;
-            margin: 4px 12px 10px;
+            border-radius: 10px;
+            margin: 3px 10px 5px;
             text-align: left;
         }
 
@@ -86,23 +92,23 @@
 
         .disclaimer {
             background-color: #ffffff;
-            border-radius: 17px;
+            border-radius: 12px;
             margin: 0 10px;
-            padding: 10px 20px;
+            padding: 4px 16px;
             color: #3AA6B9;
             text-align: center;
         }
         .disclaimer .note {
-            font-size: 13px;
+            font-size: 11px;
             color: #555;
             font-weight: 400;
-            line-height: 1.4;
+            line-height: 1.25;
         }
         .disclaimer .tagline {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 900;
             color: #3B6345;
-            margin-top: 4px;
+            margin-top: 1px;
             letter-spacing: 0.5px;
         }
     </style>
