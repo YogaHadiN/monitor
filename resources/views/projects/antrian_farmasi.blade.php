@@ -1,77 +1,172 @@
-@extends('layout.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Antrian Obat | {{ config('app.name') }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,600,900" rel="stylesheet">
+    <style type="text/css">
+        html, body {
+            background-color: #3AA6B9;
+            color: #636b6f;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 200;
+            margin: 0;
+        }
+        * { box-sizing: border-box; text-align: center; }
+        @media (min-width: 1px){
+            .container { width: 1280px; height: 100vh; }
+        }
+        [class*="col-"] { background-color: #3AA6B9; }
+        table tr td, table tr th { background-color: #fff; }
+        .bw { background-color: #ffffff !important; }
 
-@section('title')
-    {{ __('Pharmacy Queue') }} | {{ config('app.name') }}
-@endsection
+        .header { font-size: 30px; font-weight: 900; text-align: left; height: 40px; }
+        .logo { width: 100%; background-color: #C1ECE4; border-radius: 20px; margin: 10px auto; padding: 0px 15px; }
+        .waktu { color: #fff; text-align: right; font-weight: 1200; padding: 0px 20px 0px 0; }
+        #jam { font-size: 50px; margin-left: 20px; }
 
-@section('content')
-    <link href="{{ asset('dashboard.css') }}" rel="stylesheet">
-    @include('layout.navbar')
+        .container_antrian {
+            background-color: #ffffff;
+            border-radius: 17px;
+            padding: 10px 5px;
+            margin: 0px 0px 15px 0px;
+        }
+        .container_antrian_farmasi { height: 80vh; }
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card ml-5" style="height:80vh; border-radius: 15px;">
-                <div style="background-color: #FFD737; border-radius: 40px;" class="m-3 mx-5">
-                    <h1 class="p-2 mt-2 text-center">Antrian Obat Jadi</h1>
-                </div>
-                <div class="card-header h2">
+        .title_antrian_farmasi {
+            border-radius: 200px;
+            padding: 10px 30px;
+            margin: 0px 20px;
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 22px;
+            background-color: #3AA6B9;
+        }
 
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Header 1</th>
-                                <th>Header 2</th>
-                                <th>Header 3</th>
-                            </tr>
-                        </thead>
-                        <tbody style="padding: 0px">
-                            <?php
-                            // Loop to generate 10 rows
-                            for ($i = 1; $i <= 10; $i++) {
-                                echo '<tr>';
-                                echo "<td>Data $i.1</td>";
-                                echo "<td>Data $i.2</td>";
-                                echo "<td>Data $i.3</td>";
-                                echo '</tr>';
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+        .table-farmasi { font-size: 18px; }
+        .table>thead>tr>th,
+        .table>tbody>tr>td { border: none; }
+        table tr td:nth-child(1) { text-align: center; font-weight: 900; }
+        table tr th { text-align: center; }
 
-                </div>
+        .badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-weight: 900;
+            font-size: 14px;
+            color: #fff;
+        }
+        .badge-menunggu         { background-color: #C63D2F; }
+        .badge-diproses         { background-color: #FFBB5C; color: #222; }
+        .badge-tunggu_dipanggil { background-color: #3AA6B9; }
+        .badge-siap_diambil     { background-color: #3B6345; }
+
+        .empty-row td { text-align: center !important; color: #999; font-style: italic; font-weight: 200; }
+
+        .row-no-padding [class*="col-"] { padding-left: 10px; padding-right: 0; }
+        .mr-10 { margin-right: 15px !important; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row header">
+        <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+            <img src="{{ secure_url('images/logo.png') }}" class="logo">
+        </div>
+        <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 waktu">
+            <span id="hari">&nbsp;</span>
+            <span id="jam">&nbsp;</span>
+        </div>
+    </div>
+
+    <div class="row row-no-padding">
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <div class="container_antrian container_antrian_farmasi">
+                <div class="title_antrian_farmasi">Antrian Obat Jadi</div>
+                <br>
+                <table class="table bw table-farmasi">
+                    <thead>
+                        <tr>
+                            <th class="text-center">No Antrian</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="container_antrian_obat_jadi">
+                        <tr class="empty-row"><td colspan="2">Memuat data...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card mr-5" style="height:80vh; border-radius: 15px;">
-                <div style="background-color: #FFD737; border-radius: 40px;" class="m-3 mx-5">
-                    <h1 class="p-2 mt-2 text-center">Antrian Obat Racikan</h1>
-                </div>
-                <div class="card-header h2">
-
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Header 1</th>
-                                <th>Header 2</th>
-                                <th>Header 3</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            // Loop to generate 10 rows
-                            for ($i = 1; $i <= 10; $i++) {
-                                echo '<tr>';
-                                echo "<td>Data $i.1</td>";
-                                echo "<td>Data $i.2</td>";
-                                echo "<td>Data $i.3</td>";
-                                echo '</tr>';
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-
-                </div>
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <div class="container_antrian mr-10 container_antrian_farmasi">
+                <div class="title_antrian_farmasi">Antrian Obat Racikan</div>
+                <br>
+                <table class="table bw table-farmasi">
+                    <thead>
+                        <tr>
+                            <th class="text-center">No Antrian</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="container_antrian_obat_racikan">
+                        <tr class="empty-row"><td colspan="2">Memuat data...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-@endsection
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="{!! secure_url('js/moment.locale.js') !!}"></script>
+<script>
+    moment.locale('id');
+    window.setInterval(function () {
+        $('#hari').html(moment().format('dddd, DD MMMM YYYY'));
+        $('#jam').html(moment().format('HH:mm:ss'));
+    }, 1000);
+
+    var dataUrl = "{{ url('project/antrian_farmasi/data') }}";
+
+    function escapeHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderRows(rows) {
+        if (!rows || rows.length === 0) {
+            return '<tr class="empty-row"><td colspan="2">Tidak ada antrian obat saat ini</td></tr>';
+        }
+        var html = '';
+        for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            html += '<tr>'
+                 +   '<td>' + escapeHtml(r.nomor_antrian) + '</td>'
+                 +   '<td><span class="badge badge-' + escapeHtml(r.status_kode) + '">'
+                 +     escapeHtml(r.status_label)
+                 +   '</span></td>'
+                 + '</tr>';
+        }
+        return html;
+    }
+
+    function refresh() {
+        $.ajax({ url: dataUrl, cache: false, dataType: 'json' })
+            .done(function (data) {
+                $('#container_antrian_obat_jadi').html(renderRows(data.jadi));
+                $('#container_antrian_obat_racikan').html(renderRows(data.racikan));
+            });
+    }
+
+    $(function () {
+        refresh();
+        setInterval(refresh, 5000);
+    });
+</script>
+</body>
+</html>

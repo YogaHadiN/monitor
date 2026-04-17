@@ -68,6 +68,9 @@ Route::post('/daftar_online_by_phone/submit/cek_antrian', [WebRegistrationContro
 Route::post('/push-fcm', [App\Http\Controllers\FcmPushController::class, 'kirim']);
 
 Route::get('project/antrian_farmasi', [\App\Http\Controllers\ProjectController::class, 'antrian_farmasi']);
+Route::get('project/antrian_farmasi/data', [\App\Http\Controllers\AntrianApotekController::class, 'monitorData']);
+Route::get('antrian_obat/lookup', [\App\Http\Controllers\AntrianApotekController::class, 'lookup']);
+Route::post('antrian_obat/lookup', [\App\Http\Controllers\AntrianApotekController::class, 'lookupCari']);
 Route::get('project/antrian_dokter', [\App\Http\Controllers\ProjectController::class, 'antrian_dokter']);
 Route::get('project/ambil_antrian', [\App\Http\Controllers\ProjectController::class, 'ambil_antrian']);
 Route::get('project/uang', [\App\Http\Controllers\ProjectController::class, 'uang']);
