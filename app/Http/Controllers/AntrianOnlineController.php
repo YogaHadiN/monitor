@@ -295,6 +295,10 @@ class AntrianOnlineController extends Controller
         $kodepoli       = $data['kodepoli'] ?? null;
         $kodedokter     = $data['kodedokter'] ?? null;
         $tanggalperiksa = $data['tanggalperiksa'] ?? null;
+        $keluhan        = $data['keluhan'] ?? null;
+        $jampraktek     = $data['jampraktek'] ?? null;
+        $norm           = $data['norm'] ?? null;
+        $nohp           = $data['nohp'] ?? null;
 
         /**
          * VALIDASI: Pasien BPJS hanya boleh berobat sekali per hari
@@ -424,7 +428,7 @@ class AntrianOnlineController extends Controller
         /**
          * Isi data antrean BPJS
          */
-        $antrian->no_telp               = $request['nohp'] ?? null;
+        $antrian->no_telp               = $nohp;
         $antrian->antriable_id          = $antrian->id;
         $antrian->pasien_id             = $this->pasien->id;
         $antrian->tanggal_lahir         = $this->pasien->tanggal_lahir;
@@ -441,7 +445,7 @@ class AntrianOnlineController extends Controller
          * Update nomor telepon pasien jika kosong
          */
         if (empty(trim($this->pasien->no_telp))) {
-            $this->pasien->no_telp = $request['nohp'] ?? null;
+            $this->pasien->no_telp = $nohp;
             $this->pasien->save();
         }
 
