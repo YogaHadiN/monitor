@@ -58,7 +58,7 @@ class WatzapController extends Controller
     }
 
     public function set_webhook(){
-        $endpointUrl = 'https://www.klinikjatielok.com/api/watzap/webhook';
+        $endpointUrl = 'https://www.klinikjatielok.com/api/watzap/incoming';
 
         $response = Http::acceptJson()
             ->post('https://api.watzap.id/v1/set_webhook', [
@@ -82,7 +82,6 @@ class WatzapController extends Controller
 
     public function webhook(Request $request)
     {
-        Log::info('WEBHOOOK MASSUUUUUUK WATZAP');
         Log::info( '========================');
         $raw = $request->all();
 
