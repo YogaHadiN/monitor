@@ -84,6 +84,7 @@ Route::delete('/reservasi/{reservasi}', [\App\Http\Controllers\ReservasiOnlineCo
 
 Route::get('watzap/cek_api', [\App\Http\Controllers\WatzapController::class, 'cek_api']);
 Route::get('watzap/get_webhook', [\App\Http\Controllers\WatzapController::class, 'get_webhook']);
+Route::get('watzap/set_webhook', [\App\Http\Controllers\WatzapController::class, 'set_webhook']);
 
 
 // routes/web.php

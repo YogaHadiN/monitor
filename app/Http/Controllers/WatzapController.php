@@ -57,10 +57,32 @@ class WatzapController extends Controller
         dd($response->json());
     }
 
+    public function set_webhook(){
+        $endpointUrl = 'https://www.klinikjatielok.com/api/watzap/webhook';
 
+        $response = Http::acceptJson()
+            ->post('https://api.watzap.id/v1/set_webhook', [
+                'api_key'      => env('WATZAP_TOKEN'),
+                'number_key'   => env('WATZAP_NUMBER_KEY'),
+                'endpoint_url' => $endpointUrl,
+            ]);
+
+        Log::info('WATZAP_SET_WEBHOOK', [
+            'endpoint_url' => $endpointUrl,
+            'status'       => $response->status(),
+            'body'         => $response->json() ?? $response->body(),
+        ]);
+
+        dd([
+            'endpoint_url' => $endpointUrl,
+            'status'       => $response->status(),
+            'body'         => $response->json() ?? $response->body(),
+        ]);
+    }
 
     public function webhook(Request $request)
     {
+        Log::info('WEBHOOOK MASSUUUUUUK WATZAP');
         Log::info( '========================');
         $raw = $request->all();
 

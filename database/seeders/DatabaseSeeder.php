@@ -33,9 +33,5 @@ class DatabaseSeeder extends Seeder
         KuesionerMenungguObat::where('no_telp', $no_telp)->delete();
         WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
         WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
-
-        $this->call(DiagnosaIcd10B373Seeder::class);
-        $this->call(KriteriaRujukB373Seeder::class);
-        $this->call(HapusKriteriaRujukN989Seeder::class);
     }
 }
