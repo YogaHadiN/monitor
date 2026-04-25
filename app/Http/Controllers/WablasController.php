@@ -265,6 +265,42 @@ class WablasController extends Controller
             /* && $this->no_telp == '6281381912803' */
         ) {
             $this->chatBotLog(__LINE__);
+
+            // ===== SUNAT BOT START (rollback: hapus block ini sampai SUNAT BOT END) =====
+            try {
+                $botCtx = [
+                    'provider'       => $this->provider ?? 'barantum',
+                    'origin'         => $this->origin ?? 'barantum',
+                    'room_id'        => $this->room_id ?? null,
+                    'chats_users_id' => (string) ($this->chats_users_id ?: $this->no_telp),
+                    'channel'        => $this->channel ?? 'wa',
+                    'message_id'     => $this->message_id ?? '',
+                    'chats_bot_id'   => $this->chats_bot_id ?? '',
+                    'company_key'    => $this->company_key ?? config('services.barantum.company_key'),
+                ];
+                $botHandled = app(\App\Services\Bot\BotEngine::class)
+                    ->handle((string) $this->no_telp, (string) $this->message, $botCtx);
+                if ( $botHandled ) {
+                    $msgRow = [
+                        'no_telp'       => $this->no_telp,
+                        'message'       => $this->message,
+                        'tanggal'       => date('Y-m-d H:i:s'),
+                        'sending'       => 0,
+                        'sudah_dibalas' => 1,
+                        'tenant_id'     => 1,
+                        'touched'       => 0,
+                    ];
+                    if ( \Schema::hasColumn('messages', 'flagged_intent') ) {
+                        $msgRow['flagged_intent'] = 'sunat';
+                    }
+                    Message::create($msgRow);
+                    return;
+                }
+            } catch (\Throwable $botErr) {
+                \Log::error('SUNAT_BOT_FAIL_FALLBACK', ['err' => $botErr->getMessage()]);
+            }
+            // ===== SUNAT BOT END =====
+
             $date_now = date('Y-m-d H:i:s');
             if (
                 strtotime ($date_now) < strtotime( '2026-03-23 07:00:00'  )

@@ -1,0 +1,220 @@
+<?php
+
+namespace App\Services\Bot;
+
+use App\Models\BotSession;
+
+class SunatBotFlow
+{
+    public function __construct(private AiParserService $ai) {}
+
+    public function asset(string $filename): string
+    {
+        return rtrim(config('app.url'), '/') . '/bot-assets/sunat/' . $filename;
+    }
+
+    public function initialReplies(): array
+    {
+        return [
+            [
+                'image_url' => $this->asset('kolase-keluarga.jpg'),
+                'text'      => "Halo kak 🙏 Terima kasih sudah tertarik dengan *SunatBoy*.\n\n"
+                             . "Kami berkomitmen menciptakan pengalaman sunat yang tak terlupakan. Siap jadi anak hebat, bersama SunatBoy 💪"
+            ],
+            [
+                'text' => "Untuk biaya sunat tergantung usia dan berat badan anak kak.\n\nKalau boleh tau, dengan kakak siapa ya?"
+            ],
+        ];
+    }
+
+    public function handle(BotSession $session, ?string $userMessage): array
+    {
+        $step = $session->current_step;
+
+        switch ($step) {
+            case 'greeting':
+                return $this->result($this->initialReplies(), 'ask_name', false);
+
+            case 'ask_name':
+                $parsed = $this->ai->extract($userMessage ?? '', [
+                    'nama' => 'nama depan orang tua / pengirim pesan (string, title case)',
+                ]);
+                $session->setData('nama', $parsed['nama'] ?: trim($userMessage ?? ''));
+                $nama = $session->getData('nama', 'kak');
+                return $this->result([
+                    ['text' => "Baik kak {$nama} 🙏. Bisa dibantu infokan usia dan berat badan anaknya kak?"]
+                ], 'ask_age_weight', false);
+
+            case 'ask_age_weight':
+                $parsed = $this->ai->extract($userMessage ?? '', [
+                    'umur'        => 'usia anak dalam tahun (integer)',
+                    'berat_badan' => 'berat badan anak dalam kilogram (angka)',
+                ]);
+                if ( $parsed['umur'] )        $session->setData('umur', (int) $parsed['umur']);
+                if ( $parsed['berat_badan'] ) $session->setData('berat_badan', (float) $parsed['berat_badan']);
+
+                if ( !$session->getData('umur') || !$session->getData('berat_badan') ) {
+                    return $this->result([
+                        ['text' => "Maaf kak, boleh diinfokan ulang usia (dalam tahun) dan berat badan anak (dalam kg) ya? Contoh: *usia 6 tahun, berat 20 kg*"]
+                    ], 'ask_age_weight', false);
+                }
+
+                return $this->result([
+                    ['text' => "Baik kak. Untuk domisilinya dari *Tangerang* atau *Jakarta* kak?"]
+                ], 'ask_domicile', false);
+
+            case 'ask_domicile':
+                $parsed = $this->ai->extract($userMessage ?? '', [
+                    'domisili' => 'nama kota/kecamatan asal pengirim (string)',
+                ]);
+                $session->setData('domisili', $parsed['domisili'] ?: trim($userMessage ?? ''));
+                return $this->result([
+                    ['text' => "Baik kak, noted domisilinya ya 🙏\n\nApakah ada keluhan tertentu yang menyebabkan ingin dikhitan?"]
+                ], 'ask_complaint', false);
+
+            case 'ask_complaint':
+                $session->setData('keluhan', trim($userMessage ?? ''));
+                return $this->result([
+                    ['text' => "Baik kak 🙏. Apakah anak memiliki kondisi kesehatan tertentu? "
+                            . "Misalnya ada riwayat kelainan pembekuan darah, jantung, atau termasuk dalam spektrum kebutuhan khusus / autisme?"]
+                ], 'ask_health', false);
+
+            case 'ask_health':
+                $session->setData('riwayat_kesehatan', trim($userMessage ?? ''));
+                return $this->result([
+                    ['text' => "Baik kak, saya ijin menanyakan beberapa hal terlebih dahulu ya supaya kami bisa memahami kebutuhan kakak.\n\n"
+                            . "Sebelumnya, apakah kakak sudah mengetahui metode khitan dari kami, atau perlu kami jelaskan dulu?"]
+                ], 'ask_method_known', false);
+
+            case 'ask_method_known':
+                $text = strtolower(trim($userMessage ?? ''));
+                $sudahTahu = preg_match('/\b(sudah|udah|tau|tahu|paham|ngerti)\b/iu', $text)
+                          && !preg_match('/\b(belum|blm|tidak|ga|gak|nggak)\b/iu', $text);
+                $session->setData('sudah_tahu_metode', $sudahTahu);
+                return $this->result([], 'edu_teknoklamp', true);
+
+            case 'edu_teknoklamp':
+                return $this->result([
+                    [
+                        'image_url' => $this->asset('teknoklamp.jpg'),
+                        'text'      => "Kami menggunakan metode *Teknoklamp* kak:\n"
+                                     . "• Menggunakan alat cetak sehingga hasil lebih rapi\n"
+                                     . "• Tanpa alat menempel\n"
+                                     . "• Tanpa dibalut\n"
+                                     . "• Pendarahan minimal",
+                    ],
+                ], 'edu_bius', true);
+
+            case 'edu_bius':
+                return $this->result([
+                    [
+                        'image_url' => $this->asset('half-banner-bius.jpg'),
+                        'text'      => "Kelebihan SunatBoy lainnya adalah *biusnya yang nyaman*. "
+                                     . "Sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan.",
+                    ],
+                    [
+                        'image_url' => $this->asset('kesaksian-bius.jpg'),
+                        'text'      => "Berikut video kesaksian dari beberapa anak yang pernah kami tangani 🙏",
+                    ],
+                ], 'edu_room', true);
+
+            case 'edu_room':
+                return $this->result([
+                    [
+                        'image_url' => $this->asset('ruangan.jpg'),
+                        'text'      => "Kami menggunakan ruangan yang nyaman dan ramah anak 🧸",
+                    ],
+                ], 'edu_content', true);
+
+            case 'edu_content':
+                return $this->result([
+                    [
+                        'image_url' => $this->asset('contoh-konten.jpg'),
+                        'text'      => "Kami juga buatkan konten pengalaman anak selama sunat di SunatBoy. "
+                                     . "Kakak bisa share di media sosial sebagai kenangan sunat yang menyenangkan 🎬",
+                    ],
+                ], 'edu_review', true);
+
+            case 'edu_review':
+                return $this->result([
+                    [
+                        'image_url' => $this->asset('review-carousel.jpg'),
+                        'text'      => "Berikut beberapa kesaksian dari klien-klien kami setelah sunat di SunatBoy ⭐",
+                    ],
+                ], 'edu_gift', true);
+
+            case 'edu_gift':
+                return $this->result([
+                    [
+                        'image_url' => $this->asset('hadiah.jpg'),
+                        'text'      => "Banyak hadiahnya kak 🎁 Kami memberikan *remote control*, kaos keren SunatBoy, dan lainnya.",
+                    ],
+                ], 'edu_postcare', true);
+
+            case 'edu_postcare':
+                return $this->result([
+                    [
+                        'image_url' => $this->asset('obat-celana.jpg'),
+                        'text'      => "Termasuk *celana sunat*, obat, dan pengawasan dokter kami sampai sembuh.\n"
+                                     . "Kakak tidak perlu datang ke klinik, dokter akan mengawasi lewat WhatsApp 💬",
+                    ],
+                ], 'offer_price', true);
+
+            case 'offer_price':
+                return $this->result([
+                    ['text' => "Kami memberikan harga *Rp 2.500.000* untuk semua benefit tersebut kak 🙏"]
+                ], 'ask_schedule', false);
+
+            case 'ask_schedule':
+                $session->setData('jadwal_keinginan', trim($userMessage ?? ''));
+                return $this->result([
+                    ['text' => "Siap kak, terima kasih 🙏 Tim kami akan bantu koordinasikan jadwalnya.\n\n"
+                            . "Admin kami akan membalas segera untuk konfirmasi detail. Ketik *akhiri* kalau sudah cukup ya kak."]
+                ], 'done', false);
+
+            case 'done':
+            default:
+                return $this->result([], 'done', false);
+        }
+    }
+
+    public function handleReactive(BotSession $session, string $userMessage): ?array
+    {
+        $msg = strtolower($userMessage);
+
+        if ( preg_match('/\b(jarum|suntik|bius)\b/iu', $msg) ) {
+            return [
+                [
+                    'image_url' => $this->asset('kesaksian-bius.jpg'),
+                    'text'      => "Kami menggunakan teknik bius yang lebih nyaman dibanding bius tanpa jarum suntik kak. "
+                                 . "Menggunakan injeksi halus yang membuat sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan 🙏",
+                ],
+            ];
+        }
+
+        if ( preg_match('/\b(sembuh|berapa lama|kapan sekolah|pulih)\b/iu', $msg) ) {
+            return [
+                ['text' => "Perkiraan sembuh antara *2-3 minggu* kak 🙏\n"
+                        . "Biasanya anak sudah bisa mulai sekolah setelah 1 minggu bila tidak ada penyulit.\n"
+                        . "Kami juga menyediakan celana dalam sunat sehingga anak tetap nyaman pakai celana biasa."]
+            ];
+        }
+
+        if ( preg_match('/\b(harga|biaya|tarif|pricelist|price list)\b/iu', $msg) && $session->current_step !== 'offer_price' ) {
+            return [
+                ['text' => "Harga paket kami *Rp 2.500.000* kak, sudah termasuk semua benefit (alat teknoklamp, bius nyaman, celana sunat, obat, pengawasan dokter lewat WhatsApp, hadiah anak)."]
+            ];
+        }
+
+        return null;
+    }
+
+    private function result(array $replies, string $nextStep, bool $autoContinue): array
+    {
+        return [
+            'replies'       => $replies,
+            'next_step'     => $nextStep,
+            'auto_continue' => $autoContinue,
+        ];
+    }
+}
