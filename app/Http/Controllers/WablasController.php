@@ -268,6 +268,12 @@ class WablasController extends Controller
 
             // ===== SUNAT BOT START (rollback: hapus block ini sampai SUNAT BOT END) =====
             try {
+                $sunatBotEnabled = \Schema::hasColumn('tenants', 'enable_sunat_bot')
+                    ? (bool) ($this->tenant->enable_sunat_bot ?? false)
+                    : false;
+                if ( !$sunatBotEnabled ) {
+                    throw new \DomainException('sunat_bot_disabled');
+                }
                 $botCtx = [
                     'provider'       => $this->provider ?? 'barantum',
                     'origin'         => $this->origin ?? 'barantum',
@@ -296,6 +302,8 @@ class WablasController extends Controller
                     Message::create($msgRow);
                     return;
                 }
+            } catch (\DomainException $botSkip) {
+                // bot dimatikan via tenants.enable_sunat_bot — fallback ke flow lama
             } catch (\Throwable $botErr) {
                 \Log::error('SUNAT_BOT_FAIL_FALLBACK', ['err' => $botErr->getMessage()]);
             }

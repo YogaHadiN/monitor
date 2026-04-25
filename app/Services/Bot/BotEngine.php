@@ -3,8 +3,10 @@
 namespace App\Services\Bot;
 
 use App\Models\BotSession;
+use App\Models\Message;
 use App\Services\BarantumReplyService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class BotEngine
 {
@@ -19,6 +21,8 @@ class BotEngine
         if ( $noTelp === '' || $userMessage === '' ) {
             return false;
         }
+
+        $ctx['no_telp'] = $noTelp;
 
         $session = BotSession::activeFor($noTelp);
         $msgLower = strtolower(trim($userMessage));
@@ -93,6 +97,7 @@ class BotEngine
     {
         $text     = (string) ($reply['text'] ?? '');
         $imageUrl = (string) ($reply['image_url'] ?? '');
+        $noTelp   = (string) ($ctx['no_telp'] ?? '');
 
         $payload = array_merge($ctx, [
             'image_url'    => $imageUrl,
@@ -100,13 +105,44 @@ class BotEngine
             'filename'     => '',
         ]);
 
+        $sent = false;
         try {
             $res = $this->barantum->replyText($payload, $text);
-            if ( !($res['ok'] ?? false) ) {
+            $sent = (bool) ($res['ok'] ?? false);
+            if ( !$sent ) {
                 Log::warning('BOT_ENGINE_SEND_FAILED', ['reason' => $res['reason'] ?? 'unknown', 'payload' => $payload]);
             }
         } catch (\Throwable $e) {
             Log::error('BOT_ENGINE_SEND_EXCEPTION', ['err' => $e->getMessage()]);
+        }
+
+        if ( $sent && $noTelp !== '' ) {
+            $this->logOutgoing($noTelp, $text, $imageUrl);
+        }
+    }
+
+    private function logOutgoing(string $noTelp, string $text, string $imageUrl): void
+    {
+        try {
+            $row = [
+                'no_telp'        => $noTelp,
+                'message'        => $text,
+                'tanggal'        => date('Y-m-d H:i:s'),
+                'sending'        => 1,
+                'touched'        => 1,
+                'sudah_dibalas'  => 1,
+                'sudah_diproses' => 1,
+                'tenant_id'      => 1,
+            ];
+            if ( $imageUrl !== '' && Schema::hasColumn('messages', 'image_url') ) {
+                $row['image_url'] = $imageUrl;
+            }
+            if ( Schema::hasColumn('messages', 'flagged_intent') ) {
+                $row['flagged_intent'] = 'sunat_bot_reply';
+            }
+            Message::create($row);
+        } catch (\Throwable $e) {
+            Log::warning('BOT_ENGINE_LOG_OUTGOING_FAIL', ['err' => $e->getMessage()]);
         }
     }
 }
