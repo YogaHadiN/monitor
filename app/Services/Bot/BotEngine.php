@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Schema;
 
 class BotEngine
 {
+    private const BUBBLE_DELAY_SECONDS = 3;
+
+    private int $sentCount = 0;
+
     public function __construct(
         private IntentDetector $intents,
         private SunatBotFlow $sunatFlow,
@@ -21,6 +25,12 @@ class BotEngine
         if ( $noTelp === '' || $userMessage === '' ) {
             return false;
         }
+
+        // Bubble delay membuat webhook lama dijalankan; pastikan PHP tidak di-kill
+        // dan tetap proses meski Barantum sudah menutup koneksi inbound.
+        @set_time_limit(0);
+        @ignore_user_abort(true);
+        $this->sentCount = 0;
 
         $ctx['no_telp'] = $noTelp;
 
@@ -95,6 +105,11 @@ class BotEngine
 
     private function send(array $ctx, array $reply): void
     {
+        if ( $this->sentCount > 0 && self::BUBBLE_DELAY_SECONDS > 0 ) {
+            sleep(self::BUBBLE_DELAY_SECONDS);
+        }
+        $this->sentCount++;
+
         $text     = (string) ($reply['text'] ?? '');
         $imageUrl = (string) ($reply['image_url'] ?? '');
         $noTelp   = (string) ($ctx['no_telp'] ?? '');
