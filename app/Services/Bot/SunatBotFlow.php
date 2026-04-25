@@ -19,10 +19,9 @@ class SunatBotFlow
             [
                 'image_url' => $this->asset('kolase-keluarga.jpg'),
                 'text'      => "Halo kak 🙏 Terima kasih sudah tertarik dengan *SunatBoy*.\n\n"
-                             . "Kami berkomitmen menciptakan pengalaman sunat yang tak terlupakan. Siap jadi anak hebat, bersama SunatBoy 💪"
-            ],
-            [
-                'text' => "Untuk biaya sunat tergantung usia dan berat badan anak kak.\n\nKalau boleh tau, dengan kakak siapa ya?"
+                             . "Kami berkomitmen menciptakan pengalaman sunat yang tak terlupakan. Siap jadi anak hebat, bersama SunatBoy 💪\n\n"
+                             . "Untuk biaya sunat tergantung usia dan berat badan anak kak.\n\n"
+                             . "Kalau boleh tau, dengan kakak siapa ya?",
             ],
         ];
     }
@@ -108,13 +107,10 @@ class SunatBotFlow
             case 'edu_bius':
                 return $this->result([
                     [
-                        'image_url' => $this->asset('half-banner-bius.jpg'),
-                        'text'      => "Kelebihan SunatBoy lainnya adalah *biusnya yang nyaman*. "
-                                     . "Sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan.",
-                    ],
-                    [
                         'image_url' => $this->asset('kesaksian-bius.jpg'),
-                        'text'      => "Berikut video kesaksian dari beberapa anak yang pernah kami tangani 🙏",
+                        'text'      => "Kelebihan SunatBoy lainnya adalah *biusnya yang nyaman*. "
+                                     . "Sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan.\n\n"
+                                     . "Berikut video kesaksian dari beberapa anak yang pernah kami tangani 🙏",
                     ],
                 ], 'edu_room', true);
 
