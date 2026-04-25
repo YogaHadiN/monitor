@@ -18,10 +18,16 @@ class SunatBotFlow
         return [
             [
                 'image_url' => $this->asset('kolase-keluarga.jpg'),
-                'text'      => "Halo kak 🙏 Terima kasih sudah tertarik dengan *SunatBoy*.\n\n"
-                             . "Kami berkomitmen menciptakan pengalaman sunat yang tak terlupakan. Siap jadi anak hebat, bersama SunatBoy 💪\n\n"
-                             . "Untuk biaya sunat tergantung usia dan berat badan anak kak.\n\n"
-                             . "Kalau boleh tau, dengan kakak siapa ya?",
+                'text'      => "Halo kak 🙏 Terima kasih sudah tertarik dengan *SunatBoy*.",
+            ],
+            [
+                'text' => "Kami berkomitmen menciptakan pengalaman sunat yang tak terlupakan. Siap jadi anak hebat, bersama SunatBoy 💪",
+            ],
+            [
+                'text' => "Untuk biaya sunat tergantung usia dan berat badan anak kak.",
+            ],
+            [
+                'text' => "Kalau boleh tau, dengan kakak siapa ya?",
             ],
         ];
     }
@@ -41,7 +47,8 @@ class SunatBotFlow
                 $session->setData('nama', $parsed['nama'] ?: trim($userMessage ?? ''));
                 $nama = $session->getData('nama', 'kak');
                 return $this->result([
-                    ['text' => "Baik kak {$nama} 🙏. Bisa dibantu infokan usia dan berat badan anaknya kak?"]
+                    ['text' => "Baik kak {$nama} 🙏"],
+                    ['text' => "Bisa dibantu infokan usia dan berat badan anaknya kak?"],
                 ], 'ask_age_weight', false);
 
             case 'ask_age_weight':
@@ -54,12 +61,14 @@ class SunatBotFlow
 
                 if ( !$session->getData('umur') || !$session->getData('berat_badan') ) {
                     return $this->result([
-                        ['text' => "Maaf kak, boleh diinfokan ulang usia (dalam tahun) dan berat badan anak (dalam kg) ya? Contoh: *usia 6 tahun, berat 20 kg*"]
+                        ['text' => "Maaf kak, boleh diinfokan ulang usia (dalam tahun) dan berat badan anak (dalam kg) ya?"],
+                        ['text' => "Contoh: *usia 6 tahun, berat 20 kg*"],
                     ], 'ask_age_weight', false);
                 }
 
                 return $this->result([
-                    ['text' => "Baik kak. Untuk domisilinya dari *Tangerang* atau *Jakarta* kak?"]
+                    ['text' => "Baik kak."],
+                    ['text' => "Untuk domisilinya dari *Tangerang* atau *Jakarta* kak?"],
                 ], 'ask_domicile', false);
 
             case 'ask_domicile':
@@ -68,21 +77,24 @@ class SunatBotFlow
                 ]);
                 $session->setData('domisili', $parsed['domisili'] ?: trim($userMessage ?? ''));
                 return $this->result([
-                    ['text' => "Baik kak, noted domisilinya ya 🙏\n\nApakah ada keluhan tertentu yang menyebabkan ingin dikhitan?"]
+                    ['text' => "Baik kak, noted domisilinya ya 🙏"],
+                    ['text' => "Apakah ada keluhan tertentu yang menyebabkan ingin dikhitan?"],
                 ], 'ask_complaint', false);
 
             case 'ask_complaint':
                 $session->setData('keluhan', trim($userMessage ?? ''));
                 return $this->result([
-                    ['text' => "Baik kak 🙏. Apakah anak memiliki kondisi kesehatan tertentu? "
-                            . "Misalnya ada riwayat kelainan pembekuan darah, jantung, atau termasuk dalam spektrum kebutuhan khusus / autisme?"]
+                    ['text' => "Baik kak 🙏"],
+                    ['text' => "Apakah anak memiliki kondisi kesehatan tertentu?"],
+                    ['text' => "Misalnya ada riwayat kelainan pembekuan darah, jantung, atau termasuk dalam spektrum kebutuhan khusus / autisme?"],
                 ], 'ask_health', false);
 
             case 'ask_health':
                 $session->setData('riwayat_kesehatan', trim($userMessage ?? ''));
                 return $this->result([
-                    ['text' => "Baik kak, saya ijin menanyakan beberapa hal terlebih dahulu ya supaya kami bisa memahami kebutuhan kakak.\n\n"
-                            . "Sebelumnya, apakah kakak sudah mengetahui metode khitan dari kami, atau perlu kami jelaskan dulu?"]
+                    ['text' => "Baik kak 🙏"],
+                    ['text' => "Saya ijin menanyakan beberapa hal terlebih dahulu ya supaya kami bisa memahami kebutuhan kakak."],
+                    ['text' => "Sebelumnya, apakah kakak sudah mengetahui metode khitan dari kami, atau perlu kami jelaskan dulu?"],
                 ], 'ask_method_known', false);
 
             case 'ask_method_known':
@@ -96,21 +108,24 @@ class SunatBotFlow
                 return $this->result([
                     [
                         'image_url' => $this->asset('teknoklamp.jpg'),
-                        'text'      => "Kami menggunakan metode *Teknoklamp* kak:\n"
-                                     . "• Menggunakan alat cetak sehingga hasil lebih rapi\n"
-                                     . "• Tanpa alat menempel\n"
-                                     . "• Tanpa dibalut\n"
-                                     . "• Pendarahan minimal",
+                        'text'      => "Kami menggunakan metode *Teknoklamp* kak.",
                     ],
+                    ['text' => "• Menggunakan alat cetak sehingga hasil lebih rapi"],
+                    ['text' => "• Tanpa alat menempel"],
+                    ['text' => "• Tanpa dibalut"],
+                    ['text' => "• Pendarahan minimal"],
                 ], 'edu_bius', true);
 
             case 'edu_bius':
                 return $this->result([
                     [
+                        'image_url' => $this->asset('half-banner-bius.jpg'),
+                        'text'      => "Kelebihan SunatBoy lainnya adalah *biusnya yang nyaman*.",
+                    ],
+                    ['text' => "Sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan."],
+                    [
                         'image_url' => $this->asset('kesaksian-bius.jpg'),
-                        'text'      => "Kelebihan SunatBoy lainnya adalah *biusnya yang nyaman*. "
-                                     . "Sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan.\n\n"
-                                     . "Berikut video kesaksian dari beberapa anak yang pernah kami tangani 🙏",
+                        'text'      => "Berikut video kesaksian dari beberapa anak yang pernah kami tangani 🙏",
                     ],
                 ], 'edu_room', true);
 
@@ -126,9 +141,9 @@ class SunatBotFlow
                 return $this->result([
                     [
                         'image_url' => $this->asset('contoh-konten.jpg'),
-                        'text'      => "Kami juga buatkan konten pengalaman anak selama sunat di SunatBoy. "
-                                     . "Kakak bisa share di media sosial sebagai kenangan sunat yang menyenangkan 🎬",
+                        'text'      => "Kami juga buatkan konten pengalaman anak selama sunat di SunatBoy.",
                     ],
+                    ['text' => "Kakak bisa share di media sosial sebagai kenangan sunat yang menyenangkan 🎬"],
                 ], 'edu_review', true);
 
             case 'edu_review':
@@ -143,29 +158,33 @@ class SunatBotFlow
                 return $this->result([
                     [
                         'image_url' => $this->asset('hadiah.jpg'),
-                        'text'      => "Banyak hadiahnya kak 🎁 Kami memberikan *remote control*, kaos keren SunatBoy, dan lainnya.",
+                        'text'      => "Banyak hadiahnya kak 🎁",
                     ],
+                    ['text' => "Kami memberikan *remote control*, kaos keren SunatBoy, dan lainnya."],
                 ], 'edu_postcare', true);
 
             case 'edu_postcare':
                 return $this->result([
                     [
                         'image_url' => $this->asset('obat-celana.jpg'),
-                        'text'      => "Termasuk *celana sunat*, obat, dan pengawasan dokter kami sampai sembuh.\n"
-                                     . "Kakak tidak perlu datang ke klinik, dokter akan mengawasi lewat WhatsApp 💬",
+                        'text'      => "Termasuk *celana sunat*, obat, dan pengawasan dokter kami sampai sembuh.",
                     ],
+                    ['text' => "Kakak tidak perlu datang ke klinik, dokter akan mengawasi lewat WhatsApp 💬"],
                 ], 'offer_price', true);
 
             case 'offer_price':
                 return $this->result([
-                    ['text' => "Kami memberikan harga *Rp 2.500.000* untuk semua benefit tersebut kak 🙏"]
+                    ['text' => "Kami memberikan harga *Rp 2.500.000* untuk semua benefit tersebut kak 🙏"],
+                    ['text' => "Kakak berkenan untuk kami jadwalkan minggu ini atau minggu depan?"],
                 ], 'ask_schedule', false);
 
             case 'ask_schedule':
                 $session->setData('jadwal_keinginan', trim($userMessage ?? ''));
                 return $this->result([
-                    ['text' => "Siap kak, terima kasih 🙏 Tim kami akan bantu koordinasikan jadwalnya.\n\n"
-                            . "Admin kami akan membalas segera untuk konfirmasi detail. Ketik *akhiri* kalau sudah cukup ya kak."]
+                    ['text' => "Siap kak, terima kasih 🙏"],
+                    ['text' => "Tim kami akan bantu koordinasikan jadwalnya."],
+                    ['text' => "Admin kami akan membalas segera untuk konfirmasi detail."],
+                    ['text' => "Ketik *akhiri* kalau sudah cukup ya kak."],
                 ], 'done', false);
 
             case 'done':
@@ -182,23 +201,24 @@ class SunatBotFlow
             return [
                 [
                     'image_url' => $this->asset('kesaksian-bius.jpg'),
-                    'text'      => "Kami menggunakan teknik bius yang lebih nyaman dibanding bius tanpa jarum suntik kak. "
-                                 . "Menggunakan injeksi halus yang membuat sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan 🙏",
+                    'text'      => "Kami menggunakan teknik bius yang lebih nyaman dibanding bius tanpa jarum suntik kak.",
                 ],
+                ['text' => "Menggunakan injeksi halus yang membuat sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan 🙏"],
             ];
         }
 
         if ( preg_match('/\b(sembuh|berapa lama|kapan sekolah|pulih)\b/iu', $msg) ) {
             return [
-                ['text' => "Perkiraan sembuh antara *2-3 minggu* kak 🙏\n"
-                        . "Biasanya anak sudah bisa mulai sekolah setelah 1 minggu bila tidak ada penyulit.\n"
-                        . "Kami juga menyediakan celana dalam sunat sehingga anak tetap nyaman pakai celana biasa."]
+                ['text' => "Perkiraan sembuh antara *2-3 minggu* kak 🙏"],
+                ['text' => "Biasanya anak sudah bisa mulai sekolah setelah 1 minggu bila tidak ada penyulit."],
+                ['text' => "Kami juga menyediakan celana dalam sunat sehingga anak tetap nyaman pakai celana biasa."],
             ];
         }
 
         if ( preg_match('/\b(harga|biaya|tarif|pricelist|price list)\b/iu', $msg) && $session->current_step !== 'offer_price' ) {
             return [
-                ['text' => "Harga paket kami *Rp 2.500.000* kak, sudah termasuk semua benefit (alat teknoklamp, bius nyaman, celana sunat, obat, pengawasan dokter lewat WhatsApp, hadiah anak)."]
+                ['text' => "Harga paket kami *Rp 2.500.000* kak."],
+                ['text' => "Sudah termasuk semua benefit: alat teknoklamp, bius nyaman, celana sunat, obat, pengawasan dokter lewat WhatsApp, dan hadiah anak."],
             ];
         }
 
