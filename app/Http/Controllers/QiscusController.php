@@ -3635,6 +3635,7 @@ class QiscusController extends Controller
                         $antrian->kartu_asuransi_image     = $reservasi_online->kartu_asuransi_image;
                         $antrian->data_bpjs_cocok          = $reservasi_online->data_bpjs_cocok;
                         $antrian->reservasi_online         = 1;
+                        $antrian->sumber_antrian           = 'whatsapp_bot';
                         $antrian->sudah_hadir_di_klinik    = 0;
                         $antrian->qr_code_path_s3          = $this->generateQrCodeForOnlineReservation($antrian);
                         $antrian->save();
