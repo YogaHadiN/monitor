@@ -55,43 +55,45 @@ Route::post('fonnte/webhook/chaining', [\App\Http\Controllers\FonnteController::
 /* Route::post('fonnte_2/webhook/connect', [\App\Http\Controllers\FonnteSecondController::class, 'postConnect']); */
 /* Route::post('fonnte_2/webhook/chaining', [\App\Http\Controllers\FonnteSecondController::class, 'postChaining']); */
 
-Route::get('antrian_online/bpjs/auth', [\App\Http\Controllers\AntrianOnlineController::class, 'token']);
+Route::group(['middleware' => ['log_antrian_online']], function () {
 
-Route::get("antrian_online/bpjs/ref/poli/tanggal/{tanggal}", [
-    \App\Http\Controllers\AntrianOnlineController::class,
-    "status_antrean"
-]);
+    Route::get('antrian_online/bpjs/auth', [\App\Http\Controllers\AntrianOnlineController::class, 'token']);
 
-
-
-Route::group([
-    "middleware" => ["auth.jwt"]
-], function(){
-
-    Route::get("antrian_online/bpjs/antrean/status/{kode_poli}/{tanggalperiksa}", [
+    Route::get("antrian_online/bpjs/ref/poli/tanggal/{tanggal}", [
         \App\Http\Controllers\AntrianOnlineController::class,
         "status_antrean"
     ]);
 
-    Route::post("antrian_online/bpjs/antrean", [
-        \App\Http\Controllers\AntrianOnlineController::class,
-        "ambil_antrean"
-    ]);
+    Route::group([
+        "middleware" => ["auth.jwt"]
+    ], function(){
 
-    Route::get("antrian_online/bpjs/antrean/sisapeserta/{nomorkartu_jkn}/{kode_poli}/{tanggalperiksa}", [
-        \App\Http\Controllers\AntrianOnlineController::class,
-        "sisa_antrean"
-    ]);
+        Route::get("antrian_online/bpjs/antrean/status/{kode_poli}/{tanggalperiksa}", [
+            \App\Http\Controllers\AntrianOnlineController::class,
+            "status_antrean"
+        ]);
 
-    Route::post("antrian_online/bpjs/peserta", [
-        \App\Http\Controllers\AntrianOnlineController::class,
-        "pasien_baru"
-    ]);
+        Route::post("antrian_online/bpjs/antrean", [
+            \App\Http\Controllers\AntrianOnlineController::class,
+            "ambil_antrean"
+        ]);
 
-    Route::put("antrian_online/bpjs/antrean/batal", [
-        \App\Http\Controllers\AntrianOnlineController::class,
-        "batal_antrean"
-    ]);
+        Route::get("antrian_online/bpjs/antrean/sisapeserta/{nomorkartu_jkn}/{kode_poli}/{tanggalperiksa}", [
+            \App\Http\Controllers\AntrianOnlineController::class,
+            "sisa_antrean"
+        ]);
+
+        Route::post("antrian_online/bpjs/peserta", [
+            \App\Http\Controllers\AntrianOnlineController::class,
+            "pasien_baru"
+        ]);
+
+        Route::put("antrian_online/bpjs/antrean/batal", [
+            \App\Http\Controllers\AntrianOnlineController::class,
+            "batal_antrean"
+        ]);
+
+    });
 
 });
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

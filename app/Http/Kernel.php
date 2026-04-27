@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'bukan_blokir' => \Illuminate\Auth\Middleware\PastikanBukanNomorBlokir::class,
+        'log_antrian_online' => \App\Http\Middleware\LogAntrianOnlineApi::class,
     ];
 }
