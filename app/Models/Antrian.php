@@ -117,6 +117,10 @@ class Antrian extends Model
         return $this->belongsTo(RegistrasiPembayaran::class);
     }
 
+    public function sumber_antrian(){
+        return $this->belongsTo(SumberAntrian::class);
+    }
+
 	public function antriable(){
 		return $this->morphTo();
 	}

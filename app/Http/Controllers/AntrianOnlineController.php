@@ -426,7 +426,7 @@ class AntrianOnlineController extends Controller
         $antrian->nama                  = $this->pasien->nama;
         $antrian->nomor_bpjs            = $nomorkartu;
         $antrian->reservasi_online      = 1;
-        $antrian->sumber_antrian        = 'mobile_jkn';
+        $antrian->sumber_antrian_id     = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::MOBILE_JKN);
         $antrian->registrasi_pembayaran_id = 2;
         $antrian->verifikasi_bpjs       = 1;
         $antrian->save();

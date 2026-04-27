@@ -653,7 +653,7 @@ class WebRegistrationController extends Controller
         $antrian->tipe_konsultasi_id       = $web_registration->tipe_konsultasi_id;
         $antrian->staf_id                  = $web_registration->staf_id;
         $antrian->reservasi_online         = 1;
-        $antrian->sumber_antrian           = 'web_klinik';
+        $antrian->sumber_antrian_id        = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::WEB_KLINIK);
         $antrian->sudah_hadir_di_klinik    = 0;
         $antrian->qr_code_path_s3          = $wablas->generateQrCodeForOnlineReservation('A', $antrian);
         $antrian->save();
