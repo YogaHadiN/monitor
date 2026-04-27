@@ -4754,18 +4754,16 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     }
 
 
-    private function hapusAntrianWhatsappBotReservasiOnline(bool $hapus_antrian = true)
+    private function hapusAntrianWhatsappBotReservasiOnline(bool $hapus_antrian = true): string
     {
 
         $items = $this->getReservasiOnlineBelumHadirHariIni();
-        // Reset state WA registration (tetap lakukan meski tidak ada item)
         resetWhatsappRegistration($this->no_telp);
 
         if ($items->isEmpty()) {
             return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
         }
 
-        // Jika lebih dari satu, bangun pesan daftar pilihan (nomori & jelaskan tipenya)
         $lines = [];
         foreach ($items as $idx => $it) {
             $tipe  = $it instanceof Antrian ? 'Antrian' : ($it instanceof SchedulledReservation ? 'Reservasi Terjadwal' : 'Item');
@@ -4774,18 +4772,16 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $lines[] = ($idx + 1) . ". [$tipe] {$it->nama} ke $dokter (dibuat $jam)";
         }
 
-        $pesan = "Terdapat beberapa reservasi/antrean aktif untuk nomor ini hari ini:\n"
-            . implode("\n", $lines)
-            . "\n\nBalas dengan angka yg ingin dibatalkan (contoh: 1), atau ketik ‘semua’ untuk membatalkan semuanya.";
-
-        $this->autoReply($pesan);
-
         WhatsappBot::create([
             'whatsapp_bot_service_id' => 16,
             'staf_id'                 => 0,
             'no_telp'                 => $this->no_telp,
             'prevent_repetition'      => 0,
         ]);
+
+        return "Terdapat beberapa reservasi/antrean aktif untuk nomor ini hari ini:\n"
+            . implode("\n", $lines)
+            . "\n\nBalas dengan angka yg ingin dibatalkan (contoh: 1), atau ketik ‘semua’ untuk membatalkan semuanya.";
     }
 
     public function sudahAdaAntrianUntukTipeKonsultasi($tipe_konsultasi_id){
