@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Antrian;
+use App\Models\SumberAntrian;
 use App\Models\Asuransi;
 use App\Models\Pasien;
 use App\Models\Tenant;
