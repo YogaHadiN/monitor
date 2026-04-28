@@ -5045,28 +5045,45 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         /* } */
     }
 
-    /* public function sendSingleWablas($phone, $message){ */
-    /*     $curl = curl_init(); */
-    /*     $token = env('WABLAS_TOKEN'); */
-    /*     $data = [ */
-    /*     'phone' => $phone, */
-    /*     'message' => $message, */
-    /*     ]; */
-    /*     curl_setopt($curl, CURLOPT_HTTPHEADER, */
-    /*         array( */
-    /*             "Authorization: $token", */
-    /*         ) */
-    /*     ); */
-    /*     curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST"); */
-    /*     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); */
-    /*     curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data)); */
-    /*     curl_setopt($curl, CURLOPT_URL,  "https://solo.wablas.com/api/send-message"); */
-    /*     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0); */
-    /*     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0); */
-    /*     $result = curl_exec($curl); */
-    /*     curl_close($curl); */
-    /*     return $result; */
-    /* } */
+    public function sendSingleWablas($phone, $message)
+    {
+        $token = env('WABLAS_TOKEN');
+        if ( empty($token) ) {
+            Log::warning('WABLAS_TOKEN_MISSING', ['phone' => $phone]);
+            return null;
+        }
+
+        $curl = curl_init();
+        $data = [
+            'phone'   => $phone,
+            'message' => $message,
+        ];
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://solo.wablas.com/api/send-message',
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POSTFIELDS     => http_build_query($data),
+            CURLOPT_HTTPHEADER     => ["Authorization: $token"],
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_TIMEOUT        => 10,
+        ]);
+        $result   = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $err      = curl_error($curl);
+        curl_close($curl);
+
+        if ($result === false || $httpCode >= 400) {
+            Log::error('WABLAS_SEND_FAILED', [
+                'phone'     => $phone,
+                'http_code' => $httpCode,
+                'curl_err'  => $err,
+                'response'  => $result,
+            ]);
+        }
+
+        return $result;
+    }
 
     public function noTelpDalamChatWithAdmin(){
         return $this->cekListPhoneNumberRegisteredForWhatsappBotService(12);

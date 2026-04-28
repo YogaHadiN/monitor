@@ -3,29 +3,35 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\NoTelp;
-use Input;
 use Log;
 
 class WablasWebhookController extends Controller
 {
-    public $no_telp;
-
-    public function __construct()
+    public function wablas(Request $request)
     {
-    }
+        // Wablas mengirim phone/message/messageType langsung di body — sudah dibaca
+        // otomatis oleh WablasController::__construct() lewat Input::get(...).
+        $wablas = new WablasController;
 
-    public function wablas()
-    {
-        Log::info("=========================================================");
-        Log::info("phone");
-        Log::info( Input::get('phone') );
-        Log::info("sender");
-        Log::info( Input::get('sender') );
-        Log::info("message");
-        Log::info( Input::get('message') );
-        Log::info("all");
-        Log::info( Input::all() );
-        Log::info("=========================================================");
+        // Pastikan provider tetap 'wablas' (constructor pakai Input::get('provider', 'wablas'),
+        // jadi kalau Wablas tidak kirim field 'provider' tetap aman; ini cuma penegasan).
+        $wablas->provider = 'wablas';
+        $wablas->origin   = 'wablas';
+        $wablas->fonnte   = false;
+
+        try {
+            $wablas->webhook();
+        } catch (\Throwable $e) {
+            Log::error('WABLAS_WEBHOOK_EXCEPTION', [
+                'phone'   => $request->input('phone'),
+                'message' => $request->input('message'),
+                'error'   => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+            return response()->json(['ok' => false], 500);
+        }
+
+        return response()->json(['ok' => true]);
     }
 }
