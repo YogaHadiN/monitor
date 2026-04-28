@@ -6052,14 +6052,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
                 case 'wablas':
                 default:
-                    if (!headers_sent()) {
-                        header('Content-Type: application/json');
-                    }
-                    echo json_encode([
-                        'data' => [
-                            ['category' => 'text', 'message' => $text],
-                        ],
-                    ]);
+                    echo $text;
                     return;
             }
         } catch (\Throwable $e) {
