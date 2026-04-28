@@ -6052,7 +6052,14 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
                 case 'wablas':
                 default:
-                    $this->sendSingleWablas($this->no_telp, $text);
+                    if (!headers_sent()) {
+                        header('Content-Type: application/json');
+                    }
+                    echo json_encode([
+                        'data' => [
+                            ['category' => 'text', 'message' => $text],
+                        ],
+                    ]);
                     return;
             }
         } catch (\Throwable $e) {
