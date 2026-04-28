@@ -134,7 +134,7 @@ class testCommand extends Command
 		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($payload) );
-		curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/v2/send-message");
+		curl_setopt($curl, CURLOPT_URL, rtrim(env('WABLAS_BASE_URL', 'https://pati.wablas.com/api'), '/') . '/v2/send-message');
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
@@ -166,7 +166,7 @@ class testCommand extends Command
 		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-		curl_setopt($curl, CURLOPT_URL,  "https://pati.wablas.com/api/send-message");
+		curl_setopt($curl, CURLOPT_URL, rtrim(env('WABLAS_BASE_URL', 'https://pati.wablas.com/api'), '/') . '/send-message');
 		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 
