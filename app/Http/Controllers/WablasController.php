@@ -5009,40 +5009,127 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     }
 
     public function sendSingle($phone, $message){
+        $phone = convertToWablasFriendlyFormat($phone);
 
-        $fonnte = new FonnteController;
-        $reply = [
-            'message' => $message,
-            'url' => null,
-            'filename' => null
-        ];
-        $fonnte->sendFonnte( $phone, $reply );
-        /* if ( */
-        /*     NoTelp::whereRaw('updated_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)') */
-        /*         ->where('no_telp', $phone) */
-        /*         ->exists() */
-        /* ) { */
-        /*     $url      = 'https://botcake.io/api/public_api/v1/pages/waba_620223831163704/flows/send_content'; */
-        /*     $data = [ */
-        /*            "psid" => "wa_" . $phone, */
-        /*            "payload" => [], */
-        /*            "data" => [ */
-        /*                     "version" => "v2", */
-        /*                     "content" => [ */
-        /*                        "messages" => [ */
-        /*                           [ */
-        /*                              "type" => "text", */
-        /*                              "buttons" => [], */
-        /*                              "text" => $message */
-        /*                           ] */
-        /*                        ] */
-        /*                     ] */
-        /*                  ] */
-        /*         ]; */
-        /*     $response = Http::withToken(env('BOTCAKE_TOKEN'))->post($url, $data); */
-        /* } else { */
-        /*     $this->chatBotLog('Tidak bisa kirim ke yang belum kirim hari ini ' . $phone); */
-        /* } */
+        // ===== ACTIVE: Watzap dulu, fallback Wablas =====
+        $watzap = $this->sendWatzap($phone, $message);
+        if ( $this->watzapLooksSuccessful($watzap) ) {
+            Log::info('SEND_VIA_WATZAP_OK', ['phone' => $phone]);
+            return $watzap['resp'] ?? null;
+        }
+
+        Log::info('SEND_WATZAP_FAILED_FALLBACK_WABLAS', [
+            'phone'  => $phone,
+            'reason' => $watzap['reason'] ?? null,
+            'status' => $watzap['status'] ?? null,
+            'resp'   => $watzap['resp'] ?? null,
+        ]);
+
+        return $this->sendSingleWablas($phone, $message);
+
+        // ===== INACTIVE: Barantum dulu, fallback Wablas =====
+        // Untuk swap balik ke Barantum:
+        //   1) comment block "ACTIVE: Watzap" di atas
+        //   2) uncomment block "INACTIVE: Barantum" di bawah
+        /*
+        $barantum = $this->sendBarantum($phone, $message);
+        if ( $this->barantumLooksSuccessful($barantum) ) {
+            Log::info('SEND_VIA_BARANTUM_OK', ['phone' => $phone]);
+            return $barantum['resp'] ?? null;
+        }
+
+        Log::info('SEND_BARANTUM_FAILED_FALLBACK_WABLAS', [
+            'phone'  => $phone,
+            'reason' => $barantum['reason'] ?? null,
+            'status' => $barantum['status'] ?? null,
+            'resp'   => $barantum['resp'] ?? null,
+        ]);
+
+        return $this->sendSingleWablas($phone, $message);
+        */
+    }
+
+    private function sendBarantum($phone, $message)
+    {
+        $no_telp = NoTelp::where('no_telp', $phone)
+            ->where('last_received_message_time', '>=', now()->subDay())
+            ->first();
+        if (is_null($no_telp)) {
+            return ['ok' => false, 'reason' => 'no_recent_notelp'];
+        }
+
+        $text = trim((string) $message);
+        if ($text === '') {
+            return ['ok' => false, 'reason' => 'empty_text'];
+        }
+
+        return app(\App\Services\BarantumReplyService::class)->replyText([
+            'chats_users_id' => (string) $phone,
+            'channel'        => 'wa',
+            'company_key'    => config('services.barantum.company_key'),
+        ], $text);
+    }
+
+    /**
+     * Barantum kadang balas HTTP 2xx tapi body-nya {"status":false,"message":"..."}
+     * (mis. user belum punya session WA). Sukses sebenarnya = ok HTTP DAN body
+     * tidak menandai status/success false.
+     */
+    private function barantumLooksSuccessful(array $r): bool
+    {
+        if ( !($r['ok'] ?? false) ) {
+            return false;
+        }
+        $resp = $r['resp'] ?? null;
+        if ( is_array($resp) ) {
+            if ( array_key_exists('status', $resp) && $resp['status'] === false ) {
+                return false;
+            }
+            if ( array_key_exists('success', $resp) && $resp['success'] === false ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ============================================================
+    // WATZAP (AKTIF)
+    // Memakai App\Services\WatzapService yang sudah ada.
+    // ============================================================
+    private function sendWatzap($phone, $message)
+    {
+        $no_telp = NoTelp::where('no_telp', $phone)
+            ->where('last_received_message_time', '>=', now()->subDay())
+            ->first();
+        if (is_null($no_telp)) {
+            return ['ok' => false, 'reason' => 'no_recent_notelp'];
+        }
+
+        $text = trim((string) $message);
+        if ($text === '') {
+            return ['ok' => false, 'reason' => 'empty_text'];
+        }
+
+        return app(\App\Services\WatzapService::class)->sendText((string) $phone, $text);
+    }
+
+    // Watzap balas HTTP 200 walau auth/credit gagal: status=="200" + ack="Pending"
+    // berarti sukses. Selain itu (mis. status=="401"/ack=="Failure") = gagal.
+    private function watzapLooksSuccessful(array $r): bool
+    {
+        if ( !($r['ok'] ?? false) ) {
+            return false;
+        }
+        $resp = $r['resp'] ?? null;
+        if ( is_array($resp) ) {
+            if ( array_key_exists('status', $resp) && (string)$resp['status'] !== '200' ) {
+                return false;
+            }
+            if ( array_key_exists('ack', $resp) && strtolower((string)$resp['ack']) === 'failure' ) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public function sendSingleWablas($phone, $message)
