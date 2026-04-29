@@ -21,18 +21,6 @@ class WatzapController extends Controller
     /**
      * @param
      */
-    public function __construct()
-    {
-        Log::info('==================================');
-        Log::info('==================================');
-        Log::info('==================================');
-        Log::info('==================================');
-        Log::info('WEBHOOK WATZAP TRIGERRED');
-        Log::info('==================================');
-        Log::info('==================================');
-        Log::info('==================================');
-        Log::info('==================================');
-    }
 
     public function cek_api(){
         $response = Http::acceptJson()
@@ -170,6 +158,13 @@ class WatzapController extends Controller
     protected function resolvePhone(array $raw): ?string
     {
         $candidates = [
+            // Watzap WABA payload (utama)
+            data_get($raw, 'data.phone'),
+            data_get($raw, 'data.message_raw.from'),
+            data_get($raw, 'data.root_value.messages.0.from'),
+            data_get($raw, 'data.root_value.contacts.0.wa_id'),
+
+            // Bentuk umum lainnya
             data_get($raw, 'phone'),
             data_get($raw, 'from'),
             data_get($raw, 'sender'),
@@ -180,7 +175,6 @@ class WatzapController extends Controller
             data_get($raw, 'contact.number'),
             data_get($raw, 'message.from'),
             data_get($raw, 'data.from'),
-            data_get($raw, 'data.phone'),
             data_get($raw, 'payload.from'),
             data_get($raw, 'payload.phone'),
         ];
@@ -198,7 +192,13 @@ class WatzapController extends Controller
     protected function resolveMessageType(array $raw): string
     {
         $type = strtolower((string) (
-            data_get($raw, 'messageType')
+            // Watzap WABA payload (utama)
+            data_get($raw, 'data.message_type')
+            ?? data_get($raw, 'data.message_raw.type')
+            ?? data_get($raw, 'data.root_value.messages.0.type')
+
+            // Bentuk umum lainnya
+            ?? data_get($raw, 'messageType')
             ?? data_get($raw, 'message_type')
             ?? data_get($raw, 'type')
             ?? data_get($raw, 'message.type')
@@ -231,6 +231,15 @@ class WatzapController extends Controller
     protected function resolveMessage(array $raw, string $messageType): ?string
     {
         $candidates = [
+            // Watzap WABA payload (utama)
+            data_get($raw, 'data.message_text'),
+            data_get($raw, 'data.message_raw.text.body'),
+            data_get($raw, 'data.root_value.messages.0.text.body'),
+            data_get($raw, 'data.message_raw.image.caption'),
+            data_get($raw, 'data.message_raw.video.caption'),
+            data_get($raw, 'data.message_raw.document.caption'),
+
+            // Bentuk umum lainnya
             data_get($raw, 'message'),
             data_get($raw, 'text'),
             data_get($raw, 'body'),
@@ -262,6 +271,12 @@ class WatzapController extends Controller
     protected function resolveMediaUrl(array $raw, string $messageType): ?string
     {
         $candidates = [
+            // Watzap WABA payload (utama)
+            data_get($raw, 'data.media_info.url'),
+            data_get($raw, 'data.media_info.link'),
+            data_get($raw, 'data.media_info.file_url'),
+
+            // Bentuk umum lainnya
             data_get($raw, 'url'),
             data_get($raw, 'media_url'),
             data_get($raw, 'file_url'),
