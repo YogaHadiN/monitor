@@ -810,6 +810,12 @@ class WebRegistrationController extends Controller
                 unset($data['id']);
                 unset($data['data_terkonfirmasi']);
 
+                // schedulled_reservations punya NOT NULL constraint utk
+                // waitlist_flag — coerce null → 0 supaya insert tidak ditolak.
+                if (!array_key_exists('waitlist_flag', $data) || is_null($data['waitlist_flag'])) {
+                    $data['waitlist_flag'] = 0;
+                }
+
                 $schedulled_reservation = SchedulledReservation::create($data);
                 $schedulled_reservation->reservasi_selesai = 1;
                 $schedulled_reservation->qrcode = $wablas->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
