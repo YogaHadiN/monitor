@@ -1,13 +1,28 @@
 @php
     $isScheduled = (int) ($web_registration->schedulled_booking ?? 0) >= 1;
     $isWaitlist  = (int) ($web_registration->schedulled_booking ?? 0) === 2 && (int) ($web_registration->waitlist_flag ?? 0) === 1;
+    $petugas     = $web_registration->petugas_pemeriksa ?? null;
+    $jam_mulai   = $petugas ? substr((string) $petugas->jam_mulai, 0, 5) : null;
+    $jam_akhir   = $petugas ? substr((string) $petugas->jam_akhir, 0, 5) : null;
 @endphp
 <h2>Konfirmasi Data</h2>
 @if ($isScheduled)
     <div class="alert alert-warning">
-        <strong>{{ $isWaitlist ? 'Reservasi Waitlist' : 'Reservasi Terjadwal' }}</strong> —
-        Anda akan dibuatkan slot reservasi terjadwal (bukan antrian biasa).
-        QR Code akan diberikan setelah konfirmasi.
+        <strong>{{ $isWaitlist ? 'Reservasi Waitlist' : 'Reservasi Terjadwal' }}</strong>
+        @if ($jam_mulai && $jam_akhir)
+            <div>Jam pelayanan: <strong>{{ $jam_mulai }}–{{ $jam_akhir }}</strong></div>
+        @endif
+        <ul class="mt-10" style="padding-left: 18px; margin-bottom: 0;">
+            @if ($isWaitlist)
+                <li>Anda akan dimasukkan ke <strong>waitlist</strong> setelah klik <em>Lanjutkan</em>.</li>
+                <li>Kami proses secara berurutan bila ada slot batal.</li>
+            @else
+                <li>Anda akan dibuatkan <strong>slot reservasi terjadwal</strong>, bukan antrian walk-in.</li>
+                <li>QR Code muncul setelah konfirmasi.</li>
+            @endif
+            <li>Datang sesuai jam pelayanan, lalu <strong>scan QR Code</strong> di klinik.</li>
+            <li>Reservasi bisa dibatalkan via tombol <em>Hapus Reservasi</em>.</li>
+        </ul>
     </div>
 @endif
 <p>Mohon dicek kembali data yang sudah diinput</p>

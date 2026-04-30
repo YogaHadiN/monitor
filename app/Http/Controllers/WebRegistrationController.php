@@ -160,15 +160,6 @@ class WebRegistrationController extends Controller
         ) {
             return view('web_registrations.nomor_asuransi_bpjs');
         } else if (
-            // Step kartu asuransi: hanya utk BPJS, hanya jika belum di-upload/skip.
-            !is_null( $web_registration ) &&
-            (int) $web_registration->registrasi_pembayaran_id === 2 &&
-            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
-            $web_registration->nomor_asuransi_bpjs !== '' &&
-            is_null( $web_registration->kartu_asuransi_image )
-        ) {
-            return view('web_registrations.kartu_asuransi_image');
-        } else if (
             !is_null( $web_registration ) &&
             !is_null( $web_registration->tipe_konsultasi_id ) &&
             !is_null( $web_registration->registrasi_pembayaran_id ) &&
@@ -217,10 +208,16 @@ class WebRegistrationController extends Controller
             // Dokter gigi via web = mode reservasi terjadwal: tampilkan SEMUA
             // petugas dgn schedulled_booking_allowed=1 hari ini, tanpa filter jam.
             if ($tipe_konsultasi_id == 2) {
+                // Mirror WablasController petugas_pemeriksa_sekarang (line 6030-6037):
+                // selain schedulled_booking_allowed, juga butuh online_registration_enabled
+                // & registration_enabled. Jadwal yg dimatikan tidak boleh muncul.
                 $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                     ->where('tipe_konsultasi_id', 2)
                     ->where('schedulled_booking_allowed', 1)
+                    ->where('online_registration_enabled', 1)
+                    ->where('registration_enabled', 1)
                     ->where('ruangan_id', '>', 0)
+                    ->orderBy('jam_mulai', 'asc')
                     ->get();
 
                 return view('web_registrations.staf', compact('petugas_pemeriksas'));
@@ -352,14 +349,28 @@ class WebRegistrationController extends Controller
 
         // Untuk dokter gigi (tipe=2): izinkan via web HANYA kalau ada petugas
         // pemeriksa yg schedulled_booking_allowed=1 utk hari ini.
+        // Aturan disamakan dengan WablasController validasiDokterPengambilanAntrianDokterGigi
+        // (line 6347-6463): cek jam_buka tenant, deadline 30 menit sebelum jam_mulai
+        // jadwal terakhir, dan listing petugas hanya yg online_registration_enabled
+        // & registration_enabled.
         if ($tipe_konsultasi_id == '2') {
-            $hasSchedulingDokterGigi = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
+            $petugas_pemeriksa_terjadwal = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                 ->where('tipe_konsultasi_id', 2)
                 ->where('schedulled_booking_allowed', 1)
-                ->exists();
+                ->where('online_registration_enabled', 1)
+                ->where('registration_enabled', 1)
+                ->orderBy('jam_mulai_default', 'asc')
+                ->get();
 
-            if (!$hasSchedulingDokterGigi) {
+            if ($petugas_pemeriksa_terjadwal->isEmpty()) {
                 $this->message = 'Antrian dokter gigi hanya lewat whatsapp';
+                $message = view('web_registrations.message', ['message' => $this->message])->render();
+                return compact('message');
+            }
+
+            $errorWindow = $this->validasiWindowReservasiTerjadwalGigi($petugas_pemeriksa_terjadwal);
+            if (!is_null($errorWindow)) {
+                $this->message = $errorWindow;
                 $message = view('web_registrations.message', ['message' => $this->message])->render();
                 return compact('message');
             }
@@ -500,6 +511,8 @@ class WebRegistrationController extends Controller
             ->whereDate('created_at', date('Y-m-d'))
             ->first();
 
+        $alert_type = 'alert-danger';
+
         if (!$web_registration) {
             $this->message = 'registrasi tidak ditemukan';
         } else {
@@ -508,12 +521,19 @@ class WebRegistrationController extends Controller
                 $isSchedulingAllowed = (int) ($petugas_pemeriksa->schedulled_booking_allowed ?? 0) === 1;
                 $nama_dokter         = $petugas_pemeriksa->staf->nama_dengan_gelar;
 
-                if (!$petugas_pemeriksa->registration_enabled) {
-                    $web_registration->delete();
-                    $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup";
-                } else if (!$petugas_pemeriksa->slot_pendaftaran_available) {
-                    if ($isSchedulingAllowed) {
-                        // Mode reservasi terjadwal & slot penuh → tawarkan waitlist (mirror Wablas line 3818-3825).
+                // Khusus path reservasi terjadwal: aturan disamakan dgn
+                // WablasController line 3473-3513 — cek online_registration_enabled,
+                // registration_enabled, slot_pendaftaran_available, jam_praktek_terlewat.
+                if ($isSchedulingAllowed) {
+                    if (!$petugas_pemeriksa->online_registration_enabled) {
+                        $web_registration->delete();
+                        $this->message = $this->pesanHanyaPendaftaranLangsung($petugas_pemeriksa);
+                    } else if (!$petugas_pemeriksa->registration_enabled || $petugas_pemeriksa->jam_praktek_terlewat) {
+                        $web_registration->delete();
+                        $this->message = $this->pesanPendaftaranSudahDitutup($petugas_pemeriksa);
+                    } else if (!$petugas_pemeriksa->slot_pendaftaran_available) {
+                        // Slot penuh + scheduling allowed → tawarkan waitlist
+                        // (mirror Wablas line 3818-3825 saat finalisasi).
                         $web_registration->staf_id              = $petugas_pemeriksa->staf_id;
                         $web_registration->ruangan_id           = $petugas_pemeriksa->ruangan_id;
                         $web_registration->petugas_pemeriksa_id = $petugas_pemeriksa->id;
@@ -521,19 +541,35 @@ class WebRegistrationController extends Controller
                         $web_registration->waitlist_flag        = null;
                         $web_registration->save();
 
-                        $this->message = "Slot {$nama_dokter} sudah penuh. Apakah Anda ingin gabung waitlist?";
+                        $this->message = $this->pesanKuotaPenuhDenganWaitlist($petugas_pemeriksa);
+                        $alert_type    = 'alert-warning';
                     } else {
-                        $web_registration->delete();
-                        $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup karena sudah penuh";
+                        $web_registration->staf_id              = $petugas_pemeriksa->staf_id;
+                        $web_registration->ruangan_id           = $petugas_pemeriksa->ruangan_id;
+                        $web_registration->petugas_pemeriksa_id = $petugas_pemeriksa->id;
+                        $web_registration->schedulled_booking   = 1;
+                        $web_registration->save();
+
+                        $this->message = $this->pesanReservasiTerjadwalDipilih($petugas_pemeriksa);
+                        $alert_type    = 'alert-info';
                     }
                 } else {
-                    $web_registration->staf_id              = $petugas_pemeriksa->staf_id;
-                    $web_registration->ruangan_id           = $petugas_pemeriksa->ruangan_id;
-                    $web_registration->petugas_pemeriksa_id = $petugas_pemeriksa->id;
-                    $web_registration->schedulled_booking   = $isSchedulingAllowed ? 1 : 0;
-                    $web_registration->save();
+                    // Path antrian walk-in (non-scheduled) — perilaku existing tidak diubah.
+                    if (!$petugas_pemeriksa->registration_enabled) {
+                        $web_registration->delete();
+                        $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup";
+                    } else if (!$petugas_pemeriksa->slot_pendaftaran_available) {
+                        $web_registration->delete();
+                        $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup karena sudah penuh";
+                    } else {
+                        $web_registration->staf_id              = $petugas_pemeriksa->staf_id;
+                        $web_registration->ruangan_id           = $petugas_pemeriksa->ruangan_id;
+                        $web_registration->petugas_pemeriksa_id = $petugas_pemeriksa->id;
+                        $web_registration->schedulled_booking   = 0;
+                        $web_registration->save();
 
-                    $this->message = null;
+                        $this->message = null;
+                    }
                 }
             } else {
                 $this->message = 'petugas pemeriksa tidak ditemukan';
@@ -541,7 +577,8 @@ class WebRegistrationController extends Controller
         }
 
         $message = view('web_registrations.message', [
-            'message' => $this->message
+            'message'    => $this->message,
+            'alert_type' => $alert_type,
         ])->render();
 
         return compact('message');
@@ -561,60 +598,23 @@ class WebRegistrationController extends Controller
             ->where('schedulled_booking', 2)
             ->first();
 
+        $alert_type = 'alert-danger';
+
         if (!$web_registration) {
             $this->message = 'registrasi waitlist tidak ditemukan';
         } else if ($value === 1) {
             $web_registration->waitlist_flag = 1;
             $web_registration->save();
-            $this->message = null;
+            $this->message = $this->pesanWaitlistDisetujui();
+            $alert_type    = 'alert-info';
         } else {
             $web_registration->delete();
             $this->message = 'Reservasi dibatalkan';
         }
 
         $message = view('web_registrations.message', [
-            'message' => $this->message
-        ])->render();
-
-        return compact('message');
-    }
-
-    /**
-     * Upload kartu asuransi image (optional).
-     * - File ada → upload ke S3.
-     * - Tanpa file (klik "Lewati") → set string kosong, lanjut step berikutnya.
-     */
-    public function kartu_asuransi_image(Request $request)
-    {
-        $no_telp = Input::get('no_telp');
-
-        $web_registration = WebRegistration::where('no_telp', $no_telp)
-            ->whereDate('created_at', date('Y-m-d'))
-            ->first();
-
-        if (!$web_registration) {
-            $this->message = 'registrasi tidak ditemukan';
-        } else if (!$request->hasFile('file')) {
-            // skip: tetapkan kosong supaya gate `is_null` di view_refresh lewat.
-            $web_registration->kartu_asuransi_image = '';
-            $web_registration->save();
-            $this->message = null;
-        } else {
-            $file      = $request->file('file');
-            $extension = $file->getClientOriginalExtension();
-            $filename  = 'kartu_asuransi_web_' . time() . '_' . $web_registration->id . '.' . $extension;
-            $path      = 'kartu_asuransi_image/' . $filename;
-
-            \Storage::disk('s3')->put($path, file_get_contents($file));
-
-            $web_registration->kartu_asuransi_image = $path;
-            $web_registration->save();
-
-            $this->message = null;
-        }
-
-        $message = view('web_registrations.message', [
-            'message' => $this->message
+            'message'    => $this->message,
+            'alert_type' => $alert_type,
         ])->render();
 
         return compact('message');
@@ -809,7 +809,10 @@ class WebRegistrationController extends Controller
                         $web_registration->save();
 
                         $this->message = "Slot {$petugas_pemeriksa->staf->nama_dengan_gelar} sudah penuh. Setujui waitlist untuk melanjutkan.";
-                        $message = view('web_registrations.message', [ 'message' => $this->message ])->render();
+                        $message = view('web_registrations.message', [
+                            'message'    => $this->message,
+                            'alert_type' => 'alert-warning',
+                        ])->render();
                         return compact('message');
                     }
                 }
@@ -831,8 +834,14 @@ class WebRegistrationController extends Controller
 
                 WebRegistration::where('no_telp', $no_telp)->delete();
 
-                $this->message = null;
-                $message = view('web_registrations.message', [ 'message' => $this->message ])->render();
+                $isWaitlist = (int) ($schedulled_reservation->waitlist_flag ?? 0) === 1;
+                $this->message = $isWaitlist
+                    ? $this->pesanWaitlistTercatat($schedulled_reservation)
+                    : $this->pesanReservasiTerjadwalTercatat($schedulled_reservation);
+                $message = view('web_registrations.message', [
+                    'message'    => $this->message,
+                    'alert_type' => 'alert-success',
+                ])->render();
                 return compact('message');
             });
         }
@@ -851,7 +860,6 @@ class WebRegistrationController extends Controller
         $antrian->ruangan_id               = $web_registration->ruangan_id;
         $antrian->tipe_konsultasi_id       = $web_registration->tipe_konsultasi_id;
         $antrian->staf_id                  = $web_registration->staf_id;
-        $antrian->kartu_asuransi_image     = $web_registration->kartu_asuransi_image;
         $antrian->reservasi_online         = 1;
         $antrian->sumber_antrian_id        = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::WEB_KLINIK);
         $antrian->sudah_hadir_di_klinik    = 0;
@@ -1068,6 +1076,175 @@ class WebRegistrationController extends Controller
              $no_telp = '62' . substr($no_telp, 1);
          }
          return $no_telp;
+    }
+
+    /**
+     * Validasi window pendaftaran reservasi terjadwal dokter gigi.
+     * Mirror WablasController validasiDokterPengambilanAntrianDokterGigi
+     * (line 6347-6463). Return null bila masih boleh daftar; string pesan
+     * error bila di luar window.
+     *
+     * Aturan:
+     *  - Bila tenant punya jam_buka & sekarang < jam_buka → "baru dimulai pukul X"
+     *  - Deadline = jam_mulai_default jadwal terakhir - 30 menit. Bila sekarang
+     *    >= deadline → "berakhir pukul X" + listing jadwal hari ini.
+     */
+    private function validasiWindowReservasiTerjadwalGigi($petugas_pemeriksa_terjadwal): ?string
+    {
+        if ($petugas_pemeriksa_terjadwal->isEmpty()) {
+            return null;
+        }
+
+        $tz     = 'Asia/Jakarta';
+        $nowJkt = Carbon::now($tz);
+
+        if (!empty($this->tenant->jam_buka)) {
+            $jam_buka = Carbon::parse($this->tenant->jam_buka, $tz);
+            if ($nowJkt->lt($jam_buka)) {
+                return
+                    "Pendaftaran online baru dimulai pada {$jam_buka->format('H:i')}.\n" .
+                    "Silakan mendaftar kembali setelah jam tersebut.\n" .
+                    "Mohon maaf atas ketidaknyamanannya.";
+            }
+        }
+
+        $petugas_terakhir = $petugas_pemeriksa_terjadwal->last();
+        if (empty($petugas_terakhir->jam_mulai_default)) {
+            return null;
+        }
+
+        $deadline        = Carbon::parse($petugas_terakhir->jam_mulai_default, $tz)->subMinutes(30);
+        $tipe_konsultasi = ucwords(optional($petugas_terakhir->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi');
+
+        if ($nowJkt->lt($deadline)) {
+            return null;
+        }
+
+        $message = "Pendaftaran online terjadwal {$tipe_konsultasi} berakhir pukul {$deadline->format('H:i')}.\n";
+        $message .= "Jadwal {$tipe_konsultasi} hari ini :";
+
+        $petugas_hari_ini = PetugasPemeriksa::with('staf')
+            ->where('tipe_konsultasi_id', $petugas_terakhir->tipe_konsultasi_id)
+            ->whereDate('tanggal', $nowJkt->toDateString())
+            ->orderBy('jam_mulai_default')
+            ->get();
+
+        foreach ($petugas_hari_ini as $pp) {
+            $mulai = Carbon::parse($pp->jam_mulai_default, $tz)->format('H:i');
+            $akhir = Carbon::parse($pp->jam_akhir_default, $tz)->subMinutes(30)->format('H:i');
+            $nama  = optional($pp->staf)->nama_dengan_gelar ?? 'Dokter';
+            $message .= "\n{$nama}: {$mulai}-{$akhir}";
+            if ((int) $pp->max_booking > 0) {
+                $message .= " (tersisa {$pp->slot_pendaftaran} slot)";
+                $message .= "\nSilahkan daftar di klinik jika masih ada slot";
+            }
+        }
+
+        return $message;
+    }
+
+    /**
+     * Pesan dokter hanya melayani pendaftaran langsung (mirror WablasController
+     * line 3479-3486 untuk !online_registration_enabled).
+     */
+    private function pesanHanyaPendaftaranLangsung($petugas_pemeriksa): string
+    {
+        $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
+        return
+            "{$nama_dokter} hanya bisa pendaftaran langsung.\n" .
+            "Silahkan datang mendaftar pada saat dokter berpraktek.\n" .
+            "Jam {$petugas_pemeriksa->jadwal_hari_ini} pada hari ini.";
+    }
+
+    /**
+     * Pesan pendaftaran sudah ditutup (mirror WablasController line 3489-3494
+     * untuk !registration_enabled || jam_praktek_terlewat).
+     */
+    private function pesanPendaftaranSudahDitutup($petugas_pemeriksa): string
+    {
+        $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
+        return "Pendaftaran Dokter {$nama_dokter} hari ini sudah ditutup.";
+    }
+
+    /**
+     * Pesan info saat user memilih dokter dgn mode reservasi terjadwal.
+     * Mirror tone WablasController balasanReservasiTerjadwalDibuat —
+     * memberi tahu pasien bahwa ini bukan antrian biasa.
+     */
+    private function pesanReservasiTerjadwalDipilih($petugas_pemeriksa): string
+    {
+        $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
+        $mulai       = substr((string) $petugas_pemeriksa->jam_mulai, 0, 5);
+        $akhir       = substr((string) $petugas_pemeriksa->jam_akhir, 0, 5);
+
+        return
+            "Anda memilih *Reservasi Terjadwal* ke {$nama_dokter}.\n" .
+            "• Jam pelayanan: {$mulai}–{$akhir}\n" .
+            "• Lengkapi data berikut sampai selesai untuk mendapatkan QR Code.\n" .
+            "• Datang sesuai jam pelayanan, lalu *scan QR Code* di klinik.";
+    }
+
+    /**
+     * Pesan kuota penuh + tawarkan waitlist (mirror WablasController
+     * pesanKuotaPenuhPerPetugasDenganWaitlist).
+     */
+    private function pesanKuotaPenuhDenganWaitlist($petugas_pemeriksa): string
+    {
+        $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
+        $mulai       = substr((string) $petugas_pemeriksa->jam_mulai, 0, 5);
+        $akhir       = substr((string) $petugas_pemeriksa->jam_akhir, 0, 5);
+
+        return
+            "Maaf, kuota *Reservasi Terjadwal* untuk {$nama_dokter} sudah *penuh*.\n" .
+            "• Jam pelayanan: {$mulai}–{$akhir}\n" .
+            "Apakah Anda ingin masuk *waitlist*? Anda akan otomatis diproses bila ada slot batal.";
+    }
+
+    /**
+     * Pesan setelah user setuju masuk waitlist (mirror
+     * WablasController pesanWaitlistTercatat — tapi sebelum tercatat di
+     * tabel schedulled_reservations; itu terjadi di lanjutkan()).
+     */
+    private function pesanWaitlistDisetujui(): string
+    {
+        return
+            "Siap, Anda kami catat sebagai kandidat *waitlist*.\n" .
+            "Lanjutkan mengisi data sampai selesai untuk mengonfirmasi.\n" .
+            "Bila ada slot batal, Anda akan diproses secara berurutan.";
+    }
+
+    /**
+     * Pesan sukses reservasi terjadwal dibuat (mirror WablasController
+     * balasanReservasiTerjadwalDibuat).
+     */
+    private function pesanReservasiTerjadwalTercatat($schedulled_reservation): string
+    {
+        $nama_dokter = $schedulled_reservation->staf
+            ? $schedulled_reservation->staf->nama_dengan_gelar
+            : '';
+
+        $msg  = "Reservasi Terjadwal sudah tercatat";
+        if ($nama_dokter) {
+            $msg .= " ke {$nama_dokter}";
+        }
+        $msg .= ".\n";
+        $msg .= "• *Scan QR Code* (di bawah) saat tiba di klinik.\n";
+        $msg .= "• Datang sesuai jam pelayanan; mohon hadir sebelum panggilan.\n";
+        $msg .= "• Untuk membatalkan, gunakan tombol *Hapus Reservasi*.";
+        return $msg;
+    }
+
+    /**
+     * Pesan sukses waitlist tercatat (mirror WablasController
+     * pesanWaitlistTercatat — dipakai setelah schedulled_reservation
+     * dibuat dgn waitlist_flag=1).
+     */
+    private function pesanWaitlistTercatat($schedulled_reservation): string
+    {
+        return
+            "Anda sudah masuk *waitlist*. Kode waitlist: {$schedulled_reservation->id}.\n" .
+            "Bila ada slot batal, Anda akan kami hubungi *secara berurutan*.\n" .
+            "Mohon simpan QR Code; akan aktif begitu slot tersedia.";
     }
     /**
      * undocumented function

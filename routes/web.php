@@ -59,7 +59,6 @@ Route::post('daftar_online_by_phone/submit/staf', [WebRegistrationController::cl
 Route::post('/daftar_online_by_phone/submit/pasien', [WebRegistrationController::class, 'pasien']);
 Route::post('/daftar_online_by_phone/submit/lanjutkan', [WebRegistrationController::class, 'lanjutkan']);
 Route::post('/daftar_online_by_phone/submit/waitlist', [WebRegistrationController::class, 'waitlist']);
-Route::post('/daftar_online_by_phone/submit/kartu_asuransi_image', [WebRegistrationController::class, 'kartu_asuransi_image']);
 Route::post('/daftar_online_by_phone/submit/ulangi', [WebRegistrationController::class, 'ulangi']);
 Route::post('/daftar_online_by_phone/submit/validasi_bpjs', [WebRegistrationController::class, 'validasi_bpjs']);
 Route::post('/daftar_online_by_phone/submit/batalkan', [WebRegistrationController::class, 'batalkan']);
