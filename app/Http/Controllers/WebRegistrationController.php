@@ -347,12 +347,10 @@ class WebRegistrationController extends Controller
             return compact('message');
         }
 
-        // Untuk dokter gigi (tipe=2): izinkan via web HANYA kalau ada petugas
-        // pemeriksa yg schedulled_booking_allowed=1 utk hari ini.
-        // Aturan disamakan dengan WablasController validasiDokterPengambilanAntrianDokterGigi
-        // (line 6347-6463): cek jam_buka tenant, deadline 30 menit sebelum jam_mulai
-        // jadwal terakhir, dan listing petugas hanya yg online_registration_enabled
-        // & registration_enabled.
+        // Untuk dokter gigi (tipe=2): aturan disamakan dengan WablasController
+        // validasiDokterPengambilanAntrianDokterGigi (line 6347-6463) — kecuali
+        // fallback "hanya lewat whatsapp" tidak dipakai karena web sudah punya
+        // fitur reservasi terjadwal yang sama dengan whatsapp bot.
         if ($tipe_konsultasi_id == '2') {
             $petugas_pemeriksa_terjadwal = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                 ->where('tipe_konsultasi_id', 2)
@@ -363,7 +361,7 @@ class WebRegistrationController extends Controller
                 ->get();
 
             if ($petugas_pemeriksa_terjadwal->isEmpty()) {
-                $this->message = 'Antrian dokter gigi hanya lewat whatsapp';
+                $this->message = $this->pesanPelayananGigiLibur();
                 $message = view('web_registrations.message', ['message' => $this->message])->render();
                 return compact('message');
             }
@@ -1141,6 +1139,19 @@ class WebRegistrationController extends Controller
         }
 
         return $message;
+    }
+
+    /**
+     * Pesan ketika tidak ada jadwal reservasi terjadwal dokter gigi yang aktif
+     * hari ini. Mirror WablasController pelayananPoliGigiLibur (line 6709) tanpa
+     * instruksi WA-specific.
+     */
+    private function pesanPelayananGigiLibur(): string
+    {
+        return
+            "Hari ini pelayanan reservasi terjadwal dokter gigi belum tersedia.\n" .
+            "Silakan mendaftar kembali saat jadwal tersedia.\n" .
+            "Mohon maaf atas ketidaknyamanannya.";
     }
 
     /**
