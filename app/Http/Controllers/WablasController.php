@@ -5027,10 +5027,28 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         return $this->sendSingleWablas($phone, $message);
 
-        // ===== INACTIVE: Barantum dulu, fallback Wablas =====
-        // Untuk swap balik ke Barantum:
+        // ===== INACTIVE: Pancake (Botcake) dulu, fallback Wablas =====
+        // Untuk swap ke Pancake:
         //   1) comment block "ACTIVE: Watzap" di atas
-        //   2) uncomment block "INACTIVE: Barantum" di bawah
+        //   2) uncomment block ini
+        /*
+        $pancake = $this->sendPancake($phone, $message);
+        if ( $this->pancakeLooksSuccessful($pancake) ) {
+            Log::info('SEND_VIA_PANCAKE_OK', ['phone' => $phone]);
+            return $pancake['resp'] ?? null;
+        }
+
+        Log::info('SEND_PANCAKE_FAILED_FALLBACK_WABLAS', [
+            'phone'  => $phone,
+            'reason' => $pancake['reason'] ?? null,
+            'status' => $pancake['status'] ?? null,
+            'resp'   => $pancake['resp'] ?? null,
+        ]);
+
+        return $this->sendSingleWablas($phone, $message);
+        */
+
+        // ===== INACTIVE: Barantum dulu, fallback Wablas =====
         /*
         $barantum = $this->sendBarantum($phone, $message);
         if ( $this->barantumLooksSuccessful($barantum) ) {
@@ -5047,6 +5065,120 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         return $this->sendSingleWablas($phone, $message);
         */
+    }
+
+    // ============================================================
+    // PANCAKE / BOTCAKE (AKTIF)
+    // Endpoint: https://botcake.io/api/public_api/v1/pages/{page_id}/flows/send_content
+    // Auth: Bearer token via env BOTCAKE_TOKEN (JWT, embed page id "waba_xxxxxx").
+    // Page id dapat di-override via env PANCAKE_PAGE_ID; default ambil dari decode
+    // payload BOTCAKE_TOKEN (claim "id"), fallback ke konstanta lama yg pernah live.
+    //
+    // Pesan dikirim dgn psid = "wa_" . $phone (format wa Pancake utk WhatsApp).
+    // Jendela 24-jam WABA tetap berlaku — gate via NoTelp.last_received_message_time.
+    // ============================================================
+    private function sendPancake($phone, $message)
+    {
+        $no_telp = NoTelp::where('no_telp', $phone)
+            ->where('last_received_message_time', '>=', now()->subDay())
+            ->first();
+        if (is_null($no_telp)) {
+            return ['ok' => false, 'reason' => 'no_recent_notelp'];
+        }
+
+        $text = trim((string) $message);
+        if ($text === '') {
+            return ['ok' => false, 'reason' => 'empty_text'];
+        }
+
+        $token  = env('BOTCAKE_TOKEN');
+        if (empty($token)) {
+            return ['ok' => false, 'reason' => 'missing_botcake_token'];
+        }
+
+        $pageId = $this->resolvePancakePageId($token);
+        if (empty($pageId)) {
+            return ['ok' => false, 'reason' => 'missing_page_id'];
+        }
+
+        $url = "https://botcake.io/api/public_api/v1/pages/{$pageId}/flows/send_content";
+
+        $body = [
+            'psid'    => 'wa_' . $phone,
+            'payload' => [],
+            'data'    => [
+                'version' => 'v2',
+                'content' => [
+                    'messages' => [
+                        [
+                            'type'    => 'text',
+                            'buttons' => [],
+                            'text'    => $text,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $resp = Http::withToken($token)
+            ->acceptJson()
+            ->timeout(20)
+            ->post($url, $body);
+
+        return [
+            'ok'     => $resp->ok(),
+            'status' => $resp->status(),
+            'body'   => $body,
+            'resp'   => $resp->json() ?? $resp->body(),
+            'reason' => $resp->ok() ? null : 'http_' . $resp->status(),
+        ];
+    }
+
+    /**
+     * Pancake balas HTTP 200 walau payload-nya gagal validasi (mis. psid invalid).
+     * Sukses sejati: ok HTTP DAN body tidak menandai status/success false.
+     */
+    private function pancakeLooksSuccessful(array $r): bool
+    {
+        if ( !($r['ok'] ?? false) ) {
+            return false;
+        }
+        $resp = $r['resp'] ?? null;
+        if ( is_array($resp) ) {
+            if ( array_key_exists('status', $resp) && $resp['status'] === false ) {
+                return false;
+            }
+            if ( array_key_exists('success', $resp) && $resp['success'] === false ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Page ID Pancake — prioritas: env PANCAKE_PAGE_ID > claim "id" di payload
+     * BOTCAKE_TOKEN (JWT) > fallback hardcoded yg dulu pernah live.
+     */
+    private function resolvePancakePageId(string $token): ?string
+    {
+        $env = env('PANCAKE_PAGE_ID');
+        if (!empty($env)) {
+            return $env;
+        }
+
+        $parts = explode('.', $token);
+        if (count($parts) === 3) {
+            $payload = json_decode(
+                base64_decode(strtr($parts[1], '-_', '+/')),
+                true
+            );
+            if (is_array($payload) && !empty($payload['id'])) {
+                return (string) $payload['id'];
+            }
+        }
+
+        // Fallback: page id yg pernah dipakai di kode lama (commented).
+        return 'waba_620223831163704';
     }
 
     private function sendBarantum($phone, $message)

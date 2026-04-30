@@ -229,6 +229,37 @@ function daftar_lagi() {
         }
     );
 }
+function hapusSchedulledReservation(id, control) {
+    Swal.fire({
+        title: "Konfirmasi",
+        text: "Anda akan menghapus reservasi terjadwal ini",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#5cb85c",
+        confirmButtonText: "Hapus Reservasi",
+        cancelButtonText: "Kembali",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $(control).html(
+                '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+            );
+            $.post(
+                base + "/daftar_online_by_phone/submit/hapus_schedulled_reservation",
+                {
+                    no_telp: $("#no_telp").val(),
+                    schedulled_reservation_id: id,
+                },
+                function (data, textStatus, jqXHR) {
+                    view(
+                        data ? data.message : null,
+                        data ? data.web_registration : null
+                    );
+                }
+            );
+        }
+    });
+}
 function hapusAntrian(antrian_id, control) {
     var nomor_antrian = $(control)
         .closest(".alert-info")

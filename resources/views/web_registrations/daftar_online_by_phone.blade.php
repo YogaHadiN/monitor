@@ -123,7 +123,7 @@ td {
 		});
       var base = '{{ url("") }}';
   </script>
-<script src="{!! url("js/daftar_online_by_phone.js?ver=4") !!}"></script>
+<script src="{!! url("js/daftar_online_by_phone.js?ver=5") !!}"></script>
 {{-- <script> --}}
 {{--     $('#carousel1').carousel({ --}}
 {{--       interval: 7000, --}}

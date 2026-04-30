@@ -50,6 +50,13 @@
                             <img class="center-fit" src="{{ \Storage::disk('s3')->url($sr->qrcode) }}" alt=''/>
                         @endif
                     </div>
+                    <div class="row mb-10 mt-10">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <button class="btn btn-danger btn-block" onclick="hapusSchedulledReservation({{ $sr->id }}, this);return false;">
+                                Hapus Reservasi
+                            </button>
+                        </div>
+                    </div>
                 </div>
             @endforeach
         @endif

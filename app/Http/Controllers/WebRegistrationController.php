@@ -342,6 +342,14 @@ class WebRegistrationController extends Controller
         $tipe_konsultasi_id = Input::get('value');
         $no_telp            = Input::get('no_telp');
 
+        // Guard anti double-daftar: kalau sudah ada antrian/reservasi terjadwal
+        // aktif hari ini, jangan boleh mulai pendaftaran baru.
+        if ($this->sudahPunyaPendaftaranHariIni($no_telp)) {
+            $this->message = 'Anda sudah memiliki pendaftaran hari ini. Tidak bisa daftar ulang sebelum yang lama dibatalkan.';
+            $message = view('web_registrations.message', ['message' => $this->message])->render();
+            return compact('message');
+        }
+
         // Untuk dokter gigi (tipe=2): izinkan via web HANYA kalau ada petugas
         // pemeriksa yg schedulled_booking_allowed=1 utk hari ini.
         if ($tipe_konsultasi_id == '2') {
@@ -881,23 +889,75 @@ class WebRegistrationController extends Controller
     }
     public function batalkan(){
         $no_telp = Input::get('no_telp');
-        $antrian = Antrian::where('no_telp',  $no_telp )
-                            ->whereDate('created_at', date('Y-m-d'))
-                            ->where('sudah_hadir_di_klinik', 0)
-                            ->whereRaw(
-                                "(
-                                    antriable_type = 'App\\\Models\\\Antrian'
-                                )"
-                            )
-                            ->delete();
+        Antrian::where('no_telp',  $no_telp )
+                ->whereDate('created_at', date('Y-m-d'))
+                ->where('sudah_hadir_di_klinik', 0)
+                ->whereRaw(
+                    "(
+                        antriable_type = 'App\\\Models\\\Antrian'
+                    )"
+                )
+                ->delete();
+
+        // Reservasi terjadwal hari ini juga ikut dihapus.
+        SchedulledReservation::where('no_telp', $no_telp)
+                ->whereDate('created_at', date('Y-m-d'))
+                ->delete();
+    }
+
+    public function hapus_schedulled_reservation(){
+        $no_telp = Input::get('no_telp');
+        $id      = Input::get('schedulled_reservation_id');
+
+        $sr = SchedulledReservation::where('id', $id)
+            ->where('no_telp', $no_telp)
+            ->whereDate('created_at', date('Y-m-d'))
+            ->first();
+
+        if (!is_null($sr)) {
+            $sr->delete();
+        }
     }
 
     public function daftar_lagi(){
         $no_telp = Input::get('no_telp');
+
+        if ($this->sudahPunyaPendaftaranHariIni($no_telp)) {
+            $this->message = 'Anda sudah memiliki pendaftaran hari ini. Tidak bisa daftar ulang sebelum yang lama dibatalkan.';
+            $message = view('web_registrations.message', ['message' => $this->message])->render();
+            return compact('message');
+        }
+
         WebRegistration::create([
             'no_telp' => $no_telp,
             'tipe_konsultasi_id' => null
         ]);
+    }
+
+    /**
+     * Cek apakah pasien sudah punya antrian / reservasi terjadwal aktif hari ini.
+     * Dipakai sebagai guard anti double-daftar di entry point pendaftaran baru.
+     */
+    private function sudahPunyaPendaftaranHariIni($no_telp): bool
+    {
+        $today = date('Y-m-d');
+
+        $hasAntrian = Antrian::where('no_telp', $no_telp)
+            ->whereDate('created_at', $today)
+            ->whereRaw(
+                "(antriable_type = 'App\\\Models\\\Antrian' or
+                  antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                  antriable_type = 'App\\\Models\\\AntrianPoli')"
+            )
+            ->exists();
+
+        if ($hasAntrian) {
+            return true;
+        }
+
+        return SchedulledReservation::where('no_telp', $no_telp)
+            ->whereDate('created_at', $today)
+            ->exists();
     }
     public function cekBpjsApi($nomor_asuransi_bpjs){
         $bpjs                                                = new BpjsApiController;
