@@ -1,4 +1,15 @@
+@php
+    $isScheduled = (int) ($web_registration->schedulled_booking ?? 0) >= 1;
+    $isWaitlist  = (int) ($web_registration->schedulled_booking ?? 0) === 2 && (int) ($web_registration->waitlist_flag ?? 0) === 1;
+@endphp
 <h2>Konfirmasi Data</h2>
+@if ($isScheduled)
+    <div class="alert alert-warning">
+        <strong>{{ $isWaitlist ? 'Reservasi Waitlist' : 'Reservasi Terjadwal' }}</strong> —
+        Anda akan dibuatkan slot reservasi terjadwal (bukan antrian biasa).
+        QR Code akan diberikan setelah konfirmasi.
+    </div>
+@endif
 <p>Mohon dicek kembali data yang sudah diinput</p>
 <div class="table-responsive">
     <table class="table table-hover table-condensed table-bordered" width="100%">

@@ -12,6 +12,7 @@ use App\Models\Pasien;
 use App\Models\Tenant;
 use App\Models\TipeKonsultasi;
 use App\Models\PetugasPemeriksa;
+use App\Models\SchedulledReservation;
 use App\Http\Controllers\WablasController;
 use App\Http\Controllers\BpjsApiController;
 use Carbon\Carbon;
@@ -104,12 +105,17 @@ class WebRegistrationController extends Controller
                                 )
                                 ->get();
 
+        $schedulled_reservations = SchedulledReservation::where('no_telp', $no_telp)
+                                ->whereDate('created_at', date('Y-m-d'))
+                                ->get();
+
         if (
-            count( $antrians ) &&
+            (count( $antrians ) || count( $schedulled_reservations )) &&
             is_null( $web_registration )
         ) {
             return view('web_registrations.nomor_antrian', compact(
-                'antrians'
+                'antrians',
+                'schedulled_reservations'
             ));
         } else if (
             is_null( $web_registration ) ||
@@ -153,6 +159,15 @@ class WebRegistrationController extends Controller
             is_null( $web_registration->nomor_asuransi_bpjs )
         ) {
             return view('web_registrations.nomor_asuransi_bpjs');
+        } else if (
+            // Step kartu asuransi: hanya utk BPJS, hanya jika belum di-upload/skip.
+            !is_null( $web_registration ) &&
+            (int) $web_registration->registrasi_pembayaran_id === 2 &&
+            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
+            $web_registration->nomor_asuransi_bpjs !== '' &&
+            is_null( $web_registration->kartu_asuransi_image )
+        ) {
+            return view('web_registrations.kartu_asuransi_image');
         } else if (
             !is_null( $web_registration ) &&
             !is_null( $web_registration->tipe_konsultasi_id ) &&
@@ -198,6 +213,19 @@ class WebRegistrationController extends Controller
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();
             $tipe_konsultasi_id = $web_registration->tipe_konsultasi_id;
+
+            // Dokter gigi via web = mode reservasi terjadwal: tampilkan SEMUA
+            // petugas dgn schedulled_booking_allowed=1 hari ini, tanpa filter jam.
+            if ($tipe_konsultasi_id == 2) {
+                $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
+                    ->where('tipe_konsultasi_id', 2)
+                    ->where('schedulled_booking_allowed', 1)
+                    ->where('ruangan_id', '>', 0)
+                    ->get();
+
+                return view('web_registrations.staf', compact('petugas_pemeriksas'));
+            }
+
             $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                                                     ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                                                     ->get();
@@ -273,6 +301,16 @@ class WebRegistrationController extends Controller
             return view('web_registrations.staf', compact('petugas_pemeriksas'));
         } else if (
             !is_null( $web_registration ) &&
+            (int) ($web_registration->schedulled_booking ?? 0) === 2 &&
+            is_null( $web_registration->waitlist_flag )
+        ) {
+            // Slot petugas penuh — tawarkan waitlist sebelum lanjut.
+            $petugas_pemeriksa = $web_registration->petugas_pemeriksa_id
+                ? PetugasPemeriksa::find($web_registration->petugas_pemeriksa_id)
+                : null;
+            return view('web_registrations.waitlist', compact('web_registration', 'petugas_pemeriksa'));
+        } else if (
+            !is_null( $web_registration ) &&
             !is_null( $web_registration->tipe_konsultasi_id ) &&
             !is_null( $web_registration->registrasi_pembayaran_id ) &&
             !is_null( $web_registration->register_previously_saved_patient ) &&
@@ -303,18 +341,48 @@ class WebRegistrationController extends Controller
     public function submit_tipe_konsultasi(){
         $tipe_konsultasi_id = Input::get('value');
         $no_telp            = Input::get('no_telp');
-        $cek                = $this->cek( $tipe_konsultasi_id );
-        $this->message            = $cek['message'];
-        $web_registration   = null;
-        if (
-            empty( $this->message ) &&
-            $tipe_konsultasi_id !== 2
-        ) {
+
+        // Untuk dokter gigi (tipe=2): izinkan via web HANYA kalau ada petugas
+        // pemeriksa yg schedulled_booking_allowed=1 utk hari ini.
+        if ($tipe_konsultasi_id == '2') {
+            $hasSchedulingDokterGigi = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
+                ->where('tipe_konsultasi_id', 2)
+                ->where('schedulled_booking_allowed', 1)
+                ->exists();
+
+            if (!$hasSchedulingDokterGigi) {
+                $this->message = 'Antrian dokter gigi hanya lewat whatsapp';
+                $message = view('web_registrations.message', ['message' => $this->message])->render();
+                return compact('message');
+            }
+
             $web_registration = WebRegistration::whereDate('created_at', date('Y-m-d'))
-                                                ->where('no_telp', $no_telp)
-                                                ->first();
-            if (is_null( $web_registration )) {
-                $web_registration = WebRegistration::create([
+                ->where('no_telp', $no_telp)
+                ->first();
+
+            if (is_null($web_registration)) {
+                WebRegistration::create([
+                    'no_telp'            => $no_telp,
+                    'tipe_konsultasi_id' => $tipe_konsultasi_id,
+                ]);
+            } else {
+                $web_registration->tipe_konsultasi_id = $tipe_konsultasi_id;
+                $web_registration->save();
+            }
+            $this->message = null;
+            $message = view('web_registrations.message', ['message' => $this->message])->render();
+            return compact('message');
+        }
+
+        $cek             = $this->cek($tipe_konsultasi_id);
+        $this->message   = $cek['message'];
+
+        if (empty($this->message)) {
+            $web_registration = WebRegistration::whereDate('created_at', date('Y-m-d'))
+                ->where('no_telp', $no_telp)
+                ->first();
+            if (is_null($web_registration)) {
+                WebRegistration::create([
                     'no_telp'            => $no_telp,
                     'tipe_konsultasi_id' => $tipe_konsultasi_id,
                 ]);
@@ -324,22 +392,8 @@ class WebRegistrationController extends Controller
             }
         }
 
-        if ( $tipe_konsultasi_id == '2' ) { // dokter gigi
-            $this->message = 'Antrian dokter gigi hanya lewat whatsapp';
-            if ( $web_registration ) {
-                $web_registration->delete();
-            }
-            /* $wb             = new WablasController; */
-            /* $wb->tenant     = $this->tenant; */
-            /* $this->message_wablas = $wb->validasiDokterPengambilanAntrianDokterGigi(); */
-            /* if (!is_null( $this->message_wablas )) { */
-            /*     $this->message    = $this->message_wablas; */
-            /* } */
-        }
-        $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
-        return compact(
-            'message'
-        );
+        $message = view('web_registrations.message', ['message' => $this->message])->render();
+        return compact('message');
     }
     public function nomor_asuransi_bpjs(){
         $nomor_asuransi_bpjs = Input::get('value');
@@ -435,7 +489,7 @@ class WebRegistrationController extends Controller
         $no_telp              = Input::get('no_telp');
 
         $web_registration = WebRegistration::where('no_telp', $no_telp)
-            ->whereDate('created_at', date('Y-m-d')) // pakai Y (4 digit tahun)
+            ->whereDate('created_at', date('Y-m-d'))
             ->first();
 
         if (!$web_registration) {
@@ -443,27 +497,112 @@ class WebRegistrationController extends Controller
         } else {
             $petugas_pemeriksa = PetugasPemeriksa::find($petugas_pemeriksa_id);
             if ($petugas_pemeriksa) {
-                if (
-                    !$petugas_pemeriksa->registration_enabled
-                ) {
-                    $web_registration->delete();
-                    $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
-                    $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup";
-                } else if (
-                    !$petugas_pemeriksa->slot_pendaftaran_available
-                ) {
-                    $web_registration->delete();
-                    $nama_dokter = $petugas_pemeriksa->staf->nama_dengan_gelar;
-                    $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup karena sudah penuh";
-                }
-                $web_registration->staf_id    = $petugas_pemeriksa->staf_id;
-                $web_registration->ruangan_id = $petugas_pemeriksa->ruangan_id;
-                $web_registration->save();
+                $isSchedulingAllowed = (int) ($petugas_pemeriksa->schedulled_booking_allowed ?? 0) === 1;
+                $nama_dokter         = $petugas_pemeriksa->staf->nama_dengan_gelar;
 
-                $this->message = null;
+                if (!$petugas_pemeriksa->registration_enabled) {
+                    $web_registration->delete();
+                    $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup";
+                } else if (!$petugas_pemeriksa->slot_pendaftaran_available) {
+                    if ($isSchedulingAllowed) {
+                        // Mode reservasi terjadwal & slot penuh → tawarkan waitlist (mirror Wablas line 3818-3825).
+                        $web_registration->staf_id              = $petugas_pemeriksa->staf_id;
+                        $web_registration->ruangan_id           = $petugas_pemeriksa->ruangan_id;
+                        $web_registration->petugas_pemeriksa_id = $petugas_pemeriksa->id;
+                        $web_registration->schedulled_booking   = 2;
+                        $web_registration->waitlist_flag        = null;
+                        $web_registration->save();
+
+                        $this->message = "Slot {$nama_dokter} sudah penuh. Apakah Anda ingin gabung waitlist?";
+                    } else {
+                        $web_registration->delete();
+                        $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup karena sudah penuh";
+                    }
+                } else {
+                    $web_registration->staf_id              = $petugas_pemeriksa->staf_id;
+                    $web_registration->ruangan_id           = $petugas_pemeriksa->ruangan_id;
+                    $web_registration->petugas_pemeriksa_id = $petugas_pemeriksa->id;
+                    $web_registration->schedulled_booking   = $isSchedulingAllowed ? 1 : 0;
+                    $web_registration->save();
+
+                    $this->message = null;
+                }
             } else {
                 $this->message = 'petugas pemeriksa tidak ditemukan';
             }
+        }
+
+        $message = view('web_registrations.message', [
+            'message' => $this->message
+        ])->render();
+
+        return compact('message');
+    }
+
+    /**
+     * Set respon waitlist saat slot penuh (schedulled_booking=2).
+     * value=1 → setuju waitlist, lainnya → tolak (web_registration di-delete).
+     */
+    public function waitlist()
+    {
+        $no_telp = Input::get('no_telp');
+        $value   = (int) Input::get('value');
+
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+            ->whereDate('created_at', date('Y-m-d'))
+            ->where('schedulled_booking', 2)
+            ->first();
+
+        if (!$web_registration) {
+            $this->message = 'registrasi waitlist tidak ditemukan';
+        } else if ($value === 1) {
+            $web_registration->waitlist_flag = 1;
+            $web_registration->save();
+            $this->message = null;
+        } else {
+            $web_registration->delete();
+            $this->message = 'Reservasi dibatalkan';
+        }
+
+        $message = view('web_registrations.message', [
+            'message' => $this->message
+        ])->render();
+
+        return compact('message');
+    }
+
+    /**
+     * Upload kartu asuransi image (optional).
+     * - File ada → upload ke S3.
+     * - Tanpa file (klik "Lewati") → set string kosong, lanjut step berikutnya.
+     */
+    public function kartu_asuransi_image(Request $request)
+    {
+        $no_telp = Input::get('no_telp');
+
+        $web_registration = WebRegistration::where('no_telp', $no_telp)
+            ->whereDate('created_at', date('Y-m-d'))
+            ->first();
+
+        if (!$web_registration) {
+            $this->message = 'registrasi tidak ditemukan';
+        } else if (!$request->hasFile('file')) {
+            // skip: tetapkan kosong supaya gate `is_null` di view_refresh lewat.
+            $web_registration->kartu_asuransi_image = '';
+            $web_registration->save();
+            $this->message = null;
+        } else {
+            $file      = $request->file('file');
+            $extension = $file->getClientOriginalExtension();
+            $filename  = 'kartu_asuransi_web_' . time() . '_' . $web_registration->id . '.' . $extension;
+            $path      = 'kartu_asuransi_image/' . $filename;
+
+            \Storage::disk('s3')->put($path, file_get_contents($file));
+
+            $web_registration->kartu_asuransi_image = $path;
+            $web_registration->save();
+
+            $this->message = null;
         }
 
         $message = view('web_registrations.message', [
@@ -635,10 +774,56 @@ class WebRegistrationController extends Controller
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                         ->whereDate('created_at', date('Y-m-d'))
                                         ->first();
+
+        if (!$web_registration) {
+            $this->message = 'registrasi tidak ditemukan';
+            $message =  view('web_registrations.message', [ 'message' => $this->message ])->render();
+            return compact('message');
+        }
+
         $web_registration->data_terkonfirmasi = 1;
         $web_registration->save();
 
         $wablas = new WablasController;
+        $isScheduled = (int) ($web_registration->schedulled_booking ?? 0) >= 1;
+
+        // ===== RESERVASI TERJADWAL =====
+        if ($isScheduled) {
+            return \DB::transaction(function () use ($web_registration, $wablas, $no_telp) {
+                $petugas_pemeriksa = $web_registration->petugas_pemeriksa_id
+                    ? PetugasPemeriksa::find($web_registration->petugas_pemeriksa_id)
+                    : null;
+
+                // Slot penuh saat finalisasi → tetapkan ke waitlist (butuh waitlist_flag=1).
+                if ($petugas_pemeriksa && !$petugas_pemeriksa->slot_pendaftaran_available) {
+                    if ((int) $web_registration->waitlist_flag !== 1) {
+                        $web_registration->schedulled_booking = 2;
+                        $web_registration->save();
+
+                        $this->message = "Slot {$petugas_pemeriksa->staf->nama_dengan_gelar} sudah penuh. Setujui waitlist untuk melanjutkan.";
+                        $message = view('web_registrations.message', [ 'message' => $this->message ])->render();
+                        return compact('message');
+                    }
+                }
+
+                $data = $web_registration->toArray();
+                unset($data['id']);
+                unset($data['data_terkonfirmasi']);
+
+                $schedulled_reservation = SchedulledReservation::create($data);
+                $schedulled_reservation->reservasi_selesai = 1;
+                $schedulled_reservation->qrcode = $wablas->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
+                $schedulled_reservation->save();
+
+                WebRegistration::where('no_telp', $no_telp)->delete();
+
+                $this->message = null;
+                $message = view('web_registrations.message', [ 'message' => $this->message ])->render();
+                return compact('message');
+            });
+        }
+
+        // ===== ANTRIAN WALK-IN (existing flow) =====
         $wablas->input_registrasi_pembayaran_id = $web_registration->registrasi_pembayaran_id;
         $antrian                = $wablas->antrianPost( $web_registration->ruangan_id );
 
@@ -652,6 +837,7 @@ class WebRegistrationController extends Controller
         $antrian->ruangan_id               = $web_registration->ruangan_id;
         $antrian->tipe_konsultasi_id       = $web_registration->tipe_konsultasi_id;
         $antrian->staf_id                  = $web_registration->staf_id;
+        $antrian->kartu_asuransi_image     = $web_registration->kartu_asuransi_image;
         $antrian->reservasi_online         = 1;
         $antrian->sumber_antrian_id        = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::WEB_KLINIK);
         $antrian->sudah_hadir_di_klinik    = 0;

@@ -93,6 +93,54 @@ function ulangi(control) {
         }
     );
 }
+function uploadKartuAsuransi(control) {
+    var file = document.getElementById("kartu_asuransi_file").files[0];
+    if (!file) {
+        $("#info_kartu_asuransi").attr("class", "alert alert-danger")
+            .html("Pilih foto dulu, atau klik <strong>Lewati</strong>.");
+        return;
+    }
+    $(control).html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
+    var formData = new FormData();
+    formData.append("no_telp", $("#no_telp").val());
+    formData.append("file", file);
+
+    $.ajax({
+        url: base + "/daftar_online_by_phone/submit/kartu_asuransi_image",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (data) {
+            view(data.message, data.web_registration);
+        },
+        error: function () {
+            $("#info_kartu_asuransi").attr("class", "alert alert-danger")
+                .html("Upload gagal. Coba ulangi atau klik <strong>Lewati</strong>.");
+            $(control).html("Upload &amp; Lanjutkan");
+        },
+    });
+}
+function skipKartuAsuransi(control) {
+    $(control).html(
+        '<span class="glyphicon glyphicon-refresh spinning"></span> Mohon Tunggu...'
+    );
+    // Kirim TANPA file → controller akan set kartu_asuransi_image='' (skip).
+    var formData = new FormData();
+    formData.append("no_telp", $("#no_telp").val());
+    $.ajax({
+        url: base + "/daftar_online_by_phone/submit/kartu_asuransi_image",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (data) {
+            view(data.message, data.web_registration);
+        },
+    });
+}
 function validasiBpjs(control) {
     var nomor_asuransi_bpjs = $(control).val();
     if (/\D/g.test(control.value)) {
