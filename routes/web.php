@@ -26,6 +26,10 @@ Route::get('/redis-test', function () {
     return \Illuminate\Support\Facades\Redis::get('cek');
 });
 
+Route::get('/sunat-bot/test',         [\App\Http\Controllers\SunatBotTesterController::class, 'show']);
+Route::post('/sunat-bot/test',        [\App\Http\Controllers\SunatBotTesterController::class, 'chat']);
+Route::post('/sunat-bot/test/reset',  [\App\Http\Controllers\SunatBotTesterController::class, 'reset']);
+
 
 
 Route::get('/', [AntrianController::class, 'index']);
