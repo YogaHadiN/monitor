@@ -17,9 +17,10 @@ class WatzapService
         }
 
         $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_message', [
-            'api_key'  => env('WATZAP_TOKEN'),
-            'phone_no' => $phone,
-            'message'  => $message,
+            'api_key'     => env('WATZAP_TOKEN'),
+            'phone_no'    => $phone,
+            'message'     => $message,
+            'apps_source' => null,
         ]);
 
         if (!$response->ok()) {
