@@ -4,7 +4,6 @@ namespace App\Services\Bot;
 
 use App\Models\BotSession;
 use App\Models\Message;
-use App\Services\BarantumReplyService;
 use App\Services\WatzapService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +17,6 @@ class BotEngine
     public function __construct(
         private IntentDetector $intents,
         private SunatBotFlow $sunatFlow,
-        private BarantumReplyService $barantum,
         private WatzapService $watzap,
     ) {}
 
@@ -115,7 +113,6 @@ class BotEngine
         $text     = (string) ($reply['text'] ?? '');
         $imageUrl = (string) ($reply['image_url'] ?? '');
         $noTelp   = (string) ($ctx['no_telp'] ?? '');
-        $provider = strtolower((string) ($ctx['provider'] ?? ''));
 
         if ( $text === '' && $imageUrl === '' ) {
             return;
@@ -123,33 +120,15 @@ class BotEngine
 
         $sent = false;
         try {
-            if ( $provider === 'watzap' ) {
-                $res = $imageUrl !== ''
-                    ? $this->watzap->sendImage($noTelp, $imageUrl, $text)
-                    : $this->watzap->sendText($noTelp, $text);
-                $sent = (bool) ($res['ok'] ?? false);
-                if ( !$sent ) {
-                    Log::warning('BOT_ENGINE_SEND_FAILED', [
-                        'provider' => 'watzap',
-                        'reason'   => $res['reason'] ?? 'unknown',
-                        'no_telp'  => $noTelp,
-                    ]);
-                }
-            } else {
-                $payload = array_merge($ctx, [
-                    'image_url'    => $imageUrl,
-                    'message_type' => $imageUrl !== '' ? 'image' : 'text',
-                    'filename'     => '',
+            $res = $imageUrl !== ''
+                ? $this->watzap->sendImage($noTelp, $imageUrl, $text)
+                : $this->watzap->sendText($noTelp, $text);
+            $sent = (bool) ($res['ok'] ?? false);
+            if ( !$sent ) {
+                Log::warning('BOT_ENGINE_SEND_FAILED', [
+                    'reason'  => $res['reason'] ?? 'unknown',
+                    'no_telp' => $noTelp,
                 ]);
-                $res = $this->barantum->replyText($payload, $text);
-                $sent = (bool) ($res['ok'] ?? false);
-                if ( !$sent ) {
-                    Log::warning('BOT_ENGINE_SEND_FAILED', [
-                        'provider' => 'barantum',
-                        'reason'   => $res['reason'] ?? 'unknown',
-                        'payload'  => $payload,
-                    ]);
-                }
             }
         } catch (\Throwable $e) {
             Log::error('BOT_ENGINE_SEND_EXCEPTION', ['err' => $e->getMessage()]);
