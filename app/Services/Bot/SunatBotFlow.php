@@ -6,7 +6,12 @@ use App\Models\BotSession;
 
 class SunatBotFlow
 {
-    public function __construct(private AiParserService $ai) {}
+    public function __construct(
+        private AiParserService $ai,
+        private SunatQnaService $qna,
+    ) {}
+
+    private const SCHEDULING_CTA = 'Berkenan untuk kami jadwalkan minggu ini atau minggu depan kak?';
 
     public function asset(string $filename): string
     {
@@ -195,34 +200,34 @@ class SunatBotFlow
 
     public function handleReactive(BotSession $session, string $userMessage): ?array
     {
-        $msg = strtolower($userMessage);
-
-        if ( preg_match('/\b(jarum|suntik|bius)\b/iu', $msg) ) {
-            return [
-                [
-                    'image_url' => $this->asset('kesaksian-bius.jpg'),
-                    'text'      => "Kami menggunakan teknik bius yang lebih nyaman dibanding bius tanpa jarum suntik kak.",
-                ],
-                ['text' => "Menggunakan injeksi halus yang membuat sebagian besar anak bahkan tidak menyadari saat proses bius dilakukan 🙏"],
-            ];
+        if ( !$this->looksLikeQuestion($userMessage) ) {
+            return null;
         }
 
-        if ( preg_match('/\b(sembuh|berapa lama|kapan sekolah|pulih)\b/iu', $msg) ) {
-            return [
-                ['text' => "Perkiraan sembuh antara *2-3 minggu* kak 🙏"],
-                ['text' => "Biasanya anak sudah bisa mulai sekolah setelah 1 minggu bila tidak ada penyulit."],
-                ['text' => "Kami juga menyediakan celana dalam sunat sehingga anak tetap nyaman pakai celana biasa."],
-            ];
+        $qna = $this->qna->match($userMessage);
+        if ( $qna === null ) {
+            return null;
         }
 
-        if ( preg_match('/\b(harga|biaya|tarif|pricelist|price list)\b/iu', $msg) && $session->current_step !== 'offer_price' ) {
-            return [
-                ['text' => "Harga paket kami *Rp 2.500.000* kak."],
-                ['text' => "Sudah termasuk semua benefit: alat teknoklamp, bius nyaman, celana sunat, obat, pengawasan dokter lewat WhatsApp, dan hadiah anak."],
-            ];
+        $replies = [['text' => $qna->answer]];
+
+        if ( !$this->qna->isClosing($qna) && !$session->getData('scheduling_cta_sent') ) {
+            $replies[] = ['text' => self::SCHEDULING_CTA];
+            $session->setData('scheduling_cta_sent', true);
         }
 
-        return null;
+        return $replies;
+    }
+
+    private function looksLikeQuestion(string $msg): bool
+    {
+        if (str_contains($msg, '?')) return true;
+        $words = preg_split('/\s+/u', trim($msg)) ?: [];
+        if (count($words) >= 5) return true;
+        return (bool) preg_match(
+            '/\b(apa|apakah|kapan|berapa|bagaimana|gimana|kenapa|mengapa|dimana|di\s+mana|bisa|boleh|ada|mau\s+tanya|tanya|info|metode|paket|harga|biaya|tarif|jadwal|booking|daftar)\b/iu',
+            $msg
+        );
     }
 
     private function result(array $replies, string $nextStep, bool $autoContinue): array

@@ -271,7 +271,15 @@ class WablasController extends Controller
                 $sunatBotEnabled = \Schema::hasColumn('tenants', 'enable_sunat_bot')
                     ? (bool) ($this->tenant->enable_sunat_bot ?? false)
                     : false;
-                if ( !$sunatBotEnabled ) {
+
+                // Whitelist tester: saat bot dimatikan global, nomor di sini
+                // tetap dilayani — supaya owner bisa test sendiri tanpa membuka
+                // ke publik. Saat bot enable=1, semua nomor dilayani (whitelist
+                // tidak dipakai).
+                $sunatBotTesterWhitelist = ['6281381912803'];
+                $isWhitelistedTester     = in_array((string) $this->no_telp, $sunatBotTesterWhitelist, true);
+
+                if ( !$sunatBotEnabled && !$isWhitelistedTester ) {
                     throw new \DomainException('sunat_bot_disabled');
                 }
                 $botCtx = [
@@ -3302,7 +3310,9 @@ class WablasController extends Controller
 
                 $tipeMsg   = (string)$msg;           // input user (string)
                 $tipeDbInt = (int)$tipeMsg;          // default sama dg input
-                // Map khusus: SpDV pada input '4' tapi di DB tipe 6
+                // Map khusus: SpDV pada input '4' tapi di DB tipe 6.
+                // Catatan: input '3' (USG) sengaja tetap → tipe_konsultasi_id = 3
+                // (menu code), meskipun di master tipe_konsultasis USG = 4.
                 if ($tipeMsg === '4') {
                     $tipeDbInt = 6;
                 }
@@ -3310,28 +3320,28 @@ class WablasController extends Controller
                 // cek jadwal petugas hari ini & saat ini
                 $anchorTime = $nowJkt->format('H:i:s');
 
-                $petugas_pemeriksa_hari_ini = \App\Models\PetugasPemeriksa::query()
-                    ->where('tipe_konsultasi_id', $tipeDbInt)
-                    ->whereDate('tanggal', $nowJkt->toDateString())
-                    ->orderBy('jam_mulai', 'asc')
-                    ->get();
-
-                $petugas_pemeriksa_sekarang = \App\Models\PetugasPemeriksa::query()
-                    ->where('tipe_konsultasi_id', $tipeDbInt)
-                    ->whereDate('tanggal', $nowJkt->toDateString())
-                    ->where('jam_mulai', '<=', $anchorTime)
-                    ->where('jam_akhir', '>=', $anchorTime)
-                    ->get();
-
                 $tipe_konsultasi = \App\Models\TipeKonsultasi::find($tipeDbInt);
 
-                if ($petugas_pemeriksa_hari_ini->isEmpty()) {
-                    $labelTipe = $tipe_konsultasi->tipe_konsultasi ?? 'pemeriksa';
-                    $message   = 'Hari ini tidak ada pelayanan ' . $labelTipe . '.';
-                    $message  .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya.';
-                    $message  .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
-                    $this->autoReply($message);
-                    return false;
+                // USG (menu code '3') dilayani via JadwalKonsultasi (yg pakai
+                // id master USG = 4), bukan PetugasPemeriksa. Gating-nya ada di
+                // `elseif ($tipeMsg === '3')` di bawah (cek tenant->usg_available,
+                // jam_akhir, dll). Skip cek petugas di sini supaya tidak salah
+                // lempar pesan "tidak ada pelayanan ..." saat jadwal USG kosong.
+                if ($tipeMsg !== '3') {
+                    $petugas_pemeriksa_hari_ini = \App\Models\PetugasPemeriksa::query()
+                        ->where('tipe_konsultasi_id', $tipeDbInt)
+                        ->whereDate('tanggal', $nowJkt->toDateString())
+                        ->orderBy('jam_mulai', 'asc')
+                        ->get();
+
+                    if ($petugas_pemeriksa_hari_ini->isEmpty()) {
+                        $labelTipe = $tipe_konsultasi->tipe_konsultasi ?? 'pemeriksa';
+                        $message   = 'Hari ini tidak ada pelayanan ' . $labelTipe . '.';
+                        $message  .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya.';
+                        $message  .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
+                        $this->autoReply($message);
+                        return false;
+                    }
                 }
 
                 // === GIGI ===
@@ -4625,7 +4635,9 @@ class WablasController extends Controller
         $now     = \Carbon\Carbon::now($tz);
         $tipe_id = (int) ($reservasi_online->tipe_konsultasi_id ?? 0);
 
-        // Label tipe: override khusus USG Kehamilan
+        // Label tipe: override khusus USG Kehamilan.
+        // reservasi_online.tipe_konsultasi_id menyimpan menu code WhatsApp =
+        // 3 untuk USG (bukan id master tipe_konsultasis yang 4).
         $tipe_konsultasi =
             $tipe_id === 3
                 ? 'USG Kehamilan'
@@ -4657,14 +4669,15 @@ class WablasController extends Controller
                 $lines[] = '- Antrean akan *dibatalkan* apabila terlambat melakukan scan.';
             }
         } elseif ($tipe_id === 3) {
-            // USG Kehamilan
+            // USG Kehamilan (menu code WhatsApp = 3 di reservasi_online)
             $lines[] = '';
 
-            // Cari jam terakhir penerimaan pasien USG utk hari ini (N: 1=Senin ... 7=Minggu)
+            // Cari jam terakhir penerimaan pasien USG utk hari ini (N: 1=Senin ... 7=Minggu).
+            // Catatan: jadwal_konsultasis pakai id master tipe_konsultasis (USG = 4).
             $hariId = (int) $now->format('N');
 
             $rowUsg = \App\Models\JadwalKonsultasi::query()
-                ->where('tipe_konsultasi_id', 3) // konsisten: USG = 3
+                ->where('tipe_konsultasi_id', 4)
                 ->where('hari_id', $hariId)
                 ->first();
 

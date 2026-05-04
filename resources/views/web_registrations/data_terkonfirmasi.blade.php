@@ -20,8 +20,17 @@
                 <li>Anda akan dibuatkan <strong>slot reservasi terjadwal</strong>, bukan antrian walk-in.</li>
                 <li>QR Code muncul setelah konfirmasi.</li>
             @endif
-            <li>Datang sesuai jam pelayanan, lalu <strong>scan QR Code</strong> di klinik.</li>
             <li>Reservasi bisa dibatalkan via tombol <em>Hapus Reservasi</em>.</li>
+        </ul>
+        <p style="margin-top: 12px; margin-bottom: 6px;">
+            <strong>Dengan melanjutkan berarti Anda setuju dengan ketentuan berikut:</strong>
+        </p>
+        <ul style="padding-left: 18px; margin-bottom: 0;">
+            <li>Jika antrean terlewat, silakan mengambil antrean kembali.</li>
+            <li>Melakukan scan QR di klinik sebelum pukul 16:45 (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem.</li>
+            <li>Nomor Antrian diberikan setelah Scan QR Code dan urutan nomor antrian berdasarkan urutan Scan QR Code.</li>
+            <li>Pelayanan Dokter Gigi adalah pelayanan tindakan sehingga tidak bisa diperkirakan durasi layanan.</li>
+            <li>Pendaftaran dokter gigi secara langsung dimulai jam 17:00 hanya bila slot pendaftaran masih tersedia.</li>
         </ul>
     </div>
 @endif
