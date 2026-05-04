@@ -17,10 +17,9 @@ class WatzapService
         }
 
         $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_message', [
-            'api_key'      => env('WATZAP_TOKEN'),
-            'number_key'   => env('WATZAP_NUMBER_KEY'),
-            'phone_no'     => $phone,
-            'message'      => $message,
+            'api_key'  => env('WATZAP_TOKEN'),
+            'phone_no' => $phone,
+            'message'  => $message,
         ]);
 
         if (!$response->ok()) {
@@ -49,11 +48,10 @@ class WatzapService
         }
 
         $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_image_url', [
-            'api_key'      => env('WATZAP_TOKEN'),
-            'number_key'   => env('WATZAP_NUMBER_KEY'),
-            'phone_no'     => $phone,
-            'url'          => $imageUrl,
-            'caption'      => $caption,
+            'api_key'  => env('WATZAP_TOKEN'),
+            'phone_no' => $phone,
+            'url'      => $imageUrl,
+            'caption'  => $caption,
         ]);
 
         if (!$response->ok()) {
