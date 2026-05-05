@@ -266,6 +266,33 @@ class WablasController extends Controller
         ) {
             $this->chatBotLog(__LINE__);
 
+            // ===== SUNAT BOT START =====
+            try {
+                $bot = app(\App\Services\SunatBot\SunatBotEngine::class);
+                $botResult = $bot->handle((string) $this->no_telp, (string) $this->message);
+                if (!empty($botResult['handled'])) {
+                    foreach ($botResult['replies'] as $reply) {
+                        $text = (string) ($reply['text'] ?? '');
+                        if ($text !== '') {
+                            $this->autoReply($text);
+                        }
+                    }
+                    Message::create([
+                        'no_telp'       => $this->no_telp,
+                        'message'       => $this->message,
+                        'tanggal'       => date('Y-m-d H:i:s'),
+                        'sending'       => 0,
+                        'sudah_dibalas' => 1,
+                        'tenant_id'     => 1,
+                        'touched'       => 0,
+                    ]);
+                    return;
+                }
+            } catch (\Throwable $botErr) {
+                \Log::error('SUNAT_BOT_FAIL', ['err' => $botErr->getMessage()]);
+            }
+            // ===== SUNAT BOT END =====
+
             $date_now = date('Y-m-d H:i:s');
             if (
                 strtotime ($date_now) < strtotime( '2026-03-23 07:00:00'  )
