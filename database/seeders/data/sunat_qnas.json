@@ -1,0 +1,367 @@
+[
+    {
+        "urutan": 1,
+        "active": true,
+        "patterns": [
+            "Lokasinya di mana ka?",
+            "Daerah mana ka?",
+            "Halo, mau tanya-tanya tentang sunat boy. Lokasi di mana?"
+        ],
+        "answer": "Klinik Jati Elok – SunatBoy. Komp. Bumi Jati Elok Blok A1 No. 4-5. Jl. Raya Legok–Parung Panjang Km.3, Malangnengah, Pagedangan, Tangerang, Banten 15330\n\nGoogle Maps: https:\/\/maps.app.goo.gl\/WDWMvex5F9YpgPaE9?g_st=ic\nMohon simpan nomor WhatsApp ini agar link di atas bisa diklik"
+    },
+    {
+        "urutan": 2,
+        "active": true,
+        "patterns": [
+            "Saya ingin konsultasi masalah sunat kak",
+            "Saya mau tanya-tanya tentang sunat kak"
+        ],
+        "answer": "Sialhkan kak ada yang bisa dibantu?"
+    },
+    {
+        "urutan": 3,
+        "active": true,
+        "patterns": [
+            "Untuk sunat hari apa saja kak?",
+            "Setiap hari Jumat ya kak?",
+            "Bisa weekend kak?"
+        ],
+        "answer": "Layanan sunat tersedia setiap hari Senin–Minggu, pukul 07.00–17.00 WIB, dengan sistem BOOKING terlebih dahulu."
+    },
+    {
+        "urutan": 4,
+        "active": true,
+        "patterns": [
+            "Untuk tanggal 8 Juli bisa kak?",
+            "Sabtu tanggal 11 masih free di jam berapa?",
+            "Mulai bisa booking tanggal berapa?"
+        ],
+        "answer": "(Sistem akan cek ketersediaan di table jadwal_sunats dan jadwal_sunat_blackouts).\nUntuk tanggal xx-xx-xxxx tersedia di jam \n-\n-\n-\n-\nBerkenan kami jadwalkan di jam berapa kak?\n\natau kalau masih kosong:\n\nuntuk tanggal xx-xx-xxxx masih tersedia di jam 7 - 17.\n\nBerkenan kami jadwalkan di jam berapa kak?"
+    },
+    {
+        "urutan": 5,
+        "active": true,
+        "patterns": [
+            "Jam berapa kak?",
+            "Jam praktek sunatnya bagaimana?",
+            "Untuk jam tindakannya jam berapa?"
+        ],
+        "answer": "Jam pelayanan sunat: 07.00 – 17.00 WIB kak. \n\nApabila ada request lebih pagi atau lebih malam akan kami konfirmasi terlebih dahulu."
+    },
+    {
+        "urutan": 6,
+        "active": true,
+        "patterns": [
+            "Bisa langsung datang tidak kak?",
+            "Kalau daftar langsung ke klinik bisa kak?",
+            "Bisa sekarang gak kak?"
+        ],
+        "answer": "Mohon maaf untuk sunat tidak bisa walk-in \/ langsung datang ya kak — sistemnya HARUS booking dulu.\n\nUntuk booking, silakan hubungi admin sunat kami:\nIbu Rona – 0895-3692-69190 (WhatsApp)\n\nKalau Kakak ingin konsultasi dulu sebelum memutuskan booking, silakan WA admin saja, nanti dijadwalkan konsultasi dengan dokter kami."
+    },
+    {
+        "urutan": 7,
+        "active": true,
+        "patterns": [
+            "Berapa biaya sunatnya kak?",
+            "Sunat di sini berapa duit ya?",
+            "Mau tanya soal sunat boy biaya berapa?"
+        ],
+        "answer": "(sistem akan cek apakah informasi sudah dikumpulkan atau belum dan semua value sudah disampaikan atau belum). Jika belum :\nSebelum saya sampaikan price list nya. Izin saya tanyakan beberapa hal terlebih dahulu ya kak.\n(Lanjut skript whatsapp bot sunat)."
+    },
+    {
+        "urutan": 8,
+        "active": true,
+        "patterns": [
+            "Untuk paket 2,5 juta sudah tidak ada biaya lagi sampai beres?"
+        ],
+        "answer": "Benar kak. Tidak ada biaya lain lagi sampai sembuh."
+    },
+    {
+        "urutan": 9,
+        "active": true,
+        "patterns": [
+            "Apakah hanya ada 1 paket saja?",
+            "Ada berapa paket sunat boy?"
+        ],
+        "answer": "Saat ini kami menyediakan Paket Basic seharga Rp 2.500.000 yang sudah include lengkap:\n\n✅ Tindakan sunat (metode klem premium \/ laser)\n✅ Bius (suntik bius nyaman, tidak terasa)\n✅ Obat-obatan pasca tindakan\n✅ Goodie bag: kaos SunatBoy + celana sunat\n✅ Hadiah mainan mobil remot\n✅ Konsultasi pra-tindakan dengan dokter\n✅ Konsultasi pasca-tindakan via WhatsApp dengan dokter sampai sembuh\n✅ Bebas main PS di klinik\n\nPaket khusus (dewasa\/anak gemuk\/fimosis\/dengan penyulit): Rp 3.500.000\n\nApabila sunat 2 orang sekaligus diskon 500 rb \n\nApabila sunat 3 orang anak sekaligus diskon 1 juta\n\nApabila langsung daftar 10 anak, gratis sunat 1 anak."
+    },
+    {
+        "urutan": 10,
+        "active": true,
+        "patterns": [
+            "Saya lihat kemarin tiap Jumat sore gratis, masih berlaku?",
+            "Promonya masih ada tidak kak?",
+            "Mau tanya soal sunat gratis"
+        ],
+        "answer": "Program sunat gratis (yang dulu berjalan tiap Jumat sore di tahun 2024) saat ini sudah TIDAK berjalan lagi. Layanan sunat sekarang menggunakan paket berbayar."
+    },
+    {
+        "urutan": 11,
+        "active": true,
+        "patterns": [
+            "Mau tanya ada metode sunat apa saja?",
+            "Sunat dengan metode apa ya?",
+            "Metode & harganya kak"
+        ],
+        "answer": "Kami menggunakan metode KLEM PREMIUM \/ TEKNOKLAMP (kombinasi klem + bipolar electro\/laser) sebagai metode utama kak.\n\nKeunggulan:\n• Proses cepat\n• Hasil rapi & presisi\n• Minim perdarahan\n• Anak lebih nyaman karena tidak ada alat yang menempel setelah sunat (klem dilepas saat tindakan selesai)"
+    },
+    {
+        "urutan": 12,
+        "active": true,
+        "patterns": [
+            "Klem itu pakai alat seperti dibentuk gitu bukan?",
+            "Metode klem premium itu yang pakai ring?",
+            "Klem itu sama seperti bipolar?"
+        ],
+        "answer": "Iya kak, kami pakai metode TEKNOKLAMP. Klem berfungsi sebagai semacam cetakan supaya hasilnya rapi dan presisi.\n\nKlem TIDAK ditinggal menempel di tubuh anak setelah tindakan — klem dilepas saat tindakan selesai, jadi anak lebih nyaman, tidak risi, dan tidak perlu kontrol ke klinik untuk lepas klem atau untuk lepas perban.\n\nProses cepat, minim perdarahan, hasil rapi."
+    },
+    {
+        "urutan": 13,
+        "active": true,
+        "patterns": [
+            "Untuk harga metode laser-nya berapa?",
+            "Sunatnya yang biasa apa yang laser ya?",
+            "Laser itu seperti korek gedean dikit?"
+        ],
+        "answer": "Iya kak, kami juga menyediakan sunat metode laser. Pada dasarnya yang kami pakai adalah BIPOLAR ELECTRO SURGERY dengan kombinasi Teknoklamp.\n\nKeunggulan laser:\n• Pemulihan lebih cepat\n• Minim perdarahan\n\nSebelum tindakan, dilakukan pembiusan terlebih dahulu sehingga anak merasa nyaman saat tindakan."
+    },
+    {
+        "urutan": 14,
+        "active": true,
+        "patterns": [
+            "Apakah dengan laser dijahit atau tidak?",
+            "Ada metode tanpa jahit?"
+        ],
+        "answer": "Untuk metode klem\/laser yang kami pakai, sebagian besar TIDAK perlu dijahit kak. \nTapi keputusan dijahit\/tidak akan disesuaikan dengan kondisi saat tindakan oleh dokter."
+    },
+    {
+        "urutan": 15,
+        "active": true,
+        "patterns": [
+            "Selesai sunat dipakein perban tidak?"
+        ],
+        "answer": "Metode kami tidak menggunakan perban kak. Jadi anak tidak perlu merasakan perih saat lepas perban."
+    },
+    {
+        "urutan": 16,
+        "active": true,
+        "patterns": [
+            "Sunatnya disuntik bius juga tidak?",
+            "Paket basic ini tidak ada rasa sakit?",
+            "Mau pelayanan sunat bius"
+        ],
+        "answer": "Iya kak, kami menggunakan teknik injeksi khusus yang nyaman, sebagian besar anak bahkan tidak sadar saat proses bius dilakukan, salah satunya karena sibuk main PS.\n\nSetelah bius bekerja, tindakan sunat tidak akan terasa sakit kak. Setelah bius hilang (biasanya 2–3 jam pasca tindakan), yang bisa dikontrol dengan obat pereda nyeri yang sudah kami sediakan."
+    },
+    {
+        "urutan": 17,
+        "active": true,
+        "patterns": [
+            "Bisa sunat untuk bayi baru lahir?",
+            "Newborn 0 bulan bisa?"
+        ],
+        "answer": "Bisa kak. Kami sudah sering menangani sunat pada bayi."
+    },
+    {
+        "urutan": 18,
+        "active": true,
+        "patterns": [
+            "Apakah bisa sunat perempuan?"
+        ],
+        "answer": "Saat ini kami hanya melayani sunat laki-laki. Sunat perempuan tidak dapat kami layani."
+    },
+    {
+        "urutan": 19,
+        "active": true,
+        "patterns": [
+            "Anak saya umur 7 tahun, bisa sunat?",
+            "Umur ideal sunat berapa?",
+            "Usia 6 tahun BB 18 kg"
+        ],
+        "answer": "Idealnya sunat dilakukan pada usia 3–7 tahun ya kak, di rentang ini anak biasanya sudah mengerti dan kondisi medis paling kondusif. \nTapi pada prinsipnya semua usia bisa kami layani."
+    },
+    {
+        "urutan": 20,
+        "active": true,
+        "patterns": [
+            "Halo bisa sunat umur 19?",
+            "Pagi sus, ada sunat dewasa tidak?",
+            "Saya umur 30an, bisa?"
+        ],
+        "answer": "Bisa kak, kami melayani sunat dewasa."
+    },
+    {
+        "urutan": 21,
+        "active": true,
+        "patterns": [
+            "Anak saya umur 2 tahun curiga fimosis",
+            "Untuk diagnosa fimosis bisa?",
+            "Penis terbenam, bisa ditangani?"
+        ],
+        "answer": "Bisa kak, fimosis termasuk indikasi medis untuk sunat dan kami biasa menanganinya. \nAkan kami konsulkan dulu ke dokter untuk evaluasi kondisi"
+    },
+    {
+        "urutan": 22,
+        "active": true,
+        "patterns": [
+            "Mau nanya harga sunat anak gemuk?",
+            "Anak gemuk umur 9 bisa langsung sunat?",
+            "Usia 6 tahun BB 30 kg"
+        ],
+        "answer": "Bisa kak, anak dengan BB berlebih tetap bisa kami sunat tanpa harus menunggu BB turun.\n\nUntuk kategori anak gemuk, biaya: Rp 3.500.000 (lebih tinggi dari Paket Basic karena penanganan lebih kompleks).\n\nIni sudah termasuk semua: tindakan, bius, obat, goodie bag, hadiah, dan konsultasi pra\/pasca dengan dokter via WhatsApp sampai sembuh."
+    },
+    {
+        "urutan": 23,
+        "active": true,
+        "patterns": [
+            "Anak berkebutuhan khusus, autis"
+        ],
+        "answer": "Bisa kak, kami terbuka untuk anak berkebutuhan khusus.\nAkan kami konsultasikan dulu dengan dokter untuk menentukan pendekatan yang paling tepat."
+    },
+    {
+        "urutan": 24,
+        "active": true,
+        "patterns": [
+            "Anak bengkak di kemaluan, bisa minta surat rujukan untuk sunat?",
+            "Anak mengeluh kelaminnya sakit hilang timbul"
+        ],
+        "answer": "Untuk keluhan medis akut (bengkak, infeksi, nyeri) sebaiknya KONSULTASIKAN DULU dengan dokter umum kami sebelum jadwal sunat ditetapkan kak."
+    },
+    {
+        "urutan": 25,
+        "active": true,
+        "patterns": [
+            "Sebelum sunat saya harus apa kak?"
+        ],
+        "answer": "Persiapan sebelum tindakan sunat:\n\n• Pasien dalam kondisi sehat, tidak demam\n• Sudah makan sebelum berangkat ke klinik (tidak perlu puasa)\n• Sudah Buang Air Besar, dan Buang air kecil sebelum tindakan.\n• Pakaian: nyaman, longgar, mudah dibuka di area bawah\n• Hindari mengucapkan kata-kata seperti : jarum, suntik, gunting, potong, sakit, nyeri untuk mengalihkan perhatian anak dari ketakutan. \n• Hindari menakut nakuti anak walaupun bercanda, karena reaksi anak akan berlebihan apabila ditakut-takuti sebelumnya. \n\nDi klinik kami sudah disediakan PS dan mainan sebagai pengalih perhatian."
+    },
+    {
+        "urutan": 26,
+        "active": true,
+        "patterns": [
+            "Persyaratan apa saja yang harus dibawa?",
+            "Misal FC KTP \/ KK \/ sarung \/ celana sunat?",
+            "Mau tanya syarat untuk sunat"
+        ],
+        "answer": "Tidak ada syarat dokumen administrasi khusus kak — TIDAK PERLU bawa fotokopi KTP, KK, atau dokumen lainnya."
+    },
+    {
+        "urutan": 27,
+        "active": true,
+        "patterns": [
+            "Berapa lama proses sunatnya?"
+        ],
+        "answer": "Tindakan sunat sendiri berlangsung sekitar 15–30 menit kak. Tapi total waktu di klinik 30 menit - 1  jam karena ada persiapan penjelasan tindakan,  anestesi, dan edukasi cara perawatannya. \n\nSetelah tindakan selesai, anak bisa langsung pulang."
+    },
+    {
+        "urutan": 28,
+        "active": true,
+        "patterns": [
+            "Bagaimana cara daftarnya kak?",
+            "Saya mau daftar sunat, bagaimana caranya?",
+            "Booking ke nomor mana?"
+        ],
+        "answer": "Bisa dibantu oleh saya kak. Berkenan didaftarkan minggu ini atau minggu depan?"
+    },
+    {
+        "urutan": 29,
+        "active": true,
+        "patterns": [
+            "Nama: [...], TTL: [...], BB: [...] kg, TB: [...] cm",
+            "Usia 7 thn BB 18 kg",
+            "Atas nama [...], usia 9 tahun, BB 23 kg"
+        ],
+        "answer": "Baik kak, data sudah saya catat. Saya daftarkan ke list booking sunat ya kak.\n\nMohon ditunggu kabarnya — admin sunat akan menghubungi balik untuk konfirmasi tanggal & jam tindakan. Mohon nomor WhatsApp ini dijaga tetap aktif.\n\nKalau ada perubahan data atau ingin tanya-tanya lebih lanjut, silakan WA langsung ke admin sunat: Ibu Rona – 0895-3692-69190."
+    },
+    {
+        "urutan": 30,
+        "active": true,
+        "patterns": [
+            "Yang bisa cepat sembuh ada tidak?",
+            "Berapa hari sampai kering?",
+            "Berapa lama proses penyembuhan?"
+        ],
+        "answer": "• Kering luka: ±7 hari (bisa lebih cepat tergantung perawatan)\n• Pemulihan sempurna: 2–3 minggu\n• Untuk aktivitas ringan biasanya tidak ada kendala setelah luka kering\n\nKecepatan kering luka sangat tergantung perawatan di rumah. Tidak perlu khawatir — dokter kami akan tetap memantau pemulihan via WhatsApp."
+    },
+    {
+        "urutan": 31,
+        "active": true,
+        "patterns": [
+            "Habis sunat ada kontrol lagi tidak?",
+            "Kontrol harus datang atau lewat WA?",
+            "Apakah ada kontrol setelah khitan?"
+        ],
+        "answer": "Kontrol pasca sunat dilakukan VIA WHATSAPP dengan dokter — tidak perlu datang ke klinik kak.\n\nSetiap 3 hari dokter akan memantau (Kakak kirim foto perkembangan luka)\n\nKakak bisa tanya apa pun terkait luka, kapan saja\n\nKalau memang ada keluhan yang perlu ditangani langsung, baru disarankan datang\n\nKontak dokter kontrol akan diberikan saat pulang dari klinik."
+    },
+    {
+        "urutan": 32,
+        "active": true,
+        "patterns": [
+            "Obat untuk apa ya kak?",
+            "Pakai salep yang dokter bilang aja?",
+            "Sudah dikasih antibiotik untuk pereda nyeri"
+        ],
+        "answer": "Obat-obatan pasca sunat sudah TERMASUK dalam paket — tidak perlu beli sendiri kak. Biasanya berisi:\n\nAntibiotik (untuk mencegah infeksi)\nPereda nyeri \/ antiinflamasi\nSalep dan obat spray untuk perawatan luka\n\nDokter akan menjelaskan cara minum & cara pakai obat saat pulang dari klinik. Kalau ada keluhan setelah minum obat, langsung WA dokter ya kak."
+    },
+    {
+        "urutan": 33,
+        "active": true,
+        "patterns": [
+            "Senin sudah masuk sekolah, boleh sekolah?"
+        ],
+        "answer": "Sebaiknya istirahat 2–3 hari pertama dulu. Apabila tidak ada penyulit bisa kembali ke sekolah. Dengan syarat bisa dipastikan anak tidak lari-lari, loncat-loncat, main bola, main sepeda terlebih dahulu. Aktifitas ringan seperti jalan kaki boleh"
+    },
+    {
+        "urutan": 34,
+        "active": true,
+        "patterns": [
+            "boleh mandi?"
+        ],
+        "answer": "3 hari pertama baiknya tidak dibasahi dulu ya kak. Boleh mandi tapi jangan basah, setelah hari ketiga dokter akan mengecek gambar melalui whatsapp, apabila tidak ada kendala bisa langsung mandi biasa, tapi tidak boleh berendam ya kak. Boleh berendam setelah 2 minggu."
+    },
+    {
+        "urutan": 35,
+        "active": true,
+        "patterns": [
+            "Boleh main \/ olahraga?"
+        ],
+        "answer": "Selama 7 hari pertama anak tidak boleh lari-lari, loncat-loncat, main bola, main sepeda terlebih dahulu. Aktifitas ringan seperti jalan kaki tidak ada masalah."
+    },
+    {
+        "urutan": 36,
+        "active": true,
+        "patterns": [
+            "Selesai sunat dipakein perban tidak?",
+            "Buka perban sakit tidak?",
+            "Ada jahitan dan perban?"
+        ],
+        "answer": "Untuk metode klem\/laser yang kami pakai, BIASANYA TIDAK PERLU PERBAN kak — kecuali kondisi tertentu yang membutuhkan."
+    },
+    {
+        "urutan": 37,
+        "active": true,
+        "patterns": [
+            "Yang nyunat dokter siapa?",
+            "Operator dokter siapa?",
+            "Ada dokter sunatnya?"
+        ],
+        "answer": "Tindakan sunat di SunatBoy Klinik Jati Elok dilakukan dokter spesialis ya kak."
+    },
+    {
+        "urutan": 38,
+        "active": true,
+        "patterns": [
+            "Bisa home service tidak? Sunat di rumah?"
+        ],
+        "answer": "Mohon maaf kak, layanan sunat hanya dilakukan di klinik — belum tersedia home service. Hal ini supaya kami bisa memastikan kondisi steril dan kenyamanan ruang tindakan untuk anak (dilengkapi mainan, PS, dan ruang ramah anak)."
+    },
+    {
+        "urutan": 39,
+        "active": true,
+        "patterns": [
+            "Terima kasih infonya",
+            "Terimakasih banyak",
+            "Makasih"
+        ],
+        "answer": "Sama-sama kak 🙏\nKalau ada pertanyaan lain atau ingin booking, silakan WA kembali ke admin sunat: Ibu Rona – 0895-3692-69190.\n\nSemoga harinya menyenangkan ya kak!"
+    }
+]

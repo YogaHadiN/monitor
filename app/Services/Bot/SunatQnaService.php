@@ -111,7 +111,8 @@ class SunatQnaService
                 }
                 $score = $overlap / max(count($pTokens), 1);
 
-                if ($overlap >= 2 && $score >= 0.5 && $score > $bestScore) {
+                $minOverlap = min(2, count($pTokens));
+                if ($overlap >= $minOverlap && $score >= 0.5 && $score > $bestScore) {
                     $bestScore = $score;
                     $bestQna   = $qna;
                 }
@@ -129,6 +130,7 @@ class SunatQnaService
             'berapa','apa','apakah','kapan','kenapa','mengapa','bagaimana','gimana','dimana','mana',
             'saya','aku','kami','kita','sini','situ','itu','ini','tuh','lah','kah','tanya','kalau',
             'pak','bu','dok','dokter','tolong','mohon','perlu','sudah','udah','belum','blm','ingin',
+            'halo','hai','selamat','pagi','siang','sore','malam','assalamualaikum',
         ];
         $clean = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $text) ?? '';
         $words = preg_split('/\s+/u', trim($clean)) ?: [];
