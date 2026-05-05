@@ -280,27 +280,12 @@ class SunatBotEngine
         $sentences = $this->splitText($text);
         $media     = $intent->mediaList();
 
-        // No media → text-only, one bubble per sentence/line.
-        if (empty($media)) {
-            $bubbles = [];
-            foreach ($sentences as $s) {
-                $bubbles[] = ['text' => $s, 'media' => null];
-            }
-            return $bubbles;
+        $bubbles = [];
+        foreach ($media as $file) {
+            $bubbles[] = ['text' => '', 'media' => $file];
         }
-
-        // With media → first image carries the first sentence as caption,
-        // remaining sentences ride as text-only bubbles, and any extra
-        // media files are sent as image bubbles with empty caption.
-        $bubbles   = [];
-        $firstCap  = $sentences[0] ?? '';
-        $bubbles[] = ['text' => $firstCap, 'media' => $media[0]];
-
-        for ($i = 1; $i < count($sentences); $i++) {
-            $bubbles[] = ['text' => $sentences[$i], 'media' => null];
-        }
-        for ($i = 1; $i < count($media); $i++) {
-            $bubbles[] = ['text' => '', 'media' => $media[$i]];
+        foreach ($sentences as $s) {
+            $bubbles[] = ['text' => $s, 'media' => null];
         }
         return $bubbles;
     }
