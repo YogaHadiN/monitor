@@ -72,6 +72,39 @@ class WatzapService
         ];
     }
 
+    public function sendVideo(string $phone, string $videoUrl, string $caption = ''): array
+    {
+        $phone = $this->normalizePhone($phone);
+        $videoUrl = trim($videoUrl);
+
+        if ($phone === '' || $videoUrl === '') {
+            return ['ok' => false, 'reason' => 'invalid_phone_or_video'];
+        }
+
+        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_file_url', [
+            'api_key'  => env('WATZAP_TOKEN'),
+            'phone_no' => $phone,
+            'url'      => $videoUrl,
+            'caption'  => $caption,
+        ]);
+
+        if (!$response->ok()) {
+            Log::error('WATZAP_SEND_VIDEO_FAILED', [
+                'status' => $response->status(),
+                'phone'  => $phone,
+                'url'    => $videoUrl,
+                'resp'   => $response->body(),
+            ]);
+        }
+
+        return [
+            'ok'     => $response->ok(),
+            'status' => $response->status(),
+            'resp'   => $this->safeJson($response->body()),
+            'reason' => $response->ok() ? null : 'http_' . $response->status(),
+        ];
+    }
+
     private function normalizePhone(string $phone): string
     {
         $phone = preg_replace('/\D+/', '', $phone);
