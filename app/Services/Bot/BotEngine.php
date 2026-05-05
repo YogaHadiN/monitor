@@ -110,9 +110,14 @@ class BotEngine
         }
         $this->sentCount++;
 
-        $text     = (string) ($reply['text'] ?? '');
-        $imageUrl = (string) ($reply['image_url'] ?? '');
-        $noTelp   = (string) ($ctx['no_telp'] ?? '');
+        $text         = (string) ($reply['text'] ?? '');
+        $imageUrl     = (string) ($reply['image_url'] ?? '');
+        $noTelp       = (string) ($ctx['no_telp'] ?? '');
+        $imageEnabled = (bool) ($ctx['image_bot_enabled'] ?? false);
+
+        if ( !$imageEnabled ) {
+            $imageUrl = '';
+        }
 
         if ( $text === '' && $imageUrl === '' ) {
             return;

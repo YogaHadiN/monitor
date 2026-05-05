@@ -283,14 +283,15 @@ class WablasController extends Controller
                     throw new \DomainException('sunat_bot_disabled');
                 }
                 $botCtx = [
-                    'provider'       => $this->provider ?? 'barantum',
-                    'origin'         => $this->origin ?? 'barantum',
-                    'room_id'        => $this->room_id ?? null,
-                    'chats_users_id' => (string) ($this->chats_users_id ?: $this->no_telp),
-                    'channel'        => $this->channel ?? 'wa',
-                    'message_id'     => $this->message_id ?? '',
-                    'chats_bot_id'   => $this->chats_bot_id ?? '',
-                    'company_key'    => $this->company_key ?? config('services.barantum.company_key'),
+                    'provider'          => $this->provider ?? 'barantum',
+                    'origin'            => $this->origin ?? 'barantum',
+                    'room_id'           => $this->room_id ?? null,
+                    'chats_users_id'    => (string) ($this->chats_users_id ?: $this->no_telp),
+                    'channel'           => $this->channel ?? 'wa',
+                    'message_id'        => $this->message_id ?? '',
+                    'chats_bot_id'      => $this->chats_bot_id ?? '',
+                    'company_key'       => $this->company_key ?? config('services.barantum.company_key'),
+                    'image_bot_enabled' => (bool) ($this->tenant->image_bot_enabled ?? false),
                 ];
                 $botHandled = app(\App\Services\Bot\BotEngine::class)
                     ->handle((string) $this->no_telp, (string) $this->message, $botCtx);
