@@ -12,6 +12,13 @@ class BotEngine
 {
     private const BUBBLE_DELAY_SECONDS = 3;
 
+    /**
+     * Numbers that trigger an automatic session reset whenever they send
+     * a sunat/khitan keyword. Lets the operator re-test the greeting flow
+     * without manually deleting bot sessions in atika.
+     */
+    private const AUTO_RESTART_NUMBERS = ['6281381912803'];
+
     private int $sentCount = 0;
 
     public function __construct(
@@ -33,6 +40,15 @@ class BotEngine
         $this->sentCount = 0;
 
         $ctx['no_telp'] = $noTelp;
+
+        if ( in_array($noTelp, self::AUTO_RESTART_NUMBERS, true)
+            && $this->intents->detect($userMessage) === 'sunat'
+        ) {
+            BotSession::where('no_telp', $noTelp)
+                ->where('escalated_to_human', false)
+                ->where('current_step', '!=', 'done')
+                ->update(['current_step' => 'done', 'last_activity_at' => now()]);
+        }
 
         $session = BotSession::activeFor($noTelp);
         $msgLower = strtolower(trim($userMessage));
