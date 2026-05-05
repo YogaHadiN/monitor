@@ -188,14 +188,20 @@ class WatzapService
         if (!is_array($body)) {
             return true;
         }
+        // WatZap returns status as a numeric string ("200"), not an int, so
+        // is_numeric must be checked before is_string — otherwise "200"
+        // hits the string branch and fails the OK/SUCCESS whitelist.
         if (array_key_exists('status', $body)) {
             $s = $body['status'];
-            if (is_bool($s))   return $s === true;
-            if (is_string($s)) return in_array(strtolower($s), ['ok', 'success', 'sent'], true);
+            if (is_bool($s))     return $s === true;
             if (is_numeric($s)) {
                 $n = (int) $s;
                 return $n === 1 || ($n >= 200 && $n < 300);
             }
+            if (is_string($s))   return in_array(strtolower($s), ['ok', 'success', 'sent'], true);
+        }
+        if (array_key_exists('ack', $body) && is_string($body['ack'])) {
+            return strtolower($body['ack']) === 'successfully';
         }
         if (array_key_exists('ack_status', $body)) {
             return strtolower((string) $body['ack_status']) === 'successfully_sent';
