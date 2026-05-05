@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToTenant;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 
 class SchedulledReservation extends Model
@@ -59,7 +60,11 @@ class SchedulledReservation extends Model
             $second_int = (int) date('s');
 
             if ($reservasi->schedulled_booking && $second_int < 30) {
-                Artisan::call('reservasi:send-waitlist-inquiry');
+                try {
+                    Artisan::call('reservasi:send-waitlist-inquiry');
+                } catch (\Symfony\Component\Console\Exception\CommandNotFoundException $e) {
+                    Log::warning('reservasi:send-waitlist-inquiry skipped — not registered in this app');
+                }
             }
         });
     }
