@@ -271,9 +271,36 @@ class WablasController extends Controller
                 $bot = app(\App\Services\SunatBot\SunatBotEngine::class);
                 $botResult = $bot->handle((string) $this->no_telp, (string) $this->message);
                 if (!empty($botResult['handled'])) {
+                    $imageBotEnabled = (bool) ($this->tenant->image_bot_enabled ?? false);
+                    $mediaBase       = rtrim((string) config('sunatbot.media_base_url', ''), '/');
                     foreach ($botResult['replies'] as $reply) {
-                        $text = (string) ($reply['text'] ?? '');
-                        if ($text !== '') {
+                        $text  = (string) ($reply['text'] ?? '');
+                        $media = $reply['media'] ?? null;
+
+                        $ext = is_string($media)
+                            ? strtolower(pathinfo($media, PATHINFO_EXTENSION))
+                            : '';
+                        $canSendImage = $imageBotEnabled
+                            && $this->provider === 'watzap'
+                            && is_string($media)
+                            && $media !== ''
+                            && $mediaBase !== ''
+                            && in_array($ext, ['jpg','jpeg','png','gif','webp'], true);
+
+                        if ($canSendImage) {
+                            $url = $mediaBase . '/' . ltrim($media, '/');
+                            try {
+                                $result = app(\App\Services\WatzapService::class)
+                                    ->sendImage((string) $this->no_telp, $url, $text);
+                                if (empty($result['ok'])) {
+                                    \Log::error('SUNAT_BOT_IMAGE_FAIL', $result + ['url' => $url]);
+                                    if ($text !== '') $this->autoReply($text);
+                                }
+                            } catch (\Throwable $imgErr) {
+                                \Log::error('SUNAT_BOT_IMAGE_EXCEPTION', ['err' => $imgErr->getMessage(), 'url' => $url]);
+                                if ($text !== '') $this->autoReply($text);
+                            }
+                        } elseif ($text !== '') {
                             $this->autoReply($text);
                         }
                     }
