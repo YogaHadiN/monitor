@@ -18,7 +18,7 @@ class SunatBotFlow
         return rtrim(config('app.url'), '/') . '/bot-assets/sunat/' . $filename;
     }
 
-    private function greetingBubbles(): array
+    private function brandGreetingBubbles(): array
     {
         return [
             [
@@ -28,25 +28,32 @@ class SunatBotFlow
             [
                 'text' => "Kami berkomitmen menciptakan pengalaman sunat yang tak terlupakan. Siap jadi anak hebat, bersama SunatBoy 💪",
             ],
-            [
-                'text' => "Untuk biaya sunat tergantung usia dan berat badan anak kak.",
-            ],
         ];
     }
 
-    private const ASK_NAME_BUBBLE = "Kalau boleh tau, dengan kakak siapa ya?";
+    private const COST_TEASER_BUBBLE = "Untuk biaya sunat tergantung usia dan berat badan anak kak.";
+    private const ASK_NAME_BUBBLE    = "Kalau boleh tau, dengan kakak siapa ya?";
 
-    public function initialReplies(?string $userMessage = null): array
+    public function initialReplies(?string $userMessage = null, ?BotSession $session = null): array
     {
-        $replies = $this->greetingBubbles();
+        $replies = $this->brandGreetingBubbles();
 
         $qna = $userMessage !== null && trim($userMessage) !== ''
             ? $this->qna->match($userMessage)
             : null;
 
-        $replies[] = $qna !== null
-            ? ['text' => $qna->answer]
-            : ['text' => self::ASK_NAME_BUBBLE];
+        if ($qna !== null) {
+            $replies[] = ['text' => $qna->answer];
+            if (!$this->qna->isClosing($qna)) {
+                $replies[] = ['text' => self::SCHEDULING_CTA];
+                if ($session !== null) {
+                    $session->setData('scheduling_cta_sent', true);
+                }
+            }
+        } else {
+            $replies[] = ['text' => self::COST_TEASER_BUBBLE];
+            $replies[] = ['text' => self::ASK_NAME_BUBBLE];
+        }
 
         return $replies;
     }
@@ -57,7 +64,7 @@ class SunatBotFlow
 
         switch ($step) {
             case 'greeting':
-                return $this->result($this->initialReplies($userMessage), 'ask_name', false);
+                return $this->result($this->initialReplies($userMessage, $session), 'ask_name', false);
 
             case 'ask_name':
                 $parsed = $this->ai->extract($userMessage ?? '', [
