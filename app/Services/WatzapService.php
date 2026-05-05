@@ -61,12 +61,21 @@ class WatzapService
             return ['ok' => false, 'reason' => 'image_url_unreachable_' . $headStatus];
         }
 
-        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_image_url', [
+        $payload = [
             'api_key'  => env('WATZAP_TOKEN'),
             'phone_no' => $phone,
             'url'      => $imageUrl,
             'caption'  => $caption,
+        ];
+
+        Log::info('WATZAP_SEND_IMAGE_REQUEST', [
+            'phone'   => $phone,
+            'url'     => $imageUrl,
+            'caption' => $caption,
+            'payload' => $this->redactPayload($payload),
         ]);
+
+        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_image_url', $payload);
 
         $body  = $this->safeJson($response->body());
         $apiOk = $response->ok() && $this->bodyIndicatesSuccess($body);
@@ -113,12 +122,21 @@ class WatzapService
             return ['ok' => false, 'reason' => 'video_url_unreachable_' . $headStatus];
         }
 
-        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_file_url', [
+        $payload = [
             'api_key'  => env('WATZAP_TOKEN'),
             'phone_no' => $phone,
             'url'      => $videoUrl,
             'caption'  => $caption,
+        ];
+
+        Log::info('WATZAP_SEND_VIDEO_REQUEST', [
+            'phone'   => $phone,
+            'url'     => $videoUrl,
+            'caption' => $caption,
+            'payload' => $this->redactPayload($payload),
         ]);
+
+        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_file_url', $payload);
 
         $body  = $this->safeJson($response->body());
         $apiOk = $response->ok() && $this->bodyIndicatesSuccess($body);
@@ -144,6 +162,14 @@ class WatzapService
             'resp'   => $body,
             'reason' => $apiOk ? null : 'http_' . $response->status(),
         ];
+    }
+
+    private function redactPayload(array $payload): array
+    {
+        if (isset($payload['api_key']) && is_string($payload['api_key']) && $payload['api_key'] !== '') {
+            $payload['api_key'] = substr($payload['api_key'], 0, 4) . '***';
+        }
+        return $payload;
     }
 
     private function probeUrl(string $url): int
