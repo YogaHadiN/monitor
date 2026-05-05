@@ -266,58 +266,6 @@ class WablasController extends Controller
         ) {
             $this->chatBotLog(__LINE__);
 
-            // ===== SUNAT BOT START (rollback: hapus block ini sampai SUNAT BOT END) =====
-            try {
-                $sunatBotEnabled = \Schema::hasColumn('tenants', 'enable_sunat_bot')
-                    ? (bool) ($this->tenant->enable_sunat_bot ?? false)
-                    : false;
-
-                // Whitelist tester: saat bot dimatikan global, nomor di sini
-                // tetap dilayani — supaya owner bisa test sendiri tanpa membuka
-                // ke publik. Saat bot enable=1, semua nomor dilayani (whitelist
-                // tidak dipakai).
-                $sunatBotTesterWhitelist = ['6281381912803'];
-                $isWhitelistedTester     = in_array((string) $this->no_telp, $sunatBotTesterWhitelist, true);
-
-                if ( !$sunatBotEnabled && !$isWhitelistedTester ) {
-                    throw new \DomainException('sunat_bot_disabled');
-                }
-                $botCtx = [
-                    'provider'          => $this->provider ?? 'barantum',
-                    'origin'            => $this->origin ?? 'barantum',
-                    'room_id'           => $this->room_id ?? null,
-                    'chats_users_id'    => (string) ($this->chats_users_id ?: $this->no_telp),
-                    'channel'           => $this->channel ?? 'wa',
-                    'message_id'        => $this->message_id ?? '',
-                    'chats_bot_id'      => $this->chats_bot_id ?? '',
-                    'company_key'       => $this->company_key ?? config('services.barantum.company_key'),
-                    'image_bot_enabled' => (bool) ($this->tenant->image_bot_enabled ?? false),
-                ];
-                $botHandled = app(\App\Services\Bot\BotEngine::class)
-                    ->handle((string) $this->no_telp, (string) $this->message, $botCtx);
-                if ( $botHandled ) {
-                    $msgRow = [
-                        'no_telp'       => $this->no_telp,
-                        'message'       => $this->message,
-                        'tanggal'       => date('Y-m-d H:i:s'),
-                        'sending'       => 0,
-                        'sudah_dibalas' => 1,
-                        'tenant_id'     => 1,
-                        'touched'       => 0,
-                    ];
-                    if ( \Schema::hasColumn('messages', 'flagged_intent') ) {
-                        $msgRow['flagged_intent'] = 'sunat';
-                    }
-                    Message::create($msgRow);
-                    return;
-                }
-            } catch (\DomainException $botSkip) {
-                // bot dimatikan via tenants.enable_sunat_bot — fallback ke flow lama
-            } catch (\Throwable $botErr) {
-                \Log::error('SUNAT_BOT_FAIL_FALLBACK', ['err' => $botErr->getMessage()]);
-            }
-            // ===== SUNAT BOT END =====
-
             $date_now = date('Y-m-d H:i:s');
             if (
                 strtotime ($date_now) < strtotime( '2026-03-23 07:00:00'  )
