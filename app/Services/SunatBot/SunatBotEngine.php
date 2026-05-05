@@ -162,10 +162,46 @@ class SunatBotEngine
         }
 
         $text = $this->substituteVariables($intent->jawaban_template, $session);
-        return [[
-            'text'  => $text,
-            'media' => $intent->mediaList(),
-        ]];
+        return $this->splitIntoBubbles($text, $intent->mediaList());
+    }
+
+    /**
+     * Common Indonesian abbreviations whose trailing period must NOT trigger a split.
+     */
+    private const ABBREV = [
+        'Komp', 'No', 'Jl', 'Km', 'Yth', 'Dst', 'Dll', 'Pak', 'Bu', 'Tn',
+        'Ny', 'Apt', 'Ir', 'Drs', 'Prof', 'Min', 'Hal', 'Bpk', 'Sdr',
+        'Tgl', 'Th', 'a.n', 'u.p', 'd.a', 'ttd',
+    ];
+
+    /**
+     * Split a template into one bubble per sentence or per line.
+     * - Newlines always start a new bubble.
+     * - Sentence-ending punctuation (`.`, `!`, `?`) followed by whitespace also splits.
+     * - URLs (dots without trailing whitespace) and decimals like "Rp 2.500.000"
+     *   stay intact because the regex requires whitespace after.
+     * - Common Indonesian abbreviations (Komp., Jl., dll.) are masked before
+     *   splitting so they don't break addresses.
+     */
+    private function splitIntoBubbles(string $text, array $media): array
+    {
+        $marker = "\x01DOT\x01";
+        $masked = $text;
+        foreach (self::ABBREV as $abr) {
+            $masked = preg_replace('/\b' . preg_quote($abr, '/') . '\.(?=\s|$)/u', $abr . $marker, $masked);
+        }
+
+        $parts = preg_split('/(?<=[.!?])\s+|\n+/u', $masked) ?: [];
+        $bubbles = [];
+        foreach ($parts as $part) {
+            $part = trim(str_replace($marker, '.', $part));
+            if ($part === '') continue;
+            $bubbles[] = ['text' => $part, 'media' => []];
+        }
+        if (!empty($media) && !empty($bubbles)) {
+            $bubbles[0]['media'] = $media;
+        }
+        return $bubbles;
     }
 
     private function substituteVariables(string $template, BotSession $session): string
