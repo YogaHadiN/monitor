@@ -18,7 +18,7 @@ class SunatBotFlow
         return rtrim(config('app.url'), '/') . '/bot-assets/sunat/' . $filename;
     }
 
-    public function initialReplies(): array
+    private function greetingBubbles(): array
     {
         return [
             [
@@ -31,10 +31,24 @@ class SunatBotFlow
             [
                 'text' => "Untuk biaya sunat tergantung usia dan berat badan anak kak.",
             ],
-            [
-                'text' => "Kalau boleh tau, dengan kakak siapa ya?",
-            ],
         ];
+    }
+
+    private const ASK_NAME_BUBBLE = "Kalau boleh tau, dengan kakak siapa ya?";
+
+    public function initialReplies(?string $userMessage = null): array
+    {
+        $replies = $this->greetingBubbles();
+
+        $qna = $userMessage !== null && trim($userMessage) !== ''
+            ? $this->qna->match($userMessage)
+            : null;
+
+        $replies[] = $qna !== null
+            ? ['text' => $qna->answer]
+            : ['text' => self::ASK_NAME_BUBBLE];
+
+        return $replies;
     }
 
     public function handle(BotSession $session, ?string $userMessage): array
@@ -43,7 +57,7 @@ class SunatBotFlow
 
         switch ($step) {
             case 'greeting':
-                return $this->result($this->initialReplies(), 'ask_name', false);
+                return $this->result($this->initialReplies($userMessage), 'ask_name', false);
 
             case 'ask_name':
                 $parsed = $this->ai->extract($userMessage ?? '', [

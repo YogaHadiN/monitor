@@ -49,7 +49,7 @@ class BotEngine
                 'collected_data'   => [],
                 'last_activity_at' => now(),
             ]);
-            $this->runFlow($session, null, $ctx);
+            $this->runFlow($session, $userMessage, $ctx);
             return true;
         }
 

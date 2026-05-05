@@ -57,7 +57,7 @@ class SunatBotTesterController extends Controller
                 'collected_data'   => [],
                 'last_activity_at' => now(),
             ]);
-            $replies = $this->runFlow($session, null);
+            $replies = $this->runFlow($session, $msg);
         } elseif (in_array($msgLower, ['akhiri', 'ahiri', 'selesai'], true)) {
             $session->current_step     = 'done';
             $session->last_activity_at = now();
