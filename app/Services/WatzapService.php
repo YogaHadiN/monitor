@@ -81,7 +81,7 @@ class WatzapService
             return ['ok' => false, 'reason' => 'invalid_phone_or_video'];
         }
 
-        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_video_url', [
+        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_image_url', [
             'api_key'  => env('WATZAP_TOKEN'),
             'phone_no' => $phone,
             'url'      => $videoUrl,
