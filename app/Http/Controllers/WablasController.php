@@ -277,27 +277,34 @@ class WablasController extends Controller
                         $text  = (string) ($reply['text'] ?? '');
                         $media = $reply['media'] ?? null;
 
-                        $ext = is_string($media)
+                        $ext = is_string($media) && $media !== ''
                             ? strtolower(pathinfo($media, PATHINFO_EXTENSION))
                             : '';
-                        $canSendImage = $imageBotEnabled
-                            && $this->provider === 'watzap'
-                            && is_string($media)
-                            && $media !== ''
-                            && $mediaBase !== ''
-                            && in_array($ext, ['jpg','jpeg','png','gif','webp'], true);
+                        $mediaType = null;
+                        if (in_array($ext, ['jpg','jpeg','png','gif','webp'], true)) {
+                            $mediaType = 'image';
+                        } elseif (in_array($ext, ['mp4','mov','webm','3gp'], true)) {
+                            $mediaType = 'video';
+                        }
 
-                        if ($canSendImage) {
-                            $url = $mediaBase . '/' . ltrim($media, '/');
+                        $canSendMedia = $imageBotEnabled
+                            && $this->provider === 'watzap'
+                            && $mediaBase !== ''
+                            && $mediaType !== null;
+
+                        if ($canSendMedia) {
+                            $url = $mediaBase . '/' . ltrim((string) $media, '/');
                             try {
-                                $result = app(\App\Services\WatzapService::class)
-                                    ->sendImage((string) $this->no_telp, $url, $text);
+                                $watzap = app(\App\Services\WatzapService::class);
+                                $result = $mediaType === 'image'
+                                    ? $watzap->sendImage((string) $this->no_telp, $url, $text)
+                                    : $watzap->sendVideo((string) $this->no_telp, $url, $text);
                                 if (empty($result['ok'])) {
-                                    \Log::error('SUNAT_BOT_IMAGE_FAIL', $result + ['url' => $url]);
+                                    \Log::error('SUNAT_BOT_MEDIA_FAIL', $result + ['url' => $url, 'type' => $mediaType]);
                                     if ($text !== '') $this->autoReply($text);
                                 }
-                            } catch (\Throwable $imgErr) {
-                                \Log::error('SUNAT_BOT_IMAGE_EXCEPTION', ['err' => $imgErr->getMessage(), 'url' => $url]);
+                            } catch (\Throwable $mediaErr) {
+                                \Log::error('SUNAT_BOT_MEDIA_EXCEPTION', ['err' => $mediaErr->getMessage(), 'url' => $url, 'type' => $mediaType]);
                                 if ($text !== '') $this->autoReply($text);
                             }
                         } elseif ($text !== '') {
