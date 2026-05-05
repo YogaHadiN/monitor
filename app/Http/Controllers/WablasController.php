@@ -273,7 +273,13 @@ class WablasController extends Controller
                 if (!empty($botResult['handled'])) {
                     $imageBotEnabled = (bool) ($this->tenant->image_bot_enabled ?? false);
                     $mediaBase       = rtrim((string) config('sunatbot.media_base_url', ''), '/');
+                    $replyDelay      = max(0, (int) config('sunatbot.reply_delay_seconds', 0));
+                    $firstReply      = true;
                     foreach ($botResult['replies'] as $reply) {
+                        if (!$firstReply && $replyDelay > 0) {
+                            sleep($replyDelay);
+                        }
+                        $firstReply = false;
                         $text  = (string) ($reply['text'] ?? '');
                         $media = $reply['media'] ?? null;
 

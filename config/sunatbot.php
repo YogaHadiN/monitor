@@ -8,4 +8,9 @@ return [
     // Uploads land in atika/public/bot_media/ and the bot reaches them at
     // <media_base_url>/<filename>. Set SUNATBOT_MEDIA_BASE_URL in .env on prod.
     'media_base_url' => env('SUNATBOT_MEDIA_BASE_URL', ''),
+    // Seconds to wait between consecutive reply bubbles so the chat doesn't
+    // arrive as one instant burst. Applied between bubbles only, not before
+    // the first one. Total handler time grows by delay × (bubbles - 1), so
+    // keep it small enough to fit inside the webhook timeout.
+    'reply_delay_seconds' => (int) env('SUNATBOT_REPLY_DELAY_SECONDS', 3),
 ];
