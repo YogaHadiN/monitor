@@ -161,8 +161,38 @@ class SunatBotEngine
             return [];
         }
 
-        $text = $this->substituteVariables($intent->jawaban_template, $session);
-        return $this->splitIntoBubbles($text, $intent->mediaList());
+        $template = (string) $intent->jawaban_template;
+        if (trim($template) === '') {
+            return [];
+        }
+
+        $text      = $this->substituteVariables($template, $session);
+        $sentences = $this->splitText($text);
+        $media     = $intent->mediaList();
+
+        // No media → text-only, one bubble per sentence/line.
+        if (empty($media)) {
+            $bubbles = [];
+            foreach ($sentences as $s) {
+                $bubbles[] = ['text' => $s, 'media' => null];
+            }
+            return $bubbles;
+        }
+
+        // With media → first image carries the first sentence as caption,
+        // remaining sentences ride as text-only bubbles, and any extra
+        // media files are sent as image bubbles with empty caption.
+        $bubbles   = [];
+        $firstCap  = $sentences[0] ?? '';
+        $bubbles[] = ['text' => $firstCap, 'media' => $media[0]];
+
+        for ($i = 1; $i < count($sentences); $i++) {
+            $bubbles[] = ['text' => $sentences[$i], 'media' => null];
+        }
+        for ($i = 1; $i < count($media); $i++) {
+            $bubbles[] = ['text' => '', 'media' => $media[$i]];
+        }
+        return $bubbles;
     }
 
     /**
@@ -175,15 +205,13 @@ class SunatBotEngine
     ];
 
     /**
-     * Split a template into one bubble per sentence or per line.
-     * - Newlines always start a new bubble.
-     * - Sentence-ending punctuation (`.`, `!`, `?`) followed by whitespace also splits.
-     * - URLs (dots without trailing whitespace) and decimals like "Rp 2.500.000"
-     *   stay intact because the regex requires whitespace after.
-     * - Common Indonesian abbreviations (Komp., Jl., dll.) are masked before
-     *   splitting so they don't break addresses.
+     * Split a template into one fragment per sentence or per line.
+     * Newlines start a new fragment; sentence-ending punctuation followed
+     * by whitespace splits; URLs and decimals stay intact because the
+     * regex requires whitespace after the punctuation; known abbreviations
+     * are masked before splitting so addresses are not broken.
      */
-    private function splitIntoBubbles(string $text, array $media): array
+    private function splitText(string $text): array
     {
         $marker = "\x01DOT\x01";
         $masked = $text;
@@ -192,16 +220,12 @@ class SunatBotEngine
         }
 
         $parts = preg_split('/(?<=[.!?])\s+|\n+/u', $masked) ?: [];
-        $bubbles = [];
+        $out = [];
         foreach ($parts as $part) {
             $part = trim(str_replace($marker, '.', $part));
-            if ($part === '') continue;
-            $bubbles[] = ['text' => $part, 'media' => []];
+            if ($part !== '') $out[] = $part;
         }
-        if (!empty($media) && !empty($bubbles)) {
-            $bubbles[0]['media'] = $media;
-        }
-        return $bubbles;
+        return $out;
     }
 
     private function substituteVariables(string $template, BotSession $session): string
