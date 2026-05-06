@@ -13,4 +13,9 @@ return [
     // the first one. Total handler time grows by delay × (bubbles - 1), so
     // keep it small enough to fit inside the webhook timeout.
     'reply_delay_seconds' => (int) env('SUNATBOT_REPLY_DELAY_SECONDS', 3),
+    // Max seconds an incoming webhook will wait for a previous in-flight
+    // reply (same phone) to finish before giving up and dropping the new
+    // message. Stay below the upstream webhook timeout so the provider
+    // doesn't disconnect mid-wait.
+    'reply_lock_wait_seconds' => (int) env('SUNATBOT_REPLY_LOCK_WAIT_SECONDS', 25),
 ];
