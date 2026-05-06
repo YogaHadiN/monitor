@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Tenant extends Model
 {
     use HasFactory;
+
+    protected $casts = [
+        'sunat_bot_enabled' => 'boolean',
+    ];
 }
