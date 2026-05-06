@@ -41,4 +41,10 @@ return [
     // already asked something specific. Override via env as a
     // comma-separated list.
     'generic_intents' => array_values(array_filter(array_map('trim', explode(',', (string) env('SUNATBOT_GENERIC_INTENTS', 'konsultasi'))))),
+    // Goodbye bubble shown when the customer sends one of the exit
+    // keywords. Override via SUNATBOT_EXIT_MESSAGE in .env.
+    'exit_message' => (string) env(
+        'SUNATBOT_EXIT_MESSAGE',
+        'Sesi konsultasi sunat ditutup. Untuk pertanyaan lain (daftar, jadwal, chat admin), silakan kirim pesan kembali ya kak. Terima kasih 🙏'
+    ),
 ];

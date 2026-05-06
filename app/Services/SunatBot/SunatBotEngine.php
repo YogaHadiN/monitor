@@ -67,8 +67,38 @@ class SunatBotEngine
             return ['handled' => false, 'replies' => []];
         }
 
+        // Exit keyword: customer wants to leave the SunatBot flow so the
+        // legacy WablasController paths (daftar, libur, chat admin, etc.)
+        // can take over from the next bubble onward.
+        if ($session && !$session->is_complete && $this->isExitKeyword($msgLower)) {
+            $session->is_complete     = true;
+            $session->last_activity_at = Carbon::now();
+            $session->save();
+            return [
+                'handled' => true,
+                'replies' => [
+                    [
+                        'text'  => (string) config(
+                            'sunatbot.exit_message',
+                            'Sesi konsultasi sunat ditutup. Untuk pertanyaan lain (daftar, jadwal, chat admin), silakan kirim pesan kembali ya kak. Terima kasih 🙏'
+                        ),
+                        'media' => null,
+                    ],
+                ],
+            ];
+        }
+
         if ($session && $session->is_complete) {
-            return ['handled' => false, 'replies' => []];
+            // Active is_complete session: a fresh "sunat" trigger should
+            // start a new flow instead of being silently swallowed by the
+            // legacy fall-through. Drop the stale session so the next
+            // block recreates it.
+            if ($hasTrigger) {
+                $session->delete();
+                $session = null;
+            } else {
+                return ['handled' => false, 'replies' => []];
+            }
         }
 
         $replies = [];
@@ -265,6 +295,35 @@ class SunatBotEngine
             }
         }
         return null;
+    }
+
+    /**
+     * Match the customer's normalised message against the configured
+     * exit keywords (defaults: selesai, akhiri, stop, keluar, berhenti,
+     * exit, akhir bot, akhir sesi). Override via SUNATBOT_EXIT_KEYWORDS
+     * as a comma-separated list. Each keyword is matched as either an
+     * exact equality OR the entire message after stripping leading "/"
+     * — so "selesai", "/selesai", and " selesai " all qualify, but a
+     * sentence containing the word does not (so we don't terminate the
+     * session by accident on something like "stop dulu ya kak").
+     */
+    private function isExitKeyword(string $msgLower): bool
+    {
+        $needle = ltrim(trim($msgLower), '/');
+        if ($needle === '') {
+            return false;
+        }
+        $defaults = ['selesai','akhiri','stop','keluar','berhenti','exit','akhir bot','akhir sesi'];
+        $configured = (string) env('SUNATBOT_EXIT_KEYWORDS', '');
+        $list = $configured !== ''
+            ? array_filter(array_map('trim', explode(',', $configured)), fn ($v) => $v !== '')
+            : $defaults;
+        foreach ($list as $kw) {
+            if ($needle === mb_strtolower($kw)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function emitHargaClosing(BotSession $session): array
