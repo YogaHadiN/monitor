@@ -2,6 +2,7 @@
 
 namespace App\Services\SunatBot;
 
+use App\Models\Message;
 use App\Services\WatzapService;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
@@ -74,9 +75,11 @@ class SunatBotReplyDispatcher
                             Log::error('SUNAT_BOT_MEDIA_FAIL', $result + ['url' => $url, 'type' => $mediaType]);
                             if ($text !== '') {
                                 $this->watzap->sendText($phone, $text);
+                                $this->logOutgoing($phone, $text, null);
                             }
                         } else {
                             $prevSentMedia = true;
+                            $this->logOutgoing($phone, $text, $url);
                         }
                     } catch (\Throwable $mediaErr) {
                         Log::error('SUNAT_BOT_MEDIA_EXCEPTION', [
@@ -86,10 +89,12 @@ class SunatBotReplyDispatcher
                         ]);
                         if ($text !== '') {
                             $this->watzap->sendText($phone, $text);
+                            $this->logOutgoing($phone, $text, null);
                         }
                     }
                 } elseif ($text !== '') {
                     $this->watzap->sendText($phone, $text);
+                    $this->logOutgoing($phone, $text, null);
                 }
             }
             return true;
@@ -100,6 +105,36 @@ class SunatBotReplyDispatcher
             if ($lockHeld) {
                 $lock->release();
             }
+        }
+    }
+
+    /**
+     * Persist a SunatBot outgoing bubble to messages so the conversation
+     * surfaces in the same chat history UI as legacy autoReply traffic.
+     * sending=1 marks it as bot/staff outbound; staf_id stays null because
+     * the bot has no human author.
+     */
+    private function logOutgoing(string $phone, string $text, ?string $imageUrl): void
+    {
+        try {
+            Message::create([
+                'no_telp'        => $phone,
+                'message'        => $text,
+                'image_url'      => $imageUrl,
+                'tanggal'        => date('Y-m-d H:i:s'),
+                'sending'        => 1,
+                'sudah_dibalas'  => 1,
+                'sudah_diproses' => 1,
+                'tenant_id'      => 1,
+                'touched'        => 1,
+                'staf_id'        => null,
+                'flagged_intent' => 'sunat_bot',
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('SUNAT_BOT_MESSAGE_LOG_FAIL', [
+                'phone' => $phone,
+                'err'   => $e->getMessage(),
+            ]);
         }
     }
 }
