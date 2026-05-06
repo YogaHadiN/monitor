@@ -325,13 +325,14 @@ class WablasController extends Controller
                     ]);
 
                     Message::create([
-                        'no_telp'       => $this->no_telp,
-                        'message'       => $this->message,
-                        'tanggal'       => date('Y-m-d H:i:s'),
-                        'sending'       => 0,
-                        'sudah_dibalas' => 1,
-                        'tenant_id'     => 1,
-                        'touched'       => 0,
+                        'no_telp'        => $this->no_telp,
+                        'message'        => $this->message,
+                        'tanggal'        => date('Y-m-d H:i:s'),
+                        'sending'        => 0,
+                        'sudah_dibalas'  => 1,
+                        'tenant_id'      => 1,
+                        'touched'        => 0,
+                        'flagged_intent' => 'sunat_bot',
                     ]);
                     return;
                 } catch (\Throwable $bufErr) {
