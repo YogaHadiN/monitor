@@ -106,6 +106,21 @@ class SunatBotEngine
         $candidates = $this->candidateSlugs();
         $intents    = $this->classifier->classify($message, $candidates);
 
+        // Drop generic ack intents (e.g. "konsultasi" → "Silakan kak. Ada
+        // yang bisa dibantu?") whenever the same message also matched at
+        // least one specific intent — the client already stated their
+        // question, so the catch-all ack would just clutter the reply.
+        $genericSlugs = (array) config('sunatbot.generic_intents', ['konsultasi']);
+        if ($intents !== []) {
+            $nonGeneric = array_values(array_filter(
+                $intents,
+                fn ($s) => !in_array($s, $genericSlugs, true)
+            ));
+            if ($nonGeneric !== []) {
+                $intents = $nonGeneric;
+            }
+        }
+
         if (empty($intents)) {
             if ($skipFallback) {
                 return [];
