@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 use App\Models\AntrianPoli;
 use App\Models\Message;
@@ -275,102 +274,75 @@ class WablasController extends Controller
             $sunatBotShouldRun  = $sunatBotEnabled || in_array((string) $this->no_telp, $sunatBotWhitelist, true);
 
             if ($sunatBotShouldRun) {
-            // Per-phone lock so a second incoming message can't interleave its
-            // bubbles with the previous reply that's still mid-delivery.
-            $replyLock = Cache::lock('sunatbot:reply:' . $this->no_telp, 60);
-            $lockHeld  = false;
-            try {
-                $replyLock->block((int) config('sunatbot.reply_lock_wait_seconds', 25));
-                $lockHeld = true;
-
                 try {
-                    $bot = app(\App\Services\SunatBot\SunatBotEngine::class);
-                    $botResult = $bot->handle((string) $this->no_telp, (string) $this->message);
-                    if (!empty($botResult['handled'])) {
-                        $imageBotEnabled = (bool) ($this->tenant->image_bot_enabled ?? false);
-                        $mediaBase       = rtrim((string) config('sunatbot.media_base_url', ''), '/');
-                        $replyDelay      = max(0, (int) config('sunatbot.reply_delay_seconds', 0));
-                        $mediaSettle     = max(0, (int) config('sunatbot.media_settle_seconds', 5));
-                        $firstReply      = true;
-                        $prevSentMedia   = false;
-                        foreach ($botResult['replies'] as $reply) {
-                            if (!$firstReply) {
-                                // After a media bubble we pause longer so the
-                                // image/video has time to actually land on the
-                                // user's WhatsApp before the next bubble — the
-                                // WatZap API returns once the upload starts,
-                                // not once delivery completes.
-                                $gap = $prevSentMedia ? max($mediaSettle, $replyDelay) : $replyDelay;
-                                if ($gap > 0) sleep($gap);
-                            }
-                            $firstReply = false;
-                            $text  = (string) ($reply['text'] ?? '');
-                            $media = $reply['media'] ?? null;
+                    // Buffer this bubble against the per-phone row and bump
+                    // the version. The flush job (dispatched below with a
+                    // delay) checks that the version still matches before
+                    // processing — so any newer bubble that lands in the
+                    // window invalidates the older job and the freshest
+                    // dispatch is the only one that ever flushes.
+                    $version = \DB::transaction(function () {
+                        \App\Models\BotPendingBuffer::firstOrCreate(
+                            ['phone' => (string) $this->no_telp],
+                            [
+                                'provider'         => (string) ($this->provider ?? 'watzap'),
+                                'messages'         => [],
+                                'version'          => 0,
+                                'last_received_at' => now(),
+                            ]
+                        );
 
-                            $ext = is_string($media) && $media !== ''
-                                ? strtolower(pathinfo($media, PATHINFO_EXTENSION))
-                                : '';
-                            $mediaType = null;
-                            if (in_array($ext, ['jpg','jpeg','png','gif','webp'], true)) {
-                                $mediaType = 'image';
-                            } elseif (in_array($ext, ['mp4','mov','webm','3gp'], true)) {
-                                $mediaType = 'video';
-                            }
+                        $buffer = \App\Models\BotPendingBuffer::where('phone', (string) $this->no_telp)
+                            ->lockForUpdate()
+                            ->first();
 
-                            $canSendMedia = $imageBotEnabled
-                                && $this->provider === 'watzap'
-                                && $mediaBase !== ''
-                                && $mediaType !== null;
+                        $messages = $buffer->processed_at !== null
+                            ? []
+                            : ($buffer->messages ?? []);
+                        $messages[] = [
+                            'text' => (string) $this->message,
+                            'at'   => now()->toIso8601String(),
+                        ];
 
-                            $prevSentMedia = false;
-                            if ($canSendMedia) {
-                                $url = $mediaBase . '/' . ltrim((string) $media, '/');
-                                try {
-                                    $watzap = app(\App\Services\WatzapService::class);
-                                    $result = $mediaType === 'image'
-                                        ? $watzap->sendImage((string) $this->no_telp, $url, $text)
-                                        : $watzap->sendVideo((string) $this->no_telp, $url, $text);
-                                    if (empty($result['ok'])) {
-                                        \Log::error('SUNAT_BOT_MEDIA_FAIL', $result + ['url' => $url, 'type' => $mediaType]);
-                                        if ($text !== '') $this->autoReply($text);
-                                    } else {
-                                        $prevSentMedia = true;
-                                    }
-                                } catch (\Throwable $mediaErr) {
-                                    \Log::error('SUNAT_BOT_MEDIA_EXCEPTION', ['err' => $mediaErr->getMessage(), 'url' => $url, 'type' => $mediaType]);
-                                    if ($text !== '') $this->autoReply($text);
-                                }
-                            } elseif ($text !== '') {
-                                $this->autoReply($text);
-                            }
-                        }
-                        Message::create([
-                            'no_telp'       => $this->no_telp,
-                            'message'       => $this->message,
-                            'tanggal'       => date('Y-m-d H:i:s'),
-                            'sending'       => 0,
-                            'sudah_dibalas' => 1,
-                            'tenant_id'     => 1,
-                            'touched'       => 0,
-                        ]);
-                        return;
-                    }
-                } catch (\Throwable $botErr) {
-                    \Log::error('SUNAT_BOT_FAIL', ['err' => $botErr->getMessage()]);
+                        $buffer->messages         = $messages;
+                        $buffer->version          = ((int) $buffer->version) + 1;
+                        $buffer->last_received_at = now();
+                        $buffer->processed_at     = null;
+                        $buffer->provider         = (string) ($this->provider ?? 'watzap');
+                        $buffer->save();
+
+                        return (int) $buffer->version;
+                    });
+
+                    $delay = max(1, (int) config('sunatbot.buffer_window_seconds', 30));
+                    \App\Jobs\ProcessPendingSunatBotMessages::dispatch((string) $this->no_telp, $version)
+                        ->delay(now()->addSeconds($delay));
+
+                    \Log::info('SUNAT_BOT_BUFFERED', [
+                        'phone'   => $this->no_telp,
+                        'version' => $version,
+                        'delay'   => $delay,
+                    ]);
+
+                    Message::create([
+                        'no_telp'       => $this->no_telp,
+                        'message'       => $this->message,
+                        'tanggal'       => date('Y-m-d H:i:s'),
+                        'sending'       => 0,
+                        'sudah_dibalas' => 1,
+                        'tenant_id'     => 1,
+                        'touched'       => 0,
+                    ]);
+                    return;
+                } catch (\Throwable $bufErr) {
+                    // On buffer/dispatch failure fall through to the
+                    // legacy libur/daftar branches so the user still gets
+                    // a response, instead of a silent webhook.
+                    \Log::error('SUNAT_BOT_BUFFER_FAIL', [
+                        'phone' => $this->no_telp,
+                        'error' => $bufErr->getMessage(),
+                    ]);
                 }
-            } catch (\Illuminate\Contracts\Cache\LockTimeoutException $lockErr) {
-                // Previous reply still in-flight after the wait window. Drop
-                // this webhook rather than interleaving — user can resend.
-                \Log::warning('SUNAT_BOT_LOCK_TIMEOUT', [
-                    'phone'   => $this->no_telp,
-                    'message' => $this->message,
-                ]);
-                return;
-            } finally {
-                if ($lockHeld) {
-                    $replyLock->release();
-                }
-            }
             }
             // ===== SUNAT BOT END =====
 

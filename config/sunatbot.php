@@ -28,4 +28,17 @@ return [
     // so internal QA can keep testing the flow even while the tenant flag
     // is off. Override via SUNATBOT_WHITELIST_PHONES="6281...,6282...".
     'whitelist_phones' => array_values(array_filter(array_map('trim', explode(',', (string) env('SUNATBOT_WHITELIST_PHONES', '6281381912803'))))),
+    // After receiving a webhook bubble we hold the message in the
+    // bot_pending_buffers row for this many seconds before flushing the
+    // combined text to the engine. Each new bubble during the window
+    // resets the version, so the previously-scheduled flush job exits
+    // and the newest one wins. Tune via SUNATBOT_BUFFER_WINDOW_SECONDS.
+    'buffer_window_seconds' => (int) env('SUNATBOT_BUFFER_WINDOW_SECONDS', 30),
+    // Intent slugs that should be silently dropped from the classifier
+    // result whenever ANY non-generic intent also matched in the same
+    // message — they are catch-all acknowledgments ("Silakan kak. Ada
+    // yang bisa dibantu?") that add no signal once the client has
+    // already asked something specific. Override via env as a
+    // comma-separated list.
+    'generic_intents' => array_values(array_filter(array_map('trim', explode(',', (string) env('SUNATBOT_GENERIC_INTENTS', 'konsultasi'))))),
 ];
