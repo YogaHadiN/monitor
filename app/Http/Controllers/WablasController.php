@@ -267,69 +267,90 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
 
             // ===== SUNAT BOT START =====
+            // Per-phone lock so a second incoming message can't interleave its
+            // bubbles with the previous reply that's still mid-delivery.
+            $replyLock = Cache::lock('sunatbot:reply:' . $this->no_telp, 60);
+            $lockHeld  = false;
             try {
-                $bot = app(\App\Services\SunatBot\SunatBotEngine::class);
-                $botResult = $bot->handle((string) $this->no_telp, (string) $this->message);
-                if (!empty($botResult['handled'])) {
-                    $imageBotEnabled = (bool) ($this->tenant->image_bot_enabled ?? false);
-                    $mediaBase       = rtrim((string) config('sunatbot.media_base_url', ''), '/');
-                    $replyDelay      = max(0, (int) config('sunatbot.reply_delay_seconds', 0));
-                    $firstReply      = true;
-                    foreach ($botResult['replies'] as $reply) {
-                        if (!$firstReply && $replyDelay > 0) {
-                            sleep($replyDelay);
-                        }
-                        $firstReply = false;
-                        $text  = (string) ($reply['text'] ?? '');
-                        $media = $reply['media'] ?? null;
+                $replyLock->block((int) config('sunatbot.reply_lock_wait_seconds', 25));
+                $lockHeld = true;
 
-                        $ext = is_string($media) && $media !== ''
-                            ? strtolower(pathinfo($media, PATHINFO_EXTENSION))
-                            : '';
-                        $mediaType = null;
-                        if (in_array($ext, ['jpg','jpeg','png','gif','webp'], true)) {
-                            $mediaType = 'image';
-                        } elseif (in_array($ext, ['mp4','mov','webm','3gp'], true)) {
-                            $mediaType = 'video';
-                        }
+                try {
+                    $bot = app(\App\Services\SunatBot\SunatBotEngine::class);
+                    $botResult = $bot->handle((string) $this->no_telp, (string) $this->message);
+                    if (!empty($botResult['handled'])) {
+                        $imageBotEnabled = (bool) ($this->tenant->image_bot_enabled ?? false);
+                        $mediaBase       = rtrim((string) config('sunatbot.media_base_url', ''), '/');
+                        $replyDelay      = max(0, (int) config('sunatbot.reply_delay_seconds', 0));
+                        $firstReply      = true;
+                        foreach ($botResult['replies'] as $reply) {
+                            if (!$firstReply && $replyDelay > 0) {
+                                sleep($replyDelay);
+                            }
+                            $firstReply = false;
+                            $text  = (string) ($reply['text'] ?? '');
+                            $media = $reply['media'] ?? null;
 
-                        $canSendMedia = $imageBotEnabled
-                            && $this->provider === 'watzap'
-                            && $mediaBase !== ''
-                            && $mediaType !== null;
+                            $ext = is_string($media) && $media !== ''
+                                ? strtolower(pathinfo($media, PATHINFO_EXTENSION))
+                                : '';
+                            $mediaType = null;
+                            if (in_array($ext, ['jpg','jpeg','png','gif','webp'], true)) {
+                                $mediaType = 'image';
+                            } elseif (in_array($ext, ['mp4','mov','webm','3gp'], true)) {
+                                $mediaType = 'video';
+                            }
 
-                        if ($canSendMedia) {
-                            $url = $mediaBase . '/' . ltrim((string) $media, '/');
-                            try {
-                                $watzap = app(\App\Services\WatzapService::class);
-                                $result = $mediaType === 'image'
-                                    ? $watzap->sendImage((string) $this->no_telp, $url, $text)
-                                    : $watzap->sendVideo((string) $this->no_telp, $url, $text);
-                                if (empty($result['ok'])) {
-                                    \Log::error('SUNAT_BOT_MEDIA_FAIL', $result + ['url' => $url, 'type' => $mediaType]);
+                            $canSendMedia = $imageBotEnabled
+                                && $this->provider === 'watzap'
+                                && $mediaBase !== ''
+                                && $mediaType !== null;
+
+                            if ($canSendMedia) {
+                                $url = $mediaBase . '/' . ltrim((string) $media, '/');
+                                try {
+                                    $watzap = app(\App\Services\WatzapService::class);
+                                    $result = $mediaType === 'image'
+                                        ? $watzap->sendImage((string) $this->no_telp, $url, $text)
+                                        : $watzap->sendVideo((string) $this->no_telp, $url, $text);
+                                    if (empty($result['ok'])) {
+                                        \Log::error('SUNAT_BOT_MEDIA_FAIL', $result + ['url' => $url, 'type' => $mediaType]);
+                                        if ($text !== '') $this->autoReply($text);
+                                    }
+                                } catch (\Throwable $mediaErr) {
+                                    \Log::error('SUNAT_BOT_MEDIA_EXCEPTION', ['err' => $mediaErr->getMessage(), 'url' => $url, 'type' => $mediaType]);
                                     if ($text !== '') $this->autoReply($text);
                                 }
-                            } catch (\Throwable $mediaErr) {
-                                \Log::error('SUNAT_BOT_MEDIA_EXCEPTION', ['err' => $mediaErr->getMessage(), 'url' => $url, 'type' => $mediaType]);
-                                if ($text !== '') $this->autoReply($text);
+                            } elseif ($text !== '') {
+                                $this->autoReply($text);
                             }
-                        } elseif ($text !== '') {
-                            $this->autoReply($text);
                         }
+                        Message::create([
+                            'no_telp'       => $this->no_telp,
+                            'message'       => $this->message,
+                            'tanggal'       => date('Y-m-d H:i:s'),
+                            'sending'       => 0,
+                            'sudah_dibalas' => 1,
+                            'tenant_id'     => 1,
+                            'touched'       => 0,
+                        ]);
+                        return;
                     }
-                    Message::create([
-                        'no_telp'       => $this->no_telp,
-                        'message'       => $this->message,
-                        'tanggal'       => date('Y-m-d H:i:s'),
-                        'sending'       => 0,
-                        'sudah_dibalas' => 1,
-                        'tenant_id'     => 1,
-                        'touched'       => 0,
-                    ]);
-                    return;
+                } catch (\Throwable $botErr) {
+                    \Log::error('SUNAT_BOT_FAIL', ['err' => $botErr->getMessage()]);
                 }
-            } catch (\Throwable $botErr) {
-                \Log::error('SUNAT_BOT_FAIL', ['err' => $botErr->getMessage()]);
+            } catch (\Illuminate\Contracts\Cache\LockTimeoutException $lockErr) {
+                // Previous reply still in-flight after the wait window. Drop
+                // this webhook rather than interleaving — user can resend.
+                \Log::warning('SUNAT_BOT_LOCK_TIMEOUT', [
+                    'phone'   => $this->no_telp,
+                    'message' => $this->message,
+                ]);
+                return;
+            } finally {
+                if ($lockHeld) {
+                    $replyLock->release();
+                }
             }
             // ===== SUNAT BOT END =====
 
