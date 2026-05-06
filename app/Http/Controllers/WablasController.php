@@ -282,10 +282,18 @@ class WablasController extends Controller
                         $imageBotEnabled = (bool) ($this->tenant->image_bot_enabled ?? false);
                         $mediaBase       = rtrim((string) config('sunatbot.media_base_url', ''), '/');
                         $replyDelay      = max(0, (int) config('sunatbot.reply_delay_seconds', 0));
+                        $mediaSettle     = max(0, (int) config('sunatbot.media_settle_seconds', 5));
                         $firstReply      = true;
+                        $prevSentMedia   = false;
                         foreach ($botResult['replies'] as $reply) {
-                            if (!$firstReply && $replyDelay > 0) {
-                                sleep($replyDelay);
+                            if (!$firstReply) {
+                                // After a media bubble we pause longer so the
+                                // image/video has time to actually land on the
+                                // user's WhatsApp before the next bubble — the
+                                // WatZap API returns once the upload starts,
+                                // not once delivery completes.
+                                $gap = $prevSentMedia ? max($mediaSettle, $replyDelay) : $replyDelay;
+                                if ($gap > 0) sleep($gap);
                             }
                             $firstReply = false;
                             $text  = (string) ($reply['text'] ?? '');
@@ -306,6 +314,7 @@ class WablasController extends Controller
                                 && $mediaBase !== ''
                                 && $mediaType !== null;
 
+                            $prevSentMedia = false;
                             if ($canSendMedia) {
                                 $url = $mediaBase . '/' . ltrim((string) $media, '/');
                                 try {
@@ -316,6 +325,8 @@ class WablasController extends Controller
                                     if (empty($result['ok'])) {
                                         \Log::error('SUNAT_BOT_MEDIA_FAIL', $result + ['url' => $url, 'type' => $mediaType]);
                                         if ($text !== '') $this->autoReply($text);
+                                    } else {
+                                        $prevSentMedia = true;
                                     }
                                 } catch (\Throwable $mediaErr) {
                                     \Log::error('SUNAT_BOT_MEDIA_EXCEPTION', ['err' => $mediaErr->getMessage(), 'url' => $url, 'type' => $mediaType]);

@@ -13,6 +13,12 @@ return [
     // the first one. Total handler time grows by delay × (bubbles - 1), so
     // keep it small enough to fit inside the webhook timeout.
     'reply_delay_seconds' => (int) env('SUNATBOT_REPLY_DELAY_SECONDS', 3),
+    // After a media bubble (image/video) we wait at least this many seconds
+    // before the next bubble so the file has time to land on the user's
+    // WhatsApp — the WatZap API returns when the upload begins, not when
+    // delivery completes, so a too-short gap lets the next text bubble
+    // overtake the image. Effective gap = max(media_settle, reply_delay).
+    'media_settle_seconds' => (int) env('SUNATBOT_MEDIA_SETTLE_SECONDS', 5),
     // Max seconds an incoming webhook will wait for a previous in-flight
     // reply (same phone) to finish before giving up and dropping the new
     // message. Stay below the upstream webhook timeout so the provider
