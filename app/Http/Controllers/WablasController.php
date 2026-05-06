@@ -267,6 +267,14 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
 
             // ===== SUNAT BOT START =====
+            // Tenant flag gates the bot. When disabled, only whitelisted
+            // numbers (e.g. internal QA) still get a SunatBot reply so we
+            // can keep testing without exposing the flow to real clients.
+            $sunatBotEnabled    = (bool) ($this->tenant->sunat_bot_enabled ?? false);
+            $sunatBotWhitelist  = (array) config('sunatbot.whitelist_phones', ['6281381912803']);
+            $sunatBotShouldRun  = $sunatBotEnabled || in_array((string) $this->no_telp, $sunatBotWhitelist, true);
+
+            if ($sunatBotShouldRun) {
             // Per-phone lock so a second incoming message can't interleave its
             // bubbles with the previous reply that's still mid-delivery.
             $replyLock = Cache::lock('sunatbot:reply:' . $this->no_telp, 60);
@@ -362,6 +370,7 @@ class WablasController extends Controller
                 if ($lockHeld) {
                     $replyLock->release();
                 }
+            }
             }
             // ===== SUNAT BOT END =====
 

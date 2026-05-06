@@ -24,4 +24,8 @@ return [
     // message. Stay below the upstream webhook timeout so the provider
     // doesn't disconnect mid-wait.
     'reply_lock_wait_seconds' => (int) env('SUNATBOT_REPLY_LOCK_WAIT_SECONDS', 25),
+    // Phone numbers (E.164 without "+") that bypass tenants.sunat_bot_enabled
+    // so internal QA can keep testing the flow even while the tenant flag
+    // is off. Override via SUNATBOT_WHITELIST_PHONES="6281...,6282...".
+    'whitelist_phones' => array_values(array_filter(array_map('trim', explode(',', (string) env('SUNATBOT_WHITELIST_PHONES', '6281381912803'))))),
 ];
