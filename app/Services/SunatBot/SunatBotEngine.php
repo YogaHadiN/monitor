@@ -150,7 +150,6 @@ class SunatBotEngine
             }
             if ($slug === 'tanya_jadwal') {
                 $replies = array_merge($replies, $this->renderIntent('tanya_jadwal', $session));
-                $session->is_complete = true;
                 return $replies;
             }
             if (isset(self::DATA_INTENT_FIELD[$slug])) {
