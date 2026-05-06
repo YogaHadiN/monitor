@@ -273,7 +273,23 @@ class WablasController extends Controller
             $sunatBotWhitelist  = (array) config('sunatbot.whitelist_phones', ['6281381912803']);
             $sunatBotShouldRun  = $sunatBotEnabled || in_array((string) $this->no_telp, $sunatBotWhitelist, true);
 
-            if ($sunatBotShouldRun) {
+            // Only hand the bubble to the bot buffer when the bot would
+            // actually engage with it: either (a) the customer is already
+            // mid-session (active row in bot_sessions), or (b) the message
+            // contains a sunat/khitan trigger and starts a new session.
+            // Otherwise — e.g. customer typed "daftar" or "akhiri" landed
+            // and closed their session — fall through to the legacy
+            // WablasController paths so daftar/libur/chat-admin still work.
+            $sunatExistingSession = $sunatBotShouldRun
+                ? \App\Models\BotSession::where('no_telp', (string) $this->no_telp)->first()
+                : null;
+            $sunatMsgLower    = mb_strtolower((string) $this->message);
+            $sunatHasTrigger  = str_contains($sunatMsgLower, 'sunat')
+                              || str_contains($sunatMsgLower, 'khitan');
+            $sunatActive      = $sunatExistingSession !== null && !$sunatExistingSession->is_complete;
+            $sunatShouldBuffer = $sunatBotShouldRun && ($sunatActive || $sunatHasTrigger);
+
+            if ($sunatShouldBuffer) {
                 try {
                     // Buffer this bubble against the per-phone row and bump
                     // the version. The flush job (dispatched below with a
