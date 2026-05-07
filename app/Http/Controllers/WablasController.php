@@ -273,6 +273,21 @@ class WablasController extends Controller
             $sunatBotWhitelist  = (array) config('sunatbot.whitelist_phones', ['6281381912803']);
             $sunatBotShouldRun  = $sunatBotEnabled || in_array((string) $this->no_telp, $sunatBotWhitelist, true);
 
+            // Whitelist-only QA reset: "ulang sunat" wipes the existing
+            // session + any pending buffer for this phone so the next
+            // sunat/khitan trigger starts a fresh flow. Bypasses the
+            // tenant flag — whitelisted phones can always reset.
+            if (
+                in_array((string) $this->no_telp, $sunatBotWhitelist, true)
+                && trim(mb_strtolower((string) $this->message)) === 'ulang sunat'
+            ) {
+                \App\Models\BotSession::where('no_telp', (string) $this->no_telp)->delete();
+                \App\Models\BotPendingBuffer::where('phone', (string) $this->no_telp)->delete();
+                \Log::info('SUNAT_BOT_RESET', ['phone' => $this->no_telp]);
+                $this->autoReply('Session SunatBot direset. Kirim pesan dengan kata "sunat" atau "khitan" untuk memulai dari awal.');
+                return;
+            }
+
             // Only hand the bubble to the bot buffer when the bot would
             // actually engage with it: either (a) the customer is already
             // mid-session (active row in bot_sessions), or (b) the message
