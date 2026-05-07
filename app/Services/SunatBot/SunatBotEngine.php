@@ -5,47 +5,51 @@ namespace App\Services\SunatBot;
 use App\Models\BotIntent;
 use App\Models\BotSession;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class SunatBotEngine
 {
     /**
-     * For the harga (price) flow we collect five fields. Each maps to the
-     * bot-prompt intent that asks for it (rendered when the field is the
-     * next missing one).
+     * Stage 2 (Flow Konsultasi Harga). Each entry is field => intent slug
+     * the bot renders to ASK for that field. Order is the visit order;
+     * nextMissingHargaField walks this map and returns the first field
+     * with no value in collected_data.
+     *
+     * Step 2.3 (usia_bb) is naturally skipped when step 2.1 already
+     * captured both usia_anak and berat_badan_anak — captureForField
+     * marks the usia_bb sentinel so this loop sees it as "filled".
      */
     private const HARGA_FLOW = [
-        'nama'              => 'tanya_nama_client',
-        'domisili'          => 'tanya_domisili',
-        'usia_bb'           => 'tanya_usia_bb',
-        'keluhan'           => 'tanya_keluhan',
-        'riwayat_kesehatan' => 'tanya_riwayat_kesehatan',
-    ];
-
-    private const HARGA_CLOSING = [
-        'edukasi_metode_lengkap',
-        'quote_harga',
-        'tanya_jadwal',
+        'nama_orang_tua'      => 'tanya_nama_orang_tua',     // 2.1
+        'domisili'            => 'tanya_domisili',            // 2.2
+        'usia_bb'             => 'tanya_usia_bb_konfirmasi',  // 2.3
+        'indikasi_khitan'     => 'tanya_indikasi',            // 2.4
+        'riwayat_kesehatan'   => 'tanya_riwayat_kesehatan',   // 2.5 (escalation gate)
+        'sudah_tahu_metode'   => 'tanya_sudah_tahu_metode',   // 2.6 (conditional render)
+        'pengalaman_medis'    => 'tanya_pengalaman',          // 2.7 (emits 2.8 after capture)
+        'setuju_dokumentasi'  => 'tanya_setuju_dokumentasi',  // 2.9 (conditional render)
     ];
 
     /**
-     * Data-capture intents. The AI classifies the user message into zero or
-     * more of these and the engine extracts the corresponding field value
-     * into the session instead of replying with a template.
+     * Stage 2 closing (Step 2.10). Emitted when all HARGA_FLOW fields
+     * are filled. After emitting, expecting_field is set to the sentinel
+     * 'pertanyaan_lanjutan' so the next message goes through
+     * handlePertanyaanLanjutan instead of advancing fields.
      */
-    private const DATA_INTENT_FIELD = [
-        'data_nama'              => 'nama',
-        'data_domisili'          => 'domisili',
-        'data_usia_bb'           => 'usia_bb',
-        'data_keluhan'           => 'keluhan',
-        'data_riwayat_kesehatan' => 'riwayat_kesehatan',
+    private const HARGA_CLOSING = [
+        'quote_harga_paket',
+        'tanya_pertanyaan_lanjutan',
     ];
 
     private const FIELD_DESCRIPTIONS = [
-        'nama'              => 'nama depan orang tua / pengirim pesan',
-        'domisili'          => 'kota / kecamatan domisili',
-        'usia_bb'           => 'usia anak (tahun) dan berat badan (kg) digabung dalam satu string',
-        'keluhan'           => 'keluhan medis singkat atau "tidak ada"',
-        'riwayat_kesehatan' => 'riwayat penyakit / kondisi khusus anak atau "tidak ada"',
+        'nama_orang_tua'     => 'nama depan orang tua / pengirim pesan, contoh "Yeni"',
+        'domisili'           => 'kota / kecamatan domisili pasien (Tangerang/Jakarta/dst)',
+        'usia_bb'            => 'usia anak (tahun) dan berat badan (kg) digabung apa adanya',
+        'indikasi_khitan'    => 'alasan / keluhan medis yang menyebabkan ingin di-khitan, atau "tidak ada"',
+        'riwayat_kesehatan'  => 'kondisi kesehatan khusus anak (gangguan pembekuan darah, jantung, autisme, dll) atau "tidak ada"',
+        'sudah_tahu_metode'  => 'apakah pasien sudah tahu metode khitan kami: "ya"/"sudah" atau "belum"/"tidak"',
+        'pengalaman_medis'   => 'pengalaman tindakan medis anak sebelumnya (trauma/sudah pernah disunat) atau "belum ada"',
+        'setuju_dokumentasi' => 'apakah pasien setuju dibuatkan dokumentasi gratis: "ya" atau "tidak"',
     ];
 
     public function __construct(private IntentClassifier $classifier)
@@ -54,45 +58,49 @@ class SunatBotEngine
 
     /**
      * Process an incoming WA message.
-     * Returns ['handled' => bool, 'replies' => array<['text'=>string,'media'=>string[]]>]
+     * Returns ['handled' => bool, 'replies' => array<['text'=>string,'media'=>?string]>]
      */
     public function handle(string $noTelp, string $message): array
     {
-        $msg       = trim($message);
-        $msgLower  = mb_strtolower($msg);
-        $hasTrigger = str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan');
-        $session   = BotSession::where('no_telp', $noTelp)->first();
+        $msg        = trim($message);
+        $msgLower   = mb_strtolower($msg);
+        $hasTrigger = $this->hasTrigger($msgLower);
+        $session    = BotSession::where('no_telp', $noTelp)->first();
 
         if ($session === null && !$hasTrigger) {
             return ['handled' => false, 'replies' => []];
         }
 
-        // Exit keyword: customer wants to leave the SunatBot flow so the
-        // legacy WablasController paths (daftar, libur, chat admin, etc.)
-        // can take over from the next bubble onward.
+        // Gratitude exit keyword (terima kasih, makasih, etc.) — close
+        // session politely and let the legacy Wablas paths handle the
+        // next bubble.
         if ($session && !$session->is_complete && $this->isExitKeyword($msgLower)) {
-            $session->is_complete     = true;
+            $session->is_complete      = true;
             $session->last_activity_at = Carbon::now();
             $session->save();
             return [
                 'handled' => true,
-                'replies' => [
-                    [
-                        'text'  => (string) config(
-                            'sunatbot.exit_message',
-                            'Sesi konsultasi sunat ditutup. Untuk pertanyaan lain (daftar, jadwal, chat admin), silakan kirim pesan kembali ya kak. Terima kasih 🙏'
-                        ),
-                        'media' => null,
-                    ],
-                ],
+                'replies' => [[
+                    'text'  => (string) config('sunatbot.exit_message'),
+                    'media' => null,
+                ]],
+            ];
+        }
+
+        // Explicit admin / CS request — escalate immediately regardless
+        // of which flow step we are on. Whole-word match so we don't
+        // false-trigger on incidental occurrences.
+        if ($session && !$session->is_complete && $this->isAdminKeyword($msgLower)) {
+            return [
+                'handled' => true,
+                'replies' => $this->escalate($session),
             ];
         }
 
         if ($session && $session->is_complete) {
-            // Active is_complete session: a fresh "sunat" trigger should
-            // start a new flow instead of being silently swallowed by the
-            // legacy fall-through. Drop the stale session so the next
-            // block recreates it.
+            // is_complete + new sunat trigger → drop the stale session
+            // so the flow restarts. Otherwise stay out and let legacy
+            // paths handle (daftar, libur, etc.).
             if ($hasTrigger) {
                 $session->delete();
                 $session = null;
@@ -101,7 +109,7 @@ class SunatBotEngine
             }
         }
 
-        $replies = [];
+        $replies     = [];
         $justCreated = false;
 
         if ($session === null) {
@@ -128,18 +136,17 @@ class SunatBotEngine
 
     /**
      * Outside the harga flow: classify the message, render templates for
-     * normal reply intents, capture data the user volunteered, and enter
-     * the harga flow if pertanyaan_harga was detected.
+     * normal reply intents, and enter the harga flow if pertanyaan_harga
+     * was detected.
      */
     private function classifyAndRespond(BotSession $session, string $message, bool $skipFallback = false): array
     {
         $candidates = $this->candidateSlugs();
         $intents    = $this->classifier->classify($message, $candidates);
 
-        // Drop generic ack intents (e.g. "konsultasi" → "Silakan kak. Ada
-        // yang bisa dibantu?") whenever the same message also matched at
-        // least one specific intent — the client already stated their
-        // question, so the catch-all ack would just clutter the reply.
+        // Drop generic ack intents whenever the same message also matched
+        // at least one specific intent — the catch-all ack would just
+        // clutter the reply.
         $genericSlugs = (array) config('sunatbot.generic_intents', ['konsultasi']);
         if ($intents !== []) {
             $nonGeneric = array_values(array_filter(
@@ -158,12 +165,11 @@ class SunatBotEngine
             return $this->renderIntent('fallback_unknown', $session);
         }
 
-        // Order: side answers first → data captures → harga trigger last.
+        // Order: side answers first → harga trigger last.
         usort($intents, function ($a, $b) {
             $rank = function ($x) {
-                if ($x === 'pertanyaan_harga') return 3;
-                if ($x === 'tanya_jadwal')     return 2;
-                if (isset(self::DATA_INTENT_FIELD[$x])) return 1;
+                if ($x === 'pertanyaan_harga') return 2;
+                if ($x === 'tanya_jadwal')     return 1;
                 return 0;
             };
             return $rank($a) - $rank($b);
@@ -179,10 +185,6 @@ class SunatBotEngine
             if ($slug === 'tanya_jadwal') {
                 $replies = array_merge($replies, $this->renderIntent('tanya_jadwal', $session));
                 return $replies;
-            }
-            if (isset(self::DATA_INTENT_FIELD[$slug])) {
-                $this->captureField($session, self::DATA_INTENT_FIELD[$slug], $message);
-                continue;
             }
             $replies = array_merge($replies, $this->renderIntent($slug, $session));
         }
@@ -202,80 +204,244 @@ class SunatBotEngine
     }
 
     /**
-     * Inside the harga flow: classify the message, capture any data fields
-     * mentioned, answer side questions via their templates, then either ask
-     * the next missing field or emit the closing if everything is collected.
+     * Inside the harga flow. Captures the value for the currently
+     * expected field, runs per-step gates (validation, escalation,
+     * conditional renders), then advances to the next missing field or
+     * the closing.
      */
     private function processHargaTurn(BotSession $session, string $message): array
     {
-        $candidates = $this->candidateSlugs();
-        $intents    = $this->classifier->classify($message, $candidates);
+        $field = $session->expecting_field;
 
-        $replies     = [];
-        $capturedAny = false;
-        $sideAnswered = false;
-
-        foreach ($intents as $slug) {
-            if ($slug === 'pertanyaan_harga' || $slug === 'tanya_jadwal') {
-                continue;
-            }
-            if (isset(self::DATA_INTENT_FIELD[$slug])) {
-                $this->captureField($session, self::DATA_INTENT_FIELD[$slug], $message);
-                $capturedAny = true;
-                continue;
-            }
-            $rendered = $this->renderIntent($slug, $session);
-            if (!empty($rendered)) {
-                $replies = array_merge($replies, $rendered);
-                $sideAnswered = true;
-            }
+        // After step 2.10 the customer is in the follow-up question loop.
+        if ($field === 'pertanyaan_lanjutan') {
+            return $this->handlePertanyaanLanjutan($session, $message);
         }
 
-        // Fallback: when the classifier returned nothing (or only ignored
-        // intents) and we're still expecting a specific field, treat the raw
-        // message as that field's value. This rescues short answers like
-        // "Yeni" that the model occasionally misses. We DO NOT fall back when
-        // a side answer was rendered — that means the user asked a question,
-        // not provided a field value.
-        $shouldFallback = !$capturedAny
-            && !$sideAnswered
-            && $session->expecting_field !== null
-            && empty(array_diff($intents, ['pertanyaan_harga', 'tanya_jadwal']));
+        // ---- Capture phase ----------------------------------------
+        $capturedValue = $this->captureForField($session, $field, $message);
 
-        if ($shouldFallback) {
-            $field = $session->expecting_field;
-            $description = self::FIELD_DESCRIPTIONS[$field] ?? $field;
-            $value = $this->classifier->extractField($field, $description, $message) ?? trim($message);
-            if (is_string($value) && trim($value) !== '') {
-                $session->setData($field, trim($value));
-            }
+        // Step 2.3 validation: usia_bb out of range → re-ask, do not advance.
+        if ($field === 'usia_bb' && !$this->hasValidUsiaBB($session)) {
+            return $this->renderIntent('validasi_ulang_usia_bb', $session);
         }
 
+        // Step 2.5 escalation gate.
+        if ($field === 'riwayat_kesehatan' && $this->detectSpecialHandling($capturedValue)) {
+            return $this->escalate($session);
+        }
+
+        // ---- Conditional renders before advancing -----------------
+        $extra = [];
+        if ($field === 'sudah_tahu_metode' && !$this->isYesValue($capturedValue)) {
+            // 2.6 — pasien belum tahu metode → kirim edukasi metode.
+            $extra = array_merge($extra, $this->renderIntent('pertanyaan_metode', $session));
+        }
+        if ($field === 'pengalaman_medis') {
+            // 2.8 — testimonial video + penjelasan kelebihan, selalu kirim.
+            $extra = array_merge($extra, $this->renderIntent('edukasi_kelebihan', $session));
+        }
+        if ($field === 'setuju_dokumentasi' && $this->isYesValue($capturedValue)) {
+            // 2.9 — pasien setuju → kirim contoh konten dokumentasi.
+            $extra = array_merge($extra, $this->renderIntent('contoh_dokumentasi', $session));
+        }
+
+        // ---- Advance ----------------------------------------------
         $next = $this->nextMissingHargaField($session);
         if ($next === null) {
-            $replies = array_merge($replies, $this->emitHargaClosing($session));
-        } else {
-            $session->expecting_field = $next;
-            $replies = array_merge($replies, $this->renderIntent(self::HARGA_FLOW[$next], $session));
+            return array_merge($extra, $this->emitHargaClosing($session));
         }
 
+        $session->expecting_field = $next;
+        return array_merge($extra, $this->renderIntent(self::HARGA_FLOW[$next], $session));
+    }
+
+    /**
+     * Capture the value for a single field. Returns the raw captured
+     * string (used by the conditional-render gates above to decide yes/no
+     * branching). Side-effects setData on the session.
+     *
+     * Special cases:
+     * - nama_orang_tua (Step 2.1): also tries to extract usia + bb in
+     *   the same AI call so a reply like "Saya Yeni, anak 6 tahun BB 20"
+     *   skips Step 2.3 entirely.
+     * - usia_bb (Step 2.3): parses + validates against the configured
+     *   range. On invalid input the sentinel is NOT set, so the field
+     *   stays missing and the caller re-asks.
+     */
+    private function captureForField(BotSession $session, string $field, string $message): string
+    {
+        if ($field === 'nama_orang_tua') {
+            $extracted = $this->classifier->extractFields([
+                'nama_orang_tua'    => self::FIELD_DESCRIPTIONS['nama_orang_tua'],
+                'usia_anak'         => 'usia anak dalam tahun, hanya angka integer (1-18). string kosong kalau tidak disebut.',
+                'berat_badan_anak'  => 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.',
+            ], $message);
+
+            $nama = $extracted['nama_orang_tua'] !== '' ? $extracted['nama_orang_tua'] : trim($message);
+            $session->setData('nama_orang_tua', $nama);
+
+            // Also fill usia_bb from the same message if the customer
+            // volunteered numbers — saves one round-trip in step 2.3.
+            $this->trySetUsiaBB($session, $extracted['usia_anak'], $extracted['berat_badan_anak'], $message);
+
+            return $nama;
+        }
+
+        if ($field === 'usia_bb') {
+            $extracted = $this->classifier->extractFields([
+                'usia_anak'        => 'usia anak dalam tahun, hanya angka integer (1-18). string kosong kalau tidak disebut.',
+                'berat_badan_anak' => 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.',
+            ], $message);
+            $this->trySetUsiaBB($session, $extracted['usia_anak'], $extracted['berat_badan_anak'], $message);
+            return $message;
+        }
+
+        // Default: single-field extraction.
+        $description = self::FIELD_DESCRIPTIONS[$field] ?? $field;
+        $value = $this->classifier->extractField($field, $description, $message);
+        $stored = is_string($value) && trim($value) !== '' ? trim($value) : trim($message);
+        if ($stored !== '') {
+            $session->setData($field, $stored);
+        }
+        return $stored;
+    }
+
+    /**
+     * Parse + validate usia/BB and persist to session.collected_data
+     * (usia_anak, berat_badan_anak, and the usia_bb sentinel) only when
+     * BOTH values are present and within the configured range. Invalid
+     * input leaves usia_bb unset so the flow re-asks.
+     */
+    private function trySetUsiaBB(BotSession $session, string $usiaRaw, string $bbRaw, string $rawMessage): void
+    {
+        $usiaMin = (int)   config('sunatbot.usia_min', 1);
+        $usiaMax = (int)   config('sunatbot.usia_max', 18);
+        $bbMin   = (float) config('sunatbot.berat_badan_min', 5);
+        $bbMax   = (float) config('sunatbot.berat_badan_max', 100);
+
+        $usia = $this->parseInt($usiaRaw);
+        $bb   = $this->parseFloat($bbRaw);
+
+        if ($usia === null || $bb === null) {
+            return; // missing — bot will ask in step 2.3
+        }
+        if ($usia < $usiaMin || $usia > $usiaMax || $bb < $bbMin || $bb > $bbMax) {
+            return; // out of range — bot will re-ask via validasi_ulang_usia_bb
+        }
+
+        $session->setData('usia_anak', $usia);
+        $session->setData('berat_badan_anak', $bb);
+        $session->setData('usia_bb', trim($rawMessage) !== '' ? trim($rawMessage) : "{$usia} tahun, {$bb} kg");
+    }
+
+    private function hasValidUsiaBB(BotSession $session): bool
+    {
+        return $session->getData('usia_anak') !== null
+            && $session->getData('berat_badan_anak') !== null
+            && $session->getData('usia_bb') !== null;
+    }
+
+    private function parseInt(string $raw): ?int
+    {
+        $raw = trim($raw);
+        if ($raw === '') return null;
+        if (preg_match('/-?\d+/', $raw, $m)) {
+            return (int) $m[0];
+        }
+        return null;
+    }
+
+    private function parseFloat(string $raw): ?float
+    {
+        $raw = trim(str_replace(',', '.', $raw));
+        if ($raw === '') return null;
+        if (preg_match('/-?\d+(?:\.\d+)?/', $raw, $m)) {
+            return (float) $m[0];
+        }
+        return null;
+    }
+
+    /**
+     * Step 2.10 — emit the price quote bundle and pivot the session into
+     * the follow-up loop (expecting_field = 'pertanyaan_lanjutan'). Does
+     * NOT mark is_complete; closure happens via handlePertanyaanLanjutan
+     * once the customer signals they're done or escalation triggers.
+     */
+    private function emitHargaClosing(BotSession $session): array
+    {
+        $session->expecting_field = 'pertanyaan_lanjutan';
+        $replies = [];
+        foreach (self::HARGA_CLOSING as $slug) {
+            $replies = array_merge($replies, $this->renderIntent($slug, $session));
+        }
         return $replies;
     }
 
-    private function captureField(BotSession $session, string $field, string $message): void
+    /**
+     * After step 2.10 the customer either has another question (loop) or
+     * signals "tidak ada / sudah jelas" (escalate). Out-of-scope follow
+     * ups also escalate so the admin can take over.
+     */
+    private function handlePertanyaanLanjutan(BotSession $session, string $message): array
     {
-        $description = self::FIELD_DESCRIPTIONS[$field] ?? $field;
-        $value = $this->classifier->extractField($field, $description, $message);
-        if (is_string($value) && trim($value) !== '') {
-            $session->setData($field, trim($value));
+        $msgLower = mb_strtolower(trim($message));
+
+        if ($this->matchesClosingPhrase($msgLower)) {
+            return $this->escalate($session);
         }
+
+        // Customer asked a follow-up — try to match a QnA intent. If no
+        // match, escalate so the admin handles the off-script question.
+        $replies = $this->classifyAndRespond($session, $message, true);
+        if (empty($replies)) {
+            return $this->escalate($session);
+        }
+
+        // Stay in the loop so subsequent messages still get this handler.
+        return $replies;
+    }
+
+    /**
+     * Mark the session for human handover, close it, and emit the
+     * handover bubble. Caller is responsible for ['handled' => true]
+     * envelope.
+     */
+    private function escalate(BotSession $session): array
+    {
+        $session->requires_special_handling = true;
+        $session->is_complete               = true;
+        $session->last_activity_at          = Carbon::now();
+        $session->save();
+
+        Log::info('SUNAT_BOT_ESCALATED', [
+            'phone'   => $session->no_telp,
+            'session' => $session->id,
+            'data'    => $session->collected_data,
+        ]);
+
+        return [[
+            'text'  => (string) config('sunatbot.handover_message'),
+            'media' => null,
+        ]];
+    }
+
+    private function nextMissingHargaField(BotSession $session): ?string
+    {
+        foreach (array_keys(self::HARGA_FLOW) as $field) {
+            $val = $session->getData($field);
+            if ($val === null || $val === '') {
+                return $field;
+            }
+        }
+        return null;
     }
 
     private function candidateSlugs(): array
     {
-        // Only intents with keywords participate in classification.
-        // Bot-prompt intents (tanya_*, edukasi_metode_lengkap, quote_harga)
-        // have empty keywords and are emitted by the engine, not chosen by the AI.
+        // Intents with keywords participate in classification. Bot-prompt
+        // intents (tanya_*, edukasi_*, quote_*, validasi_*, contoh_*) have
+        // empty keywords and are emitted by the engine, not chosen by AI.
         return BotIntent::where('active', true)
             ->whereNotNull('keywords')
             ->where('keywords', '!=', '')
@@ -285,30 +451,27 @@ class SunatBotEngine
             ->all();
     }
 
-    private function nextMissingHargaField(BotSession $session): ?string
+    /**
+     * Trigger detection — substring match for "sunat" / "khitan". The
+     * proposal §7 mentions naive negation ("saya TIDAK mau sunat") as a
+     * future concern; for now we accept the false-positive risk.
+     */
+    private function hasTrigger(string $msgLower): bool
     {
-        foreach (array_keys(self::HARGA_FLOW) as $field) {
-            if (!$session->getData($field)) {
-                return $field;
-            }
-        }
-        return null;
+        return str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan');
     }
 
     /**
-     * Match the customer's normalised message against gratitude phrases
-     * that signal they want to wrap up the conversation. Defaults cover
-     * common Indonesian/English thank-you variants. Override via
-     * SUNATBOT_EXIT_KEYWORDS (comma-separated). Matching is exact-equality
-     * on the trimmed message (leading "/" stripped) — so "terima kasih"
-     * and "/terima kasih" qualify but "ok terima kasih, terus..." does not.
+     * Match the customer's message against gratitude phrases that signal
+     * they want to wrap up. Defaults cover Indonesian/English thank-you
+     * variants. Override via SUNATBOT_EXIT_KEYWORDS (comma-separated).
+     * Exact-equality on trimmed message (leading "/" stripped).
      */
     private function isExitKeyword(string $msgLower): bool
     {
         $needle = ltrim(trim($msgLower), '/');
-        if ($needle === '') {
-            return false;
-        }
+        if ($needle === '') return false;
+
         $defaults = [
             'terima kasih', 'terimakasih',
             'makasih', 'makasi', 'mksh', 'trims',
@@ -318,22 +481,83 @@ class SunatBotEngine
         $list = $configured !== ''
             ? array_filter(array_map('trim', explode(',', $configured)), fn ($v) => $v !== '')
             : $defaults;
+
         foreach ($list as $kw) {
-            if ($needle === mb_strtolower($kw)) {
+            if ($needle === mb_strtolower($kw)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whole-word match for "admin", "cs", "manusia", "petugas", "operator".
+     * Whole-word so "administrasi" doesn't trigger on "admin". Used to
+     * honour explicit handover requests.
+     */
+    private function isAdminKeyword(string $msgLower): bool
+    {
+        $keywords = (array) config('sunatbot.admin_keywords', []);
+        foreach ($keywords as $kw) {
+            $kw = trim((string) $kw);
+            if ($kw === '') continue;
+            if (preg_match('/\b' . preg_quote(mb_strtolower($kw), '/') . '\b/u', $msgLower)) {
                 return true;
             }
         }
         return false;
     }
 
-    private function emitHargaClosing(BotSession $session): array
+    /**
+     * Substring match (case-insensitive) on the captured riwayat_kesehatan
+     * value. A hit means the bot stops the flow and escalates to a human
+     * — medical-complex cases are out of scope per proposal §2.5.
+     */
+    private function detectSpecialHandling(string $value): bool
     {
-        $session->expecting_field = null;
-        $replies = [];
-        foreach (self::HARGA_CLOSING as $slug) {
-            $replies = array_merge($replies, $this->renderIntent($slug, $session));
+        $valueLower = mb_strtolower($value);
+        $keywords   = (array) config('sunatbot.special_handling_keywords', []);
+        foreach ($keywords as $kw) {
+            $kw = trim((string) $kw);
+            if ($kw === '') continue;
+            if (str_contains($valueLower, mb_strtolower($kw))) {
+                return true;
+            }
         }
-        return $replies;
+        return false;
+    }
+
+    private function matchesClosingPhrase(string $msgLower): bool
+    {
+        $phrases = (array) config('sunatbot.closing_phrases', []);
+        foreach ($phrases as $p) {
+            $p = trim((string) $p);
+            if ($p === '') continue;
+            if ($msgLower === mb_strtolower($p)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Loose yes-detection on a captured boolean-ish value (sudah_tahu_metode,
+     * setuju_dokumentasi). Returns true when the value clearly affirms,
+     * false otherwise (including ambiguous answers — we prefer the
+     * cautious "treat as no" path which renders the educational bubble).
+     */
+    private function isYesValue(string $value): bool
+    {
+        $v = mb_strtolower(trim($value));
+        if ($v === '') return false;
+
+        // Negation prefix anywhere → not yes.
+        if (preg_match('/\b(tidak|gak|nggak|belum|bukan)\b/u', $v)) {
+            return false;
+        }
+
+        $yes = ['ya', 'iya', 'sudah', 'sudah tahu', 'sudah paham', 'paham', 'tahu', 'oke', 'ok', 'siap', 'boleh', 'mau', 'setuju', 'yes', 'y'];
+        foreach ($yes as $kw) {
+            if ($v === $kw) return true;
+            if (preg_match('/\b' . preg_quote($kw, '/') . '\b/u', $v)) return true;
+        }
+        return false;
     }
 
     private function renderIntent(string $slug, BotSession $session): array
@@ -362,22 +586,12 @@ class SunatBotEngine
         return $bubbles;
     }
 
-    /**
-     * Common Indonesian abbreviations whose trailing period must NOT trigger a split.
-     */
     private const ABBREV = [
         'Komp', 'No', 'Jl', 'Km', 'Yth', 'Dst', 'Dll', 'Pak', 'Bu', 'Tn',
         'Ny', 'Apt', 'Ir', 'Drs', 'Prof', 'Min', 'Hal', 'Bpk', 'Sdr',
         'Tgl', 'Th', 'a.n', 'u.p', 'd.a', 'ttd',
     ];
 
-    /**
-     * Split a template into one fragment per sentence or per line.
-     * Newlines start a new fragment; sentence-ending punctuation followed
-     * by whitespace splits; URLs and decimals stay intact because the
-     * regex requires whitespace after the punctuation; known abbreviations
-     * are masked before splitting so addresses are not broken.
-     */
     private function splitText(string $text): array
     {
         $marker = "\x01DOT\x01";
@@ -386,25 +600,31 @@ class SunatBotEngine
             $masked = preg_replace('/\b' . preg_quote($abr, '/') . '\.(?=\s|$)/u', $abr . $marker, $masked);
         }
 
-        $parts = preg_split('/(?<=[.!?])\s+|\n+/u', $masked) ?: [];
+        $parts = preg_split('/(?<=[.!?])\s+(?=\S)|\n+/u', $masked);
         $out = [];
-        foreach ($parts as $part) {
-            $part = trim(str_replace($marker, '.', $part));
-            if ($part !== '') $out[] = $part;
+        foreach ($parts as $p) {
+            $p = str_replace($marker, '.', (string) $p);
+            $p = trim($p);
+            if ($p !== '') $out[] = $p;
         }
         return $out;
     }
 
     private function substituteVariables(string $template, BotSession $session): string
     {
-        $vars = [
-            '[NAMA]'           => $session->getData('nama', 'kak'),
-            '[DOMISILI]'       => $session->getData('domisili', ''),
-            '[USIA_BB]'        => $session->getData('usia_bb', ''),
-            '[ALAMAT_KLINIK]'  => config('sunatbot.alamat_klinik', 'Klinik Jati Elok – SunatBoy, Komp. Bumi Jati Elok Blok A1 No. 4-5, Jl. Raya Legok–Parung Panjang Km. 3, Malangnengah, Pagedangan, Tangerang, Banten 15330'),
-            '[LINK_MAPS]'      => config('sunatbot.link_maps', 'https://maps.app.goo.gl/WDWMvex5F9YpgPaE9'),
-            '[NOMOR_RONA]'     => config('sunatbot.nomor_rona', '0895-3692-69190'),
+        $alamat = (string) config('sunatbot.alamat_klinik', '');
+        $maps   = (string) config('sunatbot.link_maps', '');
+        $rona   = (string) config('sunatbot.nomor_rona', '');
+        $nama   = (string) ($session->getData('nama_orang_tua') ?? $session->getData('nama') ?? '');
+
+        $replacements = [
+            '[NAMA]'          => $nama !== '' ? ucwords($nama) : 'kak',
+            '[ALAMAT_KLINIK]' => $alamat,
+            '[LINK_MAPS]'     => $maps,
+            '[NOMOR_RONA]'    => $rona,
+            '{{nama}}'        => $nama !== '' ? ucwords($nama) : 'kak',
         ];
-        return strtr($template, $vars);
+
+        return strtr($template, $replacements);
     }
 }

@@ -11,9 +11,10 @@ class BotSession extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'collected_data'   => 'array',
-        'is_complete'      => 'boolean',
-        'last_activity_at' => 'datetime',
+        'collected_data'             => 'array',
+        'is_complete'                => 'boolean',
+        'requires_special_handling'  => 'boolean',
+        'last_activity_at'           => 'datetime',
     ];
 
     public function getData(string $key, $default = null)

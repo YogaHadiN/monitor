@@ -80,6 +80,71 @@ class IntentClassifier
     }
 
     /**
+     * Extract multiple structured fields from a single user reply in one
+     * AI call. Each entry of $fields is field_name => description.
+     *
+     * Returns an associative array keyed by the same field names. Missing
+     * or unparseable fields are returned as empty strings (not null) so
+     * callers can simply check `trim($v) !== ''`. Returns an array of
+     * empty strings on AI/key failure.
+     */
+    public function extractFields(array $fields, string $message): array
+    {
+        $empty = array_fill_keys(array_keys($fields), '');
+        $msg   = trim($message);
+        if ($msg === '' || $fields === []) {
+            return $empty;
+        }
+
+        $apiKey = env('OPENAI_API_KEY');
+        if (empty($apiKey)) {
+            return $empty;
+        }
+
+        $lines = [];
+        foreach ($fields as $name => $desc) {
+            $lines[] = "- {$name}: {$desc}";
+        }
+        $catalogue = implode("\n", $lines);
+
+        $prompt = "Ekstrak field berikut dari pesan client. Balas HANYA JSON object dengan key sesuai nama field.\n"
+            . "Kalau field tidak ada di pesan, isi dengan string kosong \"\".\n\n"
+            . "Field:\n{$catalogue}\n\n"
+            . "Pesan: \"{$msg}\"";
+
+        try {
+            $response = Http::withToken($apiKey)
+                ->timeout(15)
+                ->post('https://api.openai.com/v1/chat/completions', [
+                    'model'           => 'gpt-4o-mini',
+                    'temperature'     => 0,
+                    'max_tokens'      => 200,
+                    'response_format' => ['type' => 'json_object'],
+                    'messages'        => [
+                        ['role' => 'system', 'content' => 'Kamu ekstraktor data multi-field. Balas JSON object dengan key sesuai daftar field; nilai string kosong kalau tidak ada.'],
+                        ['role' => 'user',   'content' => $prompt],
+                    ],
+                ]);
+
+            if (!$response->ok()) return $empty;
+
+            $raw = (string) ($response['choices'][0]['message']['content'] ?? '');
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded)) return $empty;
+
+            $out = $empty;
+            foreach (array_keys($fields) as $name) {
+                $v = $decoded[$name] ?? '';
+                $out[$name] = is_string($v) ? trim($v) : (is_scalar($v) ? trim((string) $v) : '');
+            }
+            return $out;
+        } catch (\Throwable $e) {
+            Log::warning('SUNAT_BOT_EXTRACT_FIELDS_EXCEPTION', ['err' => $e->getMessage()]);
+            return $empty;
+        }
+    }
+
+    /**
      * Extract a specific field value from a user reply.
      * Returns trimmed string or null if AI/key unavailable.
      */
