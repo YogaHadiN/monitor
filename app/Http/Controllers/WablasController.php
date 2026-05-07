@@ -291,18 +291,25 @@ class WablasController extends Controller
             // Only hand the bubble to the bot buffer when the bot would
             // actually engage with it: either (a) the customer is already
             // mid-session (active row in bot_sessions), or (b) the message
-            // contains a sunat/khitan trigger and starts a new session.
-            // Otherwise — e.g. customer typed "daftar" or "akhiri" landed
-            // and closed their session — fall through to the legacy
-            // WablasController paths so daftar/libur/chat-admin still work.
+            // contains a sunat/khitan trigger and starts a new session,
+            // or (c) there is an unflushed buffer for this phone — meaning
+            // a previous bubble already triggered the bot and we are
+            // inside the buffer window before the BotSession exists yet.
+            // Without (c) a follow-up bubble like "Ini lokasinya dimana ya?"
+            // sent immediately after "Halo, saya mau konsultasi sunat"
+            // would race ahead of the flush job and fall through to the
+            // legacy chat-admin queue.
             $sunatExistingSession = $sunatBotShouldRun
                 ? \App\Models\BotSession::where('no_telp', (string) $this->no_telp)->first()
                 : null;
+            $sunatPendingBuffer = $sunatBotShouldRun && \App\Models\BotPendingBuffer::where('phone', (string) $this->no_telp)
+                ->whereNull('processed_at')
+                ->exists();
             $sunatMsgLower    = mb_strtolower((string) $this->message);
             $sunatHasTrigger  = str_contains($sunatMsgLower, 'sunat')
                               || str_contains($sunatMsgLower, 'khitan');
             $sunatActive      = $sunatExistingSession !== null && !$sunatExistingSession->is_complete;
-            $sunatShouldBuffer = $sunatBotShouldRun && ($sunatActive || $sunatHasTrigger);
+            $sunatShouldBuffer = $sunatBotShouldRun && ($sunatActive || $sunatHasTrigger || $sunatPendingBuffer);
 
             if ($sunatShouldBuffer) {
                 try {
