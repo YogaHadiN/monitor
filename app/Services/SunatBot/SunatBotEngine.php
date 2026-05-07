@@ -233,7 +233,7 @@ class SunatBotEngine
 
         // ---- Conditional renders before advancing -----------------
         $extra = [];
-        if ($field === 'sudah_tahu_metode' && !$this->isYesValue($capturedValue)) {
+        if ($field === 'sudah_tahu_metode' && !$this->isYesValue($capturedValue, $field)) {
             // 2.6 — pasien belum tahu metode → kirim edukasi metode.
             $extra = array_merge($extra, $this->renderIntent('pertanyaan_metode', $session));
         }
@@ -241,7 +241,7 @@ class SunatBotEngine
             // 2.8 — testimonial video + penjelasan kelebihan, selalu kirim.
             $extra = array_merge($extra, $this->renderIntent('edukasi_kelebihan', $session));
         }
-        if ($field === 'setuju_dokumentasi' && $this->isYesValue($capturedValue)) {
+        if ($field === 'setuju_dokumentasi' && $this->isYesValue($capturedValue, $field)) {
             // 2.9 — pasien setuju → kirim contoh konten dokumentasi.
             $extra = array_merge($extra, $this->renderIntent('contoh_dokumentasi', $session));
         }
@@ -541,11 +541,35 @@ class SunatBotEngine
      * setuju_dokumentasi). Returns true when the value clearly affirms,
      * false otherwise (including ambiguous answers — we prefer the
      * cautious "treat as no" path which renders the educational bubble).
+     *
+     * For the sudah_tahu_metode question specifically, the literal "iya"
+     * is ambiguous: a customer who says "iya tolong jelaskan" is
+     * acknowledging the bot then asking for explanation, not affirming
+     * they already know. So when the question is sudah_tahu_metode and
+     * the message contains an explanation-request pattern (jelaskan /
+     * info / dijelaskan / kasih tau), treat the answer as NOT-yes so
+     * the engine renders pertanyaan_metode.
      */
-    private function isYesValue(string $value): bool
+    private function isYesValue(string $value, string $field = ''): bool
     {
         $v = mb_strtolower(trim($value));
         if ($v === '') return false;
+
+        // Field-specific override: explanation-request signals trump
+        // any "iya"/"ok" in the same message for the sudah_tahu_metode
+        // question. Conservative on purpose — favours showing the
+        // explanation if the customer hinted they want one.
+        if ($field === 'sudah_tahu_metode') {
+            $explainPatterns = [
+                'jelaskan', 'jelasin', 'dijelaskan', 'dijelasin',
+                'kasih tau', 'kasi tau', 'kasi tahu', 'kasih tahu',
+                'minta info', 'tolong info', 'infokan', 'minta penjelasan',
+                'penjelasan', 'di info', 'diinfo',
+            ];
+            foreach ($explainPatterns as $p) {
+                if (str_contains($v, $p)) return false;
+            }
+        }
 
         // Negation prefix anywhere → not yes.
         if (preg_match('/\b(tidak|gak|nggak|belum|bukan)\b/u', $v)) {
