@@ -64,6 +64,16 @@ return [
         'SUNATBOT_ADMIN_KEYWORDS',
         'admin,cs,manusia,petugas,operator'
     ))))),
+    // Same word-boundary match as admin_keywords. Fires when the
+    // customer signals they are ready to book / register a sunat slot.
+    // The bot has no scheduling or payment scope, so this hands off to
+    // a human admin even before classify runs (deterministic safety
+    // net). The mau_booking_jadwal bot_intent picks up looser phrasing
+    // via the AI classifier as a fallback.
+    'booking_keywords' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+        'SUNATBOT_BOOKING_KEYWORDS',
+        'mau booking,saya mau booking,mau daftar,saya mau daftar,daftar sunat,booking sunat,jadwalkan saya,ambil jadwal,ingin booking,ingin daftar,booking aja,daftar aja,minta jadwalkan,mau diatur jadwal'
+    ))))),
     // After step 2.10 (price quote), if the customer's reply matches one
     // of these phrases (exact equality on trimmed/lowered text), close
     // the session and hand over. Otherwise their reply is treated as a
