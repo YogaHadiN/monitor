@@ -16,10 +16,11 @@ class SunatBotReplyDispatcher
      * Send a list of bot bubbles to a single phone via WatZap.
      *
      * Acquires a per-phone reply lock so a parallel dispatch cannot
-     * interleave bubbles. Pauses between bubbles using
-     * sunatbot.reply_delay_seconds and pauses longer after a media
-     * bubble (sunatbot.media_settle_seconds) so the image/video has
-     * time to land in WhatsApp before the next bubble overtakes it.
+     * interleave bubbles. Bubbles are sent back-to-back with no delay,
+     * except after a media bubble we wait sunatbot.media_settle_seconds
+     * so the image/video lands on the recipient's WhatsApp before the
+     * next bubble overtakes it (WatZap's HTTP 200 only confirms upload
+     * accepted, not delivery).
      *
      * @param array $replies array of ['text' => string, 'media' => ?string]
      * @return bool true if dispatch ran, false if the lock could not be acquired in time
@@ -37,17 +38,13 @@ class SunatBotReplyDispatcher
             $lockHeld = true;
 
             $mediaBase     = rtrim((string) config('sunatbot.media_base_url', ''), '/');
-            $replyDelay    = max(0, (int) config('sunatbot.reply_delay_seconds', 0));
             $mediaSettle   = max(0, (int) config('sunatbot.media_settle_seconds', 5));
-            $firstReply    = true;
             $prevSentMedia = false;
 
             foreach ($replies as $reply) {
-                if (!$firstReply) {
-                    $gap = $prevSentMedia ? max($mediaSettle, $replyDelay) : $replyDelay;
-                    if ($gap > 0) sleep($gap);
+                if ($prevSentMedia && $mediaSettle > 0) {
+                    sleep($mediaSettle);
                 }
-                $firstReply = false;
 
                 $text  = (string) ($reply['text'] ?? '');
                 $media = $reply['media'] ?? null;
