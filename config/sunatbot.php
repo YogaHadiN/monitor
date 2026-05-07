@@ -43,4 +43,38 @@ return [
         'SUNATBOT_EXIT_MESSAGE',
         'Sesi konsultasi sunat ditutup. Untuk pertanyaan lain (daftar, jadwal, chat admin), silakan kirim pesan kembali ya kak. Terima kasih 🙏'
     ),
+    // Bubble shown when the bot escalates to a human admin (medical
+    // condition flagged in step 2.5, customer asked for admin/CS, or
+    // closing reached at step 2.10). Override via SUNATBOT_HANDOVER_MESSAGE.
+    'handover_message' => (string) env(
+        'SUNATBOT_HANDOVER_MESSAGE',
+        'Mohon ditunggu kak, admin kami akan menghubungi Anda untuk lanjut konsultasi 🙏'
+    ),
+    // Substring match (case-insensitive) on the riwayat_kesehatan answer.
+    // If any keyword appears, requires_special_handling is set on the
+    // session and the bot escalates instead of continuing.
+    'special_handling_keywords' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+        'SUNATBOT_SPECIAL_HANDLING_KEYWORDS',
+        'pembekuan darah,kelainan jantung,jantung,autis,autisme,kebutuhan khusus,spektrum,down syndrome,cerebral palsy,epilepsi,kejang,hemofilia,thalasemia,leukemia,kanker'
+    ))))),
+    // Whole-word match (case-insensitive) on any incoming message — if
+    // any keyword appears, escalate immediately. Used to honour explicit
+    // requests like "minta admin", "mau ngomong sama operator".
+    'admin_keywords' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+        'SUNATBOT_ADMIN_KEYWORDS',
+        'admin,cs,manusia,petugas,operator'
+    ))))),
+    // After step 2.10 (price quote), if the customer's reply matches one
+    // of these phrases (exact equality on trimmed/lowered text), close
+    // the session and hand over. Otherwise their reply is treated as a
+    // follow-up question.
+    'closing_phrases' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+        'SUNATBOT_CLOSING_PHRASES',
+        'tidak ada,tidak,gak ada,nggak ada,sudah jelas,udah jelas,cukup,sudah,udah,oke,ok,siap,baik,paham'
+    ))))),
+    // Validation ranges for usia/BB capture (proposal §7).
+    'usia_min'        => (int)   env('SUNATBOT_USIA_MIN', 1),
+    'usia_max'        => (int)   env('SUNATBOT_USIA_MAX', 18),
+    'berat_badan_min' => (float) env('SUNATBOT_BERAT_BADAN_MIN', 5),
+    'berat_badan_max' => (float) env('SUNATBOT_BERAT_BADAN_MAX', 100),
 ];
