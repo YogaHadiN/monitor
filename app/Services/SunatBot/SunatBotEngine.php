@@ -4,7 +4,6 @@ namespace App\Services\SunatBot;
 
 use App\Models\BotIntent;
 use App\Models\BotSession;
-use App\Models\Message;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -405,19 +404,14 @@ class SunatBotEngine
 
     /**
      * Mark the session for human handover, close it, and emit the
-     * handover bubble. Caller is responsible for ['handled' => true]
-     * envelope.
-     *
-     * Also flips any inbound messages.sudah_dibalas=1 rows that arrived
-     * since the bot's last reply on this phone back to 0 — the bot
-     * marked them "handled" optimistically when buffering, but on
-     * escalation they're effectively unanswered and admin needs to see
-     * them as pending in the inbox.
+     * handover bubble. The actual sudah_dibalas=0 flip on the inbound
+     * messages that triggered escalation lives in
+     * ProcessPendingSunatBotMessages so it can scope to the current
+     * buffer flush precisely (id-based cutoffs in the engine miss the
+     * trigger message when the dispatcher is mid-stream).
      */
     private function escalate(BotSession $session): array
     {
-        $this->flipUnhandledInboundToZero($session);
-
         $session->requires_special_handling = true;
         $session->is_complete               = true;
         $session->last_activity_at          = Carbon::now();
@@ -433,47 +427,6 @@ class SunatBotEngine
             'text'  => (string) config('sunatbot.handover_message'),
             'media' => null,
         ]];
-    }
-
-    /**
-     * For the escalating session, flip the inbound SunatBot messages
-     * that haven't actually been answered by the bot from
-     * sudah_dibalas=1 back to 0 so the admin inbox surfaces them.
-     *
-     * Cutoff = max(latest bot outbound id for this phone, 0). Anything
-     * older than that already had a bot reply and stays handled. We
-     * also restrict to messages created at or after the session start
-     * so a fresh escalation doesn't affect prior closed sessions on the
-     * same phone.
-     */
-    private function flipUnhandledInboundToZero(BotSession $session): void
-    {
-        $phone = (string) $session->no_telp;
-
-        $lastBotReplyId = (int) Message::where('no_telp', $phone)
-            ->where('sending', 1)
-            ->where('flagged_intent', 'sunat_bot')
-            ->max('id');
-
-        $sessionStart = $session->created_at ?? Carbon::now()->subDay();
-
-        $flipped = Message::where('no_telp', $phone)
-            ->where('sending', 0)
-            ->where('flagged_intent', 'sunat_bot')
-            ->where('sudah_dibalas', 1)
-            ->where('id', '>', $lastBotReplyId)
-            ->where('created_at', '>=', $sessionStart)
-            ->update(['sudah_dibalas' => 0]);
-
-        if ($flipped > 0) {
-            Log::info('SUNAT_BOT_INBOUND_FLIPPED_UNREAD', [
-                'phone'       => $phone,
-                'session'     => $session->id,
-                'count'       => $flipped,
-                'cutoff_id'   => $lastBotReplyId,
-                'since'       => (string) $sessionStart,
-            ]);
-        }
     }
 
     private function nextMissingHargaField(BotSession $session): ?string

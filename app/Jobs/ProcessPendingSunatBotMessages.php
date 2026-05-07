@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\BotPendingBuffer;
+use App\Models\BotSession;
+use App\Models\Message;
 use App\Models\Tenant;
 use App\Services\SunatBot\SunatBotEngine;
 use App\Services\SunatBot\SunatBotReplyDispatcher;
@@ -30,9 +32,10 @@ class ProcessPendingSunatBotMessages implements ShouldQueue
 
     public function handle(SunatBotEngine $engine, SunatBotReplyDispatcher $dispatcher): void
     {
-        $combined = null;
+        $combined        = null;
+        $bufferMessages  = [];
 
-        DB::transaction(function () use (&$combined) {
+        DB::transaction(function () use (&$combined, &$bufferMessages) {
             $buffer = BotPendingBuffer::where('phone', $this->phone)
                 ->lockForUpdate()
                 ->first();
@@ -68,6 +71,7 @@ class ProcessPendingSunatBotMessages implements ShouldQueue
                 ->filter(fn ($t) => trim((string) $t) !== '')
                 ->implode("\n");
 
+            $bufferMessages       = $messages;
             $buffer->processed_at = now();
             $buffer->save();
         });
@@ -92,6 +96,17 @@ class ProcessPendingSunatBotMessages implements ShouldQueue
             return;
         }
 
+        // If the engine escalated this turn, flip the inbound Message
+        // rows that came in via THIS buffer flush (and only this flush)
+        // back to sudah_dibalas=0 so admin sees them as pending. We use
+        // the buffer's own per-bubble `at` timestamps as the lower bound
+        // — id-based cutoffs would miss the trigger message when the
+        // dispatcher is still emitting earlier bubbles in parallel.
+        $session = BotSession::where('no_telp', $this->phone)->first();
+        if ($session && $session->requires_special_handling) {
+            $this->flipBufferInboundToUnread($session, $bufferMessages);
+        }
+
         if (empty($result['handled']) || empty($result['replies'])) {
             return;
         }
@@ -103,5 +118,44 @@ class ProcessPendingSunatBotMessages implements ShouldQueue
         $imageBotEnabled = $tenant && (bool) ($tenant->image_bot_enabled ?? false);
 
         $dispatcher->dispatch($this->phone, $result['replies'], $imageBotEnabled);
+    }
+
+    /**
+     * Flip Message rows that landed in THIS buffer flush from
+     * sudah_dibalas=1 back to 0. Scope = inbound sunat_bot rows for
+     * this phone created at or after the earliest at-timestamp in the
+     * flushed buffer. Earlier turns where the bot already replied are
+     * left alone — they keep their handled status.
+     */
+    private function flipBufferInboundToUnread(BotSession $session, array $bufferMessages): void
+    {
+        if ($bufferMessages === []) {
+            return;
+        }
+
+        $earliestAt = collect($bufferMessages)
+            ->pluck('at')
+            ->filter(fn ($v) => is_string($v) && $v !== '')
+            ->min();
+
+        if ($earliestAt === null) {
+            return;
+        }
+
+        $flipped = Message::where('no_telp', $this->phone)
+            ->where('sending', 0)
+            ->where('flagged_intent', 'sunat_bot')
+            ->where('sudah_dibalas', 1)
+            ->where('created_at', '>=', $earliestAt)
+            ->update(['sudah_dibalas' => 0]);
+
+        if ($flipped > 0) {
+            Log::info('SUNAT_BOT_INBOUND_FLIPPED_UNREAD', [
+                'phone'   => $this->phone,
+                'session' => $session->id,
+                'count'   => $flipped,
+                'since'   => $earliestAt,
+            ]);
+        }
     }
 }
