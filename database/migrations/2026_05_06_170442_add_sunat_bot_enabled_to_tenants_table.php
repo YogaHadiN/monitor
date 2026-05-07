@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('tenants', function (Blueprint $table) {
             if (!Schema::hasColumn('tenants', 'sunat_bot_enabled')) {
-                $table->boolean('sunat_bot_enabled')->default(false)->after('image_bot_enabled');
+                $table->boolean('sunat_bot_enabled')->default(true)->after('image_bot_enabled');
             }
         });
     }

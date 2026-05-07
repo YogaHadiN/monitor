@@ -155,9 +155,7 @@ class SunatBotEngine
             if ($skipFallback) {
                 return [];
             }
-            $replies = $this->renderIntent('fallback_unknown', $session);
-            $session->is_complete = true;
-            return $replies;
+            return $this->renderIntent('fallback_unknown', $session);
         }
 
         // Order: side answers first → data captures → harga trigger last.
@@ -298,14 +296,12 @@ class SunatBotEngine
     }
 
     /**
-     * Match the customer's normalised message against the configured
-     * exit keywords (defaults: selesai, akhiri, stop, keluar, berhenti,
-     * exit, akhir bot, akhir sesi). Override via SUNATBOT_EXIT_KEYWORDS
-     * as a comma-separated list. Each keyword is matched as either an
-     * exact equality OR the entire message after stripping leading "/"
-     * — so "selesai", "/selesai", and " selesai " all qualify, but a
-     * sentence containing the word does not (so we don't terminate the
-     * session by accident on something like "stop dulu ya kak").
+     * Match the customer's normalised message against gratitude phrases
+     * that signal they want to wrap up the conversation. Defaults cover
+     * common Indonesian/English thank-you variants. Override via
+     * SUNATBOT_EXIT_KEYWORDS (comma-separated). Matching is exact-equality
+     * on the trimmed message (leading "/" stripped) — so "terima kasih"
+     * and "/terima kasih" qualify but "ok terima kasih, terus..." does not.
      */
     private function isExitKeyword(string $msgLower): bool
     {
@@ -313,7 +309,11 @@ class SunatBotEngine
         if ($needle === '') {
             return false;
         }
-        $defaults = ['selesai','akhiri','stop','keluar','berhenti','exit','akhir bot','akhir sesi'];
+        $defaults = [
+            'terima kasih', 'terimakasih',
+            'makasih', 'makasi', 'mksh', 'trims',
+            'thanks', 'thank you', 'thx', 'tq',
+        ];
         $configured = (string) env('SUNATBOT_EXIT_KEYWORDS', '');
         $list = $configured !== ''
             ? array_filter(array_map('trim', explode(',', $configured)), fn ($v) => $v !== '')
@@ -329,7 +329,6 @@ class SunatBotEngine
     private function emitHargaClosing(BotSession $session): array
     {
         $session->expecting_field = null;
-        $session->is_complete     = true;
         $replies = [];
         foreach (self::HARGA_CLOSING as $slug) {
             $replies = array_merge($replies, $this->renderIntent($slug, $session));

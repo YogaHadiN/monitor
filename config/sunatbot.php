@@ -8,16 +8,12 @@ return [
     // Uploads land in atika/public/bot_media/ and the bot reaches them at
     // <media_base_url>/<filename>. Set SUNATBOT_MEDIA_BASE_URL in .env on prod.
     'media_base_url' => env('SUNATBOT_MEDIA_BASE_URL', ''),
-    // Seconds to wait between consecutive reply bubbles so the chat doesn't
-    // arrive as one instant burst. Applied between bubbles only, not before
-    // the first one. Total handler time grows by delay × (bubbles - 1), so
-    // keep it small enough to fit inside the webhook timeout.
-    'reply_delay_seconds' => (int) env('SUNATBOT_REPLY_DELAY_SECONDS', 3),
     // After a media bubble (image/video) we wait at least this many seconds
     // before the next bubble so the file has time to land on the user's
     // WhatsApp — the WatZap API returns when the upload begins, not when
     // delivery completes, so a too-short gap lets the next text bubble
-    // overtake the image. Effective gap = max(media_settle, reply_delay).
+    // overtake the image. Non-media bubbles are sent back-to-back with no
+    // delay; only this media-settle pause remains.
     'media_settle_seconds' => (int) env('SUNATBOT_MEDIA_SETTLE_SECONDS', 5),
     // Max seconds an incoming webhook will wait for a previous in-flight
     // reply (same phone) to finish before giving up and dropping the new
@@ -33,7 +29,7 @@ return [
     // combined text to the engine. Each new bubble during the window
     // resets the version, so the previously-scheduled flush job exits
     // and the newest one wins. Tune via SUNATBOT_BUFFER_WINDOW_SECONDS.
-    'buffer_window_seconds' => (int) env('SUNATBOT_BUFFER_WINDOW_SECONDS', 30),
+    'buffer_window_seconds' => (int) env('SUNATBOT_BUFFER_WINDOW_SECONDS', 10),
     // Intent slugs that should be silently dropped from the classifier
     // result whenever ANY non-generic intent also matched in the same
     // message — they are catch-all acknowledgments ("Silakan kak. Ada
