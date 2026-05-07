@@ -271,39 +271,51 @@ class SunatBotEngine
      */
     private function captureForField(BotSession $session, string $field, string $message): string
     {
-        if ($field === 'nama_orang_tua') {
-            $extracted = $this->classifier->extractFields([
-                'nama_orang_tua'    => self::FIELD_DESCRIPTIONS['nama_orang_tua'],
-                'usia_anak'         => 'usia anak dalam tahun, hanya angka integer (1-18). string kosong kalau tidak disebut.',
-                'berat_badan_anak'  => 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.',
-            ], $message);
+        // Opportunistic usia/BB scan. As long as the sentinel is unset,
+        // every step's capture also looks for usia + berat badan in the
+        // same AI call. Customer might volunteer the numbers at any
+        // turn (a delayed "anak saya 8 thn 32 kg" after the buffer
+        // window closes lands at the domisili step but should still
+        // skip step 2.3). Single AI call per turn — no extra latency.
+        $needUsiaBB = $session->getData('usia_bb') === null;
 
-            $nama = $extracted['nama_orang_tua'] !== '' ? $extracted['nama_orang_tua'] : trim($message);
-            $session->setData('nama_orang_tua', $nama);
-
-            // Also fill usia_bb from the same message if the customer
-            // volunteered numbers — saves one round-trip in step 2.3.
-            $this->trySetUsiaBB($session, $extracted['usia_anak'], $extracted['berat_badan_anak'], $message);
-
-            return $nama;
-        }
+        $usiaDesc = 'usia anak dalam tahun, hanya angka integer (1-18). string kosong kalau tidak disebut.';
+        $bbDesc   = 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.';
 
         if ($field === 'usia_bb') {
             $extracted = $this->classifier->extractFields([
-                'usia_anak'        => 'usia anak dalam tahun, hanya angka integer (1-18). string kosong kalau tidak disebut.',
-                'berat_badan_anak' => 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.',
+                'usia_anak'        => $usiaDesc,
+                'berat_badan_anak' => $bbDesc,
             ], $message);
             $this->trySetUsiaBB($session, $extracted['usia_anak'], $extracted['berat_badan_anak'], $message);
             return $message;
         }
 
-        // Default: single-field extraction.
-        $description = self::FIELD_DESCRIPTIONS[$field] ?? $field;
-        $value = $this->classifier->extractField($field, $description, $message);
-        $stored = is_string($value) && trim($value) !== '' ? trim($value) : trim($message);
+        // Build the field map for the AI: the primary field for this
+        // step, plus opportunistic usia/BB if still missing.
+        $fields = [
+            $field => self::FIELD_DESCRIPTIONS[$field] ?? $field,
+        ];
+        if ($needUsiaBB) {
+            $fields['usia_anak']        = $usiaDesc;
+            $fields['berat_badan_anak'] = $bbDesc;
+        }
+        $extracted = $this->classifier->extractFields($fields, $message);
+
+        $stored = $extracted[$field] !== '' ? $extracted[$field] : trim($message);
         if ($stored !== '') {
             $session->setData($field, $stored);
         }
+
+        if ($needUsiaBB) {
+            $this->trySetUsiaBB(
+                $session,
+                $extracted['usia_anak'] ?? '',
+                $extracted['berat_badan_anak'] ?? '',
+                $message
+            );
+        }
+
         return $stored;
     }
 
