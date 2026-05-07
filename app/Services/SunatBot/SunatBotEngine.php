@@ -41,6 +41,18 @@ class SunatBotEngine
         'tanya_pertanyaan_lanjutan',
     ];
 
+    /**
+     * AI-classified intents that trigger an immediate escalation to a
+     * human admin. Anything in this list short-circuits the normal
+     * intent rendering: the slug's template is emitted as a brief
+     * acknowledgement, then escalate() flips the session and appends
+     * the handover bubble. Used for booking/scheduling intents that
+     * the bot cannot fulfil.
+     */
+    private const ESCALATION_INTENTS = [
+        'mau_booking_jadwal',
+    ];
+
     private const FIELD_DESCRIPTIONS = [
         'nama_orang_tua'     => 'nama depan orang tua / pengirim pesan, contoh "Yeni"',
         'domisili'           => 'kota / kecamatan domisili pasien (Tangerang/Jakarta/dst)',
@@ -91,6 +103,18 @@ class SunatBotEngine
         // of which flow step we are on. Whole-word match so we don't
         // false-trigger on incidental occurrences.
         if ($session && !$session->is_complete && $this->isAdminKeyword($msgLower)) {
+            return [
+                'handled' => true,
+                'replies' => $this->escalate($session),
+            ];
+        }
+
+        // Booking / scheduling intent — same deterministic short-circuit
+        // as admin keyword. Customers ready to book go straight to the
+        // admin queue; the bot does not handle scheduling or payments.
+        // Looser phrasing still gets caught by the mau_booking_jadwal
+        // AI intent inside classifyAndRespond as a fallback.
+        if ($session && !$session->is_complete && $this->isBookingKeyword($msgLower)) {
             return [
                 'handled' => true,
                 'replies' => $this->escalate($session),
@@ -178,6 +202,13 @@ class SunatBotEngine
         $replies        = [];
         $hargaTriggered = false;
         foreach ($intents as $slug) {
+            if (in_array($slug, self::ESCALATION_INTENTS, true)) {
+                // AI matched a slug whose semantic is "ready to book /
+                // register" — short-circuit the rest of the loop, emit
+                // the slug's acknowledgement template, then escalate.
+                $ack = $this->renderIntent($slug, $session);
+                return array_merge($ack, $this->escalate($session));
+            }
             if ($slug === 'pertanyaan_harga') {
                 $hargaTriggered = true;
                 continue;
@@ -511,6 +542,25 @@ class SunatBotEngine
     private function isAdminKeyword(string $msgLower): bool
     {
         $keywords = (array) config('sunatbot.admin_keywords', []);
+        foreach ($keywords as $kw) {
+            $kw = trim((string) $kw);
+            if ($kw === '') continue;
+            if (preg_match('/\b' . preg_quote(mb_strtolower($kw), '/') . '\b/u', $msgLower)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Same word-boundary match as isAdminKeyword, but for explicit
+     * booking / scheduling phrases ("mau booking", "saya mau daftar",
+     * "jadwalkan saya"). The bot has no scheduling or payment scope
+     * so customers ready to book are handed off to admin.
+     */
+    private function isBookingKeyword(string $msgLower): bool
+    {
+        $keywords = (array) config('sunatbot.booking_keywords', []);
         foreach ($keywords as $kw) {
             $kw = trim((string) $kw);
             if ($kw === '') continue;
