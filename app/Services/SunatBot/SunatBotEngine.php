@@ -221,7 +221,13 @@ class SunatBotEngine
         }
 
         if ($hargaTriggered) {
-            $replies = array_merge($replies, $this->renderIntent('pertanyaan_harga', $session));
+            // pertanyaan_harga is used as a CLASSIFIER candidate (its
+            // keywords let the AI detect price questions) but its
+            // template is NOT rendered as a separate bubble — step 2.1
+            // (tanya_nama_orang_tua) already opens with "Untuk biaya
+            // sunat tergantung usia dan berat badan kak. ..." per
+            // proposal §2.1, so rendering pertanyaan_harga here would
+            // duplicate that line.
             $next = $this->nextMissingHargaField($session);
             if ($next === null) {
                 $replies = array_merge($replies, $this->emitHargaClosing($session));
