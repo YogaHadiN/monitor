@@ -68,7 +68,7 @@ return new class extends Migration
 
             // Step 2.7 — Pengalaman sunat sebelumnya
             'tanya_pengalaman' => [
-                'jawaban_template' => 'Kak {{nama}}, anaknya pernah trauma tindakan medis atau belum pernah ada masalah sebelumnya?',
+                'jawaban_template' => 'Kak {{nama}}, sebelumnya boleh saya tanya — apakah Kakak atau ananda pernah memiliki pengalaman kurang menyenangkan terkait sunat, atau ini pengalaman pertama menyunatkan ananda?',
                 'urutan'           => 170,
             ],
 
