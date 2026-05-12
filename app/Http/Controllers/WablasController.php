@@ -3347,7 +3347,13 @@ class WablasController extends Controller
         })();
 
         // ===== jika klinik tutup → hentikan alur =====
-        if ($tenant && $tenant->jam_buka && $tenant->jam_tutup) {
+        // Whitelisted phones (config/clinic.php) lewat tanpa cek
+        // supaya QA bisa test pendaftaran end-to-end di luar jam
+        // operasional.
+        $afterHoursWhitelist = (array) config('clinic.after_hours_whitelist_phones', []);
+        $afterHoursBypass    = in_array((string) $this->no_telp, $afterHoursWhitelist, true);
+
+        if (!$afterHoursBypass && $tenant && $tenant->jam_buka && $tenant->jam_tutup) {
             $this->chatBotLog(__LINE__);
             // pakai tanggal hari ini + TZ supaya perbandingan akurat
             $jam_buka  = $this->todayTime(($tenant->jam_buka),  $tz, $nowJkt);
@@ -4910,7 +4916,13 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     }
     public function registrasiAntrianOnline(){
         $this->chatBotLog(__LINE__);
+        // Whitelisted phones (config/clinic.php) lewat tanpa cek jam
+        // supaya QA bisa test pendaftaran end-to-end di luar jam
+        // operasional 07:00-22:00.
+        $afterHoursWhitelist = (array) config('clinic.after_hours_whitelist_phones', []);
+        $afterHoursBypass    = in_array((string) $this->no_telp, $afterHoursWhitelist, true);
         if (
+            $afterHoursBypass ||
             (  date('G') <= 21 && // pendaftaran online tutup jam 21.59
             date('G') >= 7 )
         ) {
