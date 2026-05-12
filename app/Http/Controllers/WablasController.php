@@ -3536,7 +3536,10 @@ class WablasController extends Controller
                 // === default tipe lain ===
                 } else {
                     $this->chatBotLog(__LINE__);
-                    if (!$this->sudahAdaAntrianUntukTipeKonsultasi($tipeDbInt)) {
+                    // Whitelisted phones (config/clinic.php) lewat tanpa
+                    // cek antrian supaya QA bisa test flow registrasi
+                    // sebelum antrian harian pertama dibuat.
+                    if (!$afterHoursBypass && !$this->sudahAdaAntrianUntukTipeKonsultasi($tipeDbInt)) {
                         $this->chatBotLog(__LINE__);
                         $labelTipe = $tipe_konsultasi->tipe_konsultasi ?? 'pemeriksa';
                         $message   = 'Saat ini tidak ada antrian di ' . $labelTipe . '. Silakan datang dan ambil antrian langsung.';
