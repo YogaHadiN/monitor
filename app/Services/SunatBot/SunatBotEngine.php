@@ -186,7 +186,14 @@ class SunatBotEngine
             if ($skipFallback) {
                 return [];
             }
-            return $this->renderIntent('fallback_unknown', $session);
+            // AI could not classify the message → treat as out-of-scope
+            // and hand over to admin. Use the operator-configured
+            // fallback_unknown template as the goodbye bubble (it
+            // already says "akan kami teruskan ke admin"); escalate()
+            // flips requires_special_handling so the job-side flip
+            // marks the inbound as sudah_dibalas=0 and the dispatcher
+            // skips logOutgoing for these bubbles.
+            return $this->escalate($session, $this->renderIntent('fallback_unknown', $session));
         }
 
         // Order: side answers first → harga trigger last.
@@ -452,14 +459,18 @@ class SunatBotEngine
     }
 
     /**
-     * Mark the session for human handover, close it, and emit the
-     * handover bubble. The actual sudah_dibalas=0 flip on the inbound
+     * Mark the session for human handover, close it, and emit a
+     * goodbye bubble. The actual sudah_dibalas=0 flip on the inbound
      * messages that triggered escalation lives in
      * ProcessPendingSunatBotMessages so it can scope to the current
      * buffer flush precisely (id-based cutoffs in the engine miss the
      * trigger message when the dispatcher is mid-stream).
+     *
+     * Callers can override the bubble payload (e.g. fallback_unknown
+     * rendered template) by passing $replies; otherwise the
+     * sunatbot.handover_message config string is used.
      */
-    private function escalate(BotSession $session): array
+    private function escalate(BotSession $session, ?array $replies = null): array
     {
         $session->requires_special_handling = true;
         $session->is_complete               = true;
@@ -472,6 +483,9 @@ class SunatBotEngine
             'data'    => $session->collected_data,
         ]);
 
+        if ($replies !== null) {
+            return $replies;
+        }
         return [[
             'text'  => (string) config('sunatbot.handover_message'),
             'media' => null,

@@ -117,7 +117,14 @@ class ProcessPendingSunatBotMessages implements ShouldQueue
         $tenant          = Tenant::find(1);
         $imageBotEnabled = $tenant && (bool) ($tenant->image_bot_enabled ?? false);
 
-        $dispatcher->dispatch($this->phone, $result['replies'], $imageBotEnabled);
+        // For escalated sessions we still send the goodbye bubble via
+        // WatZap (customer needs to see "we'll forward to admin"), but
+        // we DO NOT log it into messages — the admin inbox should only
+        // surface the customer's unanswered question, not the bot's
+        // handover prelude.
+        $skipLog = $session && $session->requires_special_handling;
+
+        $dispatcher->dispatch($this->phone, $result['replies'], $imageBotEnabled, $skipLog);
     }
 
     /**
