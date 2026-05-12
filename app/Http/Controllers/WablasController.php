@@ -1284,15 +1284,20 @@ class WablasController extends Controller
      * @return void
      */
     private function satisfactionIndex($message){
-        if ( $message == 3 ) {
-            return 1;
-        } else if ( $message == 2 ){
-            return 2;
-        } else if ( $message == 1 ){
-            return 3;
-        } else {
+        // Customer_survey template buttons may arrive verbatim as their
+        // titles (e.g. "1. Memuaskan", "2. Biasa", "3. Kecewa"). PHP 8
+        // dropped the lenient leading-digit coercion of PHP 7, so a
+        // plain `$message == 1` no longer matches "1. Memuaskan". Pull
+        // the leading 1/2/3 ourselves before mapping.
+        $raw = trim((string) $message);
+        if ($raw === '' || !preg_match('/^([123])\b/u', $raw, $m)) {
             return null;
         }
+        $n = (int) $m[1];
+        if ($n === 3) return 1;
+        if ($n === 2) return 2;
+        if ($n === 1) return 3;
+        return null;
     }
     /**
      * undocumented function

@@ -250,6 +250,18 @@ class WatzapController extends Controller
             data_get($raw, 'data.message_text'),
             data_get($raw, 'data.message_raw.text.body'),
             data_get($raw, 'data.root_value.messages.0.text.body'),
+            // Template / interactive button taps: WhatsApp Cloud API
+            // delivers the visible button label here. Without these
+            // candidates a "1. Memuaskan" tap surfaces only as the raw
+            // type ("interactive"/"button") and the survey reply
+            // pipeline never sees the user's choice.
+            data_get($raw, 'data.message_raw.button.text'),
+            data_get($raw, 'data.message_raw.button.payload'),
+            data_get($raw, 'data.message_raw.interactive.button_reply.title'),
+            data_get($raw, 'data.message_raw.interactive.button_reply.id'),
+            data_get($raw, 'data.root_value.messages.0.button.text'),
+            data_get($raw, 'data.root_value.messages.0.interactive.button_reply.title'),
+            data_get($raw, 'data.root_value.messages.0.interactive.button_reply.id'),
             data_get($raw, 'message'),
             data_get($raw, 'text'),
             data_get($raw, 'body'),
