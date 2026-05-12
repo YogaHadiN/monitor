@@ -22,10 +22,16 @@ class SunatBotReplyDispatcher
      * next bubble overtakes it (WatZap's HTTP 200 only confirms upload
      * accepted, not delivery).
      *
-     * @param array $replies array of ['text' => string, 'media' => ?string]
+     * @param array $replies     array of ['text' => string, 'media' => ?string]
+     * @param bool  $skipLog     when true, the outbound bubbles are sent
+     *                            via WatZap but NOT persisted into the
+     *                            messages table. Used for handover /
+     *                            escalation goodbye bubbles so the admin
+     *                            inbox stays clean — the customer still
+     *                            sees the message on WhatsApp.
      * @return bool true if dispatch ran, false if the lock could not be acquired in time
      */
-    public function dispatch(string $phone, array $replies, bool $imageBotEnabled): bool
+    public function dispatch(string $phone, array $replies, bool $imageBotEnabled, bool $skipLog = false): bool
     {
         if ($replies === []) {
             return true;
@@ -72,11 +78,15 @@ class SunatBotReplyDispatcher
                             Log::error('SUNAT_BOT_MEDIA_FAIL', $result + ['url' => $url, 'type' => $mediaType]);
                             if ($text !== '') {
                                 $this->watzap->sendText($phone, $text);
-                                $this->logOutgoing($phone, $text, null);
+                                if (!$skipLog) {
+                                    $this->logOutgoing($phone, $text, null);
+                                }
                             }
                         } else {
                             $prevSentMedia = true;
-                            $this->logOutgoing($phone, $text, $url);
+                            if (!$skipLog) {
+                                $this->logOutgoing($phone, $text, $url);
+                            }
                         }
                     } catch (\Throwable $mediaErr) {
                         Log::error('SUNAT_BOT_MEDIA_EXCEPTION', [
@@ -86,12 +96,16 @@ class SunatBotReplyDispatcher
                         ]);
                         if ($text !== '') {
                             $this->watzap->sendText($phone, $text);
-                            $this->logOutgoing($phone, $text, null);
+                            if (!$skipLog) {
+                                $this->logOutgoing($phone, $text, null);
+                            }
                         }
                     }
                 } elseif ($text !== '') {
                     $this->watzap->sendText($phone, $text);
-                    $this->logOutgoing($phone, $text, null);
+                    if (!$skipLog) {
+                        $this->logOutgoing($phone, $text, null);
+                    }
                 }
             }
             return true;
