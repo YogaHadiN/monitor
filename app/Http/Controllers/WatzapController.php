@@ -230,38 +230,55 @@ class WatzapController extends Controller
 
     protected function resolveMessage(array $raw, string $messageType): ?string
     {
-        $candidates = [
-            // Watzap WABA payload (utama)
-            data_get($raw, 'data.message_text'),
-            data_get($raw, 'data.message_raw.text.body'),
-            data_get($raw, 'data.root_value.messages.0.text.body'),
+        // For media bubbles, prefer the actual caption fields first.
+        // data.message_text is "[Image]" / "[Video]" placeholder when
+        // there is no caption — surfacing that literal string into the
+        // messages.message column makes the chat UI render "[image]"
+        // text instead of the actual image, so we skip it here.
+        $isMedia = in_array($messageType, ['image', 'video', 'document', 'audio'], true);
+
+        $captionCandidates = [
             data_get($raw, 'data.message_raw.image.caption'),
             data_get($raw, 'data.message_raw.video.caption'),
             data_get($raw, 'data.message_raw.document.caption'),
+            data_get($raw, 'message.caption'),
+            data_get($raw, 'caption'),
+            data_get($raw, 'payload.message.caption'),
+        ];
 
-            // Bentuk umum lainnya
+        $textCandidates = [
+            data_get($raw, 'data.message_text'),
+            data_get($raw, 'data.message_raw.text.body'),
+            data_get($raw, 'data.root_value.messages.0.text.body'),
             data_get($raw, 'message'),
             data_get($raw, 'text'),
             data_get($raw, 'body'),
-            data_get($raw, 'caption'),
             data_get($raw, 'data.message'),
             data_get($raw, 'data.text'),
             data_get($raw, 'data.body'),
             data_get($raw, 'message.text'),
             data_get($raw, 'message.body'),
-            data_get($raw, 'message.caption'),
             data_get($raw, 'payload.message.text'),
-            data_get($raw, 'payload.message.caption'),
         ];
 
+        $candidates = $isMedia
+            ? array_merge($captionCandidates, $textCandidates)
+            : array_merge($textCandidates, $captionCandidates);
+
+        // Skip the bracketed placeholder WatZap emits when an image /
+        // video has no caption (e.g. "[Image]", "[Video]").
+        $placeholderRe = '/^\s*\[\s*(image|video|document|audio|file|sticker)\s*\]\s*$/iu';
+
         foreach ($candidates as $candidate) {
-            if (is_string($candidate) && trim($candidate) !== '') {
-                return strtolower(trim($candidate));
-            }
+            if (!is_string($candidate)) continue;
+            $trim = trim($candidate);
+            if ($trim === '') continue;
+            if (preg_match($placeholderRe, $trim)) continue;
+            return strtolower($trim);
         }
 
         // kalau image tanpa caption, jangan dipaksa string aneh
-        if ($messageType === 'image') {
+        if ($isMedia) {
             return '';
         }
 
@@ -271,10 +288,20 @@ class WatzapController extends Controller
     protected function resolveMediaUrl(array $raw, string $messageType): ?string
     {
         $candidates = [
-            // Watzap WABA payload (utama)
+            // Watzap WABA payload (utama) — cdn_url is what WatZap
+            // actually emits for incoming image/video bubbles; the
+            // others stayed in this list when an earlier schema was
+            // assumed but never proven against live payload.
+            data_get($raw, 'data.media_info.cdn_url'),
             data_get($raw, 'data.media_info.url'),
             data_get($raw, 'data.media_info.link'),
             data_get($raw, 'data.media_info.file_url'),
+
+            // Raw WhatsApp Cloud API attachments — fallback if WatZap
+            // omits its proxied cdn_url for whatever reason.
+            data_get($raw, 'data.message_raw.image.url'),
+            data_get($raw, 'data.message_raw.video.url'),
+            data_get($raw, 'data.message_raw.document.url'),
 
             // Bentuk umum lainnya
             data_get($raw, 'url'),
