@@ -95,6 +95,8 @@ class WablasController extends Controller
 	public $message;
 	public $essage_type;
 	public $image_url;
+	public $video_url;
+	public $audio_url;
 	public $fonnte;
 	public $message_id;
 	public $channel;
@@ -158,7 +160,31 @@ class WablasController extends Controller
         $this->room_id      = Input::get('room_id');
         $this->no_telp      = Input::get('phone');
         $this->message_type = Input::get('messageType', 'text');
-        $this->image_url    = Input::get('url');
+
+        // Dispatch the incoming media URL into the right column on
+        // messages. The webhook normaliser (WatzapController) flattens
+        // every kind of media into a single `url` field — we route
+        // here so the chat panel can render image vs video vs audio
+        // with the right native element. image_url retained as a
+        // catch-all for unknown types so legacy code keeps working.
+        $incomingUrl = Input::get('url');
+        $this->image_url = null;
+        $this->video_url = null;
+        $this->audio_url = null;
+        if ($incomingUrl) {
+            switch ($this->message_type) {
+                case 'video':
+                    $this->video_url = $incomingUrl;
+                    break;
+                case 'audio':
+                case 'voice':
+                case 'ptt':
+                    $this->audio_url = $incomingUrl;
+                    break;
+                default:
+                    $this->image_url = $incomingUrl;
+            }
+        }
         $this->channel      = Input::get('channel', 'wa');
         $this->message_id   = Input::get('message_id');
         $this->company_key  = Input::get('company_key');
@@ -366,6 +392,9 @@ class WablasController extends Controller
                         'no_telp'        => $this->no_telp,
                         'message'        => $this->message,
                         'tanggal'        => date('Y-m-d H:i:s'),
+                        'image_url'      => $this->image_url,
+                        'video_url'      => $this->video_url,
+                        'audio_url'      => $this->audio_url,
                         'sending'        => 0,
                         'sudah_dibalas'  => 1,
                         'tenant_id'      => 1,
@@ -5399,6 +5428,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 'message'       => $this->message,
                 'tanggal'       => date("Y-m-d H:i:s"),
                 'image_url'     => $this->image_url,
+                'video_url'     => $this->video_url,
+                'audio_url'     => $this->audio_url,
                 'sending'       => 0,
                 'sudah_dibalas' => 0,
                 'tenant_id'     => 1,
