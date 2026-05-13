@@ -6480,6 +6480,20 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     {
         $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
         $tigaPuluhMenitKeDepan = $nowJkt->copy()->addMinutes(30);
+
+        // Whitelisted phones (config/clinic.php) lewat semua gate
+        // pendaftaran dokter gigi — baik pendaftaran online (registrasi
+        // langsung) maupun pendaftaran terjadwal (scheduled booking).
+        // Comment "(kecuali nomor whitelist)" di bawah ini sudah ada
+        // sejak lama tapi implementasinya belum ada — sekarang dipasang
+        // di sini supaya semua gate gigi (queue mati, sebelum jam buka,
+        // deadline terjadwal lewat, jadwal libur, dst) ikut di-bypass
+        // dalam satu titik. QA bisa test full flow gigi end-to-end.
+        $afterHoursWhitelist = (array) config('clinic.after_hours_whitelist_phones', []);
+        if (in_array((string) $this->no_telp, $afterHoursWhitelist, true)) {
+            return null;
+        }
+
         // 1) Jika antrian gigi dimatikan (kecuali nomor whitelist)
         if (
             $this->tenant &&
