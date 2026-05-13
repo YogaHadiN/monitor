@@ -3614,11 +3614,33 @@ class WablasController extends Controller
                         $this->chatBotLog(__LINE__);
                         $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup';
                     }
-                    // jika petugas pemeriksa pendaftaran sudah max booking gagalkan
+                    // jika petugas pemeriksa pendaftaran sudah max booking
                     if (
                          !$pp->slot_pendaftaran_available
                     ) {
                         $this->chatBotLog(__LINE__);
+
+                        // Kalau dokter pakai pendaftaran terjadwal dan satu-satunya
+                        // penghalang adalah kuota penuh → tawarkan waitlist.
+                        $tawarkanWaitlist =
+                            $pp->online_registration_enabled
+                            && $pp->registration_enabled
+                            && !$pp->jam_praktek_terlewat
+                            && (int) $pp->schedulled_booking_allowed === 1;
+
+                        if ($tawarkanWaitlist) {
+                            $this->chatBotLog(__LINE__);
+                            $reservasi_online->staf_id              = $pp->staf_id;
+                            $reservasi_online->petugas_pemeriksa_id = $pp->id;
+                            $reservasi_online->ruangan_id           = $pp->ruangan_id;
+                            $reservasi_online->schedulled_booking   = 2;
+                            $reservasi_online->waitlist_flag        = 0;
+                            $reservasi_online->save();
+
+                            $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($pp));
+                            return;
+                        }
+
                         $message = 'Pendaftaran Dokter ' . $pp->staf->nama_dengan_gelar . ' hari ini sudah ditutup karena sudah penuh';
                     }
 
