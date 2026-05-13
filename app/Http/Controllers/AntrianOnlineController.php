@@ -291,6 +291,16 @@ class AntrianOnlineController extends Controller
         $nohp           = $data['nohp'] ?? null;
 
         /**
+         * IDEMPOTENT: kalau sudah ada antrian hari ini untuk nomor BPJS ini
+         * (baik via Antrian.nomor_bpjs maupun via Pasien.nomor_asuransi_bpjs),
+         * pakai antrian yang sudah ada — jangan bikin baru.
+         */
+        $existing = $this->cariAntrianHariIni($nomorkartu);
+        if (!is_null($existing)) {
+            return Response::json($this->buildAmbilAntreanResponse($existing), 200);
+        }
+
+        /**
          * VALIDASI: Pasien BPJS hanya boleh berobat sekali per hari
          */
         if ($this->validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu)) {
@@ -684,6 +694,50 @@ class AntrianOnlineController extends Controller
     /**
      * Validasi: Pasien BPJS hanya boleh daftar 1x per hari
      */
+    private function cariAntrianHariIni($nomorkartu)
+    {
+        if (empty(trim((string) $nomorkartu))) {
+            return null;
+        }
+
+        $tz         = 'Asia/Jakarta';
+        $startOfDay = Carbon::now($tz)->startOfDay()->format('Y-m-d H:i:s');
+        $endOfDay   = Carbon::now($tz)->endOfDay()->format('Y-m-d H:i:s');
+
+        return Antrian::with('pasien', 'tipe_konsultasi.poli_bpjs', 'ruangan.antrian')
+            ->where('registrasi_pembayaran_id', 2)
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->where(function ($q) use ($nomorkartu) {
+                $q->where('nomor_bpjs', $nomorkartu)
+                  ->orWhereHas('pasien', function ($p) use ($nomorkartu) {
+                      $p->where('nomor_asuransi_bpjs', $nomorkartu);
+                  });
+            })
+            ->latest('id')
+            ->first();
+    }
+
+    private function buildAmbilAntreanResponse($antrian)
+    {
+        $antreanPanggil = optional(optional($antrian->ruangan)->antrian)->nomor_antrian;
+        $namapoli       = optional(optional($antrian->tipe_konsultasi)->poli_bpjs)->nmPoli;
+
+        return [
+            'response' => [
+                'nomorantrean'   => $antrian->nomor_antrian,
+                'angkaantrean'   => (int)$antrian->nomor,
+                'namapoli'       => $namapoli,
+                'sisaantrean'    => (string)($antrian->sisa_antrian ?? 0),
+                'antreanpanggil' => $antreanPanggil ?: "",
+                'keterangan'     => "Apabila antrean terlewat harap mengambil antrean kembali"
+            ],
+            'metadata' => [
+                'message' => 'Ok',
+                'code'    => 200
+            ]
+        ];
+    }
+
     public function validasiPasienBpjsHanyaBisaBerobatSekali($nomorkartu)
     {
         $tz = 'Asia/Jakarta';
