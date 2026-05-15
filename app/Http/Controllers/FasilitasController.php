@@ -96,16 +96,25 @@ class FasilitasController extends Controller
             }
         }
 
-        $antrian                           = new Antrian;
-        $antrian->tenant_id                = 1 ;
-        $antrian->nomor_bpjs               = $this->input_nomor_bpjs;
-        $antrian->tipe_konsultasi_id       = $tipe_konsultasi_id;
-        $antrian->staf_id                  = $this->input_staf_id;
-        $antrian->ruangan_id               = $id ;
-		$antrian->antriable_id             = $antrian->id;
-		$antrian->registrasi_pembayaran_id = $this->input_registrasi_pembayaran_id;
-		$antrian->antriable_type           = 'App\\Models\\Antrian';
-		$antrian->save();
+        $antrian_existing = Antrian::whereDate('created_at', today())
+            ->where('nomor_bpjs', $this->input_nomor_bpjs)
+            ->first();
+
+        if (!is_null( $antrian_existing )) {
+            $antrian = $antrian_existing;
+        } else {
+            $antrian                           = new Antrian;
+            $antrian->tenant_id                = 1 ;
+            $antrian->nomor_bpjs               = $this->input_nomor_bpjs;
+            $antrian->tipe_konsultasi_id       = $tipe_konsultasi_id;
+            $antrian->staf_id                  = $this->input_staf_id;
+            $antrian->ruangan_id               = $id ;
+            $antrian->registrasi_pembayaran_id = $this->input_registrasi_pembayaran_id;
+            $antrian->antriable_type           = 'App\\Models\\Antrian';
+            $antrian->save();
+            $antrian->antriable_id             = $antrian->id;
+            $antrian->save();
+        }
 
 		$apc                     = new AntrianPoliController;
 		$apc->updateJumlahAntrian(false, null);

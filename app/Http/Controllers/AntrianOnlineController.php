@@ -420,6 +420,7 @@ class AntrianOnlineController extends Controller
          */
         $fc                                 = new FasilitasController;
         $fc->tipe_konsultasi_id             = $this->tipe_konsultasi->id;
+        $fc->input_nomor_bpjs             = $nomorkartu;
         $fc->ruangan_id                     = $this->tipe_konsultasi->ruangan_id;
         $fc->input_registrasi_pembayaran_id = 2; // 2 = BPJS
 
