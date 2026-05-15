@@ -746,55 +746,12 @@ class AntrianOnlineController extends Controller
         $endOfDay   = Carbon::now($tz)->endOfDay()->format('Y-m-d H:i:s');
 
         /**
-         * 1. Cek tabel antrian
+         * 1. Cek tabel periksas
          */
-        if (
-            Antrian::where('nomor_bpjs', $nomorkartu)
-                ->whereBetween('created_at', [$startOfDay, $endOfDay])
-                ->where('registrasi_pembayaran_id', 2)
-                ->exists()
-        ) {
-            return true;
-        }
 
-        /**
-         * 2. Cek tabel periksas
-         */
         $sql = "
             SELECT prx.id
             FROM periksas prx
-            JOIN pasiens psn ON psn.id = prx.pasien_id
-            WHERE prx.tenant_id = 1
-              AND prx.tanggal BETWEEN ? AND ?
-              AND prx.asuransi_id = 32
-              AND psn.nomor_asuransi_bpjs = ?
-            LIMIT 1
-        ";
-
-        if (count(DB::select($sql, [$startOfDay, $endOfDay, $nomorkartu])) > 0) return true;
-
-        /**
-         * 3. Cek tabel antrian_polis
-         */
-        $sql = "
-            SELECT prx.id
-            FROM antrian_polis prx
-            JOIN pasiens psn ON psn.id = prx.pasien_id
-            WHERE prx.tenant_id = 1
-              AND prx.tanggal BETWEEN ? AND ?
-              AND prx.asuransi_id = 32
-              AND psn.nomor_asuransi_bpjs = ?
-            LIMIT 1
-        ";
-
-        if (count(DB::select($sql, [$startOfDay, $endOfDay, $nomorkartu])) > 0) return true;
-
-        /**
-         * 4. Cek tabel antrian_periksas
-         */
-        $sql = "
-            SELECT prx.id
-            FROM antrian_periksas prx
             JOIN pasiens psn ON psn.id = prx.pasien_id
             WHERE prx.tenant_id = 1
               AND prx.tanggal BETWEEN ? AND ?
