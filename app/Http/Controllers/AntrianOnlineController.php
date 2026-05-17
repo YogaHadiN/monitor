@@ -430,7 +430,16 @@ class AntrianOnlineController extends Controller
          * Isi data antrean BPJS
          */
         $antrian->no_telp               = $nohp;
-        $antrian->antriable_id          = $antrian->id;
+        // Guard: hanya tulis ulang antriable_id kalau ini memang
+        // pola self-ref Antrian (BPJS baru). Tanpa guard, antrian
+        // existing yang sudah punya antriable_type AntrianPoli (mis.
+        // sudah lewat langsungKeAntrianPoliBilaMemungkinkan) akan
+        // ke-overwrite antriable_id-nya ke parent.id, sementara
+        // type tetap AntrianPoli — hasilnya orphan polymorph yang
+        // bikin batal_antrean tidak bisa hapus child.
+        if ($antrian->antriable_type === 'App\\Models\\Antrian') {
+            $antrian->antriable_id      = $antrian->id;
+        }
         $antrian->pasien_id             = $this->pasien->id;
         $antrian->tanggal_lahir         = $this->pasien->tanggal_lahir;
         $antrian->sudah_hadir_di_klinik = 0;
