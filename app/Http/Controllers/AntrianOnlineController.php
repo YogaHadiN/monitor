@@ -563,10 +563,24 @@ class AntrianOnlineController extends Controller
     /**
      * Pembatalan antrean BPJS
      */
-    public function batal_antrean()
+    public function batal_antrean(\Illuminate\Http\Request $req)
     {
+        // BPJS Mobile JKN kirim PUT dengan JSON body tanpa header
+        // Content-Type: application/json — sama seperti ambil_antrean.
+        // Tanpa parse raw body manual, Input::get('nomorkartu') return
+        // null sehingga query antrean cocok ke baris dengan nomor_bpjs
+        // IS NULL yang random.
+        $rawBody = $req->getContent();
+        $json    = json_decode($rawBody, true);
+        $data    = (json_last_error() === JSON_ERROR_NONE && is_array($json))
+            ? $json
+            : $req->all();
+
+        $nomorkartu     = $data['nomorkartu']     ?? null;
+        $tanggalperiksa = $data['tanggalperiksa'] ?? null;
+
         // Cek apakah antrean ditemukan
-        if ($this->antrean_tidak_ditemukan()) {
+        if ($this->antrean_tidak_ditemukan($nomorkartu, $tanggalperiksa)) {
             return Response::json([
                 'metadata' => [
                     'message' => 'Antrean Tidak Ditemukan',
@@ -871,12 +885,28 @@ class AntrianOnlineController extends Controller
     /**
      * Validasi: Apakah antrean tidak ditemukan berdasarkan tanggal dan nomor BPJS
      */
-    public function antrean_tidak_ditemukan()
+    public function antrean_tidak_ditemukan($nomorkartu = null, $tanggalperiksa = null)
     {
-        $startOfDay = Carbon::parse(Input::get('tanggalperiksa'))->startOfDay();
-        $endOfDay   = Carbon::parse(Input::get('tanggalperiksa'))->endOfDay();
+        // Tanpa nomorkartu / tanggalperiksa yang valid, jangan mencoba
+        // matching — kalau dipaksa, `where('nomor_bpjs', null)` akan
+        // cocok ke antrian random yang `nomor_bpjs IS NULL` (mis. antrian
+        // umum non-BPJS) dan menyebabkan delete salah baris.
+        $nomorkartu     = trim((string) $nomorkartu);
+        $tanggalperiksa = trim((string) $tanggalperiksa);
+        if ($nomorkartu === '' || $tanggalperiksa === '') {
+            $this->antrian = null;
+            return true;
+        }
 
-        $this->antrian = Antrian::where('nomor_bpjs', Input::get('nomorkartu'))
+        try {
+            $startOfDay = Carbon::parse($tanggalperiksa)->startOfDay();
+            $endOfDay   = Carbon::parse($tanggalperiksa)->endOfDay();
+        } catch (\Exception $e) {
+            $this->antrian = null;
+            return true;
+        }
+
+        $this->antrian = Antrian::where('nomor_bpjs', $nomorkartu)
             ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->where('tenant_id', 1)
             ->first();
