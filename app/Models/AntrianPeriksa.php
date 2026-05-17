@@ -4,7 +4,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToTenant;
-use App\Http\Controllers\AntrianPolisController;
+use App\Http\Controllers\AntrianPoliController;
 
 class AntrianPeriksa extends Model{
     use BelongsToTenant, HasFactory;
@@ -66,7 +66,7 @@ class AntrianPeriksa extends Model{
 		parent::boot();
 		self::deleting(function($antrianperiksa){
 			$antrianperiksa->antrian()->delete();
-			$apc                     = new AntrianPolisController;
+			$apc                     = new AntrianPoliController;
 			$apc->updateJumlahAntrian(null, false);
 		});
         self::creating(function($antrianpoli){
