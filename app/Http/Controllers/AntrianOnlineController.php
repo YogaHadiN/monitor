@@ -590,8 +590,13 @@ class AntrianOnlineController extends Controller
          */
         $antrian_id = $this->antrian->id;
 
-        // Hapus child (antriable)
-        $this->antrian->antriable->delete();
+        // Hapus child (antriable) — guard null karena polymorph
+        // bisa orphan (antriable_id/type tidak punya record terkait
+        // lagi), trigger "Call to a member function delete() on null".
+        $antriable = $this->antrian->antriable;
+        if (!is_null($antriable)) {
+            $antriable->delete();
+        }
 
         // Hapus antrean utama
         if (!is_null(Antrian::find($antrian_id))) {
