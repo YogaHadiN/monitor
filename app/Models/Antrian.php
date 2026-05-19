@@ -89,8 +89,10 @@ class Antrian extends Model
                     return;
                 }
 
+                $tanggalperiksa = optional($model->created_at)->format('Y-m-d');
+
                 $fktp = new AntrianOnlineController;
-                $fktp->batal_antrean();
+                $fktp->notifyBpjsAntreanBatal($nomorkartu, $tanggalperiksa, $kodepoli);
             } catch (\Throwable $e) {
                 \Log::error('Gagal batal antrean BPJS otomatis', [
                     'id' => $model->id ?? null,
