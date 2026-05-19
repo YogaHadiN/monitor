@@ -570,7 +570,7 @@ class AntrianOnlineController extends Controller
     }
 
     /**
-     * Pembatalan antrean BPJS
+     * Pembatalan antrean BPJS — webhook receiver dari Mobile JKN.
      */
     public function batal_antrean(\Illuminate\Http\Request $req)
     {
@@ -588,50 +588,83 @@ class AntrianOnlineController extends Controller
         $nomorkartu     = $data['nomorkartu']     ?? null;
         $tanggalperiksa = $data['tanggalperiksa'] ?? null;
 
-        // Cek apakah antrean ditemukan
+        $result = $this->cancelLocalAntreanByKartu($nomorkartu, $tanggalperiksa);
+
+        return Response::json([
+            'metadata' => [
+                'message' => $result['message'],
+                'code'    => $result['code'],
+            ]
+        ], $result['code']);
+    }
+
+    /**
+     * Cari antrean BPJS lokal berdasarkan nomorkartu+tanggalperiksa,
+     * lalu hapus antrean & antriable-nya. Dipakai oleh webhook BPJS
+     * (`batal_antrean`) dan bisa dipakai listener model untuk gating
+     * tanpa duplikasi logic.
+     *
+     * Return shape:
+     *   ['code' => 200|201, 'message' => string, 'antrian' => Antrian|null]
+     */
+    public function cancelLocalAntreanByKartu($nomorkartu, $tanggalperiksa)
+    {
         if ($this->antrean_tidak_ditemukan($nomorkartu, $tanggalperiksa)) {
-            return Response::json([
-                'metadata' => [
-                    'message' => 'Antrean Tidak Ditemukan',
-                    'code'    => 201
-                ]
-            ], 201);
+            return [
+                'code'    => 201,
+                'message' => 'Antrean Tidak Ditemukan',
+                'antrian' => null,
+            ];
         }
 
-        // Antrean sudah dilayani, tidak bisa dibatalkan
         if ($this->antrean_sudah_dilayani()) {
-            return Response::json([
-                'metadata' => [
-                    'message' => 'Pasien sudah dilayani, antrean tidak dapat dibatalkan',
-                    'code'    => 201
-                ]
-            ], 201);
+            return [
+                'code'    => 201,
+                'message' => 'Pasien sudah dilayani, antrean tidak dapat dibatalkan',
+                'antrian' => $this->antrian,
+            ];
         }
 
-        /**
-         * Proses menghapus antrean
-         */
-        $antrian_id = $this->antrian->id;
+        $antrian    = $this->antrian;
+        $antrian_id = $antrian->id;
 
         // Hapus child (antriable) — guard null karena polymorph
         // bisa orphan (antriable_id/type tidak punya record terkait
         // lagi), trigger "Call to a member function delete() on null".
-        $antriable = $this->antrian->antriable;
+        $antriable = $antrian->antriable;
         if (!is_null($antriable)) {
             $antriable->delete();
         }
 
-        // Hapus antrean utama
         if (!is_null(Antrian::find($antrian_id))) {
-            $this->antrian->delete();
+            $antrian->delete();
         }
 
-        return Response::json([
-            'metadata' => [
-                'message' => 'Ok',
-                'code'    => 200
-            ]
-        ], 200);
+        return [
+            'code'    => 200,
+            'message' => 'Ok',
+            'antrian' => $antrian,
+        ];
+    }
+
+    /**
+     * Stub outbound BPJS antrean cancel.
+     *
+     * Listener `deleted` di App\Models\Antrian memanggil ini saat
+     * antrean BPJS dihapus dari sisi kita supaya BPJS bisa diberi
+     * tahu — tapi endpoint outbound `antreanfktp/antrean/batal`
+     * belum diintegrasikan (butuh signature x-cons-id/x-signature
+     * + kodebooking dari saat antrean dibuat). Sementara hanya log
+     * supaya jejak terlihat dan implementasi nanti bisa drop-in.
+     */
+    public function notifyBpjsAntreanBatal($nomorkartu, $tanggalperiksa, $kodepoli = null)
+    {
+        Log::info('BPJS_ANTREAN_BATAL_OUTBOUND_PENDING', [
+            'nomorkartu'     => $nomorkartu,
+            'tanggalperiksa' => $tanggalperiksa,
+            'kodepoli'       => $kodepoli,
+        ]);
+        return ['code' => 200, 'message' => 'Logged, outbound not yet implemented'];
     }
 
     /**
