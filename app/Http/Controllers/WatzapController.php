@@ -42,13 +42,7 @@ class WatzapController extends Controller
             'waba_id' => env('WATZAP_NUMBER_KEY'),
         ]);
 
-        dd(
-            [
-                $response->json(),
-                env('WATZAP_TOKEN'),
-                env('WATZAP_NUMBER_KEY')
-            ]
-        );
+        dd($response->json());
     }
 
     public function set_webhook(){
