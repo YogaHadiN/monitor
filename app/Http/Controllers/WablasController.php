@@ -690,11 +690,7 @@ class WablasController extends Controller
             $this->whatsapp_registration->registering_confirmation < 1
         ){
             if (
-                ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == 'ya' && !$this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == 'iya' && !$this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == 'iy' && !$this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message == 'y' && !$this->tenant->iphone_whatsapp_button_available )
+                in_array($this->message, ['lanjutkan', 'ya', 'iya', 'iy', 'y'], true)
             ) {
                 $this->whatsapp_registration->registering_confirmation = 1;
                 $this->whatsapp_registration->save();
@@ -802,26 +798,18 @@ class WablasController extends Controller
             !is_null( $this->whatsapp_registration->antrian->tanggal_lahir ) &&
             !is_null( $this->whatsapp_registration->antrian->kartu_asuransi_image )
         ) {
-            if (
-                ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available )||
-                ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )||
-                (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
-            ) {
-                if (
-                    ( $this->message == 'lanjutkan' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
-                ) {
+            $firstChar = !is_null($this->message) && $this->message !== '' ? $this->message[0] : null;
+            $isLanjutkan = $this->message === 'lanjutkan' || $firstChar === '1';
+            $isUlangi    = $this->message === 'ulangi'    || $firstChar === '2';
+            if ($isLanjutkan || $isUlangi) {
+                if ($isLanjutkan) {
                     $whatsapp_registration_id = $this->whatsapp_registration->id;
                     $this->whatsapp_registration_deleted = $this->whatsapp_registration->delete();
                     /* $this->langsungKeAntrianPoliBilaMemungkinkan( $this->whatsapp_registration->antrian ); */
                     //jika pasien_id tidak kosong, maka pasien langsung masuk saja ke antrianpoli
                     //==========================================================================
                 }
-                if (
-                    ( $this->message == 'ulangi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                    (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
-                ) {
+                if ($isUlangi) {
                     $this->ulangiRegistrasiWhatsapp($this->whatsapp_registration->antrian);
                 }
             } else {
@@ -3922,12 +3910,10 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             if (!$reservasi_online->reservasi_selesai) {
                 $this->chatBotLog(__LINE__);
-                $lanjutByButton = ($msg === 'lanjutkan' && $tenant && $tenant->iphone_whatsapp_button_available);
-                $ulangByButton  = ($msg === 'ulangi'    && $tenant && $tenant->iphone_whatsapp_button_available);
-                $lanjutByText   = ($firstChar === '1'   && $tenant && !$tenant->iphone_whatsapp_button_available);
-                $ulangByText    = ($firstChar === '2'   && $tenant && !$tenant->iphone_whatsapp_button_available);
+                $lanjut = ($msg === 'lanjutkan' || $firstChar === '1');
+                $ulang  = ($msg === 'ulangi'    || $firstChar === '2');
 
-                if ($lanjutByButton || $lanjutByText) {
+                if ($lanjut) {
                     $reservasi_online->reservasi_selesai = 1;
                     $this->chatBotLog(__LINE__);
                     \DB::transaction(function () use ($reservasi_online, $tz) {
@@ -4007,7 +3993,7 @@ class WablasController extends Controller
 
                     return false;
 
-                } elseif ($ulangByButton || $ulangByText) {
+                } elseif ($ulang) {
                     $this->chatBotLog(__LINE__);
                     $this->whatsapp_bot   = $reservasi_online->whatsappBot;
                     $reservasi_online     = $this->createReservasiOnline(true);
@@ -4143,23 +4129,16 @@ class WablasController extends Controller
         return $message;
     }
     public function lanjutkanRegistrasiPembayaran($model){
-        if (
-            ( $this->message == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
-            ( !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available )
-        ) {
+        $firstChar = !is_null($this->message) && $this->message !== '' ? $this->message[0] : null;
+
+        if ($this->message === 'biaya pribadi' || $firstChar === '1') {
             $model->registrasi_pembayaran_id = 1;
             $model->kartu_asuransi_image     = '';
         }
-        if (
-            ( $this->message == 'bpjs' && $this->tenant->iphone_whatsapp_button_available ) ||
-            ( !is_null( $this->message ) &&  $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available )
-        ) {
+        if ($this->message === 'bpjs' || $firstChar === '2') {
             $model->registrasi_pembayaran_id  = 2;
         }
-        if (
-            ( $this->message == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-            (  !is_null( $this->message ) && $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available )
-        ) {
+        if ($this->message === 'lainnya' || $firstChar === '3') {
             $model->registrasi_pembayaran_id  = 3;
         }
 
@@ -4174,13 +4153,9 @@ class WablasController extends Controller
     }
 
     public function validasiRegistrasiPembayaran(){
-        return
-                ( $this->message    == 'biaya pribadi' && $this->tenant->iphone_whatsapp_button_available ) ||
-                ( $this->message    == 'bpjs' && $this->tenant->iphone_whatsapp_button_available) ||
-                ( $this->message    == 'lainnya' && $this->tenant->iphone_whatsapp_button_available ) ||
-                (  !is_null( $this->message ) && $this->message[0] == '1' && !$this->tenant->iphone_whatsapp_button_available ) ||
-                (  !is_null( $this->message ) && $this->message[0] == '2' && !$this->tenant->iphone_whatsapp_button_available) ||
-                (  !is_null( $this->message ) && $this->message[0] == '3' && !$this->tenant->iphone_whatsapp_button_available );
+        $firstChar = !is_null($this->message) && $this->message !== '' ? $this->message[0] : null;
+        return in_array($this->message, ['biaya pribadi', 'bpjs', 'lainnya'], true)
+            || in_array($firstChar, ['1', '2', '3'], true);
     }
 
     public function tanyaLanjutkanAtauUlangi($model){
