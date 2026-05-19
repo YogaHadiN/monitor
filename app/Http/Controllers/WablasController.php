@@ -1284,19 +1284,21 @@ class WablasController extends Controller
      * @return void
      */
     private function satisfactionIndex($message){
-        // Customer_survey template buttons may arrive verbatim as their
-        // titles (e.g. "1. Memuaskan", "2. Biasa", "3. Kecewa"). PHP 8
-        // dropped the lenient leading-digit coercion of PHP 7, so a
-        // plain `$message == 1` no longer matches "1. Memuaskan". Pull
-        // the leading 1/2/3 ourselves before mapping.
-        $raw = trim((string) $message);
-        if ($raw === '' || !preg_match('/^([123])\b/u', $raw, $m)) {
-            return null;
+        // Customer_survey template buttons arrive verbatim as their titles —
+        // currently "Puas"/"Biasa"/"Kecewa". Legacy numeric replies ("1", "2",
+        // "3", or "1. Memuaskan" etc.) are still accepted for manual flows.
+        $raw = mb_strtolower(trim((string) $message));
+        if ($raw === '') return null;
+
+        if (preg_match('/^([123])\b/u', $raw, $m)) {
+            $n = (int) $m[1];
+            if ($n === 3) return 1;
+            if ($n === 2) return 2;
+            if ($n === 1) return 3;
         }
-        $n = (int) $m[1];
-        if ($n === 3) return 1;
-        if ($n === 2) return 2;
-        if ($n === 1) return 3;
+        if ($raw === 'puas' || $raw === 'memuaskan') return 3;
+        if ($raw === 'biasa') return 2;
+        if ($raw === 'kecewa' || $raw === 'tidak puas') return 1;
         return null;
     }
     /**
@@ -1568,15 +1570,8 @@ class WablasController extends Controller
      */
     private function registerWhatsappSatisfactionSurvey(){
 
-        if (
-            $this->angkaPertama("1") ||
-            $this->message == 'puas' ||
-            $this->angkaPertama("2") ||
-            $this->message == 'biasa' ||
-            $this->angkaPertama("3") ||
-            $this->message == 'tidak puas'
-        ) {
-            $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
+        $satisfaction_index_ini = $this->satisfactionIndex( $this->message );
+        if ( !is_null($satisfaction_index_ini) ) {
             $no_telp = $this->no_telp;
 
             $carbon     = Carbon::parse( $this->whatsapp_satisfaction_survey->created_at->format('Y-m-d') );
@@ -1590,23 +1585,14 @@ class WablasController extends Controller
                         'satisfaction_index' => $satisfaction_index_ini
                     ]);
 
-            if(
-                 $this->angkaPertama("1")  ||
-                 $this->message == 'puas'
-            ){
+            if ( $satisfaction_index_ini === 3 ) {
                 $this->autoReply($this->kirimkanLinkGoogleReview() );
-            } else if(
-                 $this->angkaPertama("3")  ||
-                 $this->message == 'tidak puas'
-            ){
+            } else if ( $satisfaction_index_ini === 1 ) {
                 $pesan = $this->autoReplyComplainMessage(
                     $this->whatsapp_satisfaction_survey->antrian->id
                 );
                 $this->autoReply( $pesan );
-            } else if (
-                 $this->angkaPertama("2")  ||
-                 $this->message == 'biasa'
-            ) {
+            } else if ( $satisfaction_index_ini === 2 ) {
                 $complaint             = new WhatsappComplaint;
                 $complaint->no_telp    = $this->whatsapp_satisfaction_survey->antrian->no_telp;
                 $complaint->antrian_id = $this->whatsapp_satisfaction_survey->antrian->id;
@@ -1624,14 +1610,7 @@ class WablasController extends Controller
             $message = "Balasan yang anda masukkan tidak dikenali";
             $message .= PHP_EOL;
             $message .= PHP_EOL;
-            $message .= "1. Puas";
-            $message .= PHP_EOL;
-            $message .= "2. Biasa";
-            $message .= PHP_EOL;
-            $message .= "3. Tidak Puas";
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= "Mohon balas dengan angka *1,2 atau 3* sesuai urutan diatas";
+            $message .= "Mohon balas dengan *Puas*, *Biasa*, atau *Kecewa*";
             $this->autoReply($message );
         }
     }
