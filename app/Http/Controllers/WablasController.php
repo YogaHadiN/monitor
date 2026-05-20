@@ -115,6 +115,11 @@ class WablasController extends Controller
 
     public function __construct()
     {
+        Log::info("=================================");
+        Log::info("WEBHOOK IN");
+        Log::info("=================================");
+        Log::info("=================================");
+        Log::info("=================================");
         $this->message_reply = '';
         $this->fonnte = false;
         $this->image_url = null;
