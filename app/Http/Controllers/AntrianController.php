@@ -114,17 +114,13 @@ class AntrianController extends Controller
     }
 
 	public function convertSoundToArray($antrian_id){
-        $antrian = Antrian::find( $antrian_id );
+        $antrian = Antrian::with('antriable.ruangan')->find( $antrian_id );
+        if (is_null($antrian)) {
+            Log::warning('convertSoundToArray: antrian tidak ditemukan', ['antrian_id' => $antrian_id]);
+            return [];
+        }
 		$nomor_antrian = $antrian->nomor_antrian;
-		$ruangan       = $antrian->antriable->ruangan;
-        Log::info('=======================================');
-        Log::info('antrian');
-        Log::info($antrian);
-        Log::info('antrian->antriable');
-        Log::info($antrian->antriable);
-        Log::info('antrian->antriable->ruangan');
-        Log::info($antrian->antriable->ruangan);
-        Log::info('=======================================');
+		$ruangan       = optional($antrian->antriable)->ruangan;
 		$huruf         = strtolower(str_split($nomor_antrian)[0]);
 		$angka         = substr($nomor_antrian, 1);
 
@@ -217,8 +213,16 @@ class AntrianController extends Controller
 				$result[] =	(int) $angka[2];
 			}
 		}
-		$result[] =	'silahkanmenuju';
-		$result[] = $ruangan->file_panggilan;
+		if (!is_null($ruangan)) {
+			$result[] =	'silahkanmenuju';
+			$result[] = $ruangan->file_panggilan;
+		} else {
+			Log::warning('convertSoundToArray: ruangan tidak ditemukan, skip silahkan menuju', [
+				'antrian_id'     => $antrian_id,
+				'antriable_type' => $antrian->antriable_type,
+				'antriable_id'   => $antrian->antriable_id,
+			]);
+		}
 		return $result;
 
 	}
