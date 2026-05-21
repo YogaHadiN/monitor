@@ -3911,7 +3911,18 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
             }
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
-        } elseif (!$reservasi_online->reservasi_selesai) {
+        // Skip kalau waitlist offer sedang menunggu jawaban
+        // (schedulled_booking=2, waitlist_flag=0). Tanpa guard ini,
+        // balasan "1" pada offer waitlist masuk ke $lanjut=true di
+        // line bawah lalu jatuh ke else non-schedulled (walk-in)
+        // sehingga pasien dapat antrian H biasa, bukan slot waitlist.
+        } elseif (
+            !$reservasi_online->reservasi_selesai
+            && !(
+                (int) $reservasi_online->schedulled_booking === 2
+                && (int) $reservasi_online->waitlist_flag === 0
+            )
+        ) {
             $this->chatBotLog(__LINE__);
             if (!$reservasi_online->reservasi_selesai) {
                 $this->chatBotLog(__LINE__);
