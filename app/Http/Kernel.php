@@ -61,6 +61,7 @@ class Kernel extends HttpKernel
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'onlyWhenWebRegistrationEnabled' => \App\Http\Middleware\onlyWhenWebRegistrationEnabled::class,
+        'webRegistrationWithinOpeningHours' => \App\Http\Middleware\WebRegistrationWithinOpeningHours::class,
         'returnErrorIfAntrianDokterGigiNonAktif' => \App\Http\Middleware\returnErrorIfAntrianDokterGigiNonAktif::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
