@@ -825,7 +825,7 @@ class WebRegistrationController extends Controller
                     $data['waitlist_flag'] = 0;
                 }
 
-                $schedulled_reservation = SchedulledReservation::create($data);
+                $schedulled_reservation = SchedulledReservation::fromSourceArray($data);
                 $schedulled_reservation->reservasi_selesai = 1;
                 $schedulled_reservation->qrcode = $wablas->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
                 $schedulled_reservation->save();

@@ -3948,7 +3948,7 @@ class WablasController extends Controller
                                 $this->chatBotLog("DAT");
                                 $this->chatBotLog( $data );
                                 $this->chatBotLog("====================");
-                                $schedulled_reservation         = SchedulledReservation::create($data);
+                                $schedulled_reservation         = SchedulledReservation::fromSourceArray($data);
 
                                 $schedulled_reservation->qrcode = $this->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
                                 $schedulled_reservation->save();
@@ -4020,7 +4020,7 @@ class WablasController extends Controller
                 unset($data['pasien']);
                 unset($data['petugas_pemeriksa']);
                 unset($data['schedulled_reservation']);
-                $schedulled_reservation = SchedulledReservation::create($data);
+                $schedulled_reservation = SchedulledReservation::fromSourceArray($data);
             } else {
                 $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
