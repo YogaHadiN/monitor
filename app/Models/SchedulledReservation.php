@@ -22,6 +22,27 @@ class SchedulledReservation extends Model
 
     protected $guarded = [];
 
+    /**
+     * Create dari hasil toArray() model lain (ReservasiOnline /
+     * WebRegistration). Normalize created_at & updated_at ke Asia/Jakarta
+     * dulu — kalau langsung lewat create(), nilai ISO 8601 UTC yang
+     * diemit serializeDate() ditafsirkan apa adanya saat insert
+     * sehingga created_at di DB jadi 7 jam lebih muda dari waktu asli
+     * Jakarta.
+     */
+    public static function fromSourceArray(array $data): self
+    {
+        $tz = config('app.timezone', 'Asia/Jakarta');
+        foreach (['created_at', 'updated_at'] as $col) {
+            if (!empty($data[$col])) {
+                $data[$col] = \Carbon\Carbon::parse($data[$col])
+                    ->setTimezone($tz)
+                    ->format('Y-m-d H:i:s');
+            }
+        }
+        return static::create($data);
+    }
+
 
     protected static function booted()
     {
