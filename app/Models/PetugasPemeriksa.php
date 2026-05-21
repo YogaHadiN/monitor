@@ -66,8 +66,15 @@ class PetugasPemeriksa extends Model
             ->whereDate('created_at', $today)
             ->count();
 
-        // Hitung reservasi online terjadwal hari ini
-        $jumlah_reservasi_schedulled = $this->schedulled_reservations->count();
+        // Hitung reservasi online terjadwal hari ini — KECUALI waitlist
+        // (schedulled_booking=2). Waitlist belum claim slot, jadi tidak
+        // boleh mengisi kuota; kalau diikut-sertakan, slot_pendaftaran
+        // selalu 0 ketika waitlist sudah ada → command
+        // reservasi:send-waitlist-inquiry skip dan pasien waitlist
+        // tidak pernah dapat notifikasi slot kosong.
+        $jumlah_reservasi_schedulled = $this->schedulled_reservations()
+            ->where('schedulled_booking', 1)
+            ->count();
 
         $existing = $jumlah_antrian + $jumlah_reservasi_schedulled;
         $max      = (int) ($this->max_booking ?? 0);
