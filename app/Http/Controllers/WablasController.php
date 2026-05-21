@@ -3380,6 +3380,51 @@ class WablasController extends Controller
         }
 
         $this->chatBotLog(__LINE__);
+
+        // ===== waitlist offer pending: hanya terima ya/tidak =====
+        // Kalau slot full kita kirim pesanKuotaPenuhPerPetugasDenganWaitlist
+        // lalu set schedulled_booking=2, waitlist_flag=0. Tanpa guard ini,
+        // balasan "ya"/"tidak" tersangkut di branch payment / lanjutkan di
+        // bawah dan jadi input_tidak_tepat.
+        if (
+            (int) $reservasi_online->schedulled_booking === 2
+            && (int) $reservasi_online->waitlist_flag === 0
+        ) {
+            $this->chatBotLog(__LINE__);
+            if (in_array($msg, ['ya','y','1'], true)) {
+                $this->chatBotLog(__LINE__);
+                $reservasi_online->waitlist_flag = 1;
+                $reservasi_online->save();
+
+                $data = $reservasi_online->toArray();
+                unset($data['id']);
+                unset($data['pasien']);
+                unset($data['petugas_pemeriksa']);
+                unset($data['schedulled_reservation']);
+                $schedulled_reservation = SchedulledReservation::fromSourceArray($data);
+
+                $this->autoReply($this->pesanWaitlistTercatat($schedulled_reservation));
+                \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
+                return;
+            }
+
+            if (in_array($msg, ['tidak','t','2','no'], true)) {
+                $this->chatBotLog(__LINE__);
+                $reservasi_online->delete();
+                \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
+                $this->autoReply($this->pesanTolakWaitlistTawarkanDaftarSekarang());
+                return;
+            }
+
+            // Input typo → kirim ulang offer (pesan tunggal yang sama)
+            $this->chatBotLog(__LINE__);
+            $pp = $reservasi_online->petugas_pemeriksa;
+            if ($pp) {
+                $this->autoReply($this->pesanKuotaPenuhPerPetugasDenganWaitlist($pp));
+            }
+            return;
+        }
+
         // ===== pilih tipe konsultasi =====
         if (is_null($reservasi_online->tipe_konsultasi_id)) {
             $this->chatBotLog(__LINE__);
@@ -3911,18 +3956,10 @@ class WablasController extends Controller
                 $input_tidak_tepat = true;
             }
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
-        // Skip kalau waitlist offer sedang menunggu jawaban
-        // (schedulled_booking=2, waitlist_flag=0). Tanpa guard ini,
-        // balasan "1" pada offer waitlist masuk ke $lanjut=true di
-        // line bawah lalu jatuh ke else non-schedulled (walk-in)
-        // sehingga pasien dapat antrian H biasa, bukan slot waitlist.
-        } elseif (
-            !$reservasi_online->reservasi_selesai
-            && !(
-                (int) $reservasi_online->schedulled_booking === 2
-                && (int) $reservasi_online->waitlist_flag === 0
-            )
-        ) {
+        // (Guard waitlist offer pending tidak perlu lagi di sini —
+        // top-level guard di awal prosesAntrianOnline sudah return
+        // duluan kalau state waitlist offer.)
+        } elseif (!$reservasi_online->reservasi_selesai) {
             $this->chatBotLog(__LINE__);
             if (!$reservasi_online->reservasi_selesai) {
                 $this->chatBotLog(__LINE__);
@@ -4018,46 +4055,10 @@ class WablasController extends Controller
                     $input_tidak_tepat = true;
                 }
             }
-        // ===== waitlist (ketika kuota penuh) =====
-        } elseif ((int) $reservasi_online->schedulled_booking === 2 && (int) $reservasi_online->waitlist_flag === 0) {
-            $this->chatBotLog(__LINE__);
-            if (in_array($msg, ['ya','y','1'], true)) {
-                $this->chatBotLog(__LINE__);
-                $reservasi_online->waitlist_flag = 1; // setuju waitlist
-                $reservasi_online->save();
-
-                $data                 = $reservasi_online->toArray();
-                unset($data['id']);
-                unset($data['pasien']);
-                unset($data['petugas_pemeriksa']);
-                unset($data['schedulled_reservation']);
-                $schedulled_reservation = SchedulledReservation::fromSourceArray($data);
-            } elseif (in_array($msg, ['tidak','t','2','no'], true)) {
-                // Tolak waitlist → hapus reservasi_online + kabari +
-                // bersihkan WhatsappBot supaya alur selanjutnya bersih.
-                $this->chatBotLog(__LINE__);
-                $reservasi_online->delete();
-                \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
-                $this->autoReply($this->pesanTolakWaitlistTawarkanDaftarSekarang());
-                return;
-            } else {
-                $this->chatBotLog(__LINE__);
-                $input_tidak_tepat = true;
-            }
         }
 
         // ===== pesan tindak lanjut (prompt berikutnya) =====
-        // Kolom waitlist_flag NOT NULL default 0, jadi pakai == 0
-        // (sebelumnya is_null → selalu false → tanyaGabungWaitlist
-        // tidak pernah fire saat pasien typo balas offer waitlist).
-        if (
-            (int)($reservasi_online->schedulled_booking ?? 0) === 2 &&
-            (int)($reservasi_online->waitlist_flag ?? 0) === 0
-        ) {
-            $this->chatBotLog(__LINE__);
-            $message = $this->tanyaGabungWaitlist();
-
-        } elseif (is_null($reservasi_online->tipe_konsultasi_id)) {
+        if (is_null($reservasi_online->tipe_konsultasi_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->pertanyaanPoliYangDituju();
 
@@ -6669,12 +6670,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             "Apakah Kakak mau masuk *waitlist* (daftar tunggu)?\n".
             "Balas *ya* untuk masuk\n";
             "Balas *batalkan* untuk membatalkan reservasi";
-    }
-
-    /** Prompt ulang jika user salah input di state waitlist */
-    protected function tanyaGabungWaitlist(): string
-    {
-        return "Kuota booking terjadwal sudah *penuh*.\nBalas *1/ya* untuk masuk *waitlist*, atau *2/tidak*.";
     }
 
     protected function pesanWaitlistTercatat($reservasi_online): string
