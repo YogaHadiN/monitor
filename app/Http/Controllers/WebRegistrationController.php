@@ -607,7 +607,7 @@ class WebRegistrationController extends Controller
             $alert_type    = 'alert-info';
         } else {
             $web_registration->delete();
-            $this->message = 'Reservasi dibatalkan';
+            $this->message = (new WablasController)->pesanTolakWaitlistTawarkanDaftarSekarang();
         }
 
         $message = view('web_registrations.message', [

@@ -4019,7 +4019,7 @@ class WablasController extends Controller
                 }
             }
         // ===== waitlist (ketika kuota penuh) =====
-        } elseif ($reservasi_online->schedulled_booking === 2 && $reservasi_online->waitlist_flag == 0) {
+        } elseif ((int) $reservasi_online->schedulled_booking === 2 && (int) $reservasi_online->waitlist_flag === 0) {
             $this->chatBotLog(__LINE__);
             if (in_array($msg, ['ya','y','1'], true)) {
                 $this->chatBotLog(__LINE__);
@@ -4032,6 +4032,14 @@ class WablasController extends Controller
                 unset($data['petugas_pemeriksa']);
                 unset($data['schedulled_reservation']);
                 $schedulled_reservation = SchedulledReservation::fromSourceArray($data);
+            } elseif (in_array($msg, ['tidak','t','2','no'], true)) {
+                // Tolak waitlist → hapus reservasi_online + kabari +
+                // bersihkan WhatsappBot supaya alur selanjutnya bersih.
+                $this->chatBotLog(__LINE__);
+                $reservasi_online->delete();
+                \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
+                $this->autoReply($this->pesanTolakWaitlistTawarkanDaftarSekarang());
+                return;
             } else {
                 $this->chatBotLog(__LINE__);
                 $input_tidak_tepat = true;
@@ -4039,9 +4047,12 @@ class WablasController extends Controller
         }
 
         // ===== pesan tindak lanjut (prompt berikutnya) =====
+        // Kolom waitlist_flag NOT NULL default 0, jadi pakai == 0
+        // (sebelumnya is_null → selalu false → tanyaGabungWaitlist
+        // tidak pernah fire saat pasien typo balas offer waitlist).
         if (
             (int)($reservasi_online->schedulled_booking ?? 0) === 2 &&
-            is_null($reservasi_online->waitlist_flag)
+            (int)($reservasi_online->waitlist_flag ?? 0) === 0
         ) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaGabungWaitlist();
@@ -6671,7 +6682,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         return "Siap, Kakak sudah kami masukkan ke *waitlist* untuk jadwal ini. Jika ada slot batal, kami hubungi secara *berurutan*. 🙏. Kode waitlist : " . $reservasi_online->id;
     }
 
-    protected function pesanTolakWaitlistTawarkanDaftarSekarang(): string
+    public function pesanTolakWaitlistTawarkanDaftarSekarang(): string
     {
         return "Baik, tidak masuk waitlist. Kakak kami persilahkan untuk mendaftar kembali di hari lain. untuk informasi detil silahkan ketik 'Jadwal Dokter Gigi'. Mohon maaf atas ketidaknyamanannya.";
     }
