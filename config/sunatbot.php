@@ -85,8 +85,15 @@ return [
         'tidak ada,tidak,gak ada,nggak ada,sudah jelas,udah jelas,cukup,sudah,udah,oke,ok,siap,baik,paham'
     ))))),
     // Validation ranges for usia/BB capture (proposal §7).
+    // usia_min/usia_max berlaku untuk usia dalam TAHUN. Bayi yang usianya
+    // disebut dalam BULAN (mis. "7 bln") divalidasi terhadap rentang
+    // usia_bulan_min/usia_bulan_max, dengan batas berat badan minimum yang
+    // lebih rendah (berat_badan_min_bayi) karena bayi lebih ringan.
     'usia_min'        => (int)   env('SUNATBOT_USIA_MIN', 1),
     'usia_max'        => (int)   env('SUNATBOT_USIA_MAX', 18),
+    'usia_bulan_min'  => (int)   env('SUNATBOT_USIA_BULAN_MIN', 1),
+    'usia_bulan_max'  => (int)   env('SUNATBOT_USIA_BULAN_MAX', 36),
     'berat_badan_min' => (float) env('SUNATBOT_BERAT_BADAN_MIN', 5),
+    'berat_badan_min_bayi' => (float) env('SUNATBOT_BERAT_BADAN_MIN_BAYI', 2.5),
     'berat_badan_max' => (float) env('SUNATBOT_BERAT_BADAN_MAX', 100),
 ];

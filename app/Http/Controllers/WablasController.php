@@ -112,6 +112,7 @@ class WablasController extends Controller
     public $chats_users_id = null;
     public $chats_bot_id = null;
     public $filename = null;
+    public $inbound_message = null;
 
     public function __construct()
     {
@@ -419,6 +420,29 @@ class WablasController extends Controller
             }
             // ===== SUNAT BOT END =====
 
+            // ===== ARSIP SEMUA PESAN MASUK START =====
+            // Simpan setiap pesan masuk (pesan sunat bot sudah di-handle &
+            // return di atas). Pesan yang sedang berada dalam percakapan
+            // "chat admin" diberi chat_admin = 1 agar tampil di panel chat;
+            // pesan lain diberi chat_admin = 0 — tetap tersimpan untuk
+            // arsip namun tidak ditampilkan, dan dihapus otomatis setelah
+            // 50 hari oleh command messages:prune-non-admin.
+            $dalamChatAdmin = $this->noTelpDalamChatWithAdmin();
+            $this->inbound_message = Message::create([
+                'no_telp'       => $this->no_telp,
+                'message'       => $this->message,
+                'tanggal'       => date('Y-m-d H:i:s'),
+                'image_url'     => $this->image_url,
+                'video_url'     => $this->video_url,
+                'audio_url'     => $this->audio_url,
+                'sending'       => 0,
+                'sudah_dibalas' => $dalamChatAdmin ? 0 : 1,
+                'tenant_id'     => 1,
+                'touched'       => 0,
+                'chat_admin'    => $dalamChatAdmin ? 1 : 0,
+            ]);
+            // ===== ARSIP SEMUA PESAN MASUK END =====
+
             $date_now = date('Y-m-d H:i:s');
             if (
                 strtotime ($date_now) < strtotime( '2026-03-23 07:00:00'  )
@@ -464,16 +488,6 @@ class WablasController extends Controller
                     return false;
                 } else if (str_contains( $this->message ,'jadwal usg' )) {
                     $this->chatBotLog(__LINE__);
-                    Message::create([
-                        'no_telp'       => $this->no_telp,
-                        'message'       => $this->message,
-                        'tanggal'       => date("Y-m-d H:i:s"),
-                        'sending'       => 0,
-                        'sudah_dibalas' => 1,
-                        'tenant_id'     => 1,
-                        'touched'       => 0
-                    ]);
-
                     $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(4);
                     Message::create([
                         'no_telp'       => $this->no_telp,
@@ -491,16 +505,6 @@ class WablasController extends Controller
                     return false;
                 } else if (str_contains( $this->message ,'jadwal dokter gigi' )) {
                     $this->chatBotLog(__LINE__);
-                    Message::create([
-                        'no_telp'       => $this->no_telp,
-                        'message'       => $this->message,
-                        'tanggal'       => date("Y-m-d H:i:s"),
-                        'sending'       => 0,
-                        'sudah_dibalas' => 1,
-                        'tenant_id'     => 1,
-                        'touched'       => 0
-                    ]);
-
                     $pesan = $this->queryJadwalKonsultasiByTipeKonsultasi(2);
                     Message::create([
                         'no_telp'       => $this->no_telp,
@@ -541,6 +545,13 @@ class WablasController extends Controller
                        $message = $this->registerChatAdmin();
                        if (!is_null( $message )) {
                            return $message;
+                       }
+                       // Pesan ini yang memicu chat admin — tandai sebagai
+                       // bagian percakapan admin agar tampil di panel chat.
+                       if ( !is_null( $this->inbound_message ) ) {
+                           $this->inbound_message->chat_admin    = 1;
+                           $this->inbound_message->sudah_dibalas = 0;
+                           $this->inbound_message->save();
                        }
                        return $this->createWhatsappChat(); // buat pesan message
                     }
@@ -5463,21 +5474,16 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     public function createWhatsappChat(){
         if ( !is_null( $this->message ) ) {
 
+            // Pesan masuk sudah diarsipkan di awal webhook() (chat_admin = 1
+            // saat dalam percakapan admin). Di sini cukup cek apakah ada
+            // pesan LAIN dalam sesi ini untuk menentukan kiriman greeting
+            // antrian — kecualikan baris pesan yang baru saja disimpan.
             $message_hari_ini = Message::where('no_telp', $this->no_telp)
                                 ->where('created_at', '>', $this->whatsapp_bot->created_at)
+                                ->when(!is_null($this->inbound_message), function($q){
+                                    $q->where('id', '!=', $this->inbound_message->id);
+                                })
                                 ->first();
-            Message::create([
-                'no_telp'       => $this->no_telp,
-                'message'       => $this->message,
-                'tanggal'       => date("Y-m-d H:i:s"),
-                'image_url'     => $this->image_url,
-                'video_url'     => $this->video_url,
-                'audio_url'     => $this->audio_url,
-                'sending'       => 0,
-                'sudah_dibalas' => 0,
-                'tenant_id'     => 1,
-                'touched'       => 0
-            ]);
 
             event(new RefreshDiscussion( $this->no_telp ));
             event(new RefreshChat());

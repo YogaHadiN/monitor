@@ -323,7 +323,7 @@ class SunatBotEngine
         // skip step 2.3). Single AI call per turn — no extra latency.
         $needUsiaBB = $session->getData('usia_bb') === null;
 
-        $usiaDesc = 'usia anak dalam tahun, hanya angka integer (1-18). string kosong kalau tidak disebut.';
+        $usiaDesc = 'usia anak beserta satuannya apa adanya, mis. "7 bulan" atau "5 tahun" (bayi boleh dalam bulan). string kosong kalau tidak disebut.';
         $bbDesc   = 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.';
 
         if ($field === 'usia_bb') {
@@ -371,24 +371,88 @@ class SunatBotEngine
      */
     private function trySetUsiaBB(BotSession $session, string $usiaRaw, string $bbRaw, string $rawMessage): void
     {
-        $usiaMin = (int)   config('sunatbot.usia_min', 1);
-        $usiaMax = (int)   config('sunatbot.usia_max', 18);
-        $bbMin   = (float) config('sunatbot.berat_badan_min', 5);
-        $bbMax   = (float) config('sunatbot.berat_badan_max', 100);
+        $usiaMin      = (int)   config('sunatbot.usia_min', 1);
+        $usiaMax      = (int)   config('sunatbot.usia_max', 18);
+        $usiaBulanMin = (int)   config('sunatbot.usia_bulan_min', 1);
+        $usiaBulanMax = (int)   config('sunatbot.usia_bulan_max', 36);
+        $bbMin        = (float) config('sunatbot.berat_badan_min', 5);
+        $bbMinBayi    = (float) config('sunatbot.berat_badan_min_bayi', 2.5);
+        $bbMax        = (float) config('sunatbot.berat_badan_max', 100);
 
-        $usia = $this->parseInt($usiaRaw);
-        $bb   = $this->parseFloat($bbRaw);
+        // Usia bisa disebut dalam tahun ("5 thn") atau bulan ("7 bln").
+        // Klinik melayani sunat bayi, jadi usia dalam bulan tetap valid.
+        $usiaParsed = $this->parseUsia($usiaRaw, $rawMessage);
+        $bb         = $this->parseBeratBadan($bbRaw, $rawMessage);
 
-        if ($usia === null || $bb === null) {
+        if ($usiaParsed === null || $bb === null) {
             return; // missing — bot will ask in step 2.3
         }
-        if ($usia < $usiaMin || $usia > $usiaMax || $bb < $bbMin || $bb > $bbMax) {
+
+        [$usiaValue, $usiaUnit] = $usiaParsed;
+
+        if ($bb > $bbMax) {
             return; // out of range — bot will re-ask via validasi_ulang_usia_bb
         }
+        if ($usiaUnit === 'bulan') {
+            if ($usiaValue < $usiaBulanMin || $usiaValue > $usiaBulanMax || $bb < $bbMinBayi) {
+                return;
+            }
+        } else {
+            if ($usiaValue < $usiaMin || $usiaValue > $usiaMax || $bb < $bbMin) {
+                return;
+            }
+        }
 
-        $session->setData('usia_anak', $usia);
+        $session->setData('usia_anak', $usiaValue);
+        $session->setData('usia_anak_satuan', $usiaUnit);
         $session->setData('berat_badan_anak', $bb);
-        $session->setData('usia_bb', trim($rawMessage) !== '' ? trim($rawMessage) : "{$usia} tahun, {$bb} kg");
+        $session->setData('usia_bb', trim($rawMessage) !== '' ? trim($rawMessage) : "{$usiaValue} {$usiaUnit}, {$bb} kg");
+    }
+
+    /**
+     * Tentukan usia + satuan ('tahun' | 'bulan') dari teks. Mencari angka
+     * yang diikuti satuan (mis. "7 bln", "5 tahun") pada nilai hasil
+     * ekstraksi AI lebih dulu, lalu pesan mentah. Bila tidak ada satuan,
+     * angka dianggap tahun (perilaku lama). Return null kalau tak ada angka.
+     */
+    private function parseUsia(string $usiaRaw, string $rawMessage): ?array
+    {
+        foreach ([$usiaRaw, $rawMessage] as $hay) {
+            $hay = mb_strtolower(trim($hay));
+            if ($hay === '') {
+                continue;
+            }
+            if (preg_match('/(\d+)\s*(?:bln|bulan|bulanan)\b/u', $hay, $m)) {
+                return [(int) $m[1], 'bulan'];
+            }
+            if (preg_match('/(\d+)\s*(?:thn|tahun|taun|th)\b/u', $hay, $m)) {
+                return [(int) $m[1], 'tahun'];
+            }
+        }
+
+        // Tidak ada satuan eksplisit — anggap angka sebagai tahun.
+        $usia = $this->parseInt($usiaRaw);
+        if ($usia !== null) {
+            return [$usia, 'tahun'];
+        }
+        return null;
+    }
+
+    /**
+     * Ambil berat badan (kg) dari hasil ekstraksi AI; bila kosong, coba
+     * cari angka berunit "kg" pada pesan mentah (mis. "... 10 kg").
+     */
+    private function parseBeratBadan(string $bbRaw, string $rawMessage): ?float
+    {
+        $bb = $this->parseFloat($bbRaw);
+        if ($bb !== null) {
+            return $bb;
+        }
+        $hay = mb_strtolower(str_replace(',', '.', $rawMessage));
+        if (preg_match('/(\d+(?:\.\d+)?)\s*(?:kg|kilo|kilogram)\b/u', $hay, $m)) {
+            return (float) $m[1];
+        }
+        return null;
     }
 
     private function hasValidUsiaBB(BotSession $session): bool
