@@ -18,6 +18,14 @@ use App\Http\Controllers\BarantumWebhookController;
 
 Route::post('/barantum/webhook', [BarantumWebhookController::class, 'handle']);
 
+// Webhook ingress untuk notifikasi email mutasi bank dari Lambda
+// (AWS SES inbound). Signature HMAC-SHA256 diverifikasi middleware
+// dulu — raw body harus utuh, jangan tambahkan middleware lain yang
+// memodifikasi/mem-parse body sebelum signature dicek.
+Route::post('webhooks/mutasi', [\App\Http\Controllers\MutasiWebhookController::class, 'store'])
+    ->middleware('verify.mutasi.signature')
+    ->name('webhooks.mutasi');
+
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
 /* Route::get('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
 /* Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */

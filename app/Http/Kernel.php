@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'bukan_blokir' => \Illuminate\Auth\Middleware\PastikanBukanNomorBlokir::class,
         'log_antrian_online' => \App\Http\Middleware\LogAntrianOnlineApi::class,
+        'verify.mutasi.signature' => \App\Http\Middleware\VerifyMutasiSignature::class,
     ];
 }
