@@ -4,6 +4,8 @@ namespace App\Services\SunatBot;
 
 use App\Models\BotIntent;
 use App\Models\BotSession;
+use App\Models\JadwalSunat;
+use App\Models\JadwalSunatBlackout;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -49,8 +51,23 @@ class SunatBotEngine
      * the handover bubble. Used for booking/scheduling intents that
      * the bot cannot fulfil.
      */
+    /**
+     * Intent yang sebelumnya escalate ke admin — sekarang
+     * `mau_booking_jadwal` masuk ke booking flow internal (lihat
+     * enterBookingFlow + processBookingTurn). Const tetap ada supaya
+     * gampang menambah intent escalation lain di masa depan.
+     */
     private const ESCALATION_INTENTS = [
-        'mau_booking_jadwal',
+    ];
+
+    /**
+     * Slot jam booking sunat — mirror dari JadwalSunatController::slotJamList
+     * di atika (single source: keduanya hardcoded sama agar bot tidak
+     * butuh cross-app HTTP call). Update di SATU tempat kalau berubah.
+     */
+    private const BOOKING_JAM_SLOTS = [
+        '07:00', '08:00', '09:00', '10:00', '11:00',
+        '13:00', '14:00', '15:00', '16:00', '17:00',
     ];
 
     private const FIELD_DESCRIPTIONS = [
@@ -109,15 +126,16 @@ class SunatBotEngine
             ];
         }
 
-        // Booking / scheduling intent — same deterministic short-circuit
-        // as admin keyword. Customers ready to book go straight to the
-        // admin queue; the bot does not handle scheduling or payments.
-        // Looser phrasing still gets caught by the mau_booking_jadwal
-        // AI intent inside classifyAndRespond as a fallback.
+        // Booking / scheduling intent — masuk booking flow internal
+        // (state machine 4 langkah: tanggal → jam → nama anak →
+        // konfirmasi → INSERT jadwal_sunats). Looser phrasing via AI
+        // ditangani classifyAndRespond.
         if ($session && !$session->is_complete && $this->isBookingKeyword($msgLower)) {
+            $session->last_activity_at = Carbon::now();
+            $session->save();
             return [
                 'handled' => true,
-                'replies' => $this->escalate($session),
+                'replies' => $this->enterBookingFlow($session),
             ];
         }
 
@@ -147,7 +165,13 @@ class SunatBotEngine
         }
 
         if ($session->expecting_field !== null) {
-            $replies = array_merge($replies, $this->processHargaTurn($session, $msg));
+            // Router: booking_* → state machine booking; selain itu →
+            // harga flow yang sudah ada.
+            if (str_starts_with((string) $session->expecting_field, 'booking_')) {
+                $replies = array_merge($replies, $this->processBookingTurn($session, $msg));
+            } else {
+                $replies = array_merge($replies, $this->processHargaTurn($session, $msg));
+            }
         } else {
             $replies = array_merge($replies, $this->classifyAndRespond($session, $msg, $justCreated));
         }
@@ -209,6 +233,12 @@ class SunatBotEngine
         $replies        = [];
         $hargaTriggered = false;
         foreach ($intents as $slug) {
+            if ($slug === 'mau_booking_jadwal') {
+                // AI mendeteksi niat booking → masuk booking flow internal
+                // (bukan escalate). Tidak render template intent ini
+                // (acknowledgement-nya digantikan oleh booking_tanya_tanggal).
+                return $this->enterBookingFlow($session);
+            }
             if (in_array($slug, self::ESCALATION_INTENTS, true)) {
                 // AI matched a slug whose semantic is "ready to book /
                 // register" — short-circuit the rest of the loop, emit
@@ -497,6 +527,285 @@ class SunatBotEngine
             $replies   = array_merge($replies, $this->renderIntent($slug, $session));
         }
         return $replies;
+    }
+
+    // =====================================================================
+    // BOOKING FLOW
+    // State machine 4 langkah: booking_tanggal → booking_jam →
+    // booking_nama_anak → booking_konfirmasi. Setelah konfirmasi YA,
+    // baris jadwal_sunats di-INSERT (status=BOOKED) dan session di-mark
+    // is_complete. Validasi mirror JadwalSunatController di atika
+    // (slot resmi, blackout, konflik booking).
+    // =====================================================================
+
+    /**
+     * Mulai booking flow. Set expecting_field=booking_tanggal dan
+     * kirim pertanyaan tanggal sebagai pertanyaan pertama.
+     */
+    private function enterBookingFlow(BotSession $session): array
+    {
+        $session->expecting_field = 'booking_tanggal';
+        $session->save();
+        return $this->renderIntent('booking_tanya_tanggal', $session);
+    }
+
+    /**
+     * Router state machine booking. Dispatch ke handler per step
+     * berdasarkan expecting_field.
+     */
+    private function processBookingTurn(BotSession $session, string $message): array
+    {
+        $field = (string) $session->expecting_field;
+        $msg   = trim($message);
+
+        // Customer batal di mana saja → tutup flow.
+        if (in_array(mb_strtolower($msg), ['batal', 'cancel', 'batalkan'], true)) {
+            $session->expecting_field = null;
+            $session->save();
+            return $this->renderIntent('booking_dibatalkan', $session);
+        }
+
+        switch ($field) {
+            case 'booking_tanggal':    return $this->handleBookingTanggal($session, $msg);
+            case 'booking_jam':        return $this->handleBookingJam($session, $msg);
+            case 'booking_nama_anak':  return $this->handleBookingNamaAnak($session, $msg);
+            case 'booking_konfirmasi': return $this->handleBookingKonfirmasi($session, $msg);
+        }
+
+        // Field tidak dikenali — fallback aman, escalate.
+        return $this->escalate($session);
+    }
+
+    private function handleBookingTanggal(BotSession $session, string $msg): array
+    {
+        $tanggal = $this->parseBookingDate($msg);
+        if ($tanggal === null) {
+            return $this->renderIntent('booking_tanggal_invalid', $session);
+        }
+
+        // Tanggal harus hari ini atau di masa depan.
+        if ($tanggal->lt(Carbon::today())) {
+            return $this->renderIntent('booking_tanggal_invalid', $session);
+        }
+
+        // Cek blackout full-day. Blackout partial (blocked_slots) dicek
+        // saat pilih jam.
+        $blackout = $this->blackoutForDate($tanggal->format('Y-m-d'));
+        if ($blackout !== null && empty($blackout->blocked_slots)) {
+            return $this->renderIntent('booking_tanggal_invalid', $session);
+        }
+
+        $session->setData('booking_tanggal', $tanggal->format('Y-m-d'));
+        $session->expecting_field = 'booking_jam';
+        return $this->renderIntent('booking_tanya_jam', $session);
+    }
+
+    private function handleBookingJam(BotSession $session, string $msg): array
+    {
+        $jam = $this->parseBookingJam($msg);
+        $tanggalStr = (string) $session->getData('booking_tanggal');
+
+        if ($jam === null || $tanggalStr === '') {
+            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+        }
+
+        // Cek blackout partial untuk jam ini.
+        $blackout = $this->blackoutForDate($tanggalStr);
+        if ($blackout !== null && is_array($blackout->blocked_slots)
+            && in_array($jam, $blackout->blocked_slots, true)) {
+            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+        }
+
+        // Konflik: slot sudah dibooking di tanggal yang sama.
+        $taken = JadwalSunat::where('tanggal', $tanggalStr)
+            ->where('jam', $jam . ':00')
+            ->where('status', 'BOOKED')
+            ->exists();
+        if ($taken) {
+            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+        }
+
+        $session->setData('booking_jam', $jam);
+        $session->expecting_field = 'booking_nama_anak';
+        return $this->renderIntent('booking_tanya_nama_anak', $session);
+    }
+
+    private function handleBookingNamaAnak(BotSession $session, string $msg): array
+    {
+        $nama = trim($msg);
+        if ($nama === '') {
+            return $this->renderIntent('booking_tanya_nama_anak', $session);
+        }
+        // Batasi panjang biar tidak masuk paragraf panjang.
+        if (mb_strlen($nama) > 100) {
+            $nama = mb_substr($nama, 0, 100);
+        }
+
+        $session->setData('booking_nama_anak', $nama);
+        $session->expecting_field = 'booking_konfirmasi';
+        return $this->renderIntent('booking_konfirmasi', $session);
+    }
+
+    private function handleBookingKonfirmasi(BotSession $session, string $msg): array
+    {
+        $lower = mb_strtolower(trim($msg));
+
+        if (in_array($lower, ['ya', 'iya', 'iy', 'y', 'oke', 'ok', 'konfirmasi', 'lanjutkan', 'lanjut'], true)) {
+            return $this->finalizeBooking($session);
+        }
+        if (in_array($lower, ['tidak', 'tdk', 'no', 'gak', 'gakjadi', 'gak jadi', 'batal'], true)) {
+            $session->expecting_field = null;
+            $session->save();
+            return $this->renderIntent('booking_dibatalkan', $session);
+        }
+        // Tidak dimengerti — ulang konfirmasi.
+        return $this->renderIntent('booking_konfirmasi', $session);
+    }
+
+    /**
+     * INSERT jadwal_sunats + kirim bubble sukses. Validasi konflik
+     * terakhir (race-condition safety) sebelum benar-benar insert.
+     */
+    private function finalizeBooking(BotSession $session): array
+    {
+        $tanggalStr = (string) $session->getData('booking_tanggal');
+        $jam        = (string) $session->getData('booking_jam');
+        $namaAnak   = (string) $session->getData('booking_nama_anak');
+
+        if ($tanggalStr === '' || $jam === '' || $namaAnak === '') {
+            // Data tidak lengkap — escalate biar admin handle.
+            $session->expecting_field = null;
+            return $this->escalate($session);
+        }
+
+        // Race-safety: cek konflik ulang sebelum insert.
+        $taken = JadwalSunat::where('tanggal', $tanggalStr)
+            ->where('jam', $jam . ':00')
+            ->where('status', 'BOOKED')
+            ->exists();
+        if ($taken) {
+            $session->setData('booking_jam', null);
+            $session->expecting_field = 'booking_jam';
+            $session->save();
+            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+        }
+
+        try {
+            JadwalSunat::create([
+                'tenant_id'   => 1,
+                'pasien_id'   => null,
+                'tanggal'     => $tanggalStr,
+                'jam'         => $jam . ':00',
+                'status'      => 'BOOKED',
+                'nama_pasien' => $namaAnak,
+                'no_telp'     => (string) $session->no_telp,
+                'catatan'     => 'Booking via SunatBot',
+                'created_by'  => null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('SUNAT_BOOKING_INSERT_FAILED', [
+                'no_telp'  => $session->no_telp,
+                'tanggal'  => $tanggalStr,
+                'jam'      => $jam,
+                'error'    => $e->getMessage(),
+            ]);
+            $session->expecting_field = null;
+            return $this->escalate($session);
+        }
+
+        // Sukses — tutup booking flow & session.
+        $session->expecting_field  = null;
+        $session->is_complete      = true;
+        $session->last_activity_at = Carbon::now();
+        $session->save();
+
+        Log::info('SUNAT_BOOKING_CREATED', [
+            'no_telp' => $session->no_telp,
+            'tanggal' => $tanggalStr,
+            'jam'     => $jam,
+            'nama'    => $namaAnak,
+        ]);
+
+        return $this->renderIntent('booking_sukses', $session);
+    }
+
+    /**
+     * Parse berbagai format tanggal yang biasa diketik customer:
+     *   - "15 Juni 2026" (Indonesian)
+     *   - "15/06/2026" atau "15-06-2026"
+     *   - "2026-06-15"
+     *   - "besok", "lusa" (kata waktu sederhana)
+     * Return Carbon (start of day) atau null bila tidak dikenali.
+     */
+    private function parseBookingDate(string $raw): ?Carbon
+    {
+        $raw = trim($raw);
+        if ($raw === '') return null;
+
+        $lower = mb_strtolower($raw);
+        if ($lower === 'hari ini' || $lower === 'today') return Carbon::today();
+        if ($lower === 'besok'    || $lower === 'tomorrow') return Carbon::tomorrow();
+        if ($lower === 'lusa')                              return Carbon::today()->addDays(2);
+
+        // Replace nama bulan Indonesia (full word, case-insensitive) → English.
+        // Pakai word-boundary regex supaya abbreviation tidak korup hasil
+        // (mis. "Juni" jadi "June" lalu "Jun" → "Junee"). Carbon::parse
+        // sudah handle abbreviation English ("Jun", "Jul", dst) natif.
+        $idMonths = [
+            'januari' => 'January',  'februari' => 'February', 'maret'    => 'March',
+            'april'   => 'April',    'mei'      => 'May',      'juni'     => 'June',
+            'juli'    => 'July',     'agustus'  => 'August',   'september'=> 'September',
+            'oktober' => 'October',  'november' => 'November', 'desember' => 'December',
+        ];
+        $pattern    = '/\b(' . implode('|', array_keys($idMonths)) . ')\b/iu';
+        $normalized = preg_replace_callback($pattern, function ($m) use ($idMonths) {
+            return $idMonths[mb_strtolower($m[1])] ?? $m[0];
+        }, $raw);
+
+        try {
+            return Carbon::parse((string) $normalized)->startOfDay();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Parse pilihan jam: terima "07:00"–"17:00", "1"–"10" (urutan
+     * dari BOOKING_JAM_SLOTS), atau "07"/"7" (single hour).
+     * Return string "HH:MM" yang ada di slot resmi, atau null.
+     */
+    private function parseBookingJam(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '') return null;
+
+        // Angka 1-10 → index.
+        if (preg_match('/^([1-9]|10)$/', $raw, $m)) {
+            $idx = (int) $m[1] - 1;
+            return self::BOOKING_JAM_SLOTS[$idx] ?? null;
+        }
+        // "07:00" atau "07.00" / "07" / "7".
+        if (preg_match('/^(\d{1,2})[:.]?(\d{0,2})$/', $raw, $m)) {
+            $h = str_pad((string) ((int) $m[1]), 2, '0', STR_PAD_LEFT);
+            $candidate = $h . ':00';
+            if (in_array($candidate, self::BOOKING_JAM_SLOTS, true)) {
+                return $candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Ambil blackout aktif untuk tanggal tertentu (atika
+     * JadwalSunatController::blackoutForDate equivalent).
+     */
+    private function blackoutForDate(string $tanggal): ?JadwalSunatBlackout
+    {
+        return JadwalSunatBlackout::where('tenant_id', 1)
+            ->whereDate('start_date', '<=', $tanggal)
+            ->whereDate('end_date',   '>=', $tanggal)
+            ->latest('id')
+            ->first();
     }
 
     /**
@@ -807,12 +1116,34 @@ class SunatBotEngine
         $rona   = (string) config('sunatbot.nomor_rona', '');
         $nama   = (string) ($session->getData('nama_orang_tua') ?? $session->getData('nama') ?? '');
 
+        // Booking placeholders. Tanggal di-format ke Bahasa Indonesia
+        // (mis. "15 Juni 2026") biar enak dibaca customer.
+        $bookingTanggalRaw = (string) ($session->getData('booking_tanggal') ?? '');
+        $bookingTanggalDisplay = '';
+        if ($bookingTanggalRaw !== '') {
+            try {
+                $dt = Carbon::parse($bookingTanggalRaw);
+                $idMonths = [
+                    1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
+                    7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember',
+                ];
+                $bookingTanggalDisplay = $dt->day . ' ' . $idMonths[(int) $dt->month] . ' ' . $dt->year;
+            } catch (\Throwable $e) {
+                $bookingTanggalDisplay = $bookingTanggalRaw;
+            }
+        }
+        $bookingJam      = (string) ($session->getData('booking_jam') ?? '');
+        $bookingNamaAnak = (string) ($session->getData('booking_nama_anak') ?? '');
+
         $replacements = [
             '[NAMA]'          => $nama !== '' ? ucwords($nama) : 'kak',
             '[ALAMAT_KLINIK]' => $alamat,
             '[LINK_MAPS]'     => $maps,
             '[NOMOR_RONA]'    => $rona,
             '{{nama}}'        => $nama !== '' ? ucwords($nama) : 'kak',
+            '{{tanggal}}'     => $bookingTanggalDisplay,
+            '{{jam}}'         => $bookingJam,
+            '{{nama_anak}}'   => $bookingNamaAnak !== '' ? ucwords($bookingNamaAnak) : '',
         ];
 
         return strtr($template, $replacements);
