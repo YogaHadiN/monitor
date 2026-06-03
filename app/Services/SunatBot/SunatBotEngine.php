@@ -1140,22 +1140,27 @@ class SunatBotEngine
         'Tgl', 'Th', 'a.n', 'u.p', 'd.a', 'ttd',
     ];
 
+    /**
+     * Sebelumnya splitter memecah teks pada (a) titik kalimat dan
+     * (b) setiap newline — yang membuat list bernomor "1. 07:00" jadi
+     * 2 bubble, dan konfirmasi multi-baris berhamburan. Sekarang
+     * kirim seluruh template sebagai SATU bubble (whitespace + newline
+     * tetap apa adanya). Marker eksplisit `[BUBBLE]` boleh dipakai
+     * di template kalau memang butuh dipecah menjadi multi-bubble.
+     */
     private function splitText(string $text): array
     {
-        $marker = "\x01DOT\x01";
-        $masked = $text;
-        foreach (self::ABBREV as $abr) {
-            $masked = preg_replace('/\b' . preg_quote($abr, '/') . '\.(?=\s|$)/u', $abr . $marker, $masked);
+        $text = trim($text);
+        if ($text === '') {
+            return [];
         }
-
-        $parts = preg_split('/(?<=[.!?])\s+(?=\S)|\n+/u', $masked);
+        $parts = preg_split('/\s*\[BUBBLE\]\s*/u', $text);
         $out = [];
-        foreach ($parts as $p) {
-            $p = str_replace($marker, '.', (string) $p);
-            $p = trim($p);
+        foreach ((array) $parts as $p) {
+            $p = trim((string) $p);
             if ($p !== '') $out[] = $p;
         }
-        return $out;
+        return $out ?: [$text];
     }
 
     private function substituteVariables(string $template, BotSession $session): string
