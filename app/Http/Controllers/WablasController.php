@@ -260,6 +260,36 @@ class WablasController extends Controller
             return;
         }
 
+        // Phase D opt-out: deteksi paling dini supaya tidak ke-intercept
+        // oleh sunat bot buffer block di bawah (yang return early bila
+        // BotSession aktif). Customer tap button "Jangan kirim lagi" /
+        // ketik "stop" → langsung set opt_out + stop sisa follow-up +
+        // ack reply, dan hentikan webhook. Bot tidak akan kirim apapun
+        // selain ack opt-out.
+        if (!is_null($this->message) && !is_null($this->no_telp)) {
+            $earlyAction = $this->detectSunatFollowupButton($this->message);
+            if ($earlyAction === 'opt_out') {
+                // Simpan pesan inbound dulu di chat history (opt-out
+                // adalah bagian percakapan sunat — chat_sunat=1).
+                Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $this->message,
+                    'tanggal'       => date('Y-m-d H:i:s'),
+                    'image_url'     => $this->image_url,
+                    'video_url'     => $this->video_url,
+                    'audio_url'     => $this->audio_url,
+                    'sending'       => 0,
+                    'sudah_dibalas' => 1,
+                    'tenant_id'     => 1,
+                    'touched'       => 0,
+                    'chat_admin'    => 0,
+                    'chat_sunat'    => 1,
+                ]);
+                $this->handleSunatFollowupOptOut((string) $this->no_telp);
+                return;
+            }
+        }
+
         if ( !is_null( $this->no_telp ) ) {
             $no_telp = NoTelp::firstOrCreate([
                 'no_telp' => $this->no_telp,
