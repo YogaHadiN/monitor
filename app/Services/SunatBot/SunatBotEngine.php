@@ -691,7 +691,7 @@ class SunatBotEngine
         }
 
         try {
-            JadwalSunat::create([
+            $row = JadwalSunat::create([
                 'tenant_id'   => 1,
                 'pasien_id'   => null,
                 'tanggal'     => $tanggalStr,
@@ -726,7 +726,56 @@ class SunatBotEngine
             'nama'    => $namaAnak,
         ]);
 
+        // Notif WA ke operator/admin (nomor terpisah dari pasien). Pesan
+        // ke pasien sendiri di-handle oleh bubble booking_sukses yang
+        // di-return ke caller.
+        $this->notifyOperatorBooking($row);
+
         return $this->renderIntent('booking_sukses', $session);
+    }
+
+    /**
+     * Kirim notifikasi ke admin/operator (default 6281381912803) saat
+     * booking baru dibuat lewat sunat bot — mirror perilaku
+     * JadwalSunatController::store di atika. Gagalnya kirim DIAM (log
+     * warning only) supaya tidak rollback booking yang sudah berhasil.
+     */
+    private function notifyOperatorBooking(JadwalSunat $row): void
+    {
+        $operator = (string) config('sunatbot.nomor_operator', '6281381912803');
+        if ($operator === '') {
+            return;
+        }
+
+        try {
+            $idMonths = [
+                1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
+                7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember',
+            ];
+            $tgl       = Carbon::parse($row->tanggal);
+            $tglFormat = $tgl->day . ' ' . $idMonths[(int) $tgl->month] . ' ' . $tgl->year;
+
+            $msg = implode("\n", [
+                '📌 *BOOKING SUNAT BARU (SunatBot)*',
+                '',
+                'Nama Pasien : ' . $row->nama_pasien,
+                'Tanggal     : ' . $tglFormat,
+                'Jam         : ' . substr((string) $row->jam, 0, 5),
+                'No. HP      : ' . $row->no_telp,
+                '',
+                'Catatan:',
+                $row->catatan ?: '-',
+                '',
+                '🧑‍⚕️ Mohon dipersiapkan tindakan.',
+            ]);
+
+            (new \App\Http\Controllers\WablasController())->sendSingle($operator, $msg);
+        } catch (\Throwable $e) {
+            Log::warning('SUNAT_BOOKING_OPERATOR_NOTIFY_FAIL', [
+                'jadwal_id' => $row->id ?? null,
+                'error'     => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
