@@ -493,9 +493,26 @@ class SunatBotEngine
         $session->expecting_field = 'pertanyaan_lanjutan';
         $replies = [];
         foreach (self::HARGA_CLOSING as $slug) {
-            $replies = array_merge($replies, $this->renderIntent($slug, $session));
+            $slug      = $this->resolveHargaSlug($slug);
+            $replies   = array_merge($replies, $this->renderIntent($slug, $session));
         }
         return $replies;
+    }
+
+    /**
+     * Swap quote_harga_paket → quote_harga_paket_promo bila intent
+     * promo aktif (active=1) di tabel bot_intents. Toggle promo via
+     * `php artisan sunatbot:promo on|off` di sisi monitor.
+     */
+    private function resolveHargaSlug(string $slug): string
+    {
+        if ($slug !== 'quote_harga_paket') {
+            return $slug;
+        }
+        $promoActive = \App\Models\BotIntent::where('intent', 'quote_harga_paket_promo')
+            ->where('active', 1)
+            ->exists();
+        return $promoActive ? 'quote_harga_paket_promo' : $slug;
     }
 
     /**
