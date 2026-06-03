@@ -406,7 +406,15 @@ class WablasController extends Controller
                         'tenant_id'      => 1,
                         'touched'        => 0,
                         'flagged_intent' => 'sunat_bot',
+                        'chat_sunat'     => 1,
                     ]);
+                    // Dispatch push notif untuk pesan sunat buffer juga.
+                    \App\Jobs\DispatchPushTrigger::dispatch(
+                        'Chat sunat — '.$this->no_telp,
+                        mb_substr((string) $this->message, 0, 200),
+                        '/chat_sunats/'.$this->no_telp,
+                        'sunat-'.$this->no_telp,
+                    );
                     return;
                 } catch (\Throwable $bufErr) {
                     // On buffer/dispatch failure fall through to the
@@ -428,6 +436,10 @@ class WablasController extends Controller
             // arsip namun tidak ditampilkan, dan dihapus otomatis setelah
             // 50 hari oleh command messages:prune-non-admin.
             $dalamChatAdmin = $this->noTelpDalamChatWithAdmin();
+            // Nomor yang punya entry di bot_sessions = sudah/sedang dalam
+            // alur sunat bot. Semua pesannya dianggap chat sunat — dipakai
+            // halaman /chat_sunats + scope notifikasi PWA.
+            $dalamChatSunat = \App\Models\BotSession::where('no_telp', (string) $this->no_telp)->exists();
             $this->inbound_message = Message::create([
                 'no_telp'       => $this->no_telp,
                 'message'       => $this->message,
@@ -440,19 +452,20 @@ class WablasController extends Controller
                 'tenant_id'     => 1,
                 'touched'       => 0,
                 'chat_admin'    => $dalamChatAdmin ? 1 : 0,
+                'chat_sunat'    => $dalamChatSunat ? 1 : 0,
             ]);
 
-            // Dispatch push notif ke PWA atika kalau pesan ini bagian dari
-            // sesi chat admin (chat_admin=1, sending=0). Pakai job (queue
-            // pasien-queue) supaya webhook tidak blocking jaringan HTTP ke
-            // atika. Tag = nomor → notif baru collapse yang lama supaya
-            // tidak spam iPhone saat customer kirim cepat berturut-turut.
-            if ($dalamChatAdmin) {
+            // Dispatch push notif ke PWA atika kalau pesan ini bagian
+            // alur sunat (chat_sunat=1). Sesi chat admin biasa TIDAK
+            // memicu notif (per requirement). Tag = nomor → notif baru
+            // collapse yang lama supaya tidak spam saat customer kirim
+            // cepat berturut-turut.
+            if ($dalamChatSunat) {
                 \App\Jobs\DispatchPushTrigger::dispatch(
-                    'Pesan baru — '.$this->no_telp,
+                    'Chat sunat — '.$this->no_telp,
                     mb_substr((string) $this->message, 0, 200),
-                    '/messages/'.$this->no_telp,
-                    'chat-'.$this->no_telp,
+                    '/chat_sunats/'.$this->no_telp,
+                    'sunat-'.$this->no_telp,
                 );
             }
             // ===== ARSIP SEMUA PESAN MASUK END =====
@@ -567,13 +580,8 @@ class WablasController extends Controller
                            $this->inbound_message->sudah_dibalas = 0;
                            $this->inbound_message->save();
                        }
-                       // Pesan pemicu chat admin — sama-sama trigger push.
-                       \App\Jobs\DispatchPushTrigger::dispatch(
-                           'Pesan baru — '.$this->no_telp,
-                           mb_substr((string) $this->message, 0, 200),
-                           '/messages/'.$this->no_telp,
-                           'chat-'.$this->no_telp,
-                       );
+                       // Pesan pemicu chat admin TIDAK memicu push
+                       // (push scope sekarang khusus chat sunat).
                        return $this->createWhatsappChat(); // buat pesan message
                     }
                 } else if (
