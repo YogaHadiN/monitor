@@ -91,10 +91,15 @@ class ParseMutasiEmail implements ShouldQueue
 
             case 'xlsx':
             case 'xls':
-                // TODO: pakai PhpSpreadsheet (sudah terpasang di atika
-                // lewat KirimLaporanEditTransaksi & RekeningController);
-                // kemungkinan butuh di-install juga di monitor:
-                //   composer require phpoffice/phpspreadsheet
+                $xlsBytes = $this->extractXlsAttachment($rawEmail);
+                $parsed   = $this->parseKopraXls($xlsBytes);
+                $email->parsed_meta = $parsed;
+                Log::info('ParseMutasiEmail: parsed', [
+                    'id'        => $email->id,
+                    'meta'      => $parsed['meta'] ?? null,
+                    'row_count' => count($parsed['rows'] ?? []),
+                    'footer'    => $parsed['footer'] ?? null,
+                ]);
                 break;
 
             case 'pdf':
@@ -178,6 +183,162 @@ class ParseMutasiEmail implements ShouldQueue
             return 'pdf';
         }
         return 'html';
+    }
+
+    /**
+     * Ekstrak attachment .xls/.xlsx dari raw MIME tanpa lib MIME parser
+     * (struktur email Kopra konsisten: multipart/mixed dengan
+     * application/vnd.ms-excel base64). Return binary bytes attachment.
+     */
+    protected function extractXlsAttachment(string $rawEmail): string
+    {
+        if (!preg_match(
+            '/Content-Type:\s*application\/vnd\.(ms-excel|openxmlformats-officedocument\.spreadsheetml\.sheet)[^\r\n]*/i',
+            $rawEmail, $m, PREG_OFFSET_CAPTURE
+        )) {
+            throw new \RuntimeException('Attachment XLS/XLSX tidak ditemukan di raw email');
+        }
+        $partStart = (int) $m[0][1];
+
+        // Skip header part sampai blank line pertama.
+        $bodyStart = strpos($rawEmail, "\r\n\r\n", $partStart);
+        if ($bodyStart !== false) {
+            $bodyStart += 4;
+        } else {
+            $bodyStart = strpos($rawEmail, "\n\n", $partStart);
+            if ($bodyStart === false) {
+                throw new \RuntimeException('Body attachment tidak ditemukan (blank line missing)');
+            }
+            $bodyStart += 2;
+        }
+
+        // Kumpulkan semua boundary yang muncul di header email (di atas
+        // attachment) lalu cari posisi terdekat setelah bodyStart.
+        $boundaries = [];
+        if (preg_match_all('/boundary\s*=\s*"?([^";\r\n]+)"?/i', substr($rawEmail, 0, $partStart), $bm)) {
+            foreach ($bm[1] as $b) {
+                $b = trim($b);
+                if ($b !== '') {
+                    $boundaries[] = '--' . $b;
+                }
+            }
+        }
+        $bodyEnd = strlen($rawEmail);
+        foreach (array_unique($boundaries) as $b) {
+            $p = strpos($rawEmail, $b, $bodyStart);
+            if ($p !== false && $p < $bodyEnd) {
+                $bodyEnd = $p;
+            }
+        }
+
+        $b64 = substr($rawEmail, $bodyStart, $bodyEnd - $bodyStart);
+        $bin = base64_decode(preg_replace('/\s+/', '', $b64), true);
+        if ($bin === false || strlen($bin) === 0) {
+            throw new \RuntimeException('Decode base64 attachment gagal');
+        }
+        return $bin;
+    }
+
+    /**
+     * Parse Account Statement Kopra Mandiri (sheet `transaction_inquiry`).
+     * Layout (1-indexed):
+     *   Metadata: E3=Account, E4=Period, E5=Currency, E6=Branch,
+     *             E7=Opening Balance.
+     *   Header transaksi (row 9): C=Posting Date, F=Remark,
+     *             H=Reference No, I=Debit, K=Credit, L=Balance,
+     *             M=Branch Code.
+     *   Data: row 10+ sampai marker stop ("No record found" di kolom D
+     *             atau "No of Debit"/"Total Amount"/"Closing Balance"
+     *             di kolom C).
+     *   Footer: di antara data dan akhir — angka di kolom G.
+     */
+    protected function parseKopraXls(string $xlsBytes): array
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'mutasi_xls_');
+        // PhpSpreadsheet butuh ekstensi .xls untuk pilih reader otomatis,
+        // tapi kita sudah load Xls reader langsung jadi tidak rename.
+        file_put_contents($tmp, $xlsBytes);
+
+        try {
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
+            $reader->setReadDataOnly(true);
+            $spread = $reader->load($tmp);
+            $sheet  = $spread->getSheetByName('transaction_inquiry') ?: $spread->getActiveSheet();
+
+            $meta = [
+                'account_no'      => trim((string) $sheet->getCell('E3')->getValue()),
+                'period'          => trim((string) $sheet->getCell('E4')->getValue()),
+                'currency'        => trim((string) $sheet->getCell('E5')->getValue()),
+                'branch'          => trim((string) $sheet->getCell('E6')->getValue()),
+                'opening_balance' => (float) $sheet->getCell('E7')->getValue(),
+            ];
+
+            $rows    = [];
+            $footer  = [
+                'no_of_debit'           => null,
+                'total_amount_debited'  => null,
+                'no_of_credit'          => null,
+                'total_amount_credited' => null,
+                'closing_balance'       => null,
+            ];
+            $maxRow  = $sheet->getHighestRow();
+            $stopRow = $maxRow + 1;
+
+            for ($r = 10; $r <= $maxRow; $r++) {
+                $cellC = trim((string) $sheet->getCell('C'.$r)->getValue());
+                $cellD = trim((string) $sheet->getCell('D'.$r)->getValue());
+
+                if (preg_match('/^(No of Debit|No of Credit|Total Amount|Closing Balance)/i', $cellC)
+                    || $cellD === 'No record found') {
+                    $stopRow = $r;
+                    break;
+                }
+
+                $postingDate = $sheet->getCell('C'.$r)->getValue();
+                $remark      = trim((string) $sheet->getCell('F'.$r)->getValue());
+                $referenceNo = trim((string) $sheet->getCell('H'.$r)->getValue());
+                $debit       = (float) ($sheet->getCell('I'.$r)->getValue() ?: 0);
+                $credit      = (float) ($sheet->getCell('K'.$r)->getValue() ?: 0);
+                $balance     = (float) ($sheet->getCell('L'.$r)->getValue() ?: 0);
+                $branchCode  = trim((string) $sheet->getCell('M'.$r)->getValue());
+
+                if ($postingDate === null && $remark === '' && $referenceNo === ''
+                    && $debit == 0 && $credit == 0 && $balance == 0) {
+                    continue;
+                }
+
+                $rows[] = [
+                    'posting_date' => is_string($postingDate)
+                        ? $postingDate
+                        : (string) $postingDate,
+                    'remark'       => $remark,
+                    'reference_no' => $referenceNo,
+                    'debit'        => $debit,
+                    'credit'       => $credit,
+                    'balance'      => $balance,
+                    'branch_code'  => $branchCode,
+                ];
+            }
+
+            // Footer ringkasan: nilainya di kolom G; label di C.
+            for ($r = $stopRow; $r <= $maxRow; $r++) {
+                $label = trim((string) $sheet->getCell('C'.$r)->getValue());
+                $val   = $sheet->getCell('G'.$r)->getValue();
+                if (preg_match('/^No of Debit/i', $label))            $footer['no_of_debit'] = $val !== null ? (int) $val : null;
+                if (preg_match('/^Total Amount Debited/i', $label))   $footer['total_amount_debited'] = $val !== null ? (float) $val : null;
+                if (preg_match('/^No of Credit/i', $label))           $footer['no_of_credit'] = $val !== null ? (int) $val : null;
+                if (preg_match('/^Total Amount Credited/i', $label))  $footer['total_amount_credited'] = $val !== null ? (float) $val : null;
+                if (preg_match('/^Closing Balance/i', $label))        $footer['closing_balance'] = $val !== null ? (float) $val : null;
+            }
+
+            return [
+                'meta'   => $meta,
+                'rows'   => $rows,
+                'footer' => $footer,
+            ];
+        } finally {
+            @unlink($tmp);
+        }
     }
 
     public function failed(\Throwable $e): void

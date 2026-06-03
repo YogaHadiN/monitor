@@ -20,6 +20,7 @@ class MutasiInboundEmail extends Model
 
     protected $casts = [
         'verdicts'     => 'array',
+        'parsed_meta'  => 'array',
         'received_at'  => 'datetime',
         'processed_at' => 'datetime',
     ];
