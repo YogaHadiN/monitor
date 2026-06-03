@@ -927,12 +927,16 @@ class SunatBotEngine
 
         $lines = [];
         foreach (self::BOOKING_JAM_SLOTS as $i => $jam) {
-            $no = $i + 1;
-            $unavailable = $fullBlackout
-                || in_array($jam, $taken, true)
-                || in_array($jam, $blackoutSlots, true);
-            if ($unavailable) {
-                $lines[] = $no . '. ~' . $jam . '~ (terisi)';
+            $no    = $i + 1;
+            $label = null;
+            // Prioritas label: blackout > taken (kalau seandainya sama).
+            if ($fullBlackout || in_array($jam, $blackoutSlots, true)) {
+                $label = 'libur';
+            } elseif (in_array($jam, $taken, true)) {
+                $label = 'terisi';
+            }
+            if ($label !== null) {
+                $lines[] = $no . '. ~' . $jam . '~ (' . $label . ')';
             } else {
                 $lines[] = $no . '. ' . $jam;
             }
