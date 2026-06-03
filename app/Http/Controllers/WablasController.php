@@ -476,13 +476,35 @@ class WablasController extends Controller
             // Phase B (scheduler) akan dispatch saat scheduled_at jatuh tempo.
             $this->maybeCreateSunatFollowupSession();
 
-            // Phase C handoff: bila session follow-up sudah aktif dan
-            // pesan ini balasan client, set awaiting_human=true supaya
-            // bot tidak auto-reply. PWA push (lewat chat_sunat=1 di atas)
-            // sudah menotifikasi admin. Bot di-skip untuk turn ini —
-            // admin yang lanjutkan via panel chat.
-            if ($this->maybeHandoffSunatFollowup()) {
-                return;
+            // Phase D: deteksi quick-reply button dari template follow-up.
+            //   - "Saya mau booking sekarang" → masuk booking flow sunat
+            //     bot (reset awaiting_human + BotSession aktif).
+            //   - "Jangan kirim lagi" / "STOP" → opt_out + stop sequence.
+            //   - "Saya mau tanya min" → default handoff (no special action).
+            $buttonAction = $this->detectSunatFollowupButton($this->message);
+
+            if ($buttonAction === 'opt_out') {
+                $this->handleSunatFollowupOptOut((string) $this->no_telp);
+                return; // ack reply sudah dikirim, stop webhook
+            }
+
+            if ($buttonAction === 'booking') {
+                // User tap "Saya mau booking sekarang" → buka jalan untuk
+                // booking flow: reset handoff + pastikan BotSession aktif
+                // supaya engine bisa pick up via isBookingKeyword.
+                \App\Models\SunatChatSession::where('phone', (string) $this->no_telp)
+                    ->update(['awaiting_human' => false]);
+                $this->ensureSunatBotSession((string) $this->no_telp);
+                // Skip handoff — biarkan webhook lanjut ke sunat bot block
+                // di bawah; engine akan mendeteksi keyword "booking" dan
+                // masuk enterBookingFlow.
+            } else {
+                // Phase C handoff: bila session follow-up sudah aktif dan
+                // pesan ini balasan client (selain button khusus di atas),
+                // set awaiting_human=true supaya bot tidak auto-reply.
+                if ($this->maybeHandoffSunatFollowup()) {
+                    return;
+                }
             }
 
             // Dispatch push notif ke PWA atika kalau pesan ini bagian
@@ -5594,6 +5616,92 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Deteksi quick-reply button dari template follow-up sunat
+     * (tap button di WABA dikirim sebagai pesan teks dengan label
+     * tepat). Return 'booking' | 'opt_out' | null (= default handoff).
+     */
+    private function detectSunatFollowupButton(?string $message): ?string
+    {
+        if (is_null($message)) return null;
+        $m = mb_strtolower(trim($message));
+        if ($m === 'saya mau booking sekarang') return 'booking';
+        if (in_array($m, ['jangan kirim lagi', 'stop'], true)) return 'opt_out';
+        // "Saya mau tanya min" → tidak return apapun, fall through ke
+        // handoff PWA push (admin manual respond).
+        return null;
+    }
+
+    /**
+     * Tandai opt-out + stop semua sisa follow-up + kirim ack reply ke
+     * customer. Bot tidak akan kirim follow-up edukasi lagi sampai
+     * customer mulai sesi baru (kirim "sunat" lagi → sesi baru tercipta).
+     */
+    private function handleSunatFollowupOptOut(string $phone): void
+    {
+        $session = \App\Models\SunatChatSession::where('phone', $phone)
+            ->whereIn('status', ['active', 'booked'])
+            ->first();
+
+        if ($session) {
+            $session->opt_out         = true;
+            $session->followup_status = 'inactive';
+            // Kalau sudah booked, biarkan status=booked (tidak override).
+            if ($session->status === 'active') {
+                $session->status = 'stopped';
+            }
+            $session->save();
+
+            $stopped = \App\Models\SunatFollowup::where('session_id', $session->id)
+                ->where('status', 'pending')
+                ->update(['status' => 'stopped', 'error' => 'opt_out_button']);
+
+            \Log::info('SUNAT_FOLLOWUP_OPT_OUT', [
+                'phone'          => $phone,
+                'session_id'     => $session->id,
+                'stopped_count'  => $stopped,
+            ]);
+        }
+
+        // Cleanup: kalau ada WhatsappBot sunat_followup, hapus juga.
+        $serviceId = (int) \DB::table('whatsapp_bot_services')
+            ->where('whatsapp_bot_service', 'sunat_followup')
+            ->value('id');
+        if ($serviceId > 0) {
+            \App\Models\WhatsappBot::where('no_telp', $phone)
+                ->where('whatsapp_bot_service_id', $serviceId)
+                ->delete();
+        }
+
+        $this->autoReply(
+            "Baik kak, kami hentikan pesan follow-up. Kalau berubah pikiran nanti, kirim kata *sunat* untuk mulai lagi 🙏"
+        );
+    }
+
+    /**
+     * Pastikan ada BotSession sunat bot aktif (is_complete=false) untuk
+     * nomor ini — dipakai sebelum lemparan ke sunat bot booking flow.
+     * Bila session sudah ada & complete, di-reopen; bila tidak ada,
+     * buat baru.
+     */
+    private function ensureSunatBotSession(string $phone): void
+    {
+        $bs = \App\Models\BotSession::where('no_telp', $phone)->first();
+        if ($bs) {
+            if ($bs->is_complete) {
+                $bs->is_complete       = false;
+                $bs->last_activity_at  = \Carbon\Carbon::now();
+                $bs->save();
+            }
+            return;
+        }
+        \App\Models\BotSession::create([
+            'no_telp'          => $phone,
+            'collected_data'   => [],
+            'last_activity_at' => \Carbon\Carbon::now(),
+        ]);
     }
 
     /**
