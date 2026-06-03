@@ -436,10 +436,16 @@ class WablasController extends Controller
             // arsip namun tidak ditampilkan, dan dihapus otomatis setelah
             // 50 hari oleh command messages:prune-non-admin.
             $dalamChatAdmin = $this->noTelpDalamChatWithAdmin();
-            // Nomor yang punya entry di bot_sessions = sudah/sedang dalam
-            // alur sunat bot. Semua pesannya dianggap chat sunat — dipakai
-            // halaman /chat_sunats + scope notifikasi PWA.
-            $dalamChatSunat = \App\Models\BotSession::where('no_telp', (string) $this->no_telp)->exists();
+            // Chat sunat = OR dari dua sumber:
+            //   1. Sudah/pernah masuk alur sunat bot (entry di bot_sessions).
+            //   2. Manual tag staf via /messages/{no}/tag-sunat di atika
+            //      (tabel shared chat_sunat_manual_flags).
+            // Sekali salah satu menyala, semua pesan inbound berikutnya
+            // dari nomor itu ditandai chat_sunat=1 sampai admin un-tag.
+            $dalamChatSunat = \App\Models\BotSession::where('no_telp', (string) $this->no_telp)->exists()
+                || \DB::table('chat_sunat_manual_flags')
+                       ->where('no_telp', (string) $this->no_telp)
+                       ->exists();
             $this->inbound_message = Message::create([
                 'no_telp'       => $this->no_telp,
                 'message'       => $this->message,
