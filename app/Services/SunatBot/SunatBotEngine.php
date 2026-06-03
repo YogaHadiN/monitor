@@ -893,6 +893,54 @@ class SunatBotEngine
     }
 
     /**
+     * Build daftar jam dengan marker visual untuk slot yang tidak
+     * tersedia (sudah BOOKED atau blackout). WhatsApp markdown
+     * "~text~" = strikethrough. Format:
+     *   1. 07:00
+     *   2. ~08:00~ (terisi)
+     *   ...
+     * Bila $tanggalStr kosong (placeholder dipakai di luar konteks
+     * booking) — return list polos tanpa marker.
+     */
+    private function buildJamList(string $tanggalStr): string
+    {
+        $taken         = [];
+        $blackoutSlots = [];
+        $fullBlackout  = false;
+
+        if ($tanggalStr !== '') {
+            $taken = JadwalSunat::where('tanggal', $tanggalStr)
+                ->where('status', 'BOOKED')
+                ->pluck('jam')
+                ->map(fn ($j) => substr((string) $j, 0, 5))
+                ->all();
+
+            $blackout = $this->blackoutForDate($tanggalStr);
+            if ($blackout !== null) {
+                if (is_array($blackout->blocked_slots) && !empty($blackout->blocked_slots)) {
+                    $blackoutSlots = $blackout->blocked_slots;
+                } else {
+                    $fullBlackout = true;
+                }
+            }
+        }
+
+        $lines = [];
+        foreach (self::BOOKING_JAM_SLOTS as $i => $jam) {
+            $no = $i + 1;
+            $unavailable = $fullBlackout
+                || in_array($jam, $taken, true)
+                || in_array($jam, $blackoutSlots, true);
+            if ($unavailable) {
+                $lines[] = $no . '. ~' . $jam . '~ (terisi)';
+            } else {
+                $lines[] = $no . '. ' . $jam;
+            }
+        }
+        return implode("\n", $lines);
+    }
+
+    /**
      * Ambil blackout aktif untuk tanggal tertentu (atika
      * JadwalSunatController::blackoutForDate equivalent).
      */
@@ -1259,6 +1307,7 @@ class SunatBotEngine
             '{{jam}}'         => $bookingJam,
             '{{nama_anak}}'   => $bookingNamaAnak !== '' ? ucwords($bookingNamaAnak) : '',
             '{{usia_bb}}'     => $bookingUsiaBb,
+            '{{jam_list}}'    => $this->buildJamList($bookingTanggalRaw),
         ];
 
         return strtr($template, $replacements);
