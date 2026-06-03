@@ -441,6 +441,20 @@ class WablasController extends Controller
                 'touched'       => 0,
                 'chat_admin'    => $dalamChatAdmin ? 1 : 0,
             ]);
+
+            // Dispatch push notif ke PWA atika kalau pesan ini bagian dari
+            // sesi chat admin (chat_admin=1, sending=0). Pakai job (queue
+            // pasien-queue) supaya webhook tidak blocking jaringan HTTP ke
+            // atika. Tag = nomor → notif baru collapse yang lama supaya
+            // tidak spam iPhone saat customer kirim cepat berturut-turut.
+            if ($dalamChatAdmin) {
+                \App\Jobs\DispatchPushTrigger::dispatch(
+                    'Pesan baru — '.$this->no_telp,
+                    mb_substr((string) $this->message, 0, 200),
+                    '/messages/'.$this->no_telp,
+                    'chat-'.$this->no_telp,
+                );
+            }
             // ===== ARSIP SEMUA PESAN MASUK END =====
 
             $date_now = date('Y-m-d H:i:s');
@@ -553,6 +567,13 @@ class WablasController extends Controller
                            $this->inbound_message->sudah_dibalas = 0;
                            $this->inbound_message->save();
                        }
+                       // Pesan pemicu chat admin — sama-sama trigger push.
+                       \App\Jobs\DispatchPushTrigger::dispatch(
+                           'Pesan baru — '.$this->no_telp,
+                           mb_substr((string) $this->message, 0, 200),
+                           '/messages/'.$this->no_telp,
+                           'chat-'.$this->no_telp,
+                       );
                        return $this->createWhatsappChat(); // buat pesan message
                     }
                 } else if (
