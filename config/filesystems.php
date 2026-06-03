@@ -53,6 +53,21 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
         ],
 
+        // Disk khusus untuk raw email mutasi yang dilanding Lambda
+        // (SES inbound). Bucket terpisah dari disk 's3' utama supaya
+        // tidak mengganggu QR codes / qiscus media / reservasi yang
+        // memakai bucket jatielok. Credentials default ikut AWS_*
+        // utama; bisa di-override dengan AWS_MUTASI_* kalau bucket
+        // pakai IAM principal berbeda.
+        's3_mutasi' => [
+            'driver'                  => 's3',
+            'key'                     => env('AWS_MUTASI_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
+            'secret'                  => env('AWS_MUTASI_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region'                  => env('AWS_MUTASI_REGION', env('AWS_DEFAULT_REGION')),
+            'bucket'                  => env('AWS_MUTASI_BUCKET'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+        ],
+
     ],
 
     /*
