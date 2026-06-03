@@ -569,6 +569,7 @@ class SunatBotEngine
             case 'booking_tanggal':    return $this->handleBookingTanggal($session, $msg);
             case 'booking_jam':        return $this->handleBookingJam($session, $msg);
             case 'booking_nama_anak':  return $this->handleBookingNamaAnak($session, $msg);
+            case 'booking_usia_bb':    return $this->handleBookingUsiaBb($session, $msg);
             case 'booking_konfirmasi': return $this->handleBookingKonfirmasi($session, $msg);
         }
 
@@ -642,6 +643,43 @@ class SunatBotEngine
         }
 
         $session->setData('booking_nama_anak', $nama);
+
+        // Reuse usia & BB dari HARGA_FLOW kalau sudah terkumpul.
+        // Kalau belum, tanya eksplisit lewat booking_tanya_usia_bb.
+        $usia = $session->getData('usia_anak');
+        $bb   = $session->getData('berat_badan_anak');
+        if ($usia !== null && $bb !== null) {
+            $session->setData('booking_usia_anak', $usia);
+            $session->setData('booking_usia_anak_satuan', $session->getData('usia_anak_satuan') ?? 'tahun');
+            $session->setData('booking_berat_badan_anak', $bb);
+            $session->expecting_field = 'booking_konfirmasi';
+            return $this->renderIntent('booking_konfirmasi', $session);
+        }
+
+        $session->expecting_field = 'booking_usia_bb';
+        return $this->renderIntent('booking_tanya_usia_bb', $session);
+    }
+
+    private function handleBookingUsiaBb(BotSession $session, string $msg): array
+    {
+        // Reuse parser HARGA_FLOW — terima "7 bulan 10 kg", "5 thn 18 kg", dll.
+        $usiaParsed = $this->parseUsia('', $msg);
+        $bb         = $this->parseBeratBadan('', $msg);
+
+        if ($usiaParsed === null || $bb === null) {
+            return $this->renderIntent('booking_tanya_usia_bb', $session);
+        }
+
+        [$usiaValue, $usiaUnit] = $usiaParsed;
+        $session->setData('booking_usia_anak', $usiaValue);
+        $session->setData('booking_usia_anak_satuan', $usiaUnit);
+        $session->setData('booking_berat_badan_anak', $bb);
+        // Simpan juga ke field HARGA_FLOW supaya konsisten dengan
+        // percakapan utama (nilai juga jadi tersedia untuk template lain).
+        $session->setData('usia_anak', $usiaValue);
+        $session->setData('usia_anak_satuan', $usiaUnit);
+        $session->setData('berat_badan_anak', $bb);
+
         $session->expecting_field = 'booking_konfirmasi';
         return $this->renderIntent('booking_konfirmasi', $session);
     }
@@ -690,6 +728,16 @@ class SunatBotEngine
             return $this->renderIntent('booking_jam_tidak_tersedia', $session);
         }
 
+        // Catatan = sumber + usia/BB supaya operator + UI staf langsung lihat.
+        $catatan = 'Booking via SunatBot';
+        $usia    = $session->getData('booking_usia_anak');
+        $unit    = $session->getData('booking_usia_anak_satuan') ?? 'tahun';
+        $bbVal   = $session->getData('booking_berat_badan_anak');
+        if ($usia !== null && $bbVal !== null) {
+            $bbDisplay = (fmod((float) $bbVal, 1.0) == 0) ? (int) $bbVal : $bbVal;
+            $catatan  .= ' | Usia: ' . $usia . ' ' . $unit . ', BB: ' . $bbDisplay . ' kg';
+        }
+
         try {
             $row = JadwalSunat::create([
                 'tenant_id'   => 1,
@@ -699,7 +747,7 @@ class SunatBotEngine
                 'status'      => 'BOOKED',
                 'nama_pasien' => $namaAnak,
                 'no_telp'     => (string) $session->no_telp,
-                'catatan'     => 'Booking via SunatBot',
+                'catatan'     => $catatan,
                 'created_by'  => null,
             ]);
         } catch (\Throwable $e) {
@@ -1189,6 +1237,18 @@ class SunatBotEngine
         $bookingJam      = (string) ($session->getData('booking_jam') ?? '');
         $bookingNamaAnak = (string) ($session->getData('booking_nama_anak') ?? '');
 
+        // {{usia_bb}} — format "<usia> <satuan>, <bb> kg" dari session
+        // booking_* keys; kalau belum ada, kosong (template tidak akan
+        // pernah render konfirmasi sebelum step usia_bb selesai).
+        $bookingUsiaBb = '';
+        $bUsia = $session->getData('booking_usia_anak');
+        $bUnit = $session->getData('booking_usia_anak_satuan') ?? 'tahun';
+        $bBb   = $session->getData('booking_berat_badan_anak');
+        if ($bUsia !== null && $bBb !== null) {
+            $bbDisplay     = (fmod((float) $bBb, 1.0) == 0) ? (int) $bBb : $bBb;
+            $bookingUsiaBb = $bUsia . ' ' . $bUnit . ', ' . $bbDisplay . ' kg';
+        }
+
         $replacements = [
             '[NAMA]'          => $nama !== '' ? ucwords($nama) : 'kak',
             '[ALAMAT_KLINIK]' => $alamat,
@@ -1198,6 +1258,7 @@ class SunatBotEngine
             '{{tanggal}}'     => $bookingTanggalDisplay,
             '{{jam}}'         => $bookingJam,
             '{{nama_anak}}'   => $bookingNamaAnak !== '' ? ucwords($bookingNamaAnak) : '',
+            '{{usia_bb}}'     => $bookingUsiaBb,
         ];
 
         return strtr($template, $replacements);
