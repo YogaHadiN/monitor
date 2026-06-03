@@ -461,6 +461,13 @@ class WablasController extends Controller
                 'chat_sunat'    => $dalamChatSunat ? 1 : 0,
             ]);
 
+            // Sunat follow-up session detect — bila pesan inbound mengandung
+            // kata kunci "sunat"/"khitan" dan belum ada session aktif untuk
+            // nomor ini, buat session baru + 7 baris follow-up terjadwal
+            // (+2, +4, +6, +8, +10, +12, +14 hari pukul 09:00 WIB).
+            // Phase B (scheduler) akan dispatch saat scheduled_at jatuh tempo.
+            $this->maybeCreateSunatFollowupSession();
+
             // Dispatch push notif ke PWA atika kalau pesan ini bagian
             // alur sunat (chat_sunat=1). Sesi chat admin biasa TIDAK
             // memicu notif (per requirement). Tag = nomor → notif baru
@@ -5501,6 +5508,75 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         }
 
         return $result;
+    }
+
+    /**
+     * Buat sunat_chat_sessions + 7 sunat_followups bila pesan inbound
+     * mengandung kata kunci "sunat"/"khitan" dan belum ada session
+     * active untuk nomor ini. Idempotent: dipanggil di setiap pesan
+     * masuk via webhook, tidak akan duplikat.
+     *
+     * Generate jadwal 7 follow-up dengan offset +2, +4, ..., +14 hari
+     * di pukul 09:00 WIB (di tengah send-window 08-20). Scheduler
+     * (Phase B) yang akan kirim saat scheduled_at jatuh tempo.
+     */
+    private function maybeCreateSunatFollowupSession(): void
+    {
+        if (is_null($this->message) || is_null($this->no_telp)) {
+            return;
+        }
+        $msgLower = mb_strtolower((string) $this->message);
+        if (!str_contains($msgLower, 'sunat') && !str_contains($msgLower, 'khitan')) {
+            return;
+        }
+        $phone = (string) $this->no_telp;
+
+        // Dedup: jangan buat kalau sudah ada session aktif untuk nomor ini.
+        $existing = \App\Models\SunatChatSession::where('phone', $phone)
+            ->whereIn('status', ['active', 'booked'])
+            ->first();
+        if ($existing) {
+            return;
+        }
+
+        try {
+            \DB::transaction(function () use ($phone) {
+                $session = \App\Models\SunatChatSession::create([
+                    'phone'           => $phone,
+                    'contact_name'    => null,
+                    'status'          => 'active',
+                    'followup_status' => 'inactive',
+                    'awaiting_human'  => false,
+                    'reply_emailed'   => false,
+                    'opt_out'         => false,
+                ]);
+
+                $now = \Carbon\Carbon::now('Asia/Jakarta');
+                for ($n = 1; $n <= 7; $n++) {
+                    $scheduledAt = $now->copy()->addDays(2 * $n)
+                                       ->setTime(9, 0, 0); // 09:00 WIB
+
+                    \App\Models\SunatFollowup::create([
+                        'session_id'    => $session->id,
+                        'sequence'      => $n,
+                        'template_name' => 'followup_sunat_' . $n,
+                        'scheduled_at'  => $scheduledAt,
+                        'status'        => 'pending',
+                        'attempts'      => 0,
+                    ]);
+                }
+            });
+
+            \Log::info('SUNAT_FOLLOWUP_SESSION_CREATED', [
+                'phone'   => $phone,
+                'message' => mb_substr((string) $this->message, 0, 80),
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('SUNAT_FOLLOWUP_SESSION_CREATE_FAIL', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function noTelpDalamChatWithAdmin(){
