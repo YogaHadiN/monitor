@@ -436,15 +436,23 @@ class WablasController extends Controller
             // arsip namun tidak ditampilkan, dan dihapus otomatis setelah
             // 50 hari oleh command messages:prune-non-admin.
             $dalamChatAdmin = $this->noTelpDalamChatWithAdmin();
-            // Chat sunat = OR dari dua sumber:
+            // Chat sunat = OR dari tiga sumber:
             //   1. Sudah/pernah masuk alur sunat bot (entry di bot_sessions).
             //   2. Manual tag staf via /messages/{no}/tag-sunat di atika
             //      (tabel shared chat_sunat_manual_flags).
+            //   3. Sedang dalam alur follow-up sunat (sunat_chat_sessions
+            //      followup_status=active) — supaya pesan balasan client
+            //      selama follow-up tercipta dengan chat_sunat=1 dan
+            //      memicu push notif PWA.
             // Sekali salah satu menyala, semua pesan inbound berikutnya
             // dari nomor itu ditandai chat_sunat=1 sampai admin un-tag.
             $dalamChatSunat = \App\Models\BotSession::where('no_telp', (string) $this->no_telp)->exists()
                 || \DB::table('chat_sunat_manual_flags')
                        ->where('no_telp', (string) $this->no_telp)
+                       ->exists()
+                || \App\Models\SunatChatSession::where('phone', (string) $this->no_telp)
+                       ->where('followup_status', 'active')
+                       ->whereIn('status', ['active', 'booked'])
                        ->exists();
             $this->inbound_message = Message::create([
                 'no_telp'       => $this->no_telp,
@@ -467,6 +475,15 @@ class WablasController extends Controller
             // (+2, +4, +6, +8, +10, +12, +14 hari pukul 09:00 WIB).
             // Phase B (scheduler) akan dispatch saat scheduled_at jatuh tempo.
             $this->maybeCreateSunatFollowupSession();
+
+            // Phase C handoff: bila session follow-up sudah aktif dan
+            // pesan ini balasan client, set awaiting_human=true supaya
+            // bot tidak auto-reply. PWA push (lewat chat_sunat=1 di atas)
+            // sudah menotifikasi admin. Bot di-skip untuk turn ini —
+            // admin yang lanjutkan via panel chat.
+            if ($this->maybeHandoffSunatFollowup()) {
+                return;
+            }
 
             // Dispatch push notif ke PWA atika kalau pesan ini bagian
             // alur sunat (chat_sunat=1). Sesi chat admin biasa TIDAK
@@ -5577,6 +5594,38 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Bila ada sunat_chat_sessions dengan followup_status=active untuk
+     * nomor ini, ini balasan client selama alur follow-up — set
+     * awaiting_human=true. Return true bila handoff dilakukan (caller
+     * harus stop semua pemrosesan webhook untuk turn ini).
+     */
+    private function maybeHandoffSunatFollowup(): bool
+    {
+        if (is_null($this->no_telp)) {
+            return false;
+        }
+        $phone = (string) $this->no_telp;
+
+        $session = \App\Models\SunatChatSession::where('phone', $phone)
+            ->where('followup_status', 'active')
+            ->whereIn('status', ['active', 'booked'])
+            ->first();
+        if (!$session) {
+            return false;
+        }
+
+        if (!$session->awaiting_human) {
+            $session->awaiting_human = true;
+            $session->save();
+            \Log::info('SUNAT_FOLLOWUP_HANDOFF_SET', [
+                'phone'      => $phone,
+                'session_id' => $session->id,
+            ]);
+        }
+        return true;
     }
 
     public function noTelpDalamChatWithAdmin(){
