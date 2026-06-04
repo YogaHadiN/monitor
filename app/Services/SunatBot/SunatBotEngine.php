@@ -1246,7 +1246,7 @@ class SunatBotEngine
         }
 
         $text      = $this->substituteVariables($template, $session);
-        $sentences = $this->splitText($text);
+        $sentences = $this->splitText($text, $slug);
         $media     = $intent->mediaList();
 
         $bubbles = [];
@@ -1266,26 +1266,92 @@ class SunatBotEngine
     ];
 
     /**
-     * Sebelumnya splitter memecah teks pada (a) titik kalimat dan
-     * (b) setiap newline — yang membuat list bernomor "1. 07:00" jadi
-     * 2 bubble, dan konfirmasi multi-baris berhamburan. Sekarang
-     * kirim seluruh template sebagai SATU bubble (whitespace + newline
-     * tetap apa adanya). Marker eksplisit `[BUBBLE]` boleh dipakai
-     * di template kalau memang butuh dipecah menjadi multi-bubble.
+     * Aturan pemecahan bubble:
+     *   1. Marker eksplisit `[BUBBLE]` di template selalu dihormati dan
+     *      memecah teks di titik itu, terlepas dari context apa pun.
+     *   2. Booking flow (slug `booking_*`) → SATU bubble per template.
+     *      Konfirmasi multi-baris, list jam bernomor "1. 07:00", dan
+     *      bubble booking_sukses harus utuh — admin sudah konfirmasi
+     *      lewat feedback "rapihkan, jangan dobel2 gini".
+     *   3. Selain itu (consultation / harga / info) → pecah per inti
+     *      kalimat: setiap tanda akhir kalimat `.!?` diikuti whitespace
+     *      jadi pemisah bubble. Abbreviation list dihormati supaya
+     *      "Komp.", "No.", "Bpk.", dst. tidak salah dipecah.
      */
-    private function splitText(string $text): array
+    private function splitText(string $text, ?string $slug = null): array
     {
         $text = trim($text);
         if ($text === '') {
             return [];
         }
-        $parts = preg_split('/\s*\[BUBBLE\]\s*/u', $text);
-        $out = [];
-        foreach ((array) $parts as $p) {
-            $p = trim((string) $p);
-            if ($p !== '') $out[] = $p;
+
+        if (str_contains($text, '[BUBBLE]')) {
+            $parts = preg_split('/\s*\[BUBBLE\]\s*/u', $text);
+            $out = [];
+            foreach ((array) $parts as $p) {
+                $p = trim((string) $p);
+                if ($p !== '') $out[] = $p;
+            }
+            return $out ?: [$text];
         }
-        return $out ?: [$text];
+
+        if ($slug !== null && str_starts_with($slug, 'booking_')) {
+            return [$text];
+        }
+
+        return $this->splitBySentence($text);
+    }
+
+    /**
+     * Pecah teks menjadi list kalimat. Pemisah = `.!?` + whitespace
+     * (atau akhir teks), kecuali kalau token sebelum pemisah adalah
+     * abbreviation yang terdaftar di self::ABBREV.
+     */
+    private function splitBySentence(string $text): array
+    {
+        $tokens = preg_split('/([.!?])(\s+|$)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (!is_array($tokens)) return [$text];
+
+        $bubbles = [];
+        $current = '';
+        $count   = count($tokens);
+
+        for ($i = 0; $i < $count; $i++) {
+            $current .= $tokens[$i];
+            $punct = $tokens[$i + 1] ?? null;
+            if ($punct === null || !in_array($punct, ['.', '!', '?'], true)) {
+                continue;
+            }
+            $current .= $punct;
+            $ws       = $tokens[$i + 2] ?? '';
+            $i       += 2;
+
+            if ($this->endsWithAbbreviation($current)) {
+                $current .= $ws;
+                continue;
+            }
+
+            $bubbles[] = trim($current);
+            $current   = '';
+        }
+        if (trim($current) !== '') {
+            $bubbles[] = trim($current);
+        }
+
+        $bubbles = array_values(array_filter($bubbles, fn ($b) => $b !== ''));
+        return $bubbles ?: [$text];
+    }
+
+    private function endsWithAbbreviation(string $text): bool
+    {
+        foreach (self::ABBREV as $abbrev) {
+            $needle = $abbrev . '.';
+            $len    = mb_strlen($needle);
+            if (mb_substr($text, -$len) === $needle) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function substituteVariables(string $template, BotSession $session): string
