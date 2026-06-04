@@ -6725,12 +6725,15 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
                     if (!($result['ok'] ?? false)) {
                         Log::error('AUTO_REPLY_WATZAP_FAILED', $result);
+                    } else {
+                        $this->logOutboundAutoReply($text);
                     }
                     return;
 
                 case 'wablas':
                 default:
                     echo $text;
+                    $this->logOutboundAutoReply($text);
                     return;
             }
         } catch (\Throwable $e) {
@@ -6739,6 +6742,45 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 'phone'    => $this->no_telp ?? null,
                 'error'    => $e->getMessage(),
                 'line'     => $e->getLine(),
+            ]);
+        }
+    }
+
+    /**
+     * Simpan reply otomatis (bot / sistem) ke tabel messages supaya
+     * muncul di thread atika untuk audit/traceability. Flag chat_sunat
+     * di-set bila nomor sedang dalam konteks sunat (BotSession aktif,
+     * manual tag, atau sunat_chat_sessions follow-up aktif). chat_admin
+     * di-biarkan 0 — reply ini bukan dari staf manual; sudah_dibalas=1
+     * supaya tidak men-trigger badge "perlu dibalas".
+     */
+    private function logOutboundAutoReply(string $text): void
+    {
+        if (empty($this->no_telp) || trim($text) === '') return;
+        try {
+            $phone = (string) $this->no_telp;
+            $isSunat = \App\Models\BotSession::where('no_telp', $phone)->exists()
+                || \DB::table('chat_sunat_manual_flags')->where('no_telp', $phone)->exists()
+                || \App\Models\SunatChatSession::where('phone', $phone)
+                       ->where('followup_status', 'active')
+                       ->whereIn('status', ['active', 'booked'])
+                       ->exists();
+
+            Message::create([
+                'no_telp'       => $phone,
+                'message'       => $text,
+                'tanggal'       => date('Y-m-d H:i:s'),
+                'sending'       => 1,
+                'sudah_dibalas' => 1,
+                'tenant_id'     => 1,
+                'touched'       => 1,
+                'chat_admin'    => 0,
+                'chat_sunat'    => $isSunat ? 1 : 0,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('AUTO_REPLY_LOG_OUTBOUND_FAIL', [
+                'phone' => $this->no_telp ?? null,
+                'error' => $e->getMessage(),
             ]);
         }
     }
