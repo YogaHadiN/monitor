@@ -241,22 +241,18 @@ class ParseMutasiEmail implements ShouldQueue
 
     /**
      * Parse Account Statement Kopra Mandiri (sheet `transaction_inquiry`).
-     * Layout (1-indexed):
-     *   Metadata: E3=Account, E4=Period, E5=Currency, E6=Branch,
-     *             E7=Opening Balance.
-     *   Header transaksi (row 9): C=Posting Date, F=Remark,
-     *             H=Reference No, I=Debit, K=Credit, L=Balance,
-     *             M=Branch Code.
-     *   Data: row 10+ sampai marker stop ("No record found" di kolom D
-     *             atau "No of Debit"/"Total Amount"/"Closing Balance"
-     *             di kolom C).
-     *   Footer: di antara data dan akhir — angka di kolom G.
+     *
+     * Kolom Kopra bergeser antar versi export (mis. value metadata kadang
+     * di kolom D, kadang di E; transaksi tabel pernah memakai I/K/L/M
+     * lalu berubah jadi H/J/K/L). Daripada hardcode posisi, kita scan
+     * row HEADER ("Posting Date", "Debit", "Credit", dst.) dan bangun
+     * map `column letter → field` di runtime. Metadata + footer juga
+     * dideteksi by-label: ambil value dari cell non-null pertama setelah
+     * label di baris yang sama.
      */
     protected function parseKopraXls(string $xlsBytes): array
     {
         $tmp = tempnam(sys_get_temp_dir(), 'mutasi_xls_');
-        // PhpSpreadsheet butuh ekstensi .xls untuk pilih reader otomatis,
-        // tapi kita sudah load Xls reader langsung jadi tidak rename.
         file_put_contents($tmp, $xlsBytes);
 
         try {
@@ -265,52 +261,68 @@ class ParseMutasiEmail implements ShouldQueue
             $spread = $reader->load($tmp);
             $sheet  = $spread->getSheetByName('transaction_inquiry') ?: $spread->getActiveSheet();
 
+            $maxRow = $sheet->getHighestRow();
+            $maxCol = $sheet->getHighestColumn();
+
+            // Snapshot 2D array — lebih mudah di-scan ketimbang getCell
+            // ribuan kali. Hemat I/O dan jadi single source of truth.
+            $grid = $sheet->rangeToArray('A1:' . $maxCol . $maxRow, null, true, false, true);
+
+            $headerRow = $this->detectHeaderRow($grid);
+            if ($headerRow === null) {
+                throw new \RuntimeException('Header transaksi (Posting Date) tidak ditemukan di sheet');
+            }
+            $colMap = $this->buildHeaderColumnMap($grid[$headerRow] ?? []);
+
             $meta = [
-                'account_no'      => trim((string) $sheet->getCell('E3')->getValue()),
-                'period'          => trim((string) $sheet->getCell('E4')->getValue()),
-                'currency'        => trim((string) $sheet->getCell('E5')->getValue()),
-                'branch'          => trim((string) $sheet->getCell('E6')->getValue()),
-                'opening_balance' => (float) $sheet->getCell('E7')->getValue(),
+                'account_no'      => $this->lookupMetaLabel($grid, $headerRow, ['Account No', 'Account Number']),
+                'period'          => $this->lookupMetaLabel($grid, $headerRow, ['Period', 'Statement Period']),
+                'currency'        => $this->lookupMetaLabel($grid, $headerRow, ['Currency']),
+                'branch'          => $this->lookupMetaLabel($grid, $headerRow, ['Branch']),
+                'opening_balance' => (float) $this->parseAmount(
+                    $this->lookupMetaLabel($grid, $headerRow, ['Opening Balance'])
+                ),
             ];
 
             $rows    = [];
-            $footer  = [
-                'no_of_debit'           => null,
-                'total_amount_debited'  => null,
-                'no_of_credit'          => null,
-                'total_amount_credited' => null,
-                'closing_balance'       => null,
-            ];
-            $maxRow  = $sheet->getHighestRow();
             $stopRow = $maxRow + 1;
+            $postCol = $colMap['posting_date'] ?? null;
+            $remCol  = $colMap['remark']       ?? null;
+            $refCol  = $colMap['reference_no'] ?? null;
+            $debCol  = $colMap['debit']        ?? null;
+            $creCol  = $colMap['credit']       ?? null;
+            $balCol  = $colMap['balance']      ?? null;
+            $brnCol  = $colMap['branch_code']  ?? null;
 
-            for ($r = 10; $r <= $maxRow; $r++) {
-                $cellC = trim((string) $sheet->getCell('C'.$r)->getValue());
-                $cellD = trim((string) $sheet->getCell('D'.$r)->getValue());
+            for ($r = $headerRow + 1; $r <= $maxRow; $r++) {
+                $line = $grid[$r] ?? [];
 
-                if (preg_match('/^(No of Debit|No of Credit|Total Amount|Closing Balance)/i', $cellC)
-                    || $cellD === 'No record found') {
-                    $stopRow = $r;
-                    break;
+                // Footer marker: salah satu cell di baris ini berisi
+                // label ringkasan → stop scanning transaksi.
+                $isFooter = false;
+                foreach ($line as $v) {
+                    if (is_string($v) && preg_match('/^\s*(No of (Debit|Credit)|Total Amount (Debited|Credited)|Closing Balance|No record found)\b/i', $v)) {
+                        $isFooter = true;
+                        break;
+                    }
                 }
+                if ($isFooter) { $stopRow = $r; break; }
 
-                $postingDate = $sheet->getCell('C'.$r)->getValue();
-                $remark      = trim((string) $sheet->getCell('F'.$r)->getValue());
-                $referenceNo = trim((string) $sheet->getCell('H'.$r)->getValue());
-                $debit       = (float) ($sheet->getCell('I'.$r)->getValue() ?: 0);
-                $credit      = (float) ($sheet->getCell('K'.$r)->getValue() ?: 0);
-                $balance     = (float) ($sheet->getCell('L'.$r)->getValue() ?: 0);
-                $branchCode  = trim((string) $sheet->getCell('M'.$r)->getValue());
+                $postingDate = $postCol ? ($line[$postCol] ?? null) : null;
+                $remark      = $remCol  ? trim((string) ($line[$remCol]  ?? '')) : '';
+                $referenceNo = $refCol  ? trim((string) ($line[$refCol]  ?? '')) : '';
+                $debit       = $debCol  ? $this->parseAmount((string) ($line[$debCol] ?? '')) : 0.0;
+                $credit      = $creCol  ? $this->parseAmount((string) ($line[$creCol] ?? '')) : 0.0;
+                $balance     = $balCol  ? $this->parseAmount((string) ($line[$balCol] ?? '')) : 0.0;
+                $branchCode  = $brnCol  ? trim((string) ($line[$brnCol] ?? '')) : '';
 
-                if ($postingDate === null && $remark === '' && $referenceNo === ''
+                if (($postingDate === null || $postingDate === '') && $remark === '' && $referenceNo === ''
                     && $debit == 0 && $credit == 0 && $balance == 0) {
                     continue;
                 }
 
                 $rows[] = [
-                    'posting_date' => is_string($postingDate)
-                        ? $postingDate
-                        : (string) $postingDate,
+                    'posting_date' => is_string($postingDate) ? $postingDate : (string) $postingDate,
                     'remark'       => $remark,
                     'reference_no' => $referenceNo,
                     'debit'        => $debit,
@@ -320,16 +332,13 @@ class ParseMutasiEmail implements ShouldQueue
                 ];
             }
 
-            // Footer ringkasan: nilainya di kolom G; label di C.
-            for ($r = $stopRow; $r <= $maxRow; $r++) {
-                $label = trim((string) $sheet->getCell('C'.$r)->getValue());
-                $val   = $sheet->getCell('G'.$r)->getValue();
-                if (preg_match('/^No of Debit/i', $label))            $footer['no_of_debit'] = $val !== null ? (int) $val : null;
-                if (preg_match('/^Total Amount Debited/i', $label))   $footer['total_amount_debited'] = $val !== null ? (float) $val : null;
-                if (preg_match('/^No of Credit/i', $label))           $footer['no_of_credit'] = $val !== null ? (int) $val : null;
-                if (preg_match('/^Total Amount Credited/i', $label))  $footer['total_amount_credited'] = $val !== null ? (float) $val : null;
-                if (preg_match('/^Closing Balance/i', $label))        $footer['closing_balance'] = $val !== null ? (float) $val : null;
-            }
+            $footer = [
+                'no_of_debit'           => $this->parseFooterInt(  $this->lookupMetaLabel($grid, $stopRow - 1, ['No of Debit'],   $maxRow)),
+                'total_amount_debited'  => $this->parseFooterFloat($this->lookupMetaLabel($grid, $stopRow - 1, ['Total Amount Debited'],  $maxRow)),
+                'no_of_credit'          => $this->parseFooterInt(  $this->lookupMetaLabel($grid, $stopRow - 1, ['No of Credit'],  $maxRow)),
+                'total_amount_credited' => $this->parseFooterFloat($this->lookupMetaLabel($grid, $stopRow - 1, ['Total Amount Credited'], $maxRow)),
+                'closing_balance'       => $this->parseFooterFloat($this->lookupMetaLabel($grid, $stopRow - 1, ['Closing Balance'], $maxRow)),
+            ];
 
             return [
                 'meta'   => $meta,
@@ -339,6 +348,110 @@ class ParseMutasiEmail implements ShouldQueue
         } finally {
             @unlink($tmp);
         }
+    }
+
+    /**
+     * Cari row yang mengandung "Posting Date" — itu header tabel
+     * transaksi. Scan sampai 30 baris pertama saja (header selalu di
+     * atas data).
+     */
+    private function detectHeaderRow(array $grid): ?int
+    {
+        $limit = min(count($grid), 30);
+        for ($i = 1; $i <= $limit; $i++) {
+            $line = $grid[$i] ?? [];
+            foreach ($line as $v) {
+                if (is_string($v) && preg_match('/posting\s*date/i', $v)) {
+                    return $i;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Dari row header, bangun map `column letter → field name`. Kita
+     * cocokkan label header dengan fuzzy regex agar tahan terhadap
+     * varian penamaan (mis. "Reference No" vs "Reference Number").
+     */
+    private function buildHeaderColumnMap(array $headerLine): array
+    {
+        $patterns = [
+            'posting_date' => '/posting\s*date/i',
+            'remark'       => '/^\s*remark/i',
+            'reference_no' => '/reference\s*(no|number)?/i',
+            'debit'        => '/^\s*debit\b/i',
+            'credit'       => '/^\s*credit\b/i',
+            'balance'      => '/^\s*balance\b/i',
+            'branch_code'  => '/branch\s*code/i',
+        ];
+        $map = [];
+        foreach ($headerLine as $col => $val) {
+            if (!is_string($val) || $val === '') continue;
+            foreach ($patterns as $field => $regex) {
+                if (isset($map[$field])) continue;
+                if (preg_match($regex, $val)) {
+                    $map[$field] = $col;
+                    break;
+                }
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Cari label `$labels` di kolom mana pun di row 1..$limitRow
+     * (default = $headerRow-1, jadi metadata di atas tabel). Kembalikan
+     * value cell non-null pertama setelah cell label di row yang sama.
+     */
+    private function lookupMetaLabel(array $grid, int $headerRow, array $labels, ?int $limitRow = null): string
+    {
+        $limit = $limitRow ?? ($headerRow - 1);
+        for ($r = 1; $r <= $limit; $r++) {
+            $line = $grid[$r] ?? [];
+            foreach ($line as $col => $val) {
+                if (!is_string($val)) continue;
+                foreach ($labels as $label) {
+                    if (preg_match('/^\s*' . preg_quote($label, '/') . '\s*$/i', $val)) {
+                        // Take next non-null cell to the right.
+                        $found = false;
+                        foreach ($line as $col2 => $val2) {
+                            if (!$found && $col2 === $col) { $found = true; continue; }
+                            if ($found && $val2 !== null && $val2 !== '') {
+                                return trim((string) $val2);
+                            }
+                        }
+                        return '';
+                    }
+                }
+            }
+        }
+        return '';
+    }
+
+    private function parseAmount(string $raw): float
+    {
+        $raw = trim($raw);
+        if ($raw === '' || $raw === '-') return 0.0;
+        // Format Kopra: "151,121,812.46" — comma ribuan, dot desimal.
+        $clean = str_replace(',', '', $raw);
+        return is_numeric($clean) ? (float) $clean : 0.0;
+    }
+
+    private function parseFooterInt(string $raw): ?int
+    {
+        $raw = trim($raw);
+        if ($raw === '') return null;
+        $clean = str_replace(',', '', $raw);
+        return is_numeric($clean) ? (int) $clean : null;
+    }
+
+    private function parseFooterFloat(string $raw): ?float
+    {
+        $raw = trim($raw);
+        if ($raw === '') return null;
+        $clean = str_replace(',', '', $raw);
+        return is_numeric($clean) ? (float) $clean : null;
     }
 
     public function failed(\Throwable $e): void
