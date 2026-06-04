@@ -26,6 +26,11 @@ Route::post('webhooks/mutasi', [\App\Http\Controllers\MutasiWebhookController::c
     ->middleware('verify.mutasi.signature')
     ->name('webhooks.mutasi');
 
+// Internal: dipanggil atika dari tombol "Tandai chat sunat" supaya
+// sunat bot memproses pesan terakhir customer dan auto-reply.
+Route::post('internal/sunatbot-process', [\App\Http\Controllers\SunatBotInternalController::class, 'processMessage'])
+    ->middleware('verify.sunatbot.internal');
+
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
 /* Route::get('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
 /* Route::post('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */

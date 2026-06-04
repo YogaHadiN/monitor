@@ -70,5 +70,6 @@ class Kernel extends HttpKernel
         'bukan_blokir' => \Illuminate\Auth\Middleware\PastikanBukanNomorBlokir::class,
         'log_antrian_online' => \App\Http\Middleware\LogAntrianOnlineApi::class,
         'verify.mutasi.signature' => \App\Http\Middleware\VerifyMutasiSignature::class,
+        'verify.sunatbot.internal' => \App\Http\Middleware\VerifySunatBotInternalSignature::class,
     ];
 }
