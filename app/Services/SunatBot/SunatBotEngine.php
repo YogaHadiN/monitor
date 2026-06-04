@@ -557,12 +557,37 @@ class SunatBotEngine
     {
         $field = (string) $session->expecting_field;
         $msg   = trim($message);
+        $low   = mb_strtolower($msg);
 
         // Customer batal di mana saja → tutup flow.
-        if (in_array(mb_strtolower($msg), ['batal', 'cancel', 'batalkan'], true)) {
+        if (in_array($low, ['batal', 'cancel', 'batalkan'], true)) {
             $session->expecting_field = null;
             $session->save();
             return $this->renderIntent('booking_dibatalkan', $session);
+        }
+
+        // Natural-language "ganti / pindah / ubah / ulang tanggal" dari
+        // step manapun → reset ke step tanggal. Tanpa ini, customer yang
+        // ketik bebas "Saya mau pindah tanggal" saat di step jam akan
+        // ditolak sebagai "jam invalid".
+        if (str_contains($low, 'tanggal')
+            && preg_match('/\b(ganti|pindah|ubah|ulang|lain|baru)\b/u', $low)) {
+            $session->setData('booking_tanggal', null);
+            $session->setData('booking_jam', null);
+            // Nama & usia/BB sengaja DIPERTAHANKAN supaya customer tidak
+            // perlu ketik ulang — hanya pilihan tanggal yang berubah.
+            $session->expecting_field = 'booking_tanggal';
+            return $this->renderIntent('booking_tanya_tanggal', $session);
+        }
+
+        // Natural-language "ganti / pindah jam" dari step setelah jam
+        // (nama_anak / usia_bb / konfirmasi) → kembali ke step jam.
+        if ($field !== 'booking_tanggal' && $field !== 'booking_jam'
+            && str_contains($low, 'jam')
+            && preg_match('/\b(ganti|pindah|ubah|ulang|lain|baru)\b/u', $low)) {
+            $session->setData('booking_jam', null);
+            $session->expecting_field = 'booking_jam';
+            return $this->renderIntent('booking_tanya_jam', $session);
         }
 
         switch ($field) {
