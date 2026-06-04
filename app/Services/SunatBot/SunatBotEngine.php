@@ -1337,8 +1337,56 @@ class SunatBotEngine
             '{{nama_anak}}'   => $bookingNamaAnak !== '' ? ucwords($bookingNamaAnak) : '',
             '{{usia_bb}}'     => $bookingUsiaBb,
             '{{jam_list}}'    => $this->buildJamList($bookingTanggalRaw),
+            '{{nomor_admin}}' => $this->buildNomorAdminSunat(),
         ];
 
         return strtr($template, $replacements);
+    }
+
+    /**
+     * List nomor WA admin sunat (users.flagging_admin_sunat=1) sebagai
+     * bullet list `- Nama: wa.me/<no>`. Dipakai di booking_sukses dan
+     * template lain yang minta customer hubungi admin manusia kalau
+     * ada kendala. Kalau tidak ada admin yang ditandai, kembali ke
+     * teks fallback "klinik" supaya kalimat tetap natural.
+     */
+    private function buildNomorAdminSunat(): string
+    {
+        try {
+            $rows = \DB::table('users')
+                ->where('users.flagging_admin_sunat', 1)
+                ->join('stafs', 'users.staf_id', '=', 'stafs.id')
+                ->select('stafs.nama', 'stafs.no_hp', 'stafs.no_telp')
+                ->orderBy('stafs.nama')
+                ->get();
+        } catch (\Throwable $e) {
+            return 'klinik';
+        }
+
+        $lines = [];
+        foreach ($rows as $r) {
+            $raw = trim((string) ($r->no_hp ?: $r->no_telp));
+            if ($raw === '') continue;
+            $e164 = $this->normalizePhoneToE164($raw);
+            if ($e164 === '') continue;
+            $lines[] = '- ' . ucwords(mb_strtolower((string) $r->nama)) . ': wa.me/' . $e164;
+        }
+
+        if ($lines === []) return 'klinik';
+        return implode("\n", $lines);
+    }
+
+    /**
+     * "081..." / "+62..." / "62..." → "62..." (digits only). Kembali
+     * string kosong kalau tidak bisa di-normalize.
+     */
+    private function normalizePhoneToE164(string $raw): string
+    {
+        $digits = preg_replace('/\D+/', '', $raw);
+        if ($digits === '' || $digits === null) return '';
+        if (str_starts_with($digits, '0'))   return '62' . substr($digits, 1);
+        if (str_starts_with($digits, '62'))  return $digits;
+        if (str_starts_with($digits, '8'))   return '62' . $digits;
+        return $digits;
     }
 }
