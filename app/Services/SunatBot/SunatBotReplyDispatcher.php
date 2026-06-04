@@ -140,6 +140,11 @@ class SunatBotReplyDispatcher
                 'touched'        => 1,
                 'staf_id'        => null,
                 'flagged_intent' => 'sunat_bot',
+                // Tanpa chat_sunat=1 baris ini ter-filter dari thread view
+                // di atika (queryData/refresh: WHERE chat_admin=1 OR
+                // chat_sunat=1), sehingga bot reply tidak muncul di
+                // /messages/{no_telp} meski sudah terkirim ke customer.
+                'chat_sunat'     => 1,
             ]);
         } catch (\Throwable $e) {
             Log::warning('SUNAT_BOT_MESSAGE_LOG_FAIL', [
