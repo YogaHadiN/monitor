@@ -26,6 +26,7 @@ class SunatBotEngine
         'domisili'            => 'tanya_domisili',            // 2.2
         'usia_bb'             => 'tanya_usia_bb_konfirmasi',  // 2.3
         'indikasi_khitan'     => 'tanya_indikasi',            // 2.4
+        'postur_tubuh'        => 'tanya_postur_tubuh',        // 2.4.5
         'riwayat_kesehatan'   => 'tanya_riwayat_kesehatan',   // 2.5 (escalation gate)
         'sudah_tahu_metode'   => 'tanya_sudah_tahu_metode',   // 2.6 (conditional render)
         'pengalaman_medis'    => 'tanya_pengalaman',          // 2.7 (emits 2.8 after capture)
@@ -75,6 +76,7 @@ class SunatBotEngine
         'domisili'           => 'kota / kecamatan domisili pasien (Tangerang/Jakarta/dst)',
         'usia_bb'            => 'usia anak (tahun) dan berat badan (kg) digabung apa adanya',
         'indikasi_khitan'    => 'alasan / keluhan medis yang menyebabkan ingin di-khitan, atau "tidak ada"',
+        'postur_tubuh'       => 'postur tubuh anak: "gemuk" / "obesitas" kalau berat, atau "tidak gemuk" / "proporsional" / "kurus" kalau bukan',
         'riwayat_kesehatan'  => 'kondisi kesehatan khusus anak (gangguan pembekuan darah, jantung, autisme, dll) atau "tidak ada"',
         'sudah_tahu_metode'  => 'apakah pasien sudah tahu metode khitan kami: "ya"/"sudah" atau "belum"/"tidak"',
         'pengalaman_medis'   => 'pengalaman tindakan medis anak sebelumnya (trauma/sudah pernah disunat) atau "belum ada"',
