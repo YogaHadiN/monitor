@@ -741,18 +741,6 @@ class SunatBotEngine
             return $this->escalate($session);
         }
 
-        // Race-safety: cek konflik ulang sebelum insert.
-        $taken = JadwalSunat::where('tanggal', $tanggalStr)
-            ->where('jam', $jam . ':00')
-            ->where('status', 'BOOKED')
-            ->exists();
-        if ($taken) {
-            $session->setData('booking_jam', null);
-            $session->expecting_field = 'booking_jam';
-            $session->save();
-            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
-        }
-
         // Catatan = sumber + usia/BB supaya operator + UI staf langsung lihat.
         $catatan = 'Booking via SunatBot';
         $usia    = $session->getData('booking_usia_anak');
@@ -763,18 +751,48 @@ class SunatBotEngine
             $catatan  .= ' | Usia: ' . $usia . ' ' . $unit . ', BB: ' . $bbDisplay . ' kg';
         }
 
+        // Race-safety + handle slot bekas CANCELLED. Unique constraint
+        // `(tenant_id, tanggal, jam)` tidak melihat status, jadi row
+        // CANCELLED lama bisa block insert baru. Pola: kalau ada row di
+        // slot sama → status BOOKED berarti slot sudah dipakai (suruh
+        // ganti jam); status lain (CANCELLED/EXPIRED) reactivate jadi
+        // BOOKED dengan data baru.
+        $existing = JadwalSunat::where('tenant_id', 1)
+            ->where('tanggal', $tanggalStr)
+            ->where('jam', $jam . ':00')
+            ->first();
+
+        if ($existing && $existing->status === 'BOOKED') {
+            $session->setData('booking_jam', null);
+            $session->expecting_field = 'booking_jam';
+            $session->save();
+            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+        }
+
         try {
-            $row = JadwalSunat::create([
-                'tenant_id'   => 1,
-                'pasien_id'   => null,
-                'tanggal'     => $tanggalStr,
-                'jam'         => $jam . ':00',
-                'status'      => 'BOOKED',
-                'nama_pasien' => $namaAnak,
-                'no_telp'     => (string) $session->no_telp,
-                'catatan'     => $catatan,
-                'created_by'  => null,
-            ]);
+            if ($existing) {
+                $existing->update([
+                    'pasien_id'   => null,
+                    'status'      => 'BOOKED',
+                    'nama_pasien' => $namaAnak,
+                    'no_telp'     => (string) $session->no_telp,
+                    'catatan'     => $catatan,
+                    'created_by'  => null,
+                ]);
+                $row = $existing->fresh();
+            } else {
+                $row = JadwalSunat::create([
+                    'tenant_id'   => 1,
+                    'pasien_id'   => null,
+                    'tanggal'     => $tanggalStr,
+                    'jam'         => $jam . ':00',
+                    'status'      => 'BOOKED',
+                    'nama_pasien' => $namaAnak,
+                    'no_telp'     => (string) $session->no_telp,
+                    'catatan'     => $catatan,
+                    'created_by'  => null,
+                ]);
+            }
         } catch (\Throwable $e) {
             Log::error('SUNAT_BOOKING_INSERT_FAILED', [
                 'no_telp'  => $session->no_telp,
