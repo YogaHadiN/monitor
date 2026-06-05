@@ -1234,6 +1234,12 @@ class SunatBotEngine
                 'kasih tau', 'kasi tau', 'kasi tahu', 'kasih tahu',
                 'minta info', 'tolong info', 'infokan', 'minta penjelasan',
                 'penjelasan', 'di info', 'diinfo',
+                // Kata pendek yang lebih sering = "boleh dijelaskan" /
+                // "mau dijelaskan" daripada "boleh saya udah tahu".
+                // Pertanyaan punya 2 opsi (sudah tahu vs perlu jelaskan)
+                // dan opsi kedua lebih dekat ke kata kerja, jadi default
+                // ke arah penjelasan. Lebih aman: ngasih info > skip info.
+                'boleh', 'mau', 'silakan', 'silahkan', 'monggo', 'gas',
             ];
             foreach ($explainPatterns as $p) {
                 if (str_contains($v, $p)) return false;
@@ -1242,6 +1248,18 @@ class SunatBotEngine
 
         // Negation prefix anywhere → not yes.
         if (preg_match('/\b(tidak|gak|nggak|belum|bukan)\b/u', $v)) {
+            return false;
+        }
+
+        // Untuk sudah_tahu_metode, batasi YES ke kata yang eksplisit
+        // berarti "saya sudah tahu" — "ya"/"iya"/"ok" generik tidak
+        // cukup informatif untuk pertanyaan dua-opsi ini.
+        if ($field === 'sudah_tahu_metode') {
+            $yesStrict = ['sudah', 'sudah tahu', 'sudah paham', 'paham', 'tahu', 'tau', 'ngerti', 'mengerti'];
+            foreach ($yesStrict as $kw) {
+                if ($v === $kw) return true;
+                if (preg_match('/\b' . preg_quote($kw, '/') . '\b/u', $v)) return true;
+            }
             return false;
         }
 
