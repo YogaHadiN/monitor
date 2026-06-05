@@ -9,6 +9,19 @@ use Illuminate\Support\Facades\Log;
 class IntentClassifier
 {
     /**
+     * Context phone untuk audit trail — di-set sekali dari SunatBotEngine
+     * sebelum tiap turn supaya logCall() bisa atribusi call ke percakapan
+     * tertentu. Optional: kalau tidak di-set, log tetap masuk tanpa
+     * no_telp.
+     */
+    private ?string $contextPhone = null;
+
+    public function setContext(?string $noTelp): void
+    {
+        $this->contextPhone = $noTelp !== '' ? $noTelp : null;
+    }
+
+    /**
      * Classify a message into one or more intent slugs.
      * Returns an array of slugs (possibly empty) drawn from $candidates.
      */
@@ -46,19 +59,24 @@ class IntentClassifier
             . "Pesan client: \"{$msg}\"\n\n"
             . "JSON array:";
 
+        $payload = [
+            'model'       => 'gpt-4o-mini',
+            'temperature' => 0,
+            'max_tokens'  => 100,
+            'response_format' => ['type' => 'json_object'],
+            'messages'    => [
+                ['role' => 'system', 'content' => 'Kamu klasifikator intent. Balas dengan JSON object berisi field "intents" berupa array string slug.'],
+                ['role' => 'user',   'content' => $prompt],
+            ],
+        ];
+        $start = microtime(true);
+
         try {
             $response = Http::withToken($apiKey)
                 ->timeout(15)
-                ->post('https://api.openai.com/v1/chat/completions', [
-                    'model'       => 'gpt-4o-mini',
-                    'temperature' => 0,
-                    'max_tokens'  => 100,
-                    'response_format' => ['type' => 'json_object'],
-                    'messages'    => [
-                        ['role' => 'system', 'content' => 'Kamu klasifikator intent. Balas dengan JSON object berisi field "intents" berupa array string slug.'],
-                        ['role' => 'user',   'content' => $prompt],
-                    ],
-                ]);
+                ->post('https://api.openai.com/v1/chat/completions', $payload);
+
+            $this->logCall('classify', $msg, $payload, $response, $start);
 
             if (!$response->ok()) {
                 Log::warning('SUNAT_BOT_INTENT_HTTP_FAIL', ['status' => $response->status()]);
@@ -74,6 +92,7 @@ class IntentClassifier
                 fn ($s) => in_array($s, $candidateSlugs, true)
             ));
         } catch (\Throwable $e) {
+            $this->logCall('classify', $msg, $payload, null, $start, $e->getMessage());
             Log::warning('SUNAT_BOT_INTENT_EXCEPTION', ['err' => $e->getMessage()]);
             return [];
         }
@@ -112,19 +131,24 @@ class IntentClassifier
             . "Field:\n{$catalogue}\n\n"
             . "Pesan: \"{$msg}\"";
 
+        $payload = [
+            'model'           => 'gpt-4o-mini',
+            'temperature'     => 0,
+            'max_tokens'      => 200,
+            'response_format' => ['type' => 'json_object'],
+            'messages'        => [
+                ['role' => 'system', 'content' => 'Kamu ekstraktor data multi-field. Balas JSON object dengan key sesuai daftar field; nilai string kosong kalau tidak ada.'],
+                ['role' => 'user',   'content' => $prompt],
+            ],
+        ];
+        $start = microtime(true);
+
         try {
             $response = Http::withToken($apiKey)
                 ->timeout(15)
-                ->post('https://api.openai.com/v1/chat/completions', [
-                    'model'           => 'gpt-4o-mini',
-                    'temperature'     => 0,
-                    'max_tokens'      => 200,
-                    'response_format' => ['type' => 'json_object'],
-                    'messages'        => [
-                        ['role' => 'system', 'content' => 'Kamu ekstraktor data multi-field. Balas JSON object dengan key sesuai daftar field; nilai string kosong kalau tidak ada.'],
-                        ['role' => 'user',   'content' => $prompt],
-                    ],
-                ]);
+                ->post('https://api.openai.com/v1/chat/completions', $payload);
+
+            $this->logCall('extractFields', $msg, $payload, $response, $start);
 
             if (!$response->ok()) return $empty;
 
@@ -139,6 +163,7 @@ class IntentClassifier
             }
             return $out;
         } catch (\Throwable $e) {
+            $this->logCall('extractFields', $msg, $payload, null, $start, $e->getMessage());
             Log::warning('SUNAT_BOT_EXTRACT_FIELDS_EXCEPTION', ['err' => $e->getMessage()]);
             return $empty;
         }
@@ -164,19 +189,24 @@ class IntentClassifier
             . "Pesan: \"{$msg}\"\n"
             . "Balas HANYA JSON object dengan field \"value\" berisi string. Kalau tidak bisa, isi value dengan pesan apa adanya.";
 
+        $payload = [
+            'model'       => 'gpt-4o-mini',
+            'temperature' => 0,
+            'max_tokens'  => 100,
+            'response_format' => ['type' => 'json_object'],
+            'messages'    => [
+                ['role' => 'system', 'content' => 'Kamu ekstraktor data. Balas JSON object dengan field "value".'],
+                ['role' => 'user',   'content' => $prompt],
+            ],
+        ];
+        $start = microtime(true);
+
         try {
             $response = Http::withToken($apiKey)
                 ->timeout(15)
-                ->post('https://api.openai.com/v1/chat/completions', [
-                    'model'       => 'gpt-4o-mini',
-                    'temperature' => 0,
-                    'max_tokens'  => 100,
-                    'response_format' => ['type' => 'json_object'],
-                    'messages'    => [
-                        ['role' => 'system', 'content' => 'Kamu ekstraktor data. Balas JSON object dengan field "value".'],
-                        ['role' => 'user',   'content' => $prompt],
-                    ],
-                ]);
+                ->post('https://api.openai.com/v1/chat/completions', $payload);
+
+            $this->logCall('extractField:' . $field, $msg, $payload, $response, $start);
 
             if (!$response->ok()) return $msg;
 
@@ -185,8 +215,50 @@ class IntentClassifier
             $val = is_array($decoded) ? ($decoded['value'] ?? null) : null;
             return is_string($val) && trim($val) !== '' ? trim($val) : $msg;
         } catch (\Throwable $e) {
+            $this->logCall('extractField:' . $field, $msg, $payload, null, $start, $e->getMessage());
             Log::warning('SUNAT_BOT_EXTRACT_EXCEPTION', ['err' => $e->getMessage()]);
             return $msg;
+        }
+    }
+
+    /**
+     * Persist tiap call OpenAI ke open_ai_logs untuk audit trail.
+     * Trimming agar baris tidak meledak (LONGTEXT MariaDB bisa, tapi
+     * 64 KB per kolom cukup buat debugging). Failure logging-nya sendiri
+     * di-swallow — kita tidak mau gagal log bikin gagal pipeline bot.
+     */
+    private function logCall(string $method, string $prompt, array $payload, $response, float $startUs, ?string $errorMessage = null): void
+    {
+        try {
+            $durationMs = (int) ((microtime(true) - $startUs) * 1000);
+            $status     = null;
+            $rawBody    = null;
+            $ok         = false;
+            if ($response !== null) {
+                try {
+                    $status  = $response->status();
+                    $rawBody = (string) $response->body();
+                    $ok      = $response->ok();
+                } catch (\Throwable $e) {
+                    // ignore — response object mungkin half-baked di exception path
+                }
+            }
+            \DB::table('open_ai_logs')->insert([
+                'no_telp'         => $this->contextPhone,
+                'method'          => mb_substr($method, 0, 32),
+                'model'           => $payload['model'] ?? null,
+                'prompt'          => mb_substr($prompt, 0, 65000),
+                'request_payload' => mb_substr((string) json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 0, 65000),
+                'response_raw'    => $rawBody !== null ? mb_substr($rawBody, 0, 65000) : null,
+                'http_status'     => $status,
+                'duration_ms'     => $durationMs,
+                'ok'              => $ok ? 1 : 0,
+                'error'           => $errorMessage !== null ? mb_substr($errorMessage, 0, 2000) : null,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('OPEN_AI_LOG_INSERT_FAIL', ['err' => $e->getMessage()]);
         }
     }
 }

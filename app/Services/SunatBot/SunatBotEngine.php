@@ -93,6 +93,11 @@ class SunatBotEngine
      */
     public function handle(string $noTelp, string $message): array
     {
+        // Atribusi audit OpenAI ke percakapan: setiap classify /
+        // extractFields / extractField yang dipanggil dalam turn ini
+        // akan ter-log dengan no_telp ini di tabel open_ai_logs.
+        $this->classifier->setContext($noTelp);
+
         $msg        = trim($message);
         $msgLower   = mb_strtolower($msg);
         $hasTrigger = $this->hasTrigger($msgLower);
