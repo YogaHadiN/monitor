@@ -413,6 +413,14 @@ class SunatBotEngine
         $extracted = $this->classifier->extractFields($fields, $message);
 
         $stored = $extracted[$field] !== '' ? $extracted[$field] : trim($message);
+
+        // Bersihkan prefix umum kalau field-nya nama orang —
+        // AI kadang ngembaliin "Saya Yoga" karena di-mirror dari input,
+        // dan fallback raw message pasti ngandung prefix.
+        if ($field === 'nama_orang_tua') {
+            $stored = $this->cleanCapturedName($stored);
+        }
+
         if ($stored !== '') {
             $session->setData($field, $stored);
         }
@@ -694,7 +702,7 @@ class SunatBotEngine
 
     private function handleBookingNamaAnak(BotSession $session, string $msg): array
     {
-        $nama = trim($msg);
+        $nama = $this->cleanCapturedName(trim($msg));
         if ($nama === '') {
             return $this->renderIntent('booking_tanya_nama_anak', $session);
         }
@@ -1512,6 +1520,39 @@ class SunatBotEngine
 
         if ($lines === []) return 'klinik';
         return implode("\n", $lines);
+    }
+
+    /**
+     * Bersihkan prefix umum di jawaban nama (orang tua / anak). AI
+     * kadang ngembaliin echo "Saya Yoga" persis seperti input customer;
+     * fallback raw message juga pasti ada prefiks. Kita strip case-
+     * insensitive, satu kali per pattern, supaya "Saya Yoga" → "Yoga"
+     * tapi nama beneran ("Sayatama Putri") tidak terpotong (regex pakai
+     * \s+ supaya butuh whitespace setelah kata kunci).
+     */
+    private function cleanCapturedName(string $value): string
+    {
+        $v = trim($value);
+        if ($v === '') return $v;
+        $patterns = [
+            '/^nama\s+saya\s+(adalah\s+)?/iu',
+            '/^nama\s+orang\s+tua\s+(adalah\s+)?/iu',
+            '/^atas\s+nama\s+/iu',
+            '/^panggil\s+(saja\s+|aja\s+)?/iu',
+            '/^dengan\s+/iu',
+            '/^saya\s+/iu',
+            '/^aku\s+/iu',
+            '/^this\s+is\s+/iu',
+            '/^i\s+am\s+/iu',
+            '/^my\s+name\s+is\s+/iu',
+        ];
+        foreach ($patterns as $p) {
+            $v = (string) preg_replace($p, '', $v, 1);
+        }
+        // Trailing prefiks ramah ("kak", "pak", "bu") di akhir kalimat —
+        // bukan bagian dari nama, hapus juga.
+        $v = (string) preg_replace('/\s+(kak|kakak|pak|bu|ya)\.?$/iu', '', $v);
+        return trim($v);
     }
 
     /**
