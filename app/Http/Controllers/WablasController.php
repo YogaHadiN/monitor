@@ -484,6 +484,25 @@ class WablasController extends Controller
                        ->where('followup_status', 'active')
                        ->whereIn('status', ['active', 'booked'])
                        ->exists();
+
+            // Tentukan apakah bot akan handle reply atau perlu admin
+            // jawab manual. Bot akan handle hanya kalau ada BotSession
+            // yang BELUM is_complete AND tidak sedang awaiting_human
+            // dari followup pipeline. Selainnya (session tertutup, manual
+            // flag tanpa bot active, followup minta admin) → admin perlu
+            // balas → sudah_dibalas=0 supaya muncul di /messages list.
+            $botActifSession = \App\Models\BotSession::where('no_telp', (string) $this->no_telp)
+                ->where('is_complete', false)
+                ->exists();
+            $awaitingHuman = \App\Models\SunatChatSession::where('phone', (string) $this->no_telp)
+                ->where('awaiting_human', 1)
+                ->where('followup_status', 'active')
+                ->exists();
+            $botAkanBalas  = $botActifSession && !$awaitingHuman;
+            $sudahDibalas  = $dalamChatAdmin
+                ? 0
+                : ($dalamChatSunat ? ($botAkanBalas ? 1 : 0) : 1);
+
             $this->inbound_message = Message::create([
                 'no_telp'       => $this->no_telp,
                 'message'       => $this->message,
@@ -492,7 +511,7 @@ class WablasController extends Controller
                 'video_url'     => $this->video_url,
                 'audio_url'     => $this->audio_url,
                 'sending'       => 0,
-                'sudah_dibalas' => $dalamChatAdmin ? 0 : 1,
+                'sudah_dibalas' => $sudahDibalas,
                 'tenant_id'     => 1,
                 'touched'       => 0,
                 'chat_admin'    => $dalamChatAdmin ? 1 : 0,
