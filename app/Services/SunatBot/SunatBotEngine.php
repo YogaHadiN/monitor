@@ -103,6 +103,35 @@ class SunatBotEngine
         $hasTrigger = $this->hasTrigger($msgLower);
         $session    = BotSession::where('no_telp', $noTelp)->first();
 
+        // Customer ketik "akhiri" untuk keluar dari handoff manusia.
+        // Reset: hapus BotSession (kalau ada) + clear awaiting_human di
+        // sunat_chat_sessions. Customer balik ke mode "bot otomatis".
+        if ($msgLower === 'akhiri') {
+            $hadHandoff = false;
+            if ($session) {
+                $hadHandoff = true;
+                $session->delete();
+            }
+            $fuAffected = \DB::table('sunat_chat_sessions')
+                ->where('phone', $noTelp)
+                ->where('awaiting_human', 1)
+                ->update(['awaiting_human' => 0, 'updated_at' => now()]);
+            if ($fuAffected > 0) {
+                $hadHandoff = true;
+            }
+            if ($hadHandoff) {
+                Log::info('SUNAT_BOT_HANDOFF_ENDED_BY_USER', [
+                    'phone'              => $noTelp,
+                    'followup_cleared'   => $fuAffected,
+                ]);
+                return ['handled' => true, 'replies' => [[
+                    'text'  => 'Sesi handoff diakhiri. Sekarang bot otomatis aktif kembali kak. Kirim *sunat* untuk konsultasi sunat, atau *daftar* untuk pendaftaran.',
+                    'media' => null,
+                ]]];
+            }
+            // tidak sedang handoff → lanjut ke logic biasa
+        }
+
         if ($session === null && !$hasTrigger) {
             return ['handled' => false, 'replies' => []];
         }
