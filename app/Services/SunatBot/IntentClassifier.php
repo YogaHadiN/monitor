@@ -222,43 +222,47 @@ class IntentClassifier
     }
 
     /**
-     * Persist tiap call OpenAI ke open_ai_logs untuk audit trail.
-     * Trimming agar baris tidak meledak (LONGTEXT MariaDB bisa, tapi
-     * 64 KB per kolom cukup buat debugging). Failure logging-nya sendiri
-     * di-swallow — kita tidak mau gagal log bikin gagal pipeline bot.
+     * Persist tiap call OpenAI ke tabel `openai_logs` (shared dengan log
+     * fitur klinik berkas_pemeriksaan / validate_rujukan) supaya admin
+     * lihat satu dashboard untuk semua AI traffic. feature di-prefix
+     * `sunatbot.` supaya gampang di-filter di UI. Failure logging-nya
+     * sendiri di-swallow — gagal log tidak boleh ganggu reply bot.
      */
     private function logCall(string $method, string $prompt, array $payload, $response, float $startUs, ?string $errorMessage = null): void
     {
         try {
-            $durationMs = (int) ((microtime(true) - $startUs) * 1000);
-            $status     = null;
-            $rawBody    = null;
-            $ok         = false;
+            $status   = null;
+            $rawBody  = null;
+            $ok       = false;
+            $inTok    = null;
+            $outTok   = null;
             if ($response !== null) {
                 try {
                     $status  = $response->status();
                     $rawBody = (string) $response->body();
                     $ok      = $response->ok();
+                    $usage   = $response->json('usage') ?? [];
+                    $inTok   = $usage['prompt_tokens']     ?? null;
+                    $outTok  = $usage['completion_tokens'] ?? null;
                 } catch (\Throwable $e) {
                     // ignore — response object mungkin half-baked di exception path
                 }
             }
-            \DB::table('open_ai_logs')->insert([
-                'no_telp'         => $this->contextPhone,
-                'method'          => mb_substr($method, 0, 32),
-                'model'           => $payload['model'] ?? null,
-                'prompt'          => mb_substr($prompt, 0, 65000),
-                'request_payload' => mb_substr((string) json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 0, 65000),
-                'response_raw'    => $rawBody !== null ? mb_substr($rawBody, 0, 65000) : null,
-                'http_status'     => $status,
-                'duration_ms'     => $durationMs,
-                'ok'              => $ok ? 1 : 0,
-                'error'           => $errorMessage !== null ? mb_substr($errorMessage, 0, 2000) : null,
-                'created_at'      => now(),
-                'updated_at'      => now(),
+            \DB::table('openai_logs')->insert([
+                'feature'       => 'sunatbot.' . mb_substr($method, 0, 64),
+                'periksa_id'    => null,
+                'no_telp'       => $this->contextPhone,
+                'prompt'        => mb_substr($prompt, 0, 65000),
+                'response'      => $rawBody !== null ? mb_substr($rawBody, 0, 65000) : null,
+                'success'       => $ok ? 1 : 0,
+                'error'         => $errorMessage !== null ? mb_substr($errorMessage, 0, 2000) : null,
+                'input_tokens'  => $inTok,
+                'output_tokens' => $outTok,
+                'created_at'    => now(),
+                'updated_at'    => now(),
             ]);
         } catch (\Throwable $e) {
-            Log::warning('OPEN_AI_LOG_INSERT_FAIL', ['err' => $e->getMessage()]);
+            Log::warning('OPENAI_LOG_INSERT_FAIL', ['err' => $e->getMessage()]);
         }
     }
 }
