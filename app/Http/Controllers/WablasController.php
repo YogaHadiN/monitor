@@ -335,6 +335,34 @@ class WablasController extends Controller
             $sunatBotWhitelist  = (array) config('sunatbot.whitelist_phones', ['6281381912803']);
             $sunatBotShouldRun  = $sunatBotEnabled || in_array((string) $this->no_telp, $sunatBotWhitelist, true);
 
+            // Fallback: kalau sunat bot OFF untuk nomor ini DAN customer
+            // ngomongin "sunat"/"khitan" — kirim shortcut langsung ke
+            // admin sunat (Rona) supaya tidak ke-skip diam-diam.
+            // wa.me/<E.164> di-render WhatsApp jadi tap-able link.
+            $msgLower = mb_strtolower(trim((string) $this->message));
+            if (
+                !$sunatBotShouldRun
+                && (str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan'))
+            ) {
+                $rona      = (string) config('sunatbot.nomor_rona', '0895-3692-69190');
+                $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
+                if (str_starts_with($ronaDigits, '0'))  $ronaE164 = '62' . substr($ronaDigits, 1);
+                elseif (str_starts_with($ronaDigits, '62')) $ronaE164 = $ronaDigits;
+                elseif (str_starts_with($ronaDigits, '8'))  $ronaE164 = '62' . $ronaDigits;
+                else $ronaE164 = $ronaDigits;
+
+                $msg = "Halo kak 🙏\n\n"
+                     . "Untuk informasi tentang *sunat* bisa langsung chat admin kami:\n"
+                     . "*Rona* — https://wa.me/{$ronaE164}\n\n"
+                     . "Tap link di atas untuk langsung membuka chat ya kak. Terima kasih.";
+                $this->autoReply($msg);
+                \Log::info('SUNAT_FALLBACK_AUTO_REPLY', [
+                    'phone'    => $this->no_telp,
+                    'rona_wa'  => $ronaE164,
+                ]);
+                return;
+            }
+
             // Whitelist-only QA reset: "ulang sunat" wipes the existing
             // session + any pending buffer for this phone so the next
             // sunat/khitan trigger starts a fresh flow. Bypasses the
