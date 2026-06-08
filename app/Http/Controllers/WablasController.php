@@ -337,30 +337,41 @@ class WablasController extends Controller
 
             $msgLower = mb_strtolower(trim((string) $this->message));
 
-            // Override: flow PENDAFTARAN JADWAL SUNAT selalu aktif,
-            // terlepas dari tenant flag — supaya customer yang udah
-            // siap booking tidak ter-redirect ke admin manual yang
-            // belum tentu online. Detection: keyword booking dari
-            // config sunatbot.booking_keywords (mau daftar, daftar
-            // sunat, dst.) ATAU combo "daftar/booking" + "sunat/khitan".
-            $isBookingRequest = false;
-            $bookingKeywords  = (array) config('sunatbot.booking_keywords', []);
+            // Override 1: kalau sudah ada SESI sunat AKTIF untuk nomor
+            // ini, biarkan engine lanjut handle. "daftar" / "ya" /
+            // jawaban field di tengah flow tidak boleh ke-bajak ke
+            // legacy daftar dokter flow.
+            $hasActiveSunatSession = \App\Models\BotSession::where('no_telp', (string) $this->no_telp)
+                ->where('is_complete', false)
+                ->exists();
+            if ($hasActiveSunatSession && !$sunatBotShouldRun) {
+                $sunatBotShouldRun = true;
+                \Log::info('SUNAT_BOT_FORCED_ON_FOR_ACTIVE_SESSION', ['phone' => $this->no_telp]);
+            }
+
+            // Override 2: flow PENDAFTARAN JADWAL SUNAT selalu aktif
+            // KALAU pesan EKSPLISIT minta daftar/booking sunat. Kata
+            // "daftar" sendirian ambigu (daftar dokter umum vs daftar
+            // sunat) — jadi harus combo: ada kata daftar/booking AND
+            // ada kata sunat/khitan dalam pesan yang sama. Itu sinyal
+            // yang cukup jelas untuk override tenant flag.
+            $hasBookingWord = false;
+            $bookingKeywords = (array) config('sunatbot.booking_keywords', []);
             foreach ($bookingKeywords as $kw) {
                 $kw = trim((string) $kw);
                 if ($kw === '') continue;
                 if (str_contains($msgLower, mb_strtolower($kw))) {
-                    $isBookingRequest = true;
+                    $hasBookingWord = true;
                     break;
                 }
             }
-            if (
-                !$isBookingRequest
+            if (!$hasBookingWord
                 && (str_contains($msgLower, 'daftar') || str_contains($msgLower, 'booking'))
-                && (str_contains($msgLower, 'sunat')  || str_contains($msgLower, 'khitan'))
             ) {
-                $isBookingRequest = true;
+                $hasBookingWord = true;
             }
-            if ($isBookingRequest && !$sunatBotShouldRun) {
+            $hasSunatWord = str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan');
+            if ($hasBookingWord && $hasSunatWord && !$sunatBotShouldRun) {
                 $sunatBotShouldRun = true;
                 \Log::info('SUNAT_BOT_FORCED_ON_FOR_BOOKING', [
                     'phone'   => $this->no_telp,
