@@ -29,8 +29,7 @@ class SunatBotEngine
         'postur_tubuh'        => 'tanya_postur_tubuh',        // 2.4.5
         'riwayat_kesehatan'   => 'tanya_riwayat_kesehatan',   // 2.5 (escalation gate)
         'sudah_tahu_metode'   => 'tanya_sudah_tahu_metode',   // 2.6 (conditional render)
-        'pengalaman_medis'    => 'tanya_pengalaman',          // 2.7 (emits 2.8 after capture)
-        'setuju_dokumentasi'  => 'tanya_setuju_dokumentasi',  // 2.9 (conditional render)
+        'pengalaman_medis'    => 'tanya_pengalaman',          // 2.7 (emits 2.8 + contoh_dokumentasi)
     ];
 
     /**
@@ -80,7 +79,6 @@ class SunatBotEngine
         'riwayat_kesehatan'  => 'kondisi kesehatan khusus anak (gangguan pembekuan darah, jantung, autisme, dll) atau "tidak ada"',
         'sudah_tahu_metode'  => 'apakah pasien sudah tahu metode khitan kami: "ya"/"sudah" atau "belum"/"tidak"',
         'pengalaman_medis'   => 'pengalaman tindakan medis anak sebelumnya (trauma/sudah pernah disunat) atau "belum ada"',
-        'setuju_dokumentasi' => 'apakah pasien setuju dibuatkan dokumentasi gratis: "ya" atau "tidak"',
     ];
 
     public function __construct(private IntentClassifier $classifier)
@@ -349,10 +347,11 @@ class SunatBotEngine
         }
         if ($field === 'pengalaman_medis') {
             // 2.8 — testimonial video + penjelasan kelebihan, selalu kirim.
+            // contoh_dokumentasi (video kesaksian) ikut di-render sekalian
+            // karena tahap "minta izin dokumentasi" sudah dihapus (per
+            // permintaan operator: bubble "berkenan kami buatkan
+            // dokumentasi?" diasumsikan default boleh, tidak perlu tanya).
             $extra = array_merge($extra, $this->renderIntent('edukasi_kelebihan', $session));
-        }
-        if ($field === 'setuju_dokumentasi' && $this->isYesValue($capturedValue, $field)) {
-            // 2.9 — pasien setuju → kirim contoh konten dokumentasi.
             $extra = array_merge($extra, $this->renderIntent('contoh_dokumentasi', $session));
         }
 
