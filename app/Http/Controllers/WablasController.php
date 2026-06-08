@@ -3706,57 +3706,22 @@ class WablasController extends Controller
                     $reservasi_online->save();
 
                 // === USG ===
+                // USG sekarang ONLY walk-in: pendaftaran online dimatikan
+                // total karena petugas USG tidak online-handle antrian
+                // (per permintaan operator 2026-06-08). Apapun jadwal /
+                // tenant flag → balas instruksi datang langsung + cleanup
+                // reservasi yang sudah ke-buat.
                 } elseif ($tipeMsg === '3') {
-                    $jadwal_usg = \App\Models\JadwalKonsultasi::where('hari_id', $nowJkt->isoWeekday())
-                        ->where('tipe_konsultasi_id', 4)
-                        ->first();
-
                     $this->chatBotLog(__LINE__);
-                    $this->chatBotLog("tipeDbInt");
-                    $this->chatBotLog( $tipeDbInt );
-                    $this->chatBotLog("jadwal_usg");
-                    $this->chatBotLog( $jadwal_usg );
+                    $this->chatBotLog('USG walk-in only — skip online flow');
 
-                    if ($jadwal_usg) {
-                        if ($tenant && !$tenant->usg_available) {
-                            $message  = 'Karena satu dan lain hal, pelayanan USG hari ini ditiadakan.';
-                            $message .= PHP_EOL.PHP_EOL.'Kakak dapat mendaftar kembali saat jadwal USG kehamilan tersedia.';
-                            $message .= PHP_EOL.'Untuk info jadwal, ketik "Jadwal USG".';
-                            $message .= PHP_EOL.'Mohon maaf atas ketidaknyamanannya.';
-                            $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
-                            $this->autoReply($message);
-                            return false;
-                        }
-
-                        $jamAkhir     = \Carbon\Carbon::parse($jadwal_usg->jam_akhir, $tz);
-                        $cutoffDaftar = $jamAkhir->copy()->subHour();
-
-                        if ($nowJkt->gt($jamAkhir)) {
-                            $message  = 'Pelayanan USG kehamilan hari ini telah selesai pada pukul '.$jamAkhir->format('H:i').'.';
-                            $message .= PHP_EOL.'Untuk info jadwal, ketik "Jadwal USG".';
-                            $message .= PHP_EOL.'Mohon maaf atas ketidaknyamanannya.';
-                            $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
-                            $this->autoReply($message);
-                            return false;
-                        } elseif ($nowJkt->gt($cutoffDaftar)) {
-                            $message  = 'Pendaftaran USG kehamilan *secara online* hari ini telah ditutup.';
-                            $message .= PHP_EOL.'Kakak masih dapat mendaftar *langsung* di klinik hingga pukul '.$jamAkhir->format('H:i').' atau telepon 021-5977529.';
-                            $message .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya.';
-                            $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
-                            $this->autoReply($message);
-                            return false;
-                        } else {
-                            $reservasi_online->tipe_konsultasi_id = $tipeDbInt;
-                            $reservasi_online->save();
-                        }
-                    } else {
-                        $message  = 'Hari ini tidak tersedia jadwal USG kehamilan. Mohon mendaftar saat jadwal tersedia.';
-                        $message .= PHP_EOL.'Untuk info jadwal, ketik "Jadwal USG".';
-                        $message .= PHP_EOL.PHP_EOL.'Mohon maaf atas ketidaknyamanannya.';
-                        $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
-                        $this->autoReply($message);
-                        return false;
-                    }
+                    $message  = 'Untuk *USG kehamilan*, pendaftaran *hanya bisa datang langsung* ke klinik ya kak 🙏';
+                    $message .= PHP_EOL.PHP_EOL.'Silakan langsung datang sesuai jam pelayanan USG. Untuk info jadwal, ketik *Jadwal USG*.';
+                    $message .= PHP_EOL.'Kalau perlu info lain bisa telepon 021-5977529.';
+                    $message .= PHP_EOL.PHP_EOL.'Terima kasih kak.';
+                    $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
+                    $this->autoReply($message);
+                    return false;
 
                 // === SpDV (input '4' → DB tipe 6) ===
                 } elseif ($tipeMsg === '4') {
