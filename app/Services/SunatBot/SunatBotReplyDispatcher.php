@@ -51,6 +51,21 @@ class SunatBotReplyDispatcher
             $isFirst       = true;
 
             foreach ($replies as $reply) {
+                // Marker bubble: kalau ada field `delay_seconds`,
+                // dispatcher sleep N detik tanpa kirim bubble. Dipakai
+                // engine untuk suspense / build-up (mis. delay 60s
+                // sebelum quote harga supaya testimoni sempat ditonton).
+                $explicitDelay = isset($reply['delay_seconds']) ? (int) $reply['delay_seconds'] : 0;
+                if ($explicitDelay > 0) {
+                    Log::info('SUNAT_BOT_DISPATCH_EXPLICIT_DELAY', [
+                        'phone'   => $phone,
+                        'seconds' => $explicitDelay,
+                    ]);
+                    sleep($explicitDelay);
+                    $prevSentMedia = false;
+                    continue;
+                }
+
                 // Random delay 3-6 detik antar bubble supaya pengiriman
                 // terasa natural (customer punya waktu baca tiap bubble
                 // sebelum bubble berikutnya muncul). Skip untuk bubble
