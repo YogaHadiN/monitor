@@ -339,6 +339,14 @@ class SunatBotEngine
             return $this->escalate($session);
         }
 
+        // Step 2.4.5 escalation gate — postur tubuh gemuk butuh
+        // konsultasi langsung dengan dokter (faktor risiko anestesi
+        // & teknik prosedur). Begitu jawaban customer mengandung
+        // sinyal "ya/gemuk/obesitas", langsung handoff ke admin.
+        if ($field === 'postur_tubuh' && $this->isPosturGemuk($capturedValue)) {
+            return $this->escalate($session);
+        }
+
         // ---- Conditional renders before advancing -----------------
         $extra = [];
         if ($field === 'sudah_tahu_metode' && !$this->isYesValue($capturedValue, $field)) {
@@ -1235,6 +1243,28 @@ class SunatBotEngine
         return false;
     }
 
+    /**
+     * Deteksi jawaban postur_tubuh yang berarti "anak gemuk/obesitas".
+     * Sinyal positif (ya/gemuk/obesitas/...) → escalate ke admin karena
+     * butuh konsultasi langsung dokter (faktor risiko anestesi).
+     * Negatif (tidak gemuk/proporsional/kurus/normal) → lanjut flow.
+     */
+    private function isPosturGemuk(string $value): bool
+    {
+        $v = mb_strtolower(trim($value));
+        if ($v === '') return false;
+        // Negation prefix → bukan gemuk. "tidak gemuk", "ga gemuk" dst.
+        if (preg_match('/\b(tidak|gak|nggak|engga|enggak|belum|bukan|kurang)\b/u', $v)) {
+            return false;
+        }
+        $positive = ['gemuk', 'obesitas', 'obese', 'bongsor', 'overweight', 'ya', 'iya', 'iyaa', 'iyaaa', 'iyah', 'iyaa', 'betul', 'benar', 'memang gemuk'];
+        foreach ($positive as $kw) {
+            if ($v === $kw) return true;
+            if (preg_match('/\b' . preg_quote($kw, '/') . '\b/u', $v)) return true;
+        }
+        return false;
+    }
+
     private function matchesClosingPhrase(string $msgLower): bool
     {
         $phrases = (array) config('sunatbot.closing_phrases', []);
@@ -1328,12 +1358,16 @@ class SunatBotEngine
         $sentences = $this->splitText($text, $slug);
         $media     = $intent->mediaList();
 
+        // Text dulu, baru media — supaya penjelasan ke-bilang dulu,
+        // baru video / gambar muncul sebagai bukti / preview. Pattern
+        // ini lebih natural ketimbang media muncul di atas teks
+        // tanpa konteks.
         $bubbles = [];
-        foreach ($media as $file) {
-            $bubbles[] = ['text' => '', 'media' => $file];
-        }
         foreach ($sentences as $s) {
             $bubbles[] = ['text' => $s, 'media' => null];
+        }
+        foreach ($media as $file) {
+            $bubbles[] = ['text' => '', 'media' => $file];
         }
         return $bubbles;
     }
