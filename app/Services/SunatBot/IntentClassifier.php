@@ -76,7 +76,7 @@ class IntentClassifier
                 ->timeout(15)
                 ->post('https://api.openai.com/v1/chat/completions', $payload);
 
-            $this->logCall('classify', $msg, $payload, $response, $start);
+            $this->logCall('classify', $prompt, $payload, $response, $start);
 
             if (!$response->ok()) {
                 Log::warning('SUNAT_BOT_INTENT_HTTP_FAIL', ['status' => $response->status()]);
@@ -92,7 +92,7 @@ class IntentClassifier
                 fn ($s) => in_array($s, $candidateSlugs, true)
             ));
         } catch (\Throwable $e) {
-            $this->logCall('classify', $msg, $payload, null, $start, $e->getMessage());
+            $this->logCall('classify', $prompt, $payload, null, $start, $e->getMessage());
             Log::warning('SUNAT_BOT_INTENT_EXCEPTION', ['err' => $e->getMessage()]);
             return [];
         }
@@ -148,7 +148,7 @@ class IntentClassifier
                 ->timeout(15)
                 ->post('https://api.openai.com/v1/chat/completions', $payload);
 
-            $this->logCall('extractFields', $msg, $payload, $response, $start);
+            $this->logCall('extractFields', $prompt, $payload, $response, $start);
 
             if (!$response->ok()) return $empty;
 
@@ -163,7 +163,7 @@ class IntentClassifier
             }
             return $out;
         } catch (\Throwable $e) {
-            $this->logCall('extractFields', $msg, $payload, null, $start, $e->getMessage());
+            $this->logCall('extractFields', $prompt, $payload, null, $start, $e->getMessage());
             Log::warning('SUNAT_BOT_EXTRACT_FIELDS_EXCEPTION', ['err' => $e->getMessage()]);
             return $empty;
         }
@@ -206,7 +206,7 @@ class IntentClassifier
                 ->timeout(15)
                 ->post('https://api.openai.com/v1/chat/completions', $payload);
 
-            $this->logCall('extractField:' . $field, $msg, $payload, $response, $start);
+            $this->logCall('extractField:' . $field, $prompt, $payload, $response, $start);
 
             if (!$response->ok()) return $msg;
 
@@ -215,7 +215,7 @@ class IntentClassifier
             $val = is_array($decoded) ? ($decoded['value'] ?? null) : null;
             return is_string($val) && trim($val) !== '' ? trim($val) : $msg;
         } catch (\Throwable $e) {
-            $this->logCall('extractField:' . $field, $msg, $payload, null, $start, $e->getMessage());
+            $this->logCall('extractField:' . $field, $prompt, $payload, null, $start, $e->getMessage());
             Log::warning('SUNAT_BOT_EXTRACT_EXCEPTION', ['err' => $e->getMessage()]);
             return $msg;
         }
@@ -231,29 +231,37 @@ class IntentClassifier
     private function logCall(string $method, string $prompt, array $payload, $response, float $startUs, ?string $errorMessage = null): void
     {
         try {
-            $status   = null;
-            $rawBody  = null;
-            $ok       = false;
-            $inTok    = null;
-            $outTok   = null;
+            $status      = null;
+            $aiContent   = null;
+            $ok          = false;
+            $inTok       = null;
+            $outTok      = null;
             if ($response !== null) {
                 try {
-                    $status  = $response->status();
-                    $rawBody = (string) $response->body();
-                    $ok      = $response->ok();
-                    $usage   = $response->json('usage') ?? [];
-                    $inTok   = $usage['prompt_tokens']     ?? null;
-                    $outTok  = $usage['completion_tokens'] ?? null;
-                } catch (\Throwable $e) {
-                    // ignore — response object mungkin half-baked di exception path
-                }
+                    $status = $response->status();
+                    $ok     = $response->ok();
+                    $json   = $response->json() ?? [];
+                    $usage  = $json['usage'] ?? [];
+                    $inTok  = $usage['prompt_tokens']     ?? null;
+                    $outTok = $usage['completion_tokens'] ?? null;
+
+                    // Yang berguna untuk debugging cuma AI content (JSON
+                    // hasil classify / extract). Wrapper OpenAI (id, model,
+                    // choices, logprobs, system_fingerprint) di-strip
+                    // supaya kolom response tidak penuh escape-character.
+                    $raw     = (string) ($json['choices'][0]['message']['content'] ?? '');
+                    $decoded = json_decode($raw, true);
+                    $aiContent = is_array($decoded)
+                        ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                        : $raw;
+                } catch (\Throwable $e) {}
             }
             \DB::table('openai_logs')->insert([
                 'feature'       => 'sunatbot.' . mb_substr($method, 0, 64),
                 'periksa_id'    => null,
                 'no_telp'       => $this->contextPhone,
                 'prompt'        => mb_substr($prompt, 0, 65000),
-                'response'      => $rawBody !== null ? mb_substr($rawBody, 0, 65000) : null,
+                'response'      => $aiContent !== null ? mb_substr($aiContent, 0, 65000) : null,
                 'success'       => $ok ? 1 : 0,
                 'error'         => $errorMessage !== null ? mb_substr($errorMessage, 0, 2000) : null,
                 'input_tokens'  => $inTok,
