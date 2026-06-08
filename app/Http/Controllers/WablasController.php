@@ -404,7 +404,10 @@ class WablasController extends Controller
                     'phone'    => $this->no_telp,
                     'rona_wa'  => $ronaE164,
                 ]);
-                return;
+                // SENGAJA tidak return — biarkan flow lanjut ke universal
+                // save block supaya inbound message tetap ter-arsip dan
+                // maybeCreateSunatFollowupSession ke-panggil → followup
+                // 7-bubble edukasi otomatis ke-create untuk nomor ini.
             }
 
             // Whitelist-only QA reset: "ulang sunat" wipes the existing
@@ -5696,6 +5699,20 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ->whereIn('status', ['active', 'booked'])
             ->first();
         if ($existing) {
+            return;
+        }
+
+        // Skip kalau nomor ini sudah punya entry di jadwal_sunats
+        // (BOOKED atau bahkan upcoming) — customer sudah dalam pipeline
+        // booking, tidak perlu di-nag follow-up edukasi lagi. Status
+        // CANCELLED tidak diskip supaya customer yang batal masih
+        // bisa ditarik balik via followup.
+        $hasJadwal = \DB::table('jadwal_sunats')
+            ->where('no_telp', $phone)
+            ->whereIn('status', ['BOOKED', 'PENDING_PAYMENT'])
+            ->exists();
+        if ($hasJadwal) {
+            \Log::info('SUNAT_FOLLOWUP_SKIP_ALREADY_BOOKED', ['phone' => $phone]);
             return;
         }
 
