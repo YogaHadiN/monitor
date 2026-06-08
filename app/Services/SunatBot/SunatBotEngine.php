@@ -1358,18 +1358,27 @@ class SunatBotEngine
         $sentences = $this->splitText($text, $slug);
         $media     = $intent->mediaList();
 
-        // Text dulu, baru media — supaya penjelasan ke-bilang dulu,
-        // baru video / gambar muncul sebagai bukti / preview. Pattern
-        // ini lebih natural ketimbang media muncul di atas teks
-        // tanpa konteks.
-        $bubbles = [];
-        foreach ($sentences as $s) {
-            $bubbles[] = ['text' => $s, 'media' => null];
-        }
+        // Ordering: GAMBAR di atas teks (untuk header / context image
+        // seperti promo banner, klinik photo). VIDEO setelah teks
+        // (penjelasan dulu, baru bukti video). Klasifikasi via ekstensi
+        // file — sama dengan SunatBotReplyDispatcher::dispatch.
+        $imagesFirst = [];
+        $videosLast  = [];
         foreach ($media as $file) {
-            $bubbles[] = ['text' => '', 'media' => $file];
+            $ext = strtolower(pathinfo((string) $file, PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+                $imagesFirst[] = ['text' => '', 'media' => $file];
+            } else {
+                $videosLast[] = ['text' => '', 'media' => $file];
+            }
         }
-        return $bubbles;
+
+        $textBubbles = array_map(
+            fn ($s) => ['text' => $s, 'media' => null],
+            $sentences
+        );
+
+        return array_merge($imagesFirst, $textBubbles, $videosLast);
     }
 
     private const ABBREV = [
