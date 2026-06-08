@@ -45,12 +45,26 @@ class SunatBotReplyDispatcher
 
             $mediaBase     = rtrim((string) config('sunatbot.media_base_url', ''), '/');
             $mediaSettle   = max(0, (int) config('sunatbot.media_settle_seconds', 5));
+            $bubbleMin     = max(0, (int) config('sunatbot.bubble_delay_min_seconds', 3));
+            $bubbleMax     = max($bubbleMin, (int) config('sunatbot.bubble_delay_max_seconds', 6));
             $prevSentMedia = false;
+            $isFirst       = true;
 
             foreach ($replies as $reply) {
-                if ($prevSentMedia && $mediaSettle > 0) {
-                    sleep($mediaSettle);
+                // Random delay 3-6 detik antar bubble supaya pengiriman
+                // terasa natural (customer punya waktu baca tiap bubble
+                // sebelum bubble berikutnya muncul). Skip untuk bubble
+                // pertama. Setelah media, override delay-nya pakai
+                // media_settle (lebih lama, biar file beneran landed
+                // di device sebelum bubble berikutnya kirim).
+                if (!$isFirst) {
+                    if ($prevSentMedia && $mediaSettle > 0) {
+                        sleep($mediaSettle);
+                    } elseif ($bubbleMax > 0) {
+                        sleep(random_int($bubbleMin, $bubbleMax));
+                    }
                 }
+                $isFirst = false;
 
                 $text  = (string) ($reply['text'] ?? '');
                 $media = $reply['media'] ?? null;

@@ -18,6 +18,11 @@ return [
     // overtake the image. Non-media bubbles are sent back-to-back with no
     // delay; only this media-settle pause remains.
     'media_settle_seconds' => (int) env('SUNATBOT_MEDIA_SETTLE_SECONDS', 5),
+    // Random delay (detik) antar bubble teks supaya pengiriman terasa
+    // natural. Customer punya waktu baca tiap bubble sebelum bubble
+    // berikutnya. Default 3-6 detik. Override via env kalau perlu.
+    'bubble_delay_min_seconds' => (int) env('SUNATBOT_BUBBLE_DELAY_MIN_SECONDS', 3),
+    'bubble_delay_max_seconds' => (int) env('SUNATBOT_BUBBLE_DELAY_MAX_SECONDS', 6),
     // Max seconds an incoming webhook will wait for a previous in-flight
     // reply (same phone) to finish before giving up and dropping the new
     // message. Stay below the upstream webhook timeout so the provider
