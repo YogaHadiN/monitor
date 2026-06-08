@@ -335,11 +335,44 @@ class WablasController extends Controller
             $sunatBotWhitelist  = (array) config('sunatbot.whitelist_phones', ['6281381912803']);
             $sunatBotShouldRun  = $sunatBotEnabled || in_array((string) $this->no_telp, $sunatBotWhitelist, true);
 
-            // Fallback: kalau sunat bot OFF untuk nomor ini DAN customer
-            // ngomongin "sunat"/"khitan" — kirim shortcut langsung ke
-            // admin sunat (Rona) supaya tidak ke-skip diam-diam.
-            // wa.me/<E.164> di-render WhatsApp jadi tap-able link.
             $msgLower = mb_strtolower(trim((string) $this->message));
+
+            // Override: flow PENDAFTARAN JADWAL SUNAT selalu aktif,
+            // terlepas dari tenant flag — supaya customer yang udah
+            // siap booking tidak ter-redirect ke admin manual yang
+            // belum tentu online. Detection: keyword booking dari
+            // config sunatbot.booking_keywords (mau daftar, daftar
+            // sunat, dst.) ATAU combo "daftar/booking" + "sunat/khitan".
+            $isBookingRequest = false;
+            $bookingKeywords  = (array) config('sunatbot.booking_keywords', []);
+            foreach ($bookingKeywords as $kw) {
+                $kw = trim((string) $kw);
+                if ($kw === '') continue;
+                if (str_contains($msgLower, mb_strtolower($kw))) {
+                    $isBookingRequest = true;
+                    break;
+                }
+            }
+            if (
+                !$isBookingRequest
+                && (str_contains($msgLower, 'daftar') || str_contains($msgLower, 'booking'))
+                && (str_contains($msgLower, 'sunat')  || str_contains($msgLower, 'khitan'))
+            ) {
+                $isBookingRequest = true;
+            }
+            if ($isBookingRequest && !$sunatBotShouldRun) {
+                $sunatBotShouldRun = true;
+                \Log::info('SUNAT_BOT_FORCED_ON_FOR_BOOKING', [
+                    'phone'   => $this->no_telp,
+                    'message' => $msgLower,
+                ]);
+            }
+
+            // Fallback: kalau sunat bot OFF untuk nomor ini DAN customer
+            // ngomongin "sunat"/"khitan" TANPA niat booking — kirim
+            // shortcut langsung ke admin sunat (Rona) supaya tidak
+            // ke-skip diam-diam. wa.me/<E.164> di-render WhatsApp jadi
+            // tap-able link.
             if (
                 !$sunatBotShouldRun
                 && (str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan'))
