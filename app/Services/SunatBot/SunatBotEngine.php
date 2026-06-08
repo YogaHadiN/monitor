@@ -39,6 +39,7 @@ class SunatBotEngine
      * handlePertanyaanLanjutan instead of advancing fields.
      */
     private const HARGA_CLOSING = [
+        'testimoni_google_review',
         'quote_harga_paket',
         'tanya_pertanyaan_lanjutan',
     ];
