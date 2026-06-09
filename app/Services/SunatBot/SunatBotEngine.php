@@ -579,12 +579,12 @@ class SunatBotEngine
 
             // Suspense delay: sebelum quote_harga_paket (atau varian
             // promo-nya), inject marker bubble dengan field `delay_seconds`
-            // = 60. Dispatcher mendeteksi marker ini → sleep tanpa kirim
+            // = 40. Dispatcher mendeteksi marker ini → sleep tanpa kirim
             // bubble, lalu lanjut. Tujuan: kasih testimoni Google review
             // (slot sebelumnya) waktu untuk ditonton + biar harga muncul
             // sebagai jawaban, bukan info yang di-spam.
             if (in_array($resolved, ['quote_harga_paket', 'quote_harga_paket_promo'], true)) {
-                $replies[] = ['text' => '', 'media' => null, 'delay_seconds' => 60];
+                $replies[] = ['text' => '', 'media' => null, 'delay_seconds' => 40];
             }
 
             $replies = array_merge($replies, $this->renderIntent($resolved, $session));
