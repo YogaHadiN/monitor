@@ -442,11 +442,25 @@ class WablasController extends Controller
             $sunatPendingBuffer = $sunatBotShouldRun && \App\Models\BotPendingBuffer::where('phone', (string) $this->no_telp)
                 ->whereNull('processed_at')
                 ->exists();
-            $sunatMsgLower    = mb_strtolower((string) $this->message);
+            $sunatMsgLower    = mb_strtolower(trim((string) $this->message));
             $sunatHasTrigger  = str_contains($sunatMsgLower, 'sunat')
                               || str_contains($sunatMsgLower, 'khitan');
             $sunatActive      = $sunatExistingSession !== null && !$sunatExistingSession->is_complete;
-            $sunatShouldBuffer = $sunatBotShouldRun && ($sunatActive || $sunatHasTrigger || $sunatPendingBuffer);
+            // "akhiri" untuk keluar handoff: customer mungkin tidak punya
+            // sesi aktif (is_complete=true setelah escalate) tapi tetap
+            // perlu di-route ke SunatBotEngine supaya handler akhiri bisa
+            // hapus session + clear awaiting_human. Tanpa ini, "akhiri"
+            // fall-through ke legacy paths dan customer stuck di handoff.
+            $sunatIsAkhiri    = $sunatMsgLower === 'akhiri';
+            $sunatHasAnyState = $sunatExistingSession !== null
+                              || \App\Models\SunatChatSession::where('phone', (string) $this->no_telp)
+                                    ->where('awaiting_human', 1)
+                                    ->exists();
+            $sunatShouldBuffer = $sunatBotShouldRun
+                && ($sunatActive
+                    || $sunatHasTrigger
+                    || $sunatPendingBuffer
+                    || ($sunatIsAkhiri && $sunatHasAnyState));
 
             if ($sunatShouldBuffer) {
                 try {
