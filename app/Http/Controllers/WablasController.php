@@ -5778,6 +5778,30 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 ->delete();
         }
 
+        // Demote chat_sunat → chat biasa: customer eksplisit opt-out
+        // dari pipeline sunat. Hapus jejak state yang nge-trigger
+        // chat_sunat=1 di webhook universal-save (BotSession + manual
+        // flag) supaya inbound berikutnya disimpan sebagai chat_admin
+        // biasa, dan flip semua pesan historis dari chat_sunat=1 →
+        // chat_admin=1 supaya muncul di list chat umum, bukan
+        // /chat_sunats lagi.
+        \App\Models\BotSession::where('no_telp', $phone)->delete();
+        \DB::table('chat_sunat_manual_flags')->where('no_telp', $phone)->delete();
+        \DB::table('bot_pending_buffers')->where('phone', $phone)->delete();
+
+        $demoted = \DB::table('messages')
+            ->where('no_telp', $phone)
+            ->where('chat_sunat', 1)
+            ->update([
+                'chat_sunat' => 0,
+                'chat_admin' => 1,
+                'updated_at' => now(),
+            ]);
+        \Log::info('SUNAT_OPT_OUT_DEMOTE_TO_CHAT_ADMIN', [
+            'phone'           => $phone,
+            'demoted_messages'=> $demoted,
+        ]);
+
         $this->autoReply(
             "Baik kak, kami hentikan pesan follow-up. Kalau berubah pikiran nanti, kirim kata *sunat* untuk mulai lagi 🙏"
         );
