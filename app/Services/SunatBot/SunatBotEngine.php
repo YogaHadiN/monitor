@@ -1533,6 +1533,7 @@ class SunatBotEngine
             '[NOMOR_RONA]'    => $rona,
             '{{nama}}'        => $nama !== '' ? ucwords($nama) : 'kak',
             '{{tanggal}}'     => $bookingTanggalDisplay,
+            '{{tanggal_iso}}' => $bookingTanggalRaw,
             '{{jam}}'         => $bookingJam,
             '{{nama_anak}}'   => $bookingNamaAnak !== '' ? ucwords($bookingNamaAnak) : '',
             '{{usia_bb}}'     => $bookingUsiaBb,
