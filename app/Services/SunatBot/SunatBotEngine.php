@@ -750,11 +750,15 @@ class SunatBotEngine
             return $this->renderIntent('booking_jam_tidak_tersedia', $session);
         }
 
-        // Konflik: slot sudah dibooking di tanggal yang sama.
-        $taken = JadwalSunat::where('tanggal', $tanggalStr)
-            ->where('jam', $jam . ':00')
+        // Konflik: sunat blok 2 jam. Booking di jam X menabrak existing
+        // di X-1 (spillover masuk ke X) atau di X+1 (kita spillover ke X+1).
+        $jamHour = (int) substr($jam, 0, 2);
+        $taken   = JadwalSunat::where('tanggal', $tanggalStr)
             ->where('status', 'BOOKED')
-            ->exists();
+            ->pluck('jam')
+            ->first(function ($j) use ($jamHour) {
+                return abs($jamHour - (int) substr((string) $j, 0, 2)) < 2;
+            });
         if ($taken) {
             return $this->renderIntent('booking_jam_tidak_tersedia', $session);
         }
@@ -1080,11 +1084,22 @@ class SunatBotEngine
         $fullBlackout  = false;
 
         if ($tanggalStr !== '') {
-            $taken = JadwalSunat::where('tanggal', $tanggalStr)
+            // Sunat blok 2 jam: tiap booking jam X menandai X dan X+1
+            // sebagai 'terisi' di slot grid.
+            $bookedJam = JadwalSunat::where('tanggal', $tanggalStr)
                 ->where('status', 'BOOKED')
                 ->pluck('jam')
                 ->map(fn ($j) => substr((string) $j, 0, 5))
                 ->all();
+            $takenMap = [];
+            foreach ($bookedJam as $j) {
+                $takenMap[$j] = true;
+                $next = sprintf('%02d:00', ((int) substr($j, 0, 2)) + 1);
+                if (in_array($next, self::BOOKING_JAM_SLOTS, true)) {
+                    $takenMap[$next] = true;
+                }
+            }
+            $taken = array_keys($takenMap);
 
             $blackout = $this->blackoutForDate($tanggalStr);
             if ($blackout !== null) {
