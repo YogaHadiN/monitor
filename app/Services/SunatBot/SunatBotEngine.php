@@ -700,8 +700,9 @@ class SunatBotEngine
         switch ($field) {
             case 'booking_tanggal':    return $this->handleBookingTanggal($session, $msg);
             case 'booking_jam':        return $this->handleBookingJam($session, $msg);
-            case 'booking_nama_anak':  return $this->handleBookingNamaAnak($session, $msg);
-            case 'booking_usia_bb':    return $this->handleBookingUsiaBb($session, $msg);
+            case 'booking_nama_anak':       return $this->handleBookingNamaAnak($session, $msg);
+            case 'booking_nama_panggilan':  return $this->handleBookingNamaPanggilan($session, $msg);
+            case 'booking_usia_bb':         return $this->handleBookingUsiaBb($session, $msg);
             case 'booking_konfirmasi': return $this->handleBookingKonfirmasi($session, $msg);
         }
 
@@ -776,8 +777,25 @@ class SunatBotEngine
 
         $session->setData('booking_nama_anak', $nama);
 
+        // Lanjut tanya nama panggilan (dipakai semua WA reminder/intro/followup).
+        $session->expecting_field = 'booking_nama_panggilan';
+        return $this->renderIntent('booking_tanya_nama_panggilan', $session);
+    }
+
+    private function handleBookingNamaPanggilan(BotSession $session, string $msg): array
+    {
+        $panggilan = trim($msg);
+        // Customer boleh skip dgn "-" atau "sama" dst → pakai nama lengkap.
+        if ($panggilan === '' || in_array(mb_strtolower($panggilan), ['-', 'tidak ada', 'sama', 'skip'], true)) {
+            $panggilan = (string) $session->getData('booking_nama_anak');
+        }
+        $panggilan = $this->cleanCapturedName($panggilan);
+        if (mb_strlen($panggilan) > 60) {
+            $panggilan = mb_substr($panggilan, 0, 60);
+        }
+        $session->setData('booking_nama_panggilan', $panggilan);
+
         // Reuse usia & BB dari HARGA_FLOW kalau sudah terkumpul.
-        // Kalau belum, tanya eksplisit lewat booking_tanya_usia_bb.
         $usia = $session->getData('usia_anak');
         $bb   = $session->getData('berat_badan_anak');
         if ($usia !== null && $bb !== null) {
@@ -838,9 +856,10 @@ class SunatBotEngine
      */
     private function finalizeBooking(BotSession $session): array
     {
-        $tanggalStr = (string) $session->getData('booking_tanggal');
-        $jam        = (string) $session->getData('booking_jam');
-        $namaAnak   = (string) $session->getData('booking_nama_anak');
+        $tanggalStr    = (string) $session->getData('booking_tanggal');
+        $jam           = (string) $session->getData('booking_jam');
+        $namaAnak      = (string) $session->getData('booking_nama_anak');
+        $namaPanggilan = trim((string) $session->getData('booking_nama_panggilan'));
 
         if ($tanggalStr === '' || $jam === '' || $namaAnak === '') {
             // Data tidak lengkap — escalate biar admin handle.
@@ -879,25 +898,27 @@ class SunatBotEngine
         try {
             if ($existing) {
                 $existing->update([
-                    'pasien_id'   => null,
-                    'status'      => 'BOOKED',
-                    'nama_pasien' => $namaAnak,
-                    'no_telp'     => (string) $session->no_telp,
-                    'catatan'     => $catatan,
-                    'created_by'  => null,
+                    'pasien_id'      => null,
+                    'status'         => 'BOOKED',
+                    'nama_pasien'    => $namaAnak,
+                    'nama_panggilan' => $namaPanggilan !== '' ? $namaPanggilan : null,
+                    'no_telp'        => (string) $session->no_telp,
+                    'catatan'        => $catatan,
+                    'created_by'     => null,
                 ]);
                 $row = $existing->fresh();
             } else {
                 $row = JadwalSunat::create([
-                    'tenant_id'   => 1,
-                    'pasien_id'   => null,
-                    'tanggal'     => $tanggalStr,
-                    'jam'         => $jam . ':00',
-                    'status'      => 'BOOKED',
-                    'nama_pasien' => $namaAnak,
-                    'no_telp'     => (string) $session->no_telp,
-                    'catatan'     => $catatan,
-                    'created_by'  => null,
+                    'tenant_id'      => 1,
+                    'pasien_id'      => null,
+                    'tanggal'        => $tanggalStr,
+                    'jam'            => $jam . ':00',
+                    'status'         => 'BOOKED',
+                    'nama_pasien'    => $namaAnak,
+                    'nama_panggilan' => $namaPanggilan !== '' ? $namaPanggilan : null,
+                    'no_telp'        => (string) $session->no_telp,
+                    'catatan'        => $catatan,
+                    'created_by'     => null,
                 ]);
             }
         } catch (\Throwable $e) {

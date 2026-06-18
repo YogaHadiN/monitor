@@ -16,7 +16,7 @@ class JadwalSunat extends Model
 
     protected $fillable = [
         'tenant_id', 'pasien_id', 'tanggal', 'jam', 'status',
-        'nama_pasien', 'no_telp', 'catatan', 'created_by',
+        'nama_pasien', 'nama_panggilan', 'no_telp', 'catatan', 'created_by',
     ];
 
     protected $casts = [
