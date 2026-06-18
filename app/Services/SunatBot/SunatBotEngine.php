@@ -167,6 +167,15 @@ class SunatBotEngine
         // ditangani classifyAndRespond.
         if ($session && !$session->is_complete && $this->isBookingKeyword($msgLower)) {
             $session->last_activity_at = Carbon::now();
+
+            // Deep-link kalender: pesan mengandung tanggal+jam → skip step
+            // tanggal & jam, langsung ke nama_anak. Format dari kalender:
+            //   "Booking sunat tanggal 2026-06-19 jam 09:00"
+            $deepLink = $this->tryDeepLinkBooking($session, $msg);
+            if ($deepLink !== null) {
+                return ['handled' => true, 'replies' => $deepLink];
+            }
+
             $session->save();
             return [
                 'handled' => true,
@@ -610,6 +619,41 @@ class SunatBotEngine
         $session->expecting_field = 'booking_tanggal';
         $session->save();
         return $this->renderIntent('booking_tanya_tanggal', $session);
+    }
+
+    /**
+     * Coba parse tanggal + jam dari pesan awal (mis. deep-link dari
+     * kalender publik). Kalau dua-duanya ketemu dan valid, lewati step
+     * tanggal & jam, langsung minta nama anak. Kalau gagal, return null
+     * dan biarkan flow normal jalan.
+     */
+    private function tryDeepLinkBooking(BotSession $session, string $msg): ?array
+    {
+        $tglRaw = null;
+        if (preg_match('/tanggal\s+(\d{4}-\d{2}-\d{2})/iu', $msg, $m)) {
+            $tglRaw = $m[1];
+        }
+        $jamRaw = null;
+        if (preg_match('/jam\s+(\d{1,2}[:.]?\d{0,2})/iu', $msg, $m)) {
+            $jamRaw = $m[1];
+        }
+        if ($tglRaw === null || $jamRaw === null) {
+            return null;
+        }
+
+        // Validasi tanggal lewat handler asli; sets booking_tanggal +
+        // expecting_field=booking_jam kalau OK.
+        $this->handleBookingTanggal($session, $tglRaw);
+        if ($session->expecting_field !== 'booking_jam') {
+            // Tanggal invalid → balik ke null biar flow normal jalan
+            // (akan kirim 'booking_tanya_tanggal').
+            return null;
+        }
+
+        // Validasi jam — kalau OK akan advance ke booking_nama_anak.
+        $res = $this->handleBookingJam($session, $jamRaw);
+        $session->save();
+        return $res;
     }
 
     /**
