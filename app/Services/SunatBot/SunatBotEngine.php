@@ -102,6 +102,26 @@ class SunatBotEngine
         $hasTrigger = $this->hasTrigger($msgLower);
         $session    = BotSession::where('no_telp', $noTelp)->first();
 
+        // Admin reset: dari nomor operator, ketik "ulang sunat" → hapus
+        // session + clear awaiting_human + re-trigger dari awal seakan
+        // ketik "sunat" untuk pertama kali.
+        $cleanPhone   = preg_replace('/\D+/', '', $noTelp);
+        $operatorRaw  = (string) config('sunatbot.nomor_operator', '');
+        $cleanOper    = preg_replace('/\D+/', '', $operatorRaw);
+        $isOperator   = $cleanOper !== '' && $cleanPhone === $cleanOper;
+
+        if ($isOperator && $msgLower === 'ulang sunat') {
+            if ($session) {
+                $session->delete();
+            }
+            \DB::table('sunat_chat_sessions')
+                ->where('phone', $noTelp)
+                ->update(['awaiting_human' => 0, 'updated_at' => now()]);
+            Log::info('SUNAT_BOT_ADMIN_RESET', ['phone' => $noTelp]);
+            // Re-handle dgn "sunat" supaya trigger_sunat fire fresh.
+            return $this->handle($noTelp, 'sunat');
+        }
+
         // Customer ketik "akhiri" untuk keluar dari handoff manusia.
         // Reset: hapus BotSession (kalau ada) + clear awaiting_human di
         // sunat_chat_sessions. Customer balik ke mode "bot otomatis".
