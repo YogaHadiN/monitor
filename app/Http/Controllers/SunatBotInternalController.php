@@ -149,6 +149,23 @@ class SunatBotInternalController extends Controller
             $result  = $this->engine->handle($phone, $message);
             $replies = (array) ($result['replies'] ?? []);
 
+            // Resolve media filename → full URL pakai sunatbot.media_base_url
+            // supaya atika tinggal kirim, tidak perlu tahu media_base.
+            $mediaBase = rtrim((string) config('sunatbot.media_base_url', ''), '/');
+            $resolved  = [];
+            foreach ($replies as $r) {
+                $text  = (string) ($r['text']  ?? '');
+                $media = (string) ($r['media'] ?? '');
+                $url   = '';
+                if ($media !== '' && $mediaBase !== '') {
+                    $url = $mediaBase . '/' . ltrim($media, '/');
+                }
+                $resolved[] = [
+                    'text'      => $text,
+                    'media_url' => $url,
+                ];
+            }
+
             Log::info('SUNATBOT_GOWA_REPLIES', [
                 'phone'   => $phone,
                 'handled' => $result['handled'] ?? false,
@@ -158,7 +175,7 @@ class SunatBotInternalController extends Controller
             return response()->json([
                 'ok'      => true,
                 'handled' => (bool) ($result['handled'] ?? false),
-                'replies' => array_values($replies),
+                'replies' => $resolved,
             ]);
         } catch (\Throwable $e) {
             Log::error('SUNATBOT_GOWA_EXCEPTION', [
