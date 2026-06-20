@@ -121,4 +121,55 @@ class SunatBotInternalController extends Controller
         $lower = mb_strtolower($message);
         return str_contains($lower, 'sunat') || str_contains($lower, 'khitan');
     }
+
+    /**
+     * Versi tanpa dispatch via Watzap — return list reply ke caller
+     * (atika) yang akan kirim sendiri lewat gowa device 'sunat'.
+     * Dipakai untuk customer yang chat ke nomor sunat baru (62 882...).
+     */
+    public function processForGowaSunat(Request $request): JsonResponse
+    {
+        $data = (array) $request->json()->all();
+
+        $validator = Validator::make($data, [
+            'no_telp' => 'required|string|max:32',
+            'message' => 'required|string|max:2000',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Invalid payload',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $phone   = (string) $data['no_telp'];
+        $message = (string) $data['message'];
+
+        try {
+            $result  = $this->engine->handle($phone, $message);
+            $replies = (array) ($result['replies'] ?? []);
+
+            Log::info('SUNATBOT_GOWA_REPLIES', [
+                'phone'   => $phone,
+                'handled' => $result['handled'] ?? false,
+                'replies' => count($replies),
+            ]);
+
+            return response()->json([
+                'ok'      => true,
+                'handled' => (bool) ($result['handled'] ?? false),
+                'replies' => array_values($replies),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('SUNATBOT_GOWA_EXCEPTION', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+                'line'  => $e->getLine(),
+            ]);
+            return response()->json([
+                'ok'    => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
