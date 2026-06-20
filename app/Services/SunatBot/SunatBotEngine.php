@@ -185,7 +185,15 @@ class SunatBotEngine
         // (state machine 4 langkah: tanggal → jam → nama anak →
         // konfirmasi → INSERT jadwal_sunats). Looser phrasing via AI
         // ditangani classifyAndRespond.
-        if ($session && !$session->is_complete && $this->isBookingKeyword($msgLower)) {
+        if ((!$session || !$session->is_complete) && $this->isBookingKeyword($msgLower)) {
+            // Customer baru bisa pakai deep-link kalender — buat session dulu.
+            if ($session === null) {
+                $session = BotSession::create([
+                    'no_telp'          => $noTelp,
+                    'collected_data'   => [],
+                    'last_activity_at' => Carbon::now(),
+                ]);
+            }
             $session->last_activity_at = Carbon::now();
 
             // Deep-link kalender: pesan mengandung tanggal+jam → skip step
