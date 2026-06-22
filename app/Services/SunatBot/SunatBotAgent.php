@@ -70,10 +70,11 @@ class SunatBotAgent
 
         $tools = $this->toolDefinitions();
 
-        $replies   = [];
-        $signal    = null;
-        $escalate  = false;
-        $iter      = 0;
+        $replies             = [];
+        $signal              = null;
+        $escalate            = false;
+        $iter                = 0;
+        $toolEmittedReplies  = false;
 
         while ($iter < self::MAX_TOOL_ITERATIONS) {
             $iter++;
@@ -91,8 +92,19 @@ class SunatBotAgent
             $messages[] = $assistantMsg;
 
             if (empty($toolCalls)) {
-                // Tidak ada tool call → agent jawab langsung dalam text.
-                if ($textContent !== '') {
+                // Tidak ada tool call → agent jawab text langsung.
+                // HARD GUARD: kalau tool sudah pernah emit reply
+                // (mis. get_intent_response sudah render template),
+                // text ini pasti improvisation/hallucination — drop.
+                // Tool result adalah otoritas; agent tidak boleh
+                // nambahin info faktual sendiri.
+                if ($toolEmittedReplies) {
+                    Log::info('SUNAT_BOT_AGENT_DROPPED_POST_TOOL_TEXT', [
+                        'phone' => $session->no_telp,
+                        'iter'  => $iter,
+                        'text'  => mb_substr($textContent, 0, 200),
+                    ]);
+                } elseif ($textContent !== '') {
                     $replies = array_merge($replies, $this->splitToTextBubbles($textContent));
                 }
                 break;
@@ -107,8 +119,9 @@ class SunatBotAgent
 
                 [$toolResult, $sideEffect] = $this->executeTool($toolName, $args, $session);
 
-                if (isset($sideEffect['replies'])) {
+                if (isset($sideEffect['replies']) && $sideEffect['replies'] !== []) {
                     $replies = array_merge($replies, $sideEffect['replies']);
+                    $toolEmittedReplies = true;
                 }
                 if (isset($sideEffect['signal']) && $sideEffect['signal'] !== null) {
                     $signal = $sideEffect['signal'];
@@ -155,12 +168,17 @@ Kamu adalah AGENT WhatsApp untuk klinik sunat anak SunatBoy (Klinik Jati Elok, T
 PERAN:
 - Jawab pertanyaan calon klien tentang sunat: lokasi, metode, jarum/bius, harga, durasi sembuh, fasilitas, promo, testimoni, dst.
 - Pakai TOOL `lookup_knowledge` untuk cari intent yang cocok dari knowledge base, lalu TOOL `get_intent_response` untuk render template jawaban resmi.
-- JANGAN improvisasi jawaban faktual (harga, metode, alamat) — selalu pakai template dari knowledge base via tool.
 
-ATURAN PENTING SETELAH PANGGIL TOOL:
-- Setelah `get_intent_response` SUKSES (bubble_count > 0): JANGAN tulis text apa pun lagi. Cukup balas string kosong. Bubble sudah dikirim ke customer otomatis dari tool result; kalau kamu ulang isinya akan dobel.
-- Setelah `redirect_ke_admin`, `trigger_harga_flow`, atau `trigger_booking_flow`: JANGAN tulis text apa pun lagi. Balas string kosong.
-- Boleh tulis text HANYA kalau lookup_knowledge tidak ketemu apa-apa DAN kamu mau probing pertanyaan lebih jelas — itu pun maks 1 kalimat singkat.
+LARANGAN MUTLAK — JANGAN PERNAH ANDA MELANGGAR:
+- DILARANG menulis fakta tentang klinik dari pengetahuan sendiri. Termasuk: metode khitan, harga, paket, promo, fasilitas, durasi, alamat, jam buka, prosedur, nama dokter, daftar layanan, syarat & ketentuan.
+- DILARANG menebak / membuat list metode (Thermokauter, Klem, Klamp, Konvensional, Smart Klamp, dll). Klinik hanya pakai 1 metode yang sudah ada di template — tool yang sampaikan.
+- DILARANG menulis text apa pun setelah `get_intent_response` sukses. Tool sudah kirim bubble ke customer; menambah text = dobel + risiko hallucinate. Balas string KOSONG ("").
+- DILARANG menulis text setelah `redirect_ke_admin`, `trigger_harga_flow`, `trigger_booking_flow`. Balas string KOSONG.
+- DILARANG menggabungkan beberapa intent jadi list buatan sendiri. Kalau perlu jawab 2 topik, panggil `get_intent_response` 2 kali (satu per intent).
+
+KAPAN BOLEH TULIS TEXT:
+- Hanya kalau `lookup_knowledge` tidak ketemu apa-apa DAN belum panggil tool lain. Maks 1 kalimat singkat ("Boleh kakak perjelas pertanyaannya?").
+- Pesan sapaan generik (mis. "halo") tanpa konteks → 1 bubble pendek arahan ("Halo kak 🙏 Mau konsultasi sunat?").
 
 ROUTING KHUSUS (panggil tool, bukan jawab text):
 - Client minta penawaran HARGA / paket / quote → tool `trigger_harga_flow` (engine akan minta nama/usia/BB step-by-step).
