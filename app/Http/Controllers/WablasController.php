@@ -328,11 +328,16 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
 
             // ===== SUNAT BOT START =====
-            // Tenant flag gates the bot. When disabled, only whitelisted
-            // numbers (e.g. internal QA) still get a SunatBot reply so we
-            // can keep testing without exposing the flow to real clients.
-            $sunatBotEnabled    = (bool) ($this->tenant->sunat_bot_enabled ?? false);
-            $sunatBotWhitelist  = (array) config('sunatbot.whitelist_phones', ['6281381912803']);
+            // SunatBot di Wablas/Watzap (nomor Meta resmi) dipindah ke
+            // gowa device 'sunat'. Webhook ini hanya pakai SunatBot kalau
+            // env SUNATBOT_WABLAS_ENABLED=true (default false → matikan
+            // total override apapun).
+            $wablasBotAllowed = (bool) env('SUNATBOT_WABLAS_ENABLED', false);
+
+            $sunatBotEnabled    = $wablasBotAllowed && (bool) ($this->tenant->sunat_bot_enabled ?? false);
+            $sunatBotWhitelist  = $wablasBotAllowed
+                ? (array) config('sunatbot.whitelist_phones', ['6281381912803'])
+                : [];
             $sunatBotShouldRun  = $sunatBotEnabled || in_array((string) $this->no_telp, $sunatBotWhitelist, true);
 
             $msgLower = mb_strtolower(trim((string) $this->message));
@@ -344,7 +349,7 @@ class WablasController extends Controller
             $hasActiveSunatSession = \App\Models\BotSession::where('no_telp', (string) $this->no_telp)
                 ->where('is_complete', false)
                 ->exists();
-            if ($hasActiveSunatSession && !$sunatBotShouldRun) {
+            if ($wablasBotAllowed && $hasActiveSunatSession && !$sunatBotShouldRun) {
                 $sunatBotShouldRun = true;
                 \Log::info('SUNAT_BOT_FORCED_ON_FOR_ACTIVE_SESSION', ['phone' => $this->no_telp]);
             }
@@ -371,7 +376,7 @@ class WablasController extends Controller
                 $hasBookingWord = true;
             }
             $hasSunatWord = str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan');
-            if ($hasBookingWord && $hasSunatWord && !$sunatBotShouldRun) {
+            if ($wablasBotAllowed && $hasBookingWord && $hasSunatWord && !$sunatBotShouldRun) {
                 $sunatBotShouldRun = true;
                 \Log::info('SUNAT_BOT_FORCED_ON_FOR_BOOKING', [
                     'phone'   => $this->no_telp,
