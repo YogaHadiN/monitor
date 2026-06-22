@@ -852,14 +852,18 @@ class SunatBotEngine
             return $this->renderIntent('booking_jam_tidak_tersedia', $session);
         }
 
-        // Konflik: sunat blok 2 jam. Booking di jam X menabrak existing
-        // di X-1 (spillover masuk ke X) atau di X+1 (kita spillover ke X+1).
+        // Konflik: sunat blok 2 jam FORWARD. Booking di jam X menabrak
+        // existing di X (slot sama) atau X-1 (spillover masuk ke X).
+        // TIDAK menabrak existing di X+1 — itu artinya X cuma blok 1
+        // jam (X sendiri); slot X+1 sudah punya pasien lain. Contoh:
+        // 08:00 booked, booking 07:00 di-allowed dgn blok 1 jam saja.
         $jamHour = (int) substr($jam, 0, 2);
         $taken   = JadwalSunat::where('tanggal', $tanggalStr)
             ->where('status', 'BOOKED')
             ->pluck('jam')
             ->first(function ($j) use ($jamHour) {
-                return abs($jamHour - (int) substr((string) $j, 0, 2)) < 2;
+                $diff = $jamHour - (int) substr((string) $j, 0, 2);
+                return $diff === 0 || $diff === 1;
             });
         if ($taken) {
             return $this->renderIntent('booking_jam_tidak_tersedia', $session);
