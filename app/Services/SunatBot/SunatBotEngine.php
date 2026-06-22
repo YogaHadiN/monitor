@@ -730,7 +730,9 @@ class SunatBotEngine
             case 'booking_jam':        return $this->handleBookingJam($session, $msg);
             case 'booking_nama_anak':       return $this->handleBookingNamaAnak($session, $msg);
             case 'booking_nama_panggilan':  return $this->handleBookingNamaPanggilan($session, $msg);
-            case 'booking_usia_bb':         return $this->handleBookingUsiaBb($session, $msg);
+            case 'booking_usia':           return $this->handleBookingUsia($session, $msg);
+            case 'booking_berat_badan':    return $this->handleBookingBeratBadan($session, $msg);
+            case 'booking_usia_bb':        return $this->handleBookingUsiaBb($session, $msg);
             case 'booking_konfirmasi': return $this->handleBookingKonfirmasi($session, $msg);
         }
 
@@ -838,10 +840,44 @@ class SunatBotEngine
             return $this->renderIntent('booking_konfirmasi', $session);
         }
 
-        $session->expecting_field = 'booking_usia_bb';
-        return $this->renderIntent('booking_tanya_usia_bb', $session);
+        $session->expecting_field = 'booking_usia';
+        return $this->renderIntent('booking_tanya_usia', $session);
     }
 
+    private function handleBookingUsia(BotSession $session, string $msg): array
+    {
+        $usiaParsed = $this->parseUsia('', $msg);
+        if ($usiaParsed === null) {
+            return $this->renderIntent('booking_tanya_usia', $session);
+        }
+        [$usiaValue, $usiaUnit] = $usiaParsed;
+        $session->setData('booking_usia_anak', $usiaValue);
+        $session->setData('booking_usia_anak_satuan', $usiaUnit);
+        $session->setData('usia_anak', $usiaValue);
+        $session->setData('usia_anak_satuan', $usiaUnit);
+
+        $session->expecting_field = 'booking_berat_badan';
+        return $this->renderIntent('booking_tanya_berat_badan', $session);
+    }
+
+    private function handleBookingBeratBadan(BotSession $session, string $msg): array
+    {
+        $bb = $this->parseBeratBadan('', $msg);
+        if ($bb === null) {
+            return $this->renderIntent('booking_tanya_berat_badan', $session);
+        }
+        $session->setData('booking_berat_badan_anak', $bb);
+        $session->setData('berat_badan_anak', $bb);
+
+        $session->expecting_field = 'booking_konfirmasi';
+        return $this->renderIntent('booking_konfirmasi', $session);
+    }
+
+    /**
+     * Legacy combo handler — masih dipakai kalau session lama
+     * masih punya expecting_field='booking_usia_bb'. Tetap accept
+     * format "5 thn 18 kg" lalu pindah ke konfirmasi.
+     */
     private function handleBookingUsiaBb(BotSession $session, string $msg): array
     {
         // Reuse parser HARGA_FLOW — terima "7 bulan 10 kg", "5 thn 18 kg", dll.
