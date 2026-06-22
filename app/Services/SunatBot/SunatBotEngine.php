@@ -82,8 +82,46 @@ class SunatBotEngine
         'pengalaman_medis'   => 'pengalaman tindakan medis anak sebelumnya (trauma/sudah pernah disunat) atau "belum ada"',
     ];
 
-    public function __construct(private IntentClassifier $classifier)
+    public function __construct(
+        private IntentClassifier $classifier,
+        private SunatBotAgent $agent,
+    ) {
+    }
+
+    /**
+     * Cek apakah nomor ini di-route ke SunatBotAgent (tool-calling LLM)
+     * atau ke IntentClassifier lama. PR2 = allowlist nomor tertentu;
+     * PR3 = default ON untuk semua (allowed_phones boleh dikosongkan).
+     */
+    private function shouldUseAgent(?string $noTelp): bool
     {
+        if (!config('sunatbot.agent.enabled', false)) {
+            return false;
+        }
+        $allowed = (array) config('sunatbot.agent.allowed_phones', []);
+        if ($allowed === []) {
+            return true; // Empty list = global rollout (PR3 behavior).
+        }
+        $clean = preg_replace('/\D+/', '', (string) $noTelp);
+        return $clean !== '' && in_array($clean, $allowed, true);
+    }
+
+    /**
+     * Entry helper untuk harga flow — di-share antara classifier path
+     * (pertanyaan_harga di hargaTriggered block) dan agent path
+     * (signal=enter_harga). Set expecting_field ke step pertama yang
+     * belum terisi + render prompt-nya. Kalau semua sudah terisi,
+     * langsung emit closing.
+     */
+    private function enterHargaFlow(BotSession $session, array $leadInReplies = []): array
+    {
+        $next = $this->nextMissingHargaField($session);
+        if ($next === null) {
+            return array_merge($leadInReplies, $this->emitHargaClosing($session));
+        }
+        $session->expecting_field = $next;
+        $session->save();
+        return array_merge($leadInReplies, $this->renderIntent(self::HARGA_FLOW[$next], $session));
     }
 
     /**
@@ -261,6 +299,40 @@ class SunatBotEngine
      */
     private function classifyAndRespond(BotSession $session, string $message, bool $skipFallback = false): array
     {
+        // ---- AGENT PATH (PR2 allowlist) -----------------------------
+        // Kalau nomor ini di-allowlist agent, route ke SunatBotAgent
+        // (tool-calling LLM). Booking + harga state machine TETAP via
+        // engine — agent cuma signal entry; engine yang execute.
+        if ($this->shouldUseAgent($session->no_telp)) {
+            $agentResult = $this->agent->reply($session, $message);
+
+            // Agent unavailable (no API key / http fail) → fallback
+            // ke classifier path lama supaya customer tetap dapat
+            // jawaban (bukan silence).
+            if (!($agentResult['handled'] ?? false) && empty($agentResult['signal'])) {
+                Log::warning('SUNAT_BOT_AGENT_FALLBACK_TO_CLASSIFIER', [
+                    'phone' => $session->no_telp,
+                ]);
+                // fall through ke classifier path di bawah.
+            } else {
+                $signal  = $agentResult['signal'] ?? null;
+                $replies = $agentResult['replies'] ?? [];
+
+                if ($signal === 'enter_booking') {
+                    return $this->enterBookingFlow($session);
+                }
+                if ($signal === 'enter_harga') {
+                    return $this->enterHargaFlow($session, $replies);
+                }
+                if (!empty($agentResult['escalate'])) {
+                    return $this->escalate($session, $replies !== [] ? $replies : null);
+                }
+                // signal 'redirected' atau null → kirim replies apa adanya.
+                return $replies;
+            }
+        }
+
+        // ---- CLASSIFIER PATH (legacy, default) ----------------------
         $candidates = $this->candidateSlugs();
         $intents    = $this->classifier->classify($message, $candidates);
 
