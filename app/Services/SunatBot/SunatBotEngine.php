@@ -324,6 +324,20 @@ class SunatBotEngine
      */
     private function classifyAndRespond(BotSession $session, string $message, bool $skipFallback = false): array
     {
+        // Fresh trigger "sunat" tanpa konten lain: greeting (trigger_sunat)
+        // sudah di-render sebelumnya oleh handle(); tidak perlu classify
+        // pesan kosong. Tanpa guard ini, agent path bisa fire dgn pesan
+        // "sunat" doang dan generate sapaan extra dari system prompt
+        // ("Halo kak 🙏 Mau konsultasi sunat?"), dobel dgn greeting.
+        if ($skipFallback) {
+            $stripped = trim(preg_replace('/\s+/u', ' ',
+                preg_replace('/\b(sunat|khitan|sirkumsis|circumcis)\w*/iu', '', $message) ?? ''
+            ));
+            if (mb_strlen($stripped) < 4) {
+                return [];
+            }
+        }
+
         // ---- AGENT PATH (PR2 allowlist) -----------------------------
         // Kalau nomor ini di-allowlist agent, route ke SunatBotAgent
         // (tool-calling LLM). Booking + harga state machine TETAP via
