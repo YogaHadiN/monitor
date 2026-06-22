@@ -603,11 +603,19 @@ PROMPT;
         return array_map(fn ($s) => ['text' => $s, 'media' => null], $sentences);
     }
 
+    private const ABBREV = [
+        'Komp', 'No', 'Jl', 'Km', 'Yth', 'Dst', 'Dll', 'Pak', 'Bu', 'Tn',
+        'Ny', 'Apt', 'Ir', 'Drs', 'Prof', 'Min', 'Hal', 'Bpk', 'Sdr',
+        'Tgl', 'Th', 'a.n', 'u.p', 'd.a', 'ttd',
+    ];
+
     /**
-     * Pecahan ringan berdasarkan double-newline ATAU marker [BUBBLE].
-     * Untuk FAQ template yang sudah short, biarkan utuh — tidak split
-     * per kalimat (SunatBotEngine punya splitText yang lebih agresif
-     * untuk template-driven; di sini kita konservatif).
+     * Mirror SunatBotEngine::splitText untuk FAQ — supaya bot reply
+     * berbentuk "1 bubble 1 inti pesan" sesuai feedback user. Aturan:
+     *   1. Marker [BUBBLE] eksplisit selalu dihormati.
+     *   2. Selain itu: pecah per kalimat (titik/seru/tanya + whitespace),
+     *      respect abbreviation list supaya "Komp.", "No.", "Bpk." dst
+     *      tidak salah dipecah.
      */
     private function splitSentences(string $text): array
     {
@@ -615,16 +623,58 @@ PROMPT;
         if ($text === '') return [];
 
         if (str_contains($text, '[BUBBLE]')) {
-            $parts = preg_split('/\[BUBBLE\]/u', $text) ?: [];
-        } else {
-            $parts = preg_split('/\n{2,}/u', $text) ?: [$text];
+            $parts = preg_split('/\s*\[BUBBLE\]\s*/u', $text) ?: [];
+            $out = [];
+            foreach ($parts as $p) {
+                $p = trim((string) $p);
+                if ($p !== '') $out[] = $p;
+            }
+            return $out ?: [$text];
         }
-        $clean = [];
-        foreach ($parts as $p) {
-            $p = trim($p);
-            if ($p !== '') $clean[] = $p;
+
+        $tokens = preg_split('/([.!?])(\s+|$)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (!is_array($tokens)) return [$text];
+
+        $bubbles = [];
+        $current = '';
+        $count   = count($tokens);
+
+        for ($i = 0; $i < $count; $i++) {
+            $current .= $tokens[$i];
+            $punct = $tokens[$i + 1] ?? null;
+            if ($punct === null || !in_array($punct, ['.', '!', '?'], true)) {
+                continue;
+            }
+            $current .= $punct;
+            $ws       = $tokens[$i + 2] ?? '';
+            $i       += 2;
+
+            if ($this->endsWithAbbreviation($current)) {
+                $current .= $ws;
+                continue;
+            }
+
+            $bubbles[] = trim($current);
+            $current   = '';
         }
-        return $clean ?: [$text];
+        if (trim($current) !== '') {
+            $bubbles[] = trim($current);
+        }
+
+        $bubbles = array_values(array_filter($bubbles, fn ($b) => $b !== ''));
+        return $bubbles ?: [$text];
+    }
+
+    private function endsWithAbbreviation(string $text): bool
+    {
+        foreach (self::ABBREV as $abbrev) {
+            $needle = $abbrev . '.';
+            $len    = mb_strlen($needle);
+            if (mb_substr($text, -$len) === $needle) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function fallbackReply(): array
