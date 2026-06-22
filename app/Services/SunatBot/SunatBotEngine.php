@@ -24,7 +24,8 @@ class SunatBotEngine
     private const HARGA_FLOW = [
         'nama_orang_tua'      => 'tanya_nama_orang_tua',     // 2.1
         'domisili'            => 'tanya_domisili',            // 2.2
-        'usia_bb'             => 'tanya_usia_bb_konfirmasi',  // 2.3
+        'usia_anak'           => 'tanya_usia_anak',           // 2.3a (split dari usia_bb)
+        'berat_badan_anak'    => 'tanya_berat_badan_anak',    // 2.3b (split dari usia_bb)
         'indikasi_khitan'     => 'tanya_indikasi',            // 2.4
         'postur_tubuh'        => 'tanya_postur_tubuh',        // 2.4.5
         'riwayat_kesehatan'   => 'tanya_riwayat_kesehatan',   // 2.5 (escalation gate)
@@ -112,9 +113,33 @@ class SunatBotEngine
      * (signal=enter_harga). Set expecting_field ke step pertama yang
      * belum terisi + render prompt-nya. Kalau semua sudah terisi,
      * langsung emit closing.
+     *
+     * Kalau $triggerMessage diisi, scan opportunistic untuk usia + bb
+     * supaya step usia/BB di-skip kalau customer sudah sebut di pesan
+     * yang sama dgn trigger (mis. "anak saya 8 th 30 kg mau tanya
+     * harga"). Hemat 2 turn round-trip.
      */
-    private function enterHargaFlow(BotSession $session, array $leadInReplies = []): array
+    private function enterHargaFlow(BotSession $session, array $leadInReplies = [], ?string $triggerMessage = null): array
     {
+        if ($triggerMessage !== null && trim($triggerMessage) !== '') {
+            $needUsia = $session->getData('usia_anak') === null;
+            $needBB   = $session->getData('berat_badan_anak') === null;
+            if ($needUsia || $needBB) {
+                $usiaDesc = 'usia anak beserta satuannya apa adanya, mis. "7 bulan" atau "5 tahun" (bayi boleh dalam bulan). string kosong kalau tidak disebut.';
+                $bbDesc   = 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.';
+                $extracted = $this->classifier->extractFields([
+                    'usia_anak'        => $usiaDesc,
+                    'berat_badan_anak' => $bbDesc,
+                ], $triggerMessage);
+                $this->trySetUsiaBB(
+                    $session,
+                    $extracted['usia_anak'] ?? '',
+                    $extracted['berat_badan_anak'] ?? '',
+                    $triggerMessage
+                );
+            }
+        }
+
         $next = $this->nextMissingHargaField($session);
         if ($next === null) {
             return array_merge($leadInReplies, $this->emitHargaClosing($session));
@@ -322,7 +347,7 @@ class SunatBotEngine
                     return $this->enterBookingFlow($session);
                 }
                 if ($signal === 'enter_harga') {
-                    return $this->enterHargaFlow($session, $replies);
+                    return $this->enterHargaFlow($session, $replies, $message);
                 }
                 if (!empty($agentResult['escalate'])) {
                     return $this->escalate($session, $replies !== [] ? $replies : null);
@@ -409,13 +434,11 @@ class SunatBotEngine
             // sunat tergantung usia dan berat badan kak. ..." per
             // proposal §2.1, so rendering pertanyaan_harga here would
             // duplicate that line.
-            $next = $this->nextMissingHargaField($session);
-            if ($next === null) {
-                $replies = array_merge($replies, $this->emitHargaClosing($session));
-            } else {
-                $session->expecting_field = $next;
-                $replies = array_merge($replies, $this->renderIntent(self::HARGA_FLOW[$next], $session));
-            }
+            // enterHargaFlow ikut scan $message untuk usia/BB
+            // opportunistic — kalau customer sebut umur/BB di pesan
+            // trigger ("anak saya 8 th 30 kg mau tanya harga"),
+            // step 2.3a + 2.3b langsung skip.
+            $replies = $this->enterHargaFlow($session, $replies, $message);
         }
 
         return $replies;
@@ -436,11 +459,25 @@ class SunatBotEngine
             return $this->handlePertanyaanLanjutan($session, $message);
         }
 
+        // Back-compat: session legacy dgn expecting_field='usia_bb'
+        // (sebelum split) → arahkan ke step usia_anak dulu.
+        if ($field === 'usia_bb') {
+            $field = $session->getData('usia_anak') === null ? 'usia_anak' : 'berat_badan_anak';
+            $session->expecting_field = $field;
+        }
+
         // ---- Capture phase ----------------------------------------
         $capturedValue = $this->captureForField($session, $field, $message);
 
-        // Step 2.3 validation: usia_bb out of range → re-ask, do not advance.
-        if ($field === 'usia_bb' && !$this->hasValidUsiaBB($session)) {
+        // Step 2.3a validation: usia_anak — kalau tidak ke-capture /
+        // out of range, $session->collected_data['usia_anak'] tetap null
+        // (lihat captureForField di bawah). Re-ask via validasi template.
+        if ($field === 'usia_anak' && $session->getData('usia_anak') === null) {
+            return $this->renderIntent('validasi_ulang_usia_bb', $session);
+        }
+
+        // Step 2.3b validation: berat_badan_anak — sama pola.
+        if ($field === 'berat_badan_anak' && $session->getData('berat_badan_anak') === null) {
             return $this->renderIntent('validasi_ulang_usia_bb', $session);
         }
 
@@ -498,32 +535,39 @@ class SunatBotEngine
      */
     private function captureForField(BotSession $session, string $field, string $message): string
     {
-        // Opportunistic usia/BB scan. As long as the sentinel is unset,
-        // every step's capture also looks for usia + berat badan in the
-        // same AI call. Customer might volunteer the numbers at any
-        // turn (a delayed "anak saya 8 thn 32 kg" after the buffer
-        // window closes lands at the domisili step but should still
-        // skip step 2.3). Single AI call per turn — no extra latency.
-        $needUsiaBB = $session->getData('usia_bb') === null;
+        // Opportunistic usia/BB scan. Selama salah satu field belum
+        // ke-set, tiap step capture juga cari usia + bb di pesan yang
+        // sama. Customer kadang sebut di pesan trigger ("Anak saya 8
+        // thn 30 kg ada promo?"), atau di pesan step lain.
+        $needUsia = $session->getData('usia_anak') === null;
+        $needBB   = $session->getData('berat_badan_anak') === null;
 
         $usiaDesc = 'usia anak beserta satuannya apa adanya, mis. "7 bulan" atau "5 tahun" (bayi boleh dalam bulan). string kosong kalau tidak disebut.';
         $bbDesc   = 'berat badan anak dalam kg, hanya angka (boleh desimal). string kosong kalau tidak disebut.';
 
-        if ($field === 'usia_bb') {
+        // ---- usia_anak / berat_badan_anak sebagai primary field ----
+        // Step 2.3a / 2.3b: tanya 1 field, tapi tetap accept kalau customer
+        // sebut keduanya sekaligus.
+        if ($field === 'usia_anak' || $field === 'berat_badan_anak') {
             $extracted = $this->classifier->extractFields([
                 'usia_anak'        => $usiaDesc,
                 'berat_badan_anak' => $bbDesc,
             ], $message);
-            $this->trySetUsiaBB($session, $extracted['usia_anak'], $extracted['berat_badan_anak'], $message);
+            $this->trySetUsiaBB(
+                $session,
+                $extracted['usia_anak'] ?? '',
+                $extracted['berat_badan_anak'] ?? '',
+                $message
+            );
             return $message;
         }
 
         // Build the field map for the AI: the primary field for this
-        // step, plus opportunistic usia/BB if still missing.
+        // step, plus opportunistic usia/BB kalau salah satu masih kosong.
         $fields = [
             $field => self::FIELD_DESCRIPTIONS[$field] ?? $field,
         ];
-        if ($needUsiaBB) {
+        if ($needUsia || $needBB) {
             $fields['usia_anak']        = $usiaDesc;
             $fields['berat_badan_anak'] = $bbDesc;
         }
@@ -542,7 +586,7 @@ class SunatBotEngine
             $session->setData($field, $stored);
         }
 
-        if ($needUsiaBB) {
+        if ($needUsia || $needBB) {
             $this->trySetUsiaBB(
                 $session,
                 $extracted['usia_anak'] ?? '',
@@ -575,29 +619,43 @@ class SunatBotEngine
         $usiaParsed = $this->parseUsia($usiaRaw, $rawMessage);
         $bb         = $this->parseBeratBadan($bbRaw, $rawMessage);
 
-        if ($usiaParsed === null || $bb === null) {
-            return; // missing — bot will ask in step 2.3
-        }
-
-        [$usiaValue, $usiaUnit] = $usiaParsed;
-
-        if ($bb > $bbMax) {
-            return; // out of range — bot will re-ask via validasi_ulang_usia_bb
-        }
-        if ($usiaUnit === 'bulan') {
-            if ($usiaValue < $usiaBulanMin || $usiaValue > $usiaBulanMax || $bb < $bbMinBayi) {
-                return;
-            }
-        } else {
-            if ($usiaValue < $usiaMin || $usiaValue > $usiaMax || $bb < $bbMin) {
-                return;
+        // ---- Save usia kalau valid (independen dari BB) -------------
+        $usiaStored = false;
+        if ($usiaParsed !== null && $session->getData('usia_anak') === null) {
+            [$usiaValue, $usiaUnit] = $usiaParsed;
+            $usiaValid = $usiaUnit === 'bulan'
+                ? ($usiaValue >= $usiaBulanMin && $usiaValue <= $usiaBulanMax)
+                : ($usiaValue >= $usiaMin    && $usiaValue <= $usiaMax);
+            if ($usiaValid) {
+                $session->setData('usia_anak', $usiaValue);
+                $session->setData('usia_anak_satuan', $usiaUnit);
+                $usiaStored = true;
             }
         }
 
-        $session->setData('usia_anak', $usiaValue);
-        $session->setData('usia_anak_satuan', $usiaUnit);
-        $session->setData('berat_badan_anak', $bb);
-        $session->setData('usia_bb', trim($rawMessage) !== '' ? trim($rawMessage) : "{$usiaValue} {$usiaUnit}, {$bb} kg");
+        // ---- Save bb kalau valid (independen dari usia) -------------
+        $bbStored = false;
+        if ($bb !== null && $session->getData('berat_badan_anak') === null) {
+            $existingUsiaUnit = (string) ($session->getData('usia_anak_satuan') ?? '');
+            $bbMinForUsia     = $existingUsiaUnit === 'bulan' ? $bbMinBayi : $bbMin;
+            if ($bb >= $bbMinForUsia && $bb <= $bbMax) {
+                $session->setData('berat_badan_anak', $bb);
+                $bbStored = true;
+            }
+        }
+
+        // ---- Sentinel usia_bb (back-compat) -------------------------
+        // Set hanya kalau kedua-duanya sudah ada di session — bukan
+        // sekedar di pesan ini. Karena step capture sekarang bisa
+        // datang dari 2 turn berbeda, sentinel di-derive dari state.
+        $haveBoth = $session->getData('usia_anak') !== null
+                 && $session->getData('berat_badan_anak') !== null;
+        if ($haveBoth && $session->getData('usia_bb') === null) {
+            $u = $session->getData('usia_anak');
+            $unit = $session->getData('usia_anak_satuan') ?? 'tahun';
+            $b = $session->getData('berat_badan_anak');
+            $session->setData('usia_bb', "{$u} {$unit}, {$b} kg");
+        }
     }
 
     /**
