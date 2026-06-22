@@ -106,20 +106,20 @@ return [
     'berat_badan_max' => (float) env('SUNATBOT_BERAT_BADAN_MAX', 100),
 
     // Tool-calling LLM agent (pengganti IntentClassifier + AI gate
-    // sunat-relevance untuk fase Q&A free-form). PR1 = build, belum
-    // routed. PR2 akan flip allowed_phones jadi allowlist tester
-    // (mulai dari 6281381912803). PR3 = default ON, hapus classifier.
+    // sunat-relevance untuk fase Q&A free-form). PR3: default ON
+    // global. Rollback cepat kalau ada masalah → set
+    // SUNATBOT_AGENT_ENABLED=false di .env + reload php-fpm; engine
+    // akan balik pakai IntentClassifier path lama.
     'agent' => [
-        // Master switch. false di PR1: agent ada di code tapi tidak
-        // pernah dipanggil dari SunatBotEngine (verifikasi callsite
-        // belum berubah). PR2: true + allowed_phones non-empty.
-        'enabled' => filter_var(env('SUNATBOT_AGENT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
-        // Allowlist nomor E.164 (tanpa +). Kalau enabled=true tapi
-        // list ini kosong → agent jalan untuk SEMUA nomor (PR3
-        // behaviour). Default list dipakai PR2 untuk gradual rollout.
+        // Master switch. Default true (PR3). Set false di .env untuk
+        // emergency rollback ke IntentClassifier legacy.
+        'enabled' => filter_var(env('SUNATBOT_AGENT_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+        // Allowlist nomor E.164 (tanpa +). Kosong = global rollout
+        // (PR3 default). Isi dengan comma-separated phones untuk
+        // narrow rollout (mis. debugging spesifik nomor).
         'allowed_phones' => array_values(array_filter(array_map('trim', explode(',', (string) env(
             'SUNATBOT_AGENT_ALLOWED_PHONES',
-            '6281381912803'
+            ''
         ))))),
     ],
 ];
