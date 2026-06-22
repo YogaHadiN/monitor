@@ -12,6 +12,7 @@ class BotSession extends Model
 
     protected $casts = [
         'collected_data'             => 'array',
+        'agent_history'              => 'array',
         'is_complete'                => 'boolean',
         'requires_special_handling'  => 'boolean',
         'last_activity_at'           => 'datetime',

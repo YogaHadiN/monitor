@@ -104,4 +104,22 @@ return [
     'berat_badan_min' => (float) env('SUNATBOT_BERAT_BADAN_MIN', 5),
     'berat_badan_min_bayi' => (float) env('SUNATBOT_BERAT_BADAN_MIN_BAYI', 2.5),
     'berat_badan_max' => (float) env('SUNATBOT_BERAT_BADAN_MAX', 100),
+
+    // Tool-calling LLM agent (pengganti IntentClassifier + AI gate
+    // sunat-relevance untuk fase Q&A free-form). PR1 = build, belum
+    // routed. PR2 akan flip allowed_phones jadi allowlist tester
+    // (mulai dari 6281381912803). PR3 = default ON, hapus classifier.
+    'agent' => [
+        // Master switch. false di PR1: agent ada di code tapi tidak
+        // pernah dipanggil dari SunatBotEngine (verifikasi callsite
+        // belum berubah). PR2: true + allowed_phones non-empty.
+        'enabled' => filter_var(env('SUNATBOT_AGENT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        // Allowlist nomor E.164 (tanpa +). Kalau enabled=true tapi
+        // list ini kosong → agent jalan untuk SEMUA nomor (PR3
+        // behaviour). Default list dipakai PR2 untuk gradual rollout.
+        'allowed_phones' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+            'SUNATBOT_AGENT_ALLOWED_PHONES',
+            '6281381912803'
+        ))))),
+    ],
 ];
