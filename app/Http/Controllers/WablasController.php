@@ -354,61 +354,56 @@ class WablasController extends Controller
                 \Log::info('SUNAT_BOT_FORCED_ON_FOR_ACTIVE_SESSION', ['phone' => $this->no_telp]);
             }
 
-            // Override 2: flow PENDAFTARAN JADWAL SUNAT selalu aktif
-            // KALAU pesan EKSPLISIT minta daftar/booking sunat. Kata
-            // "daftar" sendirian ambigu (daftar dokter umum vs daftar
-            // sunat) — jadi harus combo: ada kata daftar/booking AND
-            // ada kata sunat/khitan dalam pesan yang sama. Itu sinyal
-            // yang cukup jelas untuk override tenant flag.
-            $hasBookingWord = false;
-            $bookingKeywords = (array) config('sunatbot.booking_keywords', []);
-            foreach ($bookingKeywords as $kw) {
-                $kw = trim((string) $kw);
-                if ($kw === '') continue;
-                if (str_contains($msgLower, mb_strtolower($kw))) {
-                    $hasBookingWord = true;
-                    break;
-                }
-            }
-            if (!$hasBookingWord
-                && (str_contains($msgLower, 'daftar') || str_contains($msgLower, 'booking'))
-            ) {
-                $hasBookingWord = true;
-            }
+            // Chat umum + sunat/khitan: auto-reply template, jangan masuk
+            // SunatBot flow penuh (SunatBot punya nomor dedicated 62
+            // 882-0151-9253-2 untuk customer yang mau full bot booking
+            // flow). Di chat umum, kasih customer 2 jalur cepat:
+            //   - kalau pesan ada "daftar/booking" + sunat → kirim
+            //     template Daftar Sunat (2 opsi: wa.me admin sunat +
+            //     link sunat-calendar). Mirror tombol "Daftar Sunat"
+            //     di /messages/{no_telp}.
+            //   - kalau cuma sunat/khitan (tanpa daftar) → kirim
+            //     template Tanya Sunat (Rona redirect). Mirror tombol
+            //     "Tanya Sunat" di /messages/{no_telp}.
+            // Customer mid-flow (Override 1 di atas yang detect active
+            // session) tetap diteruskan ke bot supaya tidak kepotong.
             $hasSunatWord = str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan');
-            if ($wablasBotAllowed && $hasBookingWord && $hasSunatWord && !$sunatBotShouldRun) {
-                $sunatBotShouldRun = true;
-                \Log::info('SUNAT_BOT_FORCED_ON_FOR_BOOKING', [
-                    'phone'   => $this->no_telp,
-                    'message' => $msgLower,
-                ]);
-            }
+            $hasDaftarWord = str_contains($msgLower, 'daftar') || str_contains($msgLower, 'booking');
 
-            // Fallback: kalau sunat bot OFF untuk nomor ini DAN customer
-            // ngomongin "sunat"/"khitan" TANPA niat booking — kirim
-            // shortcut langsung ke admin sunat (Rona) supaya tidak
-            // ke-skip diam-diam. wa.me/<E.164> di-render WhatsApp jadi
-            // tap-able link.
-            if (
-                !$sunatBotShouldRun
-                && (str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan'))
-            ) {
-                $rona      = (string) config('sunatbot.nomor_rona', '0895-3692-69190');
-                $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
-                if (str_starts_with($ronaDigits, '0'))  $ronaE164 = '62' . substr($ronaDigits, 1);
-                elseif (str_starts_with($ronaDigits, '62')) $ronaE164 = $ronaDigits;
-                elseif (str_starts_with($ronaDigits, '8'))  $ronaE164 = '62' . $ronaDigits;
-                else $ronaE164 = $ronaDigits;
+            if (!$sunatBotShouldRun && $hasSunatWord) {
+                if ($hasDaftarWord) {
+                    $sunatJid = preg_replace('/\D+/', '', (string) config('services.gowa.sunat_device_jid', '')) ?: '62882015192532';
+                    $autoText = rawurlencode('saya mau daftar sunat');
+                    $calendar = 'https://www.kezia.id/sunat-calendar';
 
-                $msg = "Halo kak 🙏\n\n"
-                     . "Untuk informasi tentang *sunat* bisa langsung chat admin kami:\n"
-                     . "*Rona* — https://wa.me/{$ronaE164}\n\n"
-                     . "Tap link di atas untuk langsung membuka chat ya kak. Terima kasih.";
-                $this->autoReply($msg);
-                \Log::info('SUNAT_FALLBACK_AUTO_REPLY', [
-                    'phone'    => $this->no_telp,
-                    'rona_wa'  => $ronaE164,
-                ]);
+                    $msg = "Halo kak 🙏\n\n"
+                         . "Untuk mendaftar sunat, silakan pilih salah satu cara berikut:\n\n"
+                         . "1️⃣ Chat admin sunat langsung:\n"
+                         . "https://wa.me/{$sunatJid}?text={$autoText}\n\n"
+                         . "2️⃣ Atau pilih jadwal sendiri di kalender:\n"
+                         . "{$calendar}\n"
+                         . "Setelah memilih tanggal, kakak akan diarahkan ke WhatsApp SunatBoy.\n\n"
+                         . "Tap link di atas untuk mulai ya kak.";
+                    $this->autoReply($msg);
+                    \Log::info('SUNAT_DAFTAR_AUTO_REPLY', ['phone' => $this->no_telp]);
+                } else {
+                    $rona      = (string) config('sunatbot.nomor_rona', '0895-3692-69190');
+                    $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
+                    if (str_starts_with($ronaDigits, '0'))  $ronaE164 = '62' . substr($ronaDigits, 1);
+                    elseif (str_starts_with($ronaDigits, '62')) $ronaE164 = $ronaDigits;
+                    elseif (str_starts_with($ronaDigits, '8'))  $ronaE164 = '62' . $ronaDigits;
+                    else $ronaE164 = $ronaDigits;
+
+                    $msg = "Halo kak 🙏\n\n"
+                         . "Untuk informasi tentang *sunat* bisa langsung chat admin kami:\n"
+                         . "*Rona* — https://wa.me/{$ronaE164}\n\n"
+                         . "Tap link di atas untuk langsung membuka chat ya kak. Terima kasih.";
+                    $this->autoReply($msg);
+                    \Log::info('SUNAT_FALLBACK_AUTO_REPLY', [
+                        'phone'    => $this->no_telp,
+                        'rona_wa'  => $ronaE164,
+                    ]);
+                }
                 // SENGAJA tidak return — biarkan flow lanjut ke universal
                 // save block supaya inbound message tetap ter-arsip dan
                 // maybeCreateSunatFollowupSession ke-panggil → followup
