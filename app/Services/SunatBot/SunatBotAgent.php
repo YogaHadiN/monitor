@@ -75,6 +75,11 @@ class SunatBotAgent
         $escalate            = false;
         $iter                = 0;
         $toolEmittedReplies  = false;
+        // Tracker slug yang sudah di-render via get_intent_response di
+        // turn ini. Agent kadang panggil intent yang sama berkali-kali
+        // (mis. iter1 + iter2 get_intent_response("pertanyaan_lokasi")
+        // dua kali → template ke-render dobel). Dedupe di sisi tool.
+        $renderedSlugs = [];
 
         while ($iter < self::MAX_TOOL_ITERATIONS) {
             $iter++;
@@ -116,6 +121,30 @@ class SunatBotAgent
                 $argsRaw  = (string) ($call['function']['arguments'] ?? '{}');
                 $args     = json_decode($argsRaw, true) ?: [];
                 $callId   = (string) ($call['id'] ?? '');
+
+                // Dedupe: kalau agent call get_intent_response untuk
+                // slug yang sudah di-render di turn ini, skip eksekusi
+                // dan kembalikan note ke LLM supaya tidak loop.
+                if ($toolName === 'get_intent_response') {
+                    $slugArg = trim((string) ($args['slug'] ?? ''));
+                    if ($slugArg !== '' && in_array($slugArg, $renderedSlugs, true)) {
+                        Log::info('SUNAT_BOT_AGENT_DEDUP_SLUG', [
+                            'phone' => $session->no_telp,
+                            'slug'  => $slugArg,
+                            'iter'  => $iter,
+                        ]);
+                        $toolResult = ['ok' => true, 'note' => "slug $slugArg sudah di-render di turn ini, dilewati"];
+                        $messages[] = [
+                            'role'         => 'tool',
+                            'tool_call_id' => $callId,
+                            'content'      => json_encode($toolResult, JSON_UNESCAPED_UNICODE),
+                        ];
+                        continue;
+                    }
+                    if ($slugArg !== '') {
+                        $renderedSlugs[] = $slugArg;
+                    }
+                }
 
                 [$toolResult, $sideEffect] = $this->executeTool($toolName, $args, $session);
 
