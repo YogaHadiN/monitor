@@ -486,13 +486,24 @@ class SunatBotEngine
         // Step 2.3a validation: usia_anak — kalau tidak ke-capture /
         // out of range, $session->collected_data['usia_anak'] tetap null
         // (lihat captureForField di bawah). Re-ask via validasi template.
+        // EXCEPTION: customer bilang "tidak tahu" / "lupa" → accept,
+        // tandai usia_anak dengan sentinel kosong "unknown" supaya
+        // nextMissingHargaField anggap field sudah terisi & advance.
         if ($field === 'usia_anak' && $session->getData('usia_anak') === null) {
-            return $this->renderIntent('validasi_ulang_usia_bb', $session);
+            if ($this->isDontKnow($message)) {
+                $session->setData('usia_anak', 'unknown');
+            } else {
+                return $this->renderIntent('validasi_ulang_usia_bb', $session);
+            }
         }
 
         // Step 2.3b validation: berat_badan_anak — sama pola.
         if ($field === 'berat_badan_anak' && $session->getData('berat_badan_anak') === null) {
-            return $this->renderIntent('validasi_ulang_usia_bb', $session);
+            if ($this->isDontKnow($message)) {
+                $session->setData('berat_badan_anak', 'unknown');
+            } else {
+                return $this->renderIntent('validasi_ulang_usia_bb', $session);
+            }
         }
 
         // Step 2.5 escalation gate.
@@ -996,6 +1007,14 @@ class SunatBotEngine
     {
         $usiaParsed = $this->parseUsia('', $msg);
         if ($usiaParsed === null) {
+            // Customer bilang "tidak tahu" / "lupa" → skip step, advance
+            // ke BB tanpa simpan nilai (catatan booking akan kosong di
+            // bagian usia, operator bisa konfirmasi later).
+            if ($this->isDontKnow($msg)) {
+                $session->expecting_field = 'booking_berat_badan';
+                $session->save();
+                return $this->renderIntent('booking_tanya_berat_badan', $session);
+            }
             return $this->renderIntent('booking_tanya_usia', $session);
         }
         [$usiaValue, $usiaUnit] = $usiaParsed;
@@ -1012,6 +1031,13 @@ class SunatBotEngine
     {
         $bb = $this->parseBeratBadan('', $msg);
         if ($bb === null) {
+            // Customer bilang "tidak tahu" / "belum ditimbang" → skip
+            // step, advance ke konfirmasi tanpa simpan BB.
+            if ($this->isDontKnow($msg)) {
+                $session->expecting_field = 'booking_konfirmasi';
+                $session->save();
+                return $this->renderIntent('booking_konfirmasi', $session);
+            }
             return $this->renderIntent('booking_tanya_berat_badan', $session);
         }
         $session->setData('booking_berat_badan_anak', $bb);
@@ -1019,6 +1045,42 @@ class SunatBotEngine
 
         $session->expecting_field = 'booking_konfirmasi';
         return $this->renderIntent('booking_konfirmasi', $session);
+    }
+
+    /**
+     * Detect kalau customer bilang "tidak tahu" / "lupa" / sejenisnya
+     * untuk pertanyaan usia atau BB. Fast-path local pattern match;
+     * kalau pesannya pendek dan tidak match, fallback ke classifier
+     * AI. Pakai di booking + harga flow capture supaya bot tidak
+     * loop nanya yang sama.
+     */
+    private function isDontKnow(string $message): bool
+    {
+        $low = mb_strtolower(trim($message));
+        if ($low === '') return false;
+
+        $patterns = [
+            'tidak tahu', 'tdk tahu', 'gak tahu', 'ga tahu', 'nggak tahu', 'ngga tahu',
+            'tidak tau',  'tdk tau',  'gak tau',  'ga tau',  'nggak tau',  'ngga tau',
+            'gatau', 'gatahu',
+            'belum tahu', 'belum tau', 'blm tau', 'blm tahu',
+            'lupa', 'kelupaan',
+            'tidak ingat', 'gak ingat', 'ga ingat', 'nggak ingat',
+            'belum ditimbang', 'belum diukur', 'belum ditimbang kak',
+            'belum tau kak', 'belum tahu kak',
+        ];
+        foreach ($patterns as $p) {
+            if (str_contains($low, $p)) return true;
+        }
+
+        // AI fallback hanya untuk pesan pendek (di bawah 60 char) supaya
+        // tidak mahal — pesan panjang biasanya jelas-jelas isi nilai.
+        if (mb_strlen($low) > 60) return false;
+
+        $res = $this->classifier->extractFields([
+            'is_dont_know' => "balas 'ya' kalau pesan menunjukkan customer TIDAK TAHU / LUPA / BELUM TAHU / BELUM DITIMBANG. Selain itu balas 'tidak'.",
+        ], $message);
+        return mb_strtolower(trim($res['is_dont_know'] ?? '')) === 'ya';
     }
 
     /**
