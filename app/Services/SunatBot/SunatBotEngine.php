@@ -895,23 +895,59 @@ class SunatBotEngine
         return $this->escalate($session);
     }
 
+    /**
+     * Bubble fallback: pilihan WA admin sunat + Rona kalau customer
+     * stuck di tengah booking flow (jawaban tidak ke-parse, jam tidak
+     * tersedia, atau konfirmasi tidak dimengerti). Append ke tiap
+     * re-ask supaya customer punya jalan keluar tanpa harus terus
+     * menerus diuji oleh validator.
+     */
+    private function bookingFallbackBubble(): array
+    {
+        $sunatJid = '62882015192532';
+        $autoText = rawurlencode('saya butuh bantuan booking sunat');
+
+        $rona       = (string) config('sunatbot.nomor_rona', '0895-3692-69190');
+        $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
+        if (str_starts_with($ronaDigits, '0'))       $ronaE164 = '62' . substr($ronaDigits, 1);
+        elseif (str_starts_with($ronaDigits, '62'))  $ronaE164 = $ronaDigits;
+        elseif (str_starts_with($ronaDigits, '8'))   $ronaE164 = '62' . $ronaDigits;
+        else                                          $ronaE164 = $ronaDigits;
+
+        return [
+            'text'  => "Kalau ada kendala, kakak bisa langsung WA admin kami:\n\n"
+                     . "• Admin Sunat: https://wa.me/{$sunatJid}?text={$autoText}\n"
+                     . "• Rona: https://wa.me/{$ronaE164}",
+            'media' => null,
+        ];
+    }
+
+    /**
+     * Wrapper renderIntent + append bubble fallback. Dipakai di setiap
+     * re-ask path booking flow.
+     */
+    private function reAskWithFallback(string $slug, BotSession $session): array
+    {
+        return array_merge($this->renderIntent($slug, $session), [$this->bookingFallbackBubble()]);
+    }
+
     private function handleBookingTanggal(BotSession $session, string $msg): array
     {
         $tanggal = $this->parseBookingDate($msg);
         if ($tanggal === null) {
-            return $this->renderIntent('booking_tanggal_invalid', $session);
+            return $this->reAskWithFallback('booking_tanggal_invalid', $session);
         }
 
         // Tanggal harus hari ini atau di masa depan.
         if ($tanggal->lt(Carbon::today())) {
-            return $this->renderIntent('booking_tanggal_invalid', $session);
+            return $this->reAskWithFallback('booking_tanggal_invalid', $session);
         }
 
         // Cek blackout full-day. Blackout partial (blocked_slots) dicek
         // saat pilih jam.
         $blackout = $this->blackoutForDate($tanggal->format('Y-m-d'));
         if ($blackout !== null && empty($blackout->blocked_slots)) {
-            return $this->renderIntent('booking_tanggal_invalid', $session);
+            return $this->reAskWithFallback('booking_tanggal_invalid', $session);
         }
 
         $session->setData('booking_tanggal', $tanggal->format('Y-m-d'));
@@ -925,14 +961,14 @@ class SunatBotEngine
         $tanggalStr = (string) $session->getData('booking_tanggal');
 
         if ($jam === null || $tanggalStr === '') {
-            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+            return $this->reAskWithFallback('booking_jam_tidak_tersedia', $session);
         }
 
         // Cek blackout partial untuk jam ini.
         $blackout = $this->blackoutForDate($tanggalStr);
         if ($blackout !== null && is_array($blackout->blocked_slots)
             && in_array($jam, $blackout->blocked_slots, true)) {
-            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+            return $this->reAskWithFallback('booking_jam_tidak_tersedia', $session);
         }
 
         // Konflik: sunat blok 2 jam FORWARD. Booking di jam X menabrak
@@ -949,7 +985,7 @@ class SunatBotEngine
                 return $diff === 0 || $diff === 1;
             });
         if ($taken) {
-            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+            return $this->reAskWithFallback('booking_jam_tidak_tersedia', $session);
         }
 
         $session->setData('booking_jam', $jam);
@@ -961,7 +997,7 @@ class SunatBotEngine
     {
         $nama = $this->cleanCapturedName(trim($msg));
         if ($nama === '') {
-            return $this->renderIntent('booking_tanya_nama_anak', $session);
+            return $this->reAskWithFallback('booking_tanya_nama_anak', $session);
         }
         // Batasi panjang biar tidak masuk paragraf panjang.
         if (mb_strlen($nama) > 100) {
@@ -1015,7 +1051,7 @@ class SunatBotEngine
                 $session->save();
                 return $this->renderIntent('booking_tanya_berat_badan', $session);
             }
-            return $this->renderIntent('booking_tanya_usia', $session);
+            return $this->reAskWithFallback('booking_tanya_usia', $session);
         }
         [$usiaValue, $usiaUnit] = $usiaParsed;
         $session->setData('booking_usia_anak', $usiaValue);
@@ -1038,7 +1074,7 @@ class SunatBotEngine
                 $session->save();
                 return $this->renderIntent('booking_konfirmasi', $session);
             }
-            return $this->renderIntent('booking_tanya_berat_badan', $session);
+            return $this->reAskWithFallback('booking_tanya_berat_badan', $session);
         }
         $session->setData('booking_berat_badan_anak', $bb);
         $session->setData('berat_badan_anak', $bb);
@@ -1095,7 +1131,7 @@ class SunatBotEngine
         $bb         = $this->parseBeratBadan('', $msg);
 
         if ($usiaParsed === null || $bb === null) {
-            return $this->renderIntent('booking_tanya_usia_bb', $session);
+            return $this->reAskWithFallback('booking_tanya_usia_bb', $session);
         }
 
         [$usiaValue, $usiaUnit] = $usiaParsed;
@@ -1124,8 +1160,8 @@ class SunatBotEngine
             $session->save();
             return $this->renderIntent('booking_dibatalkan', $session);
         }
-        // Tidak dimengerti — ulang konfirmasi.
-        return $this->renderIntent('booking_konfirmasi', $session);
+        // Tidak dimengerti — ulang konfirmasi + tawarkan WA admin.
+        return $this->reAskWithFallback('booking_konfirmasi', $session);
     }
 
     /**
@@ -1170,7 +1206,7 @@ class SunatBotEngine
             $session->setData('booking_jam', null);
             $session->expecting_field = 'booking_jam';
             $session->save();
-            return $this->renderIntent('booking_jam_tidak_tersedia', $session);
+            return $this->reAskWithFallback('booking_jam_tidak_tersedia', $session);
         }
 
         try {
