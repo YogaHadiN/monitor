@@ -605,6 +605,13 @@ class SunatBotEngine
         // dan fallback raw message pasti ngandung prefix.
         if ($field === 'nama_orang_tua') {
             $stored = $this->cleanCapturedName($stored);
+            // Reject kalau hasil bukan nama plausible (mis. customer
+            // jawab "Usia 7th" / "18 kg" karena mishears pertanyaan).
+            // Biarkan field tetap kosong supaya processHargaTurn
+            // re-ask di turn berikutnya.
+            if (!$this->isPlausibleName($stored)) {
+                $stored = '';
+            }
         }
 
         if ($stored !== '') {
@@ -725,6 +732,14 @@ class SunatBotEngine
         $hay = mb_strtolower(str_replace(',', '.', $rawMessage));
         if (preg_match('/(\d+(?:\.\d+)?)\s*(?:kg|kilo|kilogram)\b/u', $hay, $m)) {
             return (float) $m[1];
+        }
+        // Fallback: kalau pesan customer cuma angka (mis. "18"), accept
+        // sebagai kg langsung. Customer biasanya jawab BB pertanyaan
+        // dgn angka saja tanpa unit. Reject kalau ada keyword usia
+        // supaya tidak salah interpret jawaban usia sebagai BB.
+        $trimmed = trim($rawMessage);
+        if (preg_match('/^\d+(?:[.,]\d+)?$/', $trimmed)) {
+            return (float) str_replace(',', '.', $trimmed);
         }
         return null;
     }
@@ -2001,6 +2016,32 @@ class SunatBotEngine
         // bukan bagian dari nama, hapus juga.
         $v = (string) preg_replace('/\s+(kak|kakak|pak|bu|ya)\.?$/iu', '', $v);
         return trim($v);
+    }
+
+    /**
+     * Cek apakah string layak jadi nama orang tua. Reject:
+     *  - terlalu pendek (< 2 char)
+     *  - berisi indicator usia / BB (customer mishears step)
+     *  - mostly digit (>50% digit)
+     */
+    private function isPlausibleName(string $value): bool
+    {
+        $v = trim($value);
+        if (mb_strlen($v) < 2) return false;
+
+        // Indicator customer salah jawab pertanyaan usia/BB di step nama.
+        if (preg_match('/\b(usia|umur|tahun|thn|th|bulan|bln|kg|kilo|kilogram|berat|bb)\b/iu', $v)) {
+            return false;
+        }
+
+        // Reject kalau mostly digits (lebih dari 50% karakter adalah angka).
+        $digitCount = strlen(preg_replace('/\D/', '', $v) ?? '');
+        $totalLen   = mb_strlen($v);
+        if ($totalLen > 0 && $digitCount / $totalLen > 0.5) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

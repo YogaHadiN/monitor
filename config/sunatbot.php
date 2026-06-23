@@ -65,7 +65,7 @@ return [
     // session and the bot escalates instead of continuing.
     'special_handling_keywords' => array_values(array_filter(array_map('trim', explode(',', (string) env(
         'SUNATBOT_SPECIAL_HANDLING_KEYWORDS',
-        'pembekuan darah,kelainan jantung,jantung,autis,autisme,kebutuhan khusus,spektrum,down syndrome,cerebral palsy,epilepsi,kejang,hemofilia,thalasemia,leukemia,kanker'
+        'pembekuan darah,kelainan jantung,jantung,autis,autisme,asd,kebutuhan khusus,berkebutuhan,spektrum,down syndrome,cerebral palsy,epilepsi,kejang,hemofilia,thalasemia,leukemia,kanker,adhd,hiperaktif,hyperactive,tantrum'
     ))))),
     // Whole-word match (case-insensitive) on any incoming message — if
     // any keyword appears, escalate immediately. Used to honour explicit
