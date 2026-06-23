@@ -525,15 +525,14 @@ class WablasController extends Controller
                         'tenant_id'      => 1,
                         'touched'        => 0,
                         'flagged_intent' => 'sunat_bot',
-                        'chat_sunat'     => 1,
+                        // chat_sunat=0: chat umum (Wablas/Watzap general)
+                        // tidak lagi auto-tag sebagai chat_sunat. Flag
+                        // chat_sunat hanya untuk traffic dari gowa sunat
+                        // device (di-handle atika GowaWebhookController).
+                        'chat_sunat'     => 0,
                     ]);
-                    // Dispatch push notif untuk pesan sunat buffer juga.
-                    \App\Jobs\DispatchPushTrigger::dispatch(
-                        'Chat sunat — '.$this->no_telp,
-                        mb_substr((string) $this->message, 0, 200),
-                        '/chat_sunats/'.$this->no_telp,
-                        'sunat-'.$this->no_telp,
-                    );
+                    // PWA push hanya fire untuk gowa sunat device, bukan
+                    // chat umum — di-handle di atika side.
                     return;
                 } catch (\Throwable $bufErr) {
                     // On buffer/dispatch failure fall through to the
@@ -604,7 +603,10 @@ class WablasController extends Controller
                 'tenant_id'     => 1,
                 'touched'       => 0,
                 'chat_admin'    => $dalamChatAdmin ? 1 : 0,
-                'chat_sunat'    => $dalamChatSunat ? 1 : 0,
+                // chat_sunat selalu 0 untuk chat umum (Wablas/Watzap).
+                // Flag chat_sunat khusus traffic gowa sunat device,
+                // di-set di atika GowaWebhookController::handleSunatBotText.
+                'chat_sunat'    => 0,
             ]);
 
             // Sunat follow-up session detect — bila pesan inbound mengandung
@@ -645,19 +647,11 @@ class WablasController extends Controller
                 }
             }
 
-            // Dispatch push notif ke PWA atika kalau pesan ini bagian
-            // alur sunat (chat_sunat=1). Sesi chat admin biasa TIDAK
-            // memicu notif (per requirement). Tag = nomor → notif baru
-            // collapse yang lama supaya tidak spam saat customer kirim
-            // cepat berturut-turut.
-            if ($dalamChatSunat) {
-                \App\Jobs\DispatchPushTrigger::dispatch(
-                    'Chat sunat — '.$this->no_telp,
-                    mb_substr((string) $this->message, 0, 200),
-                    '/chat_sunats/'.$this->no_telp,
-                    'sunat-'.$this->no_telp,
-                );
-            }
+            // PWA push hanya fire untuk gowa sunat device (di-handle
+            // atika GowaWebhookController::handleSunatBotText). Chat
+            // umum (Wablas/Watzap general) tidak fire notif apa pun —
+            // per requirement: "notifikasi PWA hanya apabila chat
+            // sunat muncul di gowa sunat".
             // ===== ARSIP SEMUA PESAN MASUK END =====
 
             $date_now = date('Y-m-d H:i:s');
