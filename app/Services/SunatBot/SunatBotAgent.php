@@ -80,6 +80,12 @@ class SunatBotAgent
         // (mis. iter1 + iter2 get_intent_response("pertanyaan_lokasi")
         // dua kali → template ke-render dobel). Dedupe di sisi tool.
         $renderedSlugs = [];
+        // Enforce: agent harus panggil lookup_knowledge minimal 1x
+        // sebelum boleh redirect / trigger flow. Model kadang skip
+        // lookup dan langsung redirect untuk pertanyaan yg sebenarnya
+        // ada di knowledge base (mis. "ada hadiah?" → redirect padahal
+        // ada intent pertanyaan_hadiah).
+        $lookupCalled = false;
 
         while ($iter < self::MAX_TOOL_ITERATIONS) {
             $iter++;
@@ -121,6 +127,35 @@ class SunatBotAgent
                 $argsRaw  = (string) ($call['function']['arguments'] ?? '{}');
                 $args     = json_decode($argsRaw, true) ?: [];
                 $callId   = (string) ($call['id'] ?? '');
+
+                // Enforce: redirect / trigger flow hanya boleh setelah
+                // lookup_knowledge dipanggil 1x. Kalau belum, reject
+                // call ini + kasih instruksi ke agent untuk lookup
+                // dulu. Mencegah false-positive redirect tanpa explore.
+                if (
+                    !$lookupCalled
+                    && in_array($toolName, ['redirect_ke_admin', 'trigger_harga_flow', 'trigger_booking_flow'], true)
+                ) {
+                    Log::info('SUNAT_BOT_AGENT_REJECT_PREMATURE_ROUTING', [
+                        'phone' => $session->no_telp,
+                        'tool'  => $toolName,
+                        'iter'  => $iter,
+                    ]);
+                    $toolResult = [
+                        'ok'    => false,
+                        'error' => "Wajib panggil lookup_knowledge dulu sebelum $toolName. Cari intent yg cocok di knowledge base — kalau tidak ada baru routing.",
+                    ];
+                    $messages[] = [
+                        'role'         => 'tool',
+                        'tool_call_id' => $callId,
+                        'content'      => json_encode($toolResult, JSON_UNESCAPED_UNICODE),
+                    ];
+                    continue;
+                }
+
+                if ($toolName === 'lookup_knowledge') {
+                    $lookupCalled = true;
+                }
 
                 // Dedupe: kalau agent call get_intent_response untuk
                 // slug yang sudah di-render di turn ini, skip eksekusi
