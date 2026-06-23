@@ -1302,7 +1302,10 @@ class SunatBotEngine
                 '🧑‍⚕️ Mohon dipersiapkan tindakan.',
             ]);
 
-            (new \App\Http\Controllers\WablasController())->sendSingle($operator, $msg);
+            // Kirim via gowa sunat device (bukan Meta/Watzap). Helper
+            // enqueue ke gowa_outbound_messages → dispatcher atika
+            // pick up tiap menit dgn flow typing → pause → send.
+            \App\Services\GowaSunatNotifier::notifyStaff($operator, $msg, 'booking_notif_operator');
         } catch (\Throwable $e) {
             Log::warning('SUNAT_BOOKING_OPERATOR_NOTIFY_FAIL', [
                 'jadwal_id' => $row->id ?? null,
