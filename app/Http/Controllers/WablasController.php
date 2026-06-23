@@ -6871,6 +6871,13 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                        ->whereIn('status', ['active', 'booked'])
                        ->exists();
 
+            // chat_admin diset 1 kalau customer sedang dalam konteks
+            // chat dengan admin (mis. pilih menu 5). Tanpa flag ini,
+            // auto-reply bot tidak muncul di /messages/{phone} (yg
+            // filter chat_admin=1 OR chat_sunat=1) → admin lihat
+            // inbound customer sebagai unanswered + manually balas.
+            $isAdmin = $this->noTelpDalamChatWithAdmin();
+
             Message::create([
                 'no_telp'       => $phone,
                 'message'       => $text,
@@ -6879,7 +6886,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 'sudah_dibalas' => 1,
                 'tenant_id'     => 1,
                 'touched'       => 1,
-                'chat_admin'    => 0,
+                'chat_admin'    => $isAdmin ? 1 : 0,
                 'chat_sunat'    => $isSunat ? 1 : 0,
             ]);
         } catch (\Throwable $e) {
