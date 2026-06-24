@@ -28,6 +28,41 @@ class SunatBotInternalController extends Controller
         private SunatBotReplyDispatcher $dispatcher,
     ) {}
 
+    /**
+     * Reset state per phone: close all BotSession + clear cache key
+     * agent redirect throttle. Dipanggil oleh atika command
+     * `sunatbot:reset {phone}` lewat HTTP HMAC internal.
+     */
+    public function reset(Request $request): JsonResponse
+    {
+        $data = (array) $request->json()->all();
+        $validator = Validator::make($data, [
+            'no_telp' => 'required|string|max:32',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Invalid payload', 'errors' => $validator->errors()], 422);
+        }
+
+        $phone     = preg_replace('/\D+/', '', (string) $data['no_telp']);
+        $sessions  = BotSession::where('no_telp', $phone)->where('is_complete', 0)->update(['is_complete' => 1]);
+        $redirKey  = 'sunatbot_agent_redirect:' . $phone;
+        $hadCache  = \Cache::has($redirKey);
+        \Cache::forget($redirKey);
+
+        Log::info('SUNATBOT_INTERNAL_RESET', [
+            'phone'             => $phone,
+            'sessions_closed'   => $sessions,
+            'cache_was_present' => $hadCache,
+        ]);
+
+        return response()->json([
+            'ok'              => true,
+            'phone'           => $phone,
+            'sessions_closed' => $sessions,
+            'redirect_throttle_cleared' => $hadCache,
+        ]);
+    }
+
     public function processMessage(Request $request): JsonResponse
     {
         $data = (array) $request->json()->all();

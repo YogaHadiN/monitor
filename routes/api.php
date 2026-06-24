@@ -32,6 +32,8 @@ Route::post('internal/sunatbot-process', [\App\Http\Controllers\SunatBotInternal
     ->middleware('verify.sunatbot.internal');
 Route::post('internal/sunatbot-process-for-gowa', [\App\Http\Controllers\SunatBotInternalController::class, 'processForGowaSunat'])
     ->middleware('verify.sunatbot.internal');
+Route::post('internal/sunatbot-reset', [\App\Http\Controllers\SunatBotInternalController::class, 'reset'])
+    ->middleware('verify.sunatbot.internal');
 
 /* Route::get('wablas/webhook', [\App\Http\Controllers\BotCakeController::class, 'webhookGet']); */
 /* Route::get('wablas/webhook', [\App\Http\Controllers\WablasController::class, 'webhook']); */
