@@ -58,8 +58,9 @@ class SunatBotAgent
             return $this->fallbackReply();
         }
 
-        $systemPrompt = $this->buildSystemPrompt();
-        $history      = $this->loadHistory($session);
+        $history     = $this->loadHistory($session);
+        $isFirstTurn = empty($history);
+        $systemPrompt = $this->buildSystemPrompt($isFirstTurn);
 
         // Append user turn — disimpan ke history setelah loop selesai.
         $messages = array_merge(
@@ -134,7 +135,7 @@ class SunatBotAgent
                 // dulu. Mencegah false-positive redirect tanpa explore.
                 if (
                     !$lookupCalled
-                    && in_array($toolName, ['redirect_ke_admin', 'trigger_harga_flow', 'trigger_booking_flow'], true)
+                    && in_array($toolName, ['redirect_ke_klinik_utama', 'redirect_ke_admin', 'trigger_harga_flow', 'trigger_booking_flow'], true)
                 ) {
                     Log::info('SUNAT_BOT_AGENT_REJECT_PREMATURE_ROUTING', [
                         'phone' => $session->no_telp,
@@ -221,10 +222,21 @@ class SunatBotAgent
         ];
     }
 
-    private function buildSystemPrompt(): string
+    private function buildSystemPrompt(bool $isFirstTurn = false): string
     {
         $klinik = (string) config('sunatbot.alamat_klinik', '');
         $maps   = (string) config('sunatbot.link_maps', '');
+
+        // Special instruction kalau ini chat awal customer (history kosong).
+        // Agent harus tanya keperluan dulu sebelum jawab apa-apa — supaya
+        // kalau bukan sunat, langsung redirect ke klinik utama Meta.
+        $firstTurnNote = $isFirstTurn
+            ? "\n\nCHAT PERTAMA (tidak ada history):\n"
+            . "- INI INTERAKSI PERTAMA dgn customer ini. SEBELUM jawab apa pun, tanya keperluan customer dulu.\n"
+            . "- Balas dgn text pendek: \"Halo kak 🙏 Sebelumnya boleh tau, apakah Kakak mau konsultasi *sunat*, atau ada keperluan lain (mis. pendaftaran dokter umum, BPJS, dll)?\"\n"
+            . "- JANGAN panggil tool apa pun di turn pertama ini. Tunggu jawaban customer di turn berikutnya.\n"
+            . "- DI TURN BERIKUTNYA: kalau customer jawab BUKAN sunat (mis. \"mau daftar dokter umum\", \"tanya BPJS\", \"tanya gigi\") → panggil `redirect_ke_klinik_utama`. Kalau jawab sunat-related → lanjut algoritma normal."
+            : '';
 
         return <<<PROMPT
 Kamu adalah AGENT WhatsApp untuk klinik sunat anak SunatBoy (Klinik Jati Elok, Tangerang).
@@ -232,6 +244,7 @@ Kamu adalah AGENT WhatsApp untuk klinik sunat anak SunatBoy (Klinik Jati Elok, T
 PERAN:
 - Jawab pertanyaan calon klien tentang sunat anak (dan dewasa, perempuan): lokasi, metode, jarum/bius, harga, durasi sembuh, fasilitas, promo, testimoni, kontak admin, jadwal, hadiah, BPJS, perban, jahit, dst.
 - Pakai TOOL `lookup_knowledge` untuk cari intent yang cocok dari knowledge base, lalu TOOL `get_intent_response` untuk render template jawaban resmi.
+$firstTurnNote
 
 ALGORITMA WAJIB — TIDAK ADA PENGECUALIAN:
 1. PANGGIL `lookup_knowledge` LEBIH DULU untuk SETIAP pesan yang mengandung kata sunat/khitan ATAU topik klinik. JANGAN PERNAH skip langkah ini, bahkan untuk pesan generik seperti "halo saya mau konsultasi sunat" atau "mau tanya-tanya". DILARANG redirect tanpa lookup.
@@ -247,13 +260,13 @@ ALGORITMA WAJIB — TIDAK ADA PENGECUALIAN:
 LARANGAN MUTLAK:
 - DILARANG menulis fakta tentang klinik dari pengetahuan sendiri (metode khitan, harga, paket, promo, fasilitas, durasi, alamat, jam buka, prosedur, nama dokter, daftar layanan, syarat). Selalu lewat `get_intent_response`.
 - DILARANG menebak nama metode (Thermokauter, Klem, Klamp, Konvensional, Smart Klamp). Klinik pakai 1 metode saja yang ada di template.
-- DILARANG menulis text apa pun setelah `get_intent_response`, `redirect_ke_admin`, `trigger_harga_flow`, atau `trigger_booking_flow`. Balas string KOSONG ("").
+- DILARANG menulis text apa pun setelah `get_intent_response`, `redirect_ke_klinik_utama`, `trigger_harga_flow`, atau `trigger_booking_flow`. Balas string KOSONG ("").
 - DILARANG menggabungkan beberapa intent jadi list buatan sendiri. Panggil `get_intent_response` per intent.
 
 ROUTING KHUSUS (panggil tool, bukan jawab text):
 - Client minta penawaran HARGA / paket / quote → `trigger_harga_flow`.
-- Client mau BOOKING / daftar / jadwalkan → `trigger_booking_flow`.
-- Pesan jelas BUKAN tentang klinik sunat sama sekali (mis. tanya gigi, infus, daftar poli umum, pesan random) → `redirect_ke_admin`. JANGAN redirect kalau pertanyaan masih ada hubungannya dengan sunat (kontak admin sunat, jadwal sunat, hadiah sunat, dst) — itu pakai `get_intent_response`.
+- Client mau BOOKING / daftar / jadwalkan sunat → `trigger_booking_flow`.
+- Pesan jelas BUKAN tentang klinik sunat (mis. tanya gigi, infus, daftar poli umum, BPJS umum, pendaftaran dokter umum) → `redirect_ke_klinik_utama`. Customer dapat link wa.me ke admin klinik utama Meta. JANGAN redirect kalau pertanyaan masih ada hubungannya dengan sunat (kontak admin sunat, jadwal sunat, hadiah sunat, dst) — itu pakai `get_intent_response`.
 
 KAPAN BOLEH TULIS TEXT (sangat terbatas):
 - Hanya kalau sudah panggil lookup_knowledge DAN hasil kosong DAN tidak cocok masuk routing khusus. Tulis 1 kalimat probing pertanyaan ("Boleh kakak perjelas pertanyaannya?"). JANGAN salin contoh sapaan apa pun.
@@ -298,8 +311,8 @@ PROMPT;
             [
                 'type' => 'function',
                 'function' => [
-                    'name'        => 'redirect_ke_admin',
-                    'description' => 'Panggil ini saat pesan customer JELAS-JELAS bukan tentang sunat (mis. tanya gigi, daftar poli lain, halo random tanpa konteks). Bot akan kirim pesan redirect + nomor admin. Throttled 1x/hari per nomor (kalau sudah dikirim hari ini, jadi no-op).',
+                    'name'        => 'redirect_ke_klinik_utama',
+                    'description' => 'Panggil ini saat customer JELAS-JELAS bukan keperluan sunat (mis. tanya gigi, pendaftaran dokter umum, BPJS umum, halo random tanpa konteks sunat). Bot kirim pesan redirect ke admin klinik utama Meta (6282113781271) dgn wa.me link. Throttled 1x/hari per nomor.',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
@@ -347,9 +360,10 @@ PROMPT;
                 [$summary, $bubbles] = $this->toolGetIntentResponse((string) ($args['slug'] ?? ''));
                 return [$summary, ['replies' => $bubbles]];
 
-            case 'redirect_ke_admin':
+            case 'redirect_ke_klinik_utama':
+            case 'redirect_ke_admin': // back-compat: agent kadang masih panggil nama lama
                 $reason = (string) ($args['reason'] ?? '');
-                [$summary, $bubbles] = $this->toolRedirectKeAdmin($session, $reason);
+                [$summary, $bubbles] = $this->toolRedirectKeKlinikUtama($session, $reason);
                 return [$summary, ['replies' => $bubbles, 'signal' => 'redirected']];
 
             case 'trigger_harga_flow':
@@ -464,14 +478,16 @@ PROMPT;
     }
 
     /**
-     * Mirror behavior atika maybeSendRedirect (throttled 1x/hari).
-     * Tool ini di-call agent kalau pesan jelas bukan sunat.
+     * Redirect customer ke admin klinik utama Meta (6282113781271).
+     * Dipakai saat customer di gowa sunat tapi keperluannya bukan
+     * sunat (pendaftaran dokter umum, BPJS, tanya gigi, dll).
+     * Throttled 1x/hari per nomor supaya tidak spam.
      *
      * @return array{0:array, 1:array<array{text:string,media:?string}>}
      */
-    private function toolRedirectKeAdmin(BotSession $session, string $reason): array
+    private function toolRedirectKeKlinikUtama(BotSession $session, string $reason): array
     {
-        // Throttle 1x/hari per nomor: pakai cache file (key by phone).
+        // Throttle 1x/hari per nomor: pakai cache (key by phone).
         $phone = $session->no_telp ?? '';
         $key   = 'sunatbot_agent_redirect:' . preg_replace('/\D+/', '', $phone);
 
@@ -481,17 +497,18 @@ PROMPT;
         }
         \Cache::put($key, 1, now()->endOfDay());
 
-        $adminPhone = (string) config('sunatbot.nomor_operator', '');
-        $adminPhone = preg_replace('/\D+/', '', $adminPhone);
-        $adminLink  = $adminPhone !== '' ? "https://wa.me/{$adminPhone}" : '';
+        // Nomor klinik utama Meta — hardcoded per user spec. Bukan
+        // pakai nomor_operator (Dr Yoga) yg dulu — operator adalah
+        // staf internal, bukan jalur customer service umum.
+        $klinikUtama = '6282113781271';
+        $waLink      = "https://wa.me/{$klinikUtama}";
 
-        $text = "Maaf kak, mohon menghubungi admin kami untuk membantu pertanyaan kakak 🙏";
-        if ($adminLink !== '') {
-            $text .= "\n\nHubungi admin di sini: {$adminLink}";
-        }
-        $text .= "\n\nUntuk konsultasi *sunat anak*, silakan kirim kata *sunat* ke chat ini ya kak.";
+        $text = "Halo kak 🙏\n\n"
+              . "Nomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum, jadwal dokter, BPJS, atau informasi klinik lainnya, silakan langsung chat admin kami di nomor utama:\n\n"
+              . $waLink . "\n\n"
+              . "Tap link di atas untuk langsung membuka chat ya kak. Terima kasih.";
 
-        Log::info('SUNAT_BOT_AGENT_REDIRECT', ['phone' => $phone, 'reason' => $reason]);
+        Log::info('SUNAT_BOT_AGENT_REDIRECT', ['phone' => $phone, 'reason' => $reason, 'target' => 'klinik-utama']);
 
         return [['ok' => true, 'redirected' => true], [['text' => $text, 'media' => null]]];
     }
