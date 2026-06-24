@@ -135,7 +135,11 @@ class SunatBotAgent
                 // dulu. Mencegah false-positive redirect tanpa explore.
                 if (
                     !$lookupCalled
-                    && in_array($toolName, ['redirect_ke_klinik_utama', 'redirect_ke_admin', 'trigger_harga_flow', 'trigger_booking_flow'], true)
+                    && in_array($toolName, ['trigger_harga_flow', 'trigger_booking_flow'], true)
+                    // redirect_ke_klinik_utama TIDAK kena gate ini —
+                    // untuk customer yg bilang "mau daftar dokter umum"
+                    // setelah ditanya keperluan, agent sudah tau non-sunat
+                    // dan harus langsung redirect tanpa lookup_knowledge.
                 ) {
                     Log::info('SUNAT_BOT_AGENT_REJECT_PREMATURE_ROUTING', [
                         'phone' => $session->no_telp,
