@@ -215,7 +215,12 @@ class SunatBotEngine
         }
 
         if ($session === null && !$hasTrigger) {
-            return ['handled' => false, 'replies' => []];
+            // Agent path (PR3 default ON): biarkan agent yang putuskan
+            // mau jawab apa (greeting question, redirect, lookup, dst).
+            // Kalau agent disabled, fallback ke perilaku lama (bail).
+            if (!$this->shouldUseAgent($noTelp)) {
+                return ['handled' => false, 'replies' => []];
+            }
         }
 
         // Gratitude exit keyword (terima kasih, makasih, etc.) — close
@@ -276,9 +281,12 @@ class SunatBotEngine
 
         if ($session && $session->is_complete) {
             // is_complete + new sunat trigger → drop the stale session
-            // so the flow restarts. Otherwise stay out and let legacy
-            // paths handle (daftar, libur, etc.).
-            if ($hasTrigger) {
+            // so the flow restarts. Tanpa trigger:
+            //   - Agent enabled: drop juga, biar agent handle fresh
+            //     (jawab greeting question dst).
+            //   - Agent disabled: stay out, legacy paths (daftar, libur)
+            //     handle.
+            if ($hasTrigger || $this->shouldUseAgent($noTelp)) {
                 $session->delete();
                 $session = null;
             } else {
