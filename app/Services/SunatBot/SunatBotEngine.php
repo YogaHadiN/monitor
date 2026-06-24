@@ -1647,6 +1647,20 @@ class SunatBotEngine
      */
     private function isBookingKeyword(string $msgLower): bool
     {
+        // Hard guard: kalau pesan ada kata kunci non-sunat (usg, lab,
+        // dokter umum, dll), JANGAN match sebagai booking sunat. Engine
+        // shortcut ini designed utk "saya mau daftar" → booking flow,
+        // tapi customer kadang bilang "saya mau daftar USG" — bukan
+        // sunat. Biarkan agent yang handle (route ke redirect).
+        $nonSunatKw = ['usg', 'kandungan', 'kehamilan', 'hamil', 'lab',
+            'cek darah', 'dokter umum', 'gigi', 'kulit', 'vaksin',
+            'imunisasi', 'mobile jkn', 'mobile-jkn', 'obat', 'resep'];
+        foreach ($nonSunatKw as $kw) {
+            if (str_contains($msgLower, $kw)) {
+                return false;
+            }
+        }
+
         $keywords = (array) config('sunatbot.booking_keywords', []);
         foreach ($keywords as $kw) {
             $kw = trim((string) $kw);
