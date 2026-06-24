@@ -31,6 +31,22 @@ class SunatBotAgent
     private const MODEL               = 'gpt-4o-mini';
     private const HTTP_TIMEOUT        = 20;
 
+    // Hard guard utk trigger_booking_flow — kalau user message ada kata
+    // ini, BUKAN booking sunat → reject tool call, force agent re-route
+    // ke redirect_ke_klinik_utama.
+    private const NON_SUNAT_KEYWORDS = [
+        'usg', 'kandungan', 'kehamilan', 'hamil', 'lab',
+        'cek darah', 'dokter umum', 'gigi', 'kulit',
+        'vaksin', 'imunisasi', 'mobile jkn', 'mobile-jkn',
+        'jkn', 'obat', 'resep',
+    ];
+    private const SUNAT_KEYWORDS = [
+        'sunat', 'khitan', 'sirkumsis', 'circumcis',
+    ];
+
+    /** Pesan customer turn ini — di-set di reply(), dibaca di executeTool. */
+    private string $currentUserMessage = '';
+
     private ?string $contextPhone = null;
 
     public function setContext(?string $noTelp): void
@@ -51,6 +67,7 @@ class SunatBotAgent
     public function reply(BotSession $session, string $userMessage): array
     {
         $this->setContext($session->no_telp ?? null);
+        $this->currentUserMessage = $userMessage;
 
         $apiKey = (string) env('OPENAI_API_KEY', '');
         if ($apiKey === '') {
@@ -182,6 +199,32 @@ class SunatBotAgent
                     }
                     if ($slugArg !== '') {
                         $renderedSlugs[] = $slugArg;
+                    }
+                }
+
+                // Hard guard: trigger_booking_flow hanya valid kalau user
+                // message ada kata sunat/khitan, dan tidak ada kata kunci
+                // non-sunat. Model kadang shortcut "daftar X" → booking
+                // walaupun X = USG/lab/dokter umum. Reject + arahkan ke
+                // redirect_ke_klinik_utama.
+                if ($toolName === 'trigger_booking_flow') {
+                    $rejectReason = $this->validateBookingFlowMessage($this->currentUserMessage);
+                    if ($rejectReason !== null) {
+                        Log::info('SUNAT_BOT_AGENT_REJECT_BOOKING_FLOW', [
+                            'phone'   => $session->no_telp,
+                            'reason'  => $rejectReason,
+                            'message' => mb_substr($this->currentUserMessage, 0, 200),
+                        ]);
+                        $toolResult = [
+                            'ok'    => false,
+                            'error' => "Booking flow ditolak: $rejectReason. WAJIB panggil redirect_ke_klinik_utama (customer butuh layanan non-sunat / pesan tidak menyebut sunat).",
+                        ];
+                        $messages[] = [
+                            'role'         => 'tool',
+                            'tool_call_id' => $callId,
+                            'content'      => json_encode($toolResult, JSON_UNESCAPED_UNICODE),
+                        ];
+                        continue;
                     }
                 }
 
@@ -481,6 +524,34 @@ PROMPT;
      *
      * @return array{0:array, 1:array<array{text:string,media:?string}>}
      */
+    /**
+     * Validate apakah pesan customer layak masuk trigger_booking_flow.
+     * Return null kalau valid, atau string alasan reject.
+     */
+    private function validateBookingFlowMessage(string $message): ?string
+    {
+        $lower = mb_strtolower($message);
+
+        foreach (self::NON_SUNAT_KEYWORDS as $kw) {
+            if (str_contains($lower, $kw)) {
+                return "pesan mengandung kata non-sunat: '{$kw}'";
+            }
+        }
+
+        $hasSunatKw = false;
+        foreach (self::SUNAT_KEYWORDS as $kw) {
+            if (str_contains($lower, $kw)) {
+                $hasSunatKw = true;
+                break;
+            }
+        }
+        if (!$hasSunatKw) {
+            return "pesan tidak menyebut sunat/khitan/sirkumsisi secara eksplisit";
+        }
+
+        return null;
+    }
+
     private function toolRedirectKeKlinikUtama(BotSession $session, string $reason): array
     {
         // Throttle 1x/hari per nomor: pakai cache (key by phone).
