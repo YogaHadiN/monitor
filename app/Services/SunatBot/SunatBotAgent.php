@@ -253,8 +253,12 @@ ALGORITMA UNTUK PESAN BERKONTEN (bukan greeting):
 
 ROUTING KHUSUS (panggil tool, bukan jawab text):
 - Client minta penawaran HARGA / paket sunat / quote → `trigger_harga_flow`.
-- Client mau BOOKING / daftar / jadwalkan **sunat** (HANYA sunat) → `trigger_booking_flow`. DILARANG `trigger_booking_flow` utk layanan non-sunat — USG, lab, dokter umum, gigi, poli kulit, vaksin umum, dll WAJIB `redirect_ke_klinik_utama`.
-- Customer EKSPLISIT bilang keperluan non-sunat (mis. "mau daftar dokter umum", "tanya BPJS umum", "anak saya sakit gigi", "mau ke poli kulit", "mau daftar USG", "mau daftar lab", "mau daftar vaksin") → `redirect_ke_klinik_utama`. Customer dapat link wa.me Meta klinik utama.
+- Client mau BOOKING / daftar / jadwalkan **sunat** (HANYA sunat — kata "sunat" atau "khitan" HARUS ada di pesan) → `trigger_booking_flow`. DILARANG `trigger_booking_flow` utk layanan non-sunat.
+- Customer EKSPLISIT bilang keperluan non-sunat (mis. "mau daftar dokter umum", "tanya BPJS umum", "anak saya sakit gigi", "mau ke poli kulit", "mau daftar USG", "mau daftar lab", "mau daftar vaksin", "mau periksa kandungan", "mau cek hamil") → `redirect_ke_klinik_utama`. Customer dapat link wa.me Meta klinik utama.
+
+PRE-CHECK KATA KUNCI NON-SUNAT (cek INI DULU sebelum routing):
+- Kalau pesan customer ada kata: `usg`, `kandungan`, `kehamilan`, `hamil`, `lab`, `cek darah`, `dokter umum`, `gigi`, `kulit`, `vaksin`, `imunisasi`, `bpjs` (tanpa "sunat"), `mobile jkn`, `jkn`, `obat`, `resep`, `kontrol` (tanpa sunat) → WAJIB `redirect_ke_klinik_utama`. JANGAN PERNAH `trigger_booking_flow` utk pesan ini, walaupun ada kata "daftar". "Daftar USG", "daftar BPJS", "daftar dokter umum" semuanya HARUS redirect.
+- Booking flow HANYA untuk pesan yang ada kata "sunat" / "khitan" / "sirkumsisi" eksplisit.
 
 LARANGAN MUTLAK:
 - DILARANG menulis fakta tentang klinik dari pengetahuan sendiri (metode khitan, harga, paket, promo, fasilitas, durasi, alamat, jam buka, prosedur, nama dokter, daftar layanan, syarat). Selalu lewat `get_intent_response`.
@@ -329,7 +333,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'trigger_booking_flow',
-                    'description' => 'HANYA untuk customer mau booking / daftar jadwal SUNAT. DILARANG dipakai utk layanan non-sunat (USG, lab, dokter umum, gigi, vaksin umum, poli kulit, dll) — pakai redirect_ke_klinik_utama. Engine akan masuk ke booking flow sunat (tanggal, jam, nama anak, dst).',
+                    'description' => 'HANYA untuk booking SUNAT — pesan customer WAJIB mengandung kata "sunat", "khitan", atau "sirkumsisi" eksplisit. DILARANG dipakai utk: USG, lab, cek darah, dokter umum, gigi, kulit, vaksin/imunisasi, kandungan/kehamilan/hamil, BPJS umum, kontrol obat, resep, dll. Kalau pesan ada "daftar" + layanan non-sunat (mis. "daftar USG", "daftar lab", "daftar dokter umum") WAJIB pakai redirect_ke_klinik_utama. Engine akan masuk ke booking flow sunat (tanggal, jam, nama anak, dst).',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => new \stdClass(),
