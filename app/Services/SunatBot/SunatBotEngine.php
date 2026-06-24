@@ -303,7 +303,13 @@ class SunatBotEngine
                 'collected_data'   => [],
                 'last_activity_at' => Carbon::now(),
             ]);
-            $replies = array_merge($replies, $this->renderIntent('trigger_sunat', $session));
+            // Skip auto trigger_sunat greeting kalau agent enabled — agent
+            // punya logic greeting sendiri (tanya keperluan dulu). Tanpa
+            // skip, customer kena 3 bubble template + 1 bubble agent greet
+            // = dobel.
+            if (!$this->shouldUseAgent($noTelp)) {
+                $replies = array_merge($replies, $this->renderIntent('trigger_sunat', $session));
+            }
             $justCreated = true;
         }
 
