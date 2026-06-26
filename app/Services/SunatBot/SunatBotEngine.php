@@ -292,7 +292,7 @@ class SunatBotEngine
             $session->save();
             return [
                 'handled' => true,
-                'replies' => $this->enterBookingFlow($session),
+                'replies' => $this->enterBookingFlow($session, [], $msg),
             ];
         }
 
@@ -452,7 +452,7 @@ class SunatBotEngine
                 // AI mendeteksi niat booking → masuk booking flow internal
                 // (bukan escalate). Tidak render template intent ini
                 // (acknowledgement-nya digantikan oleh booking_tanya_tanggal).
-                return $this->enterBookingFlow($session);
+                return $this->enterBookingFlow($session, [], $message);
             }
             if (in_array($slug, self::ESCALATION_INTENTS, true)) {
                 // AI matched a slug whose semantic is "ready to book /
