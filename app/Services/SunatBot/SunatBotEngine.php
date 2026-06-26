@@ -390,7 +390,7 @@ class SunatBotEngine
                 $prefill = (array) ($agentResult['prefill'] ?? []);
 
                 if ($signal === 'enter_booking') {
-                    return $this->enterBookingFlow($session, $prefill);
+                    return $this->enterBookingFlow($session, $prefill, $message);
                 }
                 if ($signal === 'enter_harga') {
                     return $this->enterHargaFlow($session, $replies, $message, $prefill);
@@ -859,8 +859,28 @@ class SunatBotEngine
      * populate dulu — engine skip step yang sudah ada datanya. Kalau
      * SEMUA field complete (tanggal+jam+nama+usia+BB) → auto-finalize.
      */
-    private function enterBookingFlow(BotSession $session, array $prefill = []): array
+    private function enterBookingFlow(BotSession $session, array $prefill = [], ?string $triggerMessage = null): array
     {
+        // FALLBACK extraction: agent kadang call trigger_booking_flow tanpa
+        // pass params walaupun customer udah kasih info. Engine extract
+        // sendiri via classifier kalau prefill kosong + ada triggerMessage.
+        if (empty($prefill) && $triggerMessage !== null && trim($triggerMessage) !== '') {
+            $extracted = $this->classifier->extractFields([
+                'tanggal'           => 'tanggal booking format YYYY-MM-DD, atau format mentah customer ("5 Juli 2026", "5/7/2026", "besok"). string kosong kalau tidak disebut.',
+                'jam'               => 'jam booking format HH:MM (24 jam). String kosong kalau tidak disebut.',
+                'nama_anak'         => 'nama anak yang akan disunat. String kosong kalau tidak disebut.',
+                'nama_panggilan'    => 'nama panggilan anak. String kosong kalau tidak disebut.',
+                'usia_anak'         => 'usia anak beserta satuannya, mis. "7 tahun" atau "8 bulan". String kosong kalau tidak disebut.',
+                'berat_badan_anak'  => 'berat badan anak dalam kg, angka saja. String kosong kalau tidak disebut.',
+            ], $triggerMessage);
+            foreach (['tanggal','jam','nama_anak','nama_panggilan','usia_anak'] as $k) {
+                $v = trim((string) ($extracted[$k] ?? ''));
+                if ($v !== '') $prefill[$k] = $v;
+            }
+            $bb = trim((string) ($extracted['berat_badan_anak'] ?? ''));
+            if ($bb !== '' && is_numeric($bb)) $prefill['berat_badan_anak'] = (float) $bb;
+        }
+
         // PRE-FILL dari agent (info yg sudah disebut customer di chat).
         // Tanggal — parse via parseBookingDate (support YYYY-MM-DD, "5 Juli 2026", dst).
         if (!empty($prefill['tanggal'])) {
