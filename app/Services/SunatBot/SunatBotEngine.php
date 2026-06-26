@@ -520,9 +520,23 @@ class SunatBotEngine
             }
         }
 
-        // Step 2.5 escalation gate.
-        if ($field === 'riwayat_kesehatan' && $this->detectSpecialHandling($capturedValue)) {
+        // Step 2.4 escalation gate — indikasi_khitan. Per request user:
+        // kalau customer sebut keluhan medis apa pun (positive answer),
+        // handoff ke admin. Negative = "tidak ada" / "normal" / "sehat"
+        // → lanjut flow.
+        if ($field === 'indikasi_khitan' && !$this->isNoComplaint($capturedValue)) {
             return $this->escalate($session);
+        }
+
+        // Step 2.5 escalation gate — riwayat_kesehatan. Pertama cek
+        // keyword spesifik (jantung, pembekuan, autisme dll). Kalau
+        // tidak ada keyword, tetap escalate kalau jawaban POSITIVE
+        // (bukan "tidak ada") — customer mention kondisi medis yg
+        // tidak tercover keyword.
+        if ($field === 'riwayat_kesehatan') {
+            if ($this->detectSpecialHandling($capturedValue) || !$this->isNoComplaint($capturedValue)) {
+                return $this->escalate($session);
+            }
         }
 
         // Step 2.4.5 escalation gate — postur tubuh gemuk butuh
@@ -1695,6 +1709,44 @@ class SunatBotEngine
                 return true;
             }
         }
+        return false;
+    }
+
+    /**
+     * Deteksi jawaban "tidak ada keluhan / kondisi medis". Return true
+     * kalau customer effectively bilang TIDAK ADA — bot bisa lanjut
+     * flow. Return false kalau ada hint positif → caller escalate.
+     *
+     * Negatif markers: "tidak ada", "ga ada", "ngga", "engga", "belum",
+     * "normal", "sehat", "biasa", "tidak", "-", "none", string kosong.
+     */
+    private function isNoComplaint(string $value): bool
+    {
+        $v = mb_strtolower(trim($value));
+        if ($v === '' || $v === '-') return true;
+
+        // Single-word "no" markers (case sensitive after lower).
+        $singletons = [
+            'tidak', 'gak', 'nggak', 'engga', 'enggak', 'ngga',
+            'belum', 'bukan', 'sehat', 'normal', 'biasa', 'fine',
+            'oke', 'baik', 'none', 'no', 'nope', 'aman',
+        ];
+        if (in_array($v, $singletons, true)) return true;
+
+        // Phrase patterns yg jelas berarti "tidak ada keluhan".
+        $negPatterns = [
+            '/\b(tidak|ga|gak|nggak|engga|enggak|ngga|belum)\s+ada\b/u',
+            '/\btidak\s+(ada|punya)\b/u',
+            '/\bbiasa\s+saja\b/u',
+            '/\bnggak\s+ada\b/u',
+            '/\bbelum\s+ada\b/u',
+            '/\btidak\s+ada\s+keluhan\b/u',
+            '/\bsehat[\s-]*sehat\b/u',
+        ];
+        foreach ($negPatterns as $p) {
+            if (preg_match($p, $v)) return true;
+        }
+
         return false;
     }
 
