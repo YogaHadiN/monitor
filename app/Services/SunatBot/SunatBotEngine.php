@@ -119,8 +119,25 @@ class SunatBotEngine
      * yang sama dgn trigger (mis. "anak saya 8 th 30 kg mau tanya
      * harga"). Hemat 2 turn round-trip.
      */
-    private function enterHargaFlow(BotSession $session, array $leadInReplies = [], ?string $triggerMessage = null): array
+    private function enterHargaFlow(BotSession $session, array $leadInReplies = [], ?string $triggerMessage = null, array $prefill = []): array
     {
+        // PRE-FILL dari agent tool args (history-aware extraction).
+        // Agent ekstrak field yg sudah disebut customer dari chat history,
+        // engine populate session collected_data → skip step yang sudah ada.
+        foreach ($prefill as $field => $value) {
+            if ($field === 'usia_anak' && is_string($value)) {
+                $parsed = $this->parseUsia('', $value);
+                if ($parsed !== null) {
+                    $session->setData('usia_anak', (int) $parsed['value']);
+                    $session->setData('usia_anak_satuan', $parsed['unit']);
+                }
+            } elseif ($field === 'berat_badan_anak' && is_numeric($value)) {
+                $session->setData('berat_badan_anak', (float) $value);
+            } else {
+                $session->setData($field, $value);
+            }
+        }
+
         if ($triggerMessage !== null && trim($triggerMessage) !== '') {
             $needUsia = $session->getData('usia_anak') === null;
             $needBB   = $session->getData('berat_badan_anak') === null;
@@ -370,12 +387,13 @@ class SunatBotEngine
             } else {
                 $signal  = $agentResult['signal'] ?? null;
                 $replies = $agentResult['replies'] ?? [];
+                $prefill = (array) ($agentResult['prefill'] ?? []);
 
                 if ($signal === 'enter_booking') {
-                    return $this->enterBookingFlow($session);
+                    return $this->enterBookingFlow($session, $prefill);
                 }
                 if ($signal === 'enter_harga') {
-                    return $this->enterHargaFlow($session, $replies, $message);
+                    return $this->enterHargaFlow($session, $replies, $message, $prefill);
                 }
                 if (!empty($agentResult['escalate'])) {
                     return $this->escalate($session, $replies !== [] ? $replies : null);
@@ -837,14 +855,70 @@ class SunatBotEngine
     // =====================================================================
 
     /**
-     * Mulai booking flow. Set expecting_field=booking_tanggal dan
-     * kirim pertanyaan tanggal sebagai pertanyaan pertama.
+     * Mulai booking flow. Kalau prefill ada (dari agent tool args),
+     * populate dulu — engine skip step yang sudah ada datanya. Kalau
+     * SEMUA field complete (tanggal+jam+nama+usia+BB) → auto-finalize.
      */
-    private function enterBookingFlow(BotSession $session): array
+    private function enterBookingFlow(BotSession $session, array $prefill = []): array
     {
-        $session->expecting_field = 'booking_tanggal';
+        // PRE-FILL dari agent (info yg sudah disebut customer di chat).
+        if (!empty($prefill['tanggal']))
+            $session->setData('booking_tanggal', $prefill['tanggal']);
+        if (!empty($prefill['jam']))
+            $session->setData('booking_jam', $prefill['jam']);
+        if (!empty($prefill['nama_anak']))
+            $session->setData('booking_nama_anak', $prefill['nama_anak']);
+        if (!empty($prefill['nama_panggilan']))
+            $session->setData('booking_nama_panggilan', $prefill['nama_panggilan']);
+        if (!empty($prefill['usia_anak']) && is_string($prefill['usia_anak'])) {
+            $parsed = $this->parseUsia('', $prefill['usia_anak']);
+            if ($parsed !== null) {
+                $session->setData('booking_usia_anak', (int) $parsed['value']);
+                $session->setData('booking_usia_anak_satuan', $parsed['unit']);
+            }
+        }
+        if (isset($prefill['berat_badan_anak']) && is_numeric($prefill['berat_badan_anak']))
+            $session->setData('booking_berat_badan_anak', (float) $prefill['berat_badan_anak']);
+
+        // Cek apakah semua field lengkap → auto-finalize (tidak nanya apa-apa).
+        $hasAll = $session->getData('booking_tanggal') !== null
+               && $session->getData('booking_jam')     !== null
+               && trim((string) $session->getData('booking_nama_anak')) !== ''
+               && $session->getData('booking_usia_anak')        !== null
+               && $session->getData('booking_berat_badan_anak') !== null;
+        if ($hasAll) {
+            return $this->finalizeBooking($session);
+        }
+
+        // Lanjut ke step pertama yang masih missing.
+        $next = $this->nextMissingBookingField($session);
+        $session->expecting_field = $next;
         $session->save();
-        return $this->renderIntent('booking_tanya_tanggal', $session);
+        $intentMap = [
+            'booking_tanggal'          => 'booking_tanya_tanggal',
+            'booking_jam'              => 'booking_tanya_jam',
+            'booking_nama_anak'        => 'booking_tanya_nama_anak',
+            'booking_nama_panggilan'   => 'booking_tanya_nama_panggilan',
+            'booking_usia'             => 'booking_tanya_usia',
+            'booking_berat_badan'      => 'booking_tanya_berat_badan',
+            'booking_konfirmasi'       => 'booking_konfirmasi',
+        ];
+        return $this->renderIntent($intentMap[$next] ?? 'booking_tanya_tanggal', $session);
+    }
+
+    /**
+     * Cari step booking_* berikutnya yang datanya belum ada. Order:
+     * tanggal → jam → nama_anak → nama_panggilan → usia → BB → konfirmasi.
+     */
+    private function nextMissingBookingField(BotSession $session): string
+    {
+        if ($session->getData('booking_tanggal') === null)        return 'booking_tanggal';
+        if ($session->getData('booking_jam')     === null)        return 'booking_jam';
+        if (trim((string) $session->getData('booking_nama_anak')) === '') return 'booking_nama_anak';
+        if (trim((string) $session->getData('booking_nama_panggilan')) === '') return 'booking_nama_panggilan';
+        if ($session->getData('booking_usia_anak') === null)      return 'booking_usia';
+        if ($session->getData('booking_berat_badan_anak') === null) return 'booking_berat_badan';
+        return 'booking_konfirmasi';
     }
 
     /**

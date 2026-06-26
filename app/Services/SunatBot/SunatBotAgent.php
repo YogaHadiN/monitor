@@ -92,6 +92,7 @@ class SunatBotAgent
         $escalate            = false;
         $iter                = 0;
         $toolEmittedReplies  = false;
+        $prefill             = [];
         // Tracker slug yang sudah di-render via get_intent_response di
         // turn ini. Agent kadang panggil intent yang sama berkali-kali
         // (mis. iter1 + iter2 get_intent_response("pertanyaan_lokasi")
@@ -237,6 +238,9 @@ class SunatBotAgent
                 if (isset($sideEffect['signal']) && $sideEffect['signal'] !== null) {
                     $signal = $sideEffect['signal'];
                 }
+                if (isset($sideEffect['prefill']) && is_array($sideEffect['prefill'])) {
+                    $prefill = $sideEffect['prefill'];
+                }
                 if (!empty($sideEffect['escalate'])) {
                     $escalate = true;
                 }
@@ -265,6 +269,7 @@ class SunatBotAgent
             'replies'  => $replies,
             'signal'   => $signal,
             'escalate' => $escalate,
+            'prefill'  => $prefill,
         ];
     }
 
@@ -408,10 +413,19 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'trigger_harga_flow',
-                    'description' => 'Customer minta quote harga / paket / penawaran. Engine akan masuk ke harga flow (capture nama, domisili, usia/BB, dst step-by-step). Setelah panggil tool ini, JANGAN tambah text lain — engine yang lanjutkan.',
+                    'description' => 'Customer minta quote harga / paket / penawaran. Engine masuk ke harga flow (capture nama, domisili, usia/BB, dst). KASIH parameter utk field yang SUDAH disebut customer di percakapan supaya engine tidak nanya ulang. Setelah call tool, output text KOSONG.',
                     'parameters'  => [
                         'type' => 'object',
-                        'properties' => new \stdClass(),
+                        'properties' => [
+                            'nama_orang_tua'    => ['type' => 'string', 'description' => 'kalau sudah disebut, mis. "Ibu Yeni"'],
+                            'domisili'          => ['type' => 'string', 'description' => 'kalau sudah disebut, mis. "Tangerang"'],
+                            'usia_anak'         => ['type' => 'string', 'description' => 'angka usia dgn satuan, mis. "7 tahun" atau "8 bulan"'],
+                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'dalam kg, mis. 18 atau 25.5'],
+                            'sudah_tahu_metode' => ['type' => 'string', 'description' => '"ya" atau "tidak" kalau customer udah bilang'],
+                            'indikasi_khitan'   => ['type' => 'string', 'description' => 'keluhan medis atau "tidak ada"'],
+                            'postur_tubuh'      => ['type' => 'string', 'description' => '"gemuk" atau "tidak gemuk" / "normal"'],
+                            'riwayat_kesehatan' => ['type' => 'string', 'description' => 'kondisi medis (jantung, autisme dll) atau "tidak ada"'],
+                        ],
                     ],
                 ],
             ],
@@ -419,10 +433,17 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'trigger_booking_flow',
-                    'description' => 'HANYA untuk booking SUNAT — pesan customer WAJIB mengandung kata "sunat", "khitan", atau "sirkumsisi" eksplisit. DILARANG dipakai utk: USG, lab, cek darah, dokter umum, gigi, kulit, vaksin/imunisasi, kandungan/kehamilan/hamil, BPJS umum, kontrol obat, resep, dll. Kalau pesan ada "daftar" + layanan non-sunat (mis. "daftar USG", "daftar lab", "daftar dokter umum") WAJIB pakai redirect_ke_klinik_utama. Engine akan masuk ke booking flow sunat (tanggal, jam, nama anak, dst).',
+                    'description' => 'HANYA untuk booking SUNAT — pesan customer WAJIB ada kata "sunat" / "khitan" / "sirkumsisi". DILARANG utk USG, lab, dokter umum, gigi, kulit, vaksin, kandungan, BPJS umum, dll → pakai redirect_ke_klinik_utama. KASIH parameter utk field yang sudah disebut customer di percakapan (tanggal, jam, nama_anak, usia, BB) supaya engine skip step itu. Kalau semua complete, engine auto-store jadwal_sunats. Output text KOSONG setelah call.',
                     'parameters'  => [
                         'type' => 'object',
-                        'properties' => new \stdClass(),
+                        'properties' => [
+                            'tanggal'           => ['type' => 'string', 'description' => 'format YYYY-MM-DD, mis. "2026-07-15"'],
+                            'jam'               => ['type' => 'string', 'description' => 'format HH:MM, mis. "10:00"'],
+                            'nama_anak'         => ['type' => 'string', 'description' => 'nama lengkap anak'],
+                            'nama_panggilan'    => ['type' => 'string', 'description' => 'nama panggilan, mis. "Nio"'],
+                            'usia_anak'         => ['type' => 'string', 'description' => 'usia dgn satuan, mis. "7 tahun"'],
+                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'dalam kg'],
+                        ],
                     ],
                 ],
             ],
@@ -449,10 +470,16 @@ PROMPT;
                 return [$summary, ['replies' => $bubbles, 'signal' => 'redirected']];
 
             case 'trigger_harga_flow':
-                return [['ok' => true, 'note' => 'engine akan ambil alih flow harga'], ['signal' => 'enter_harga']];
+                return [['ok' => true, 'note' => 'engine akan ambil alih flow harga'], [
+                    'signal'  => 'enter_harga',
+                    'prefill' => $this->normalizeHargaArgs($args),
+                ]];
 
             case 'trigger_booking_flow':
-                return [['ok' => true, 'note' => 'engine akan ambil alih flow booking'], ['signal' => 'enter_booking']];
+                return [['ok' => true, 'note' => 'engine akan ambil alih flow booking'], [
+                    'signal'  => 'enter_booking',
+                    'prefill' => $this->normalizeBookingArgs($args),
+                ]];
 
             default:
                 return [['ok' => false, 'error' => "unknown tool: $name"], []];
@@ -567,6 +594,47 @@ PROMPT;
      *
      * @return array{0:array, 1:array<array{text:string,media:?string}>}
      */
+    /**
+     * Filter argument trigger_harga_flow yang valid (skip kosong/null).
+     * Output: assoc array siap pakai utk pre-fill session collected_data.
+     */
+    private function normalizeHargaArgs(array $args): array
+    {
+        $out = [];
+        $strKeys = ['nama_orang_tua', 'domisili', 'usia_anak', 'sudah_tahu_metode', 'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan'];
+        foreach ($strKeys as $k) {
+            $v = trim((string) ($args[$k] ?? ''));
+            if ($v !== '') $out[$k] = $v;
+        }
+        if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
+            $out['berat_badan_anak'] = (float) $args['berat_badan_anak'];
+        }
+        return $out;
+    }
+
+    /**
+     * Filter argument trigger_booking_flow yang valid + parse jam/tanggal.
+     */
+    private function normalizeBookingArgs(array $args): array
+    {
+        $out = [];
+        if (!empty($args['tanggal']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $args['tanggal'])) {
+            $out['tanggal'] = (string) $args['tanggal'];
+        }
+        if (!empty($args['jam']) && preg_match('/^\d{1,2}:\d{2}$/', (string) $args['jam'])) {
+            $out['jam'] = (string) $args['jam'];
+        }
+        $strKeys = ['nama_anak', 'nama_panggilan', 'usia_anak'];
+        foreach ($strKeys as $k) {
+            $v = trim((string) ($args[$k] ?? ''));
+            if ($v !== '') $out[$k] = $v;
+        }
+        if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
+            $out['berat_badan_anak'] = (float) $args['berat_badan_anak'];
+        }
+        return $out;
+    }
+
     /**
      * Validate apakah pesan customer layak masuk trigger_booking_flow.
      * Return null kalau valid, atau string alasan reject.
