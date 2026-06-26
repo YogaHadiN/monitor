@@ -289,7 +289,7 @@ Bicaranya santai, ramah, natural — seperti staf admin manusia. Jawab langsung 
 
 📅 DURASI SEMBUH: Luka kering 5-10 hari (rata-rata 1 minggu). Anak bisa kembali sekolah ~3 hari pasca tindakan kalau tidak ada penyulit.
 
-⏱️ DURASI TINDAKAN: 15-30 menit. Total kunjungan ~1-1.5 jam (konsultasi + tindakan + edukasi).
+⏱️ DURASI TINDAKAN: Proses sunat 15-30 menit. Tapi total di klinik sekitar 1-1.5 jam (termasuk konsultasi + edukasi pasca).
 
 🩺 PENGAWASAN PASCA SUNAT: Lewat WhatsApp dengan dokter kami — TIDAK perlu kontrol fisik ke klinik.
 
