@@ -866,15 +866,19 @@ class SunatBotEngine
         // sendiri via classifier kalau prefill kosong + ada triggerMessage.
         if (empty($prefill) && $triggerMessage !== null && trim($triggerMessage) !== '') {
             $extracted = $this->classifier->extractFields([
-                'tanggal'           => 'tanggal booking format YYYY-MM-DD, atau format mentah customer ("5 Juli 2026", "5/7/2026", "besok"). string kosong kalau tidak disebut.',
-                'jam'               => 'jam booking format HH:MM (24 jam). String kosong kalau tidak disebut.',
-                'nama_anak'         => 'nama anak yang akan disunat. String kosong kalau tidak disebut.',
-                'nama_panggilan'    => 'nama panggilan anak. String kosong kalau tidak disebut.',
-                'usia_anak'         => 'usia anak beserta satuannya, mis. "7 tahun" atau "8 bulan". String kosong kalau tidak disebut.',
-                'berat_badan_anak'  => 'berat badan anak dalam kg, angka saja. String kosong kalau tidak disebut.',
+                'tanggal'           => 'tanggal booking format mentah customer ("5 Juli 2026", "5/7/2026", "besok"). Kosong kalau tidak disebut.',
+                'jam'               => 'jam booking format HH:MM atau angka jam saja (10, 11). Kosong kalau tidak disebut.',
+                'nama_anak'         => 'HANYA nama anak (full name). JANGAN include kata "BB", "berat", angka, atau satuan. Contoh: "Faiz" (BUKAN "Faiz BB"). Kosong kalau tidak disebut.',
+                'nama_panggilan'    => 'HANYA nama panggilan anak. Kosong kalau tidak disebut.',
+                'usia_anak'         => 'usia anak beserta satuan: "7 tahun" atau "8 bulan". Kosong kalau tidak disebut.',
+                'berat_badan_anak'  => 'berat badan anak dalam kg, ANGKA SAJA tanpa unit (mis. 22). Kosong kalau tidak disebut.',
             ], $triggerMessage);
             foreach (['tanggal','jam','nama_anak','nama_panggilan','usia_anak'] as $k) {
                 $v = trim((string) ($extracted[$k] ?? ''));
+                // Cleanup nama_anak: strip trailing "BB" / "berat" / digits
+                if ($k === 'nama_anak' && $v !== '') {
+                    $v = trim(preg_replace('/\s*(bb|berat|berat\s*badan)\s*\d*\s*$/iu', '', $v));
+                }
                 if ($v !== '') $prefill[$k] = $v;
             }
             $bb = trim((string) ($extracted['berat_badan_anak'] ?? ''));
