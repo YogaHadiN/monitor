@@ -1297,18 +1297,13 @@ class SunatBotEngine
     }
 
     /**
-     * Kirim notifikasi ke admin/operator (default 6281381912803) saat
-     * booking baru dibuat lewat sunat bot — mirror perilaku
-     * JadwalSunatController::store di atika. Gagalnya kirim DIAM (log
-     * warning only) supaya tidak rollback booking yang sudah berhasil.
+     * Kirim notifikasi ke admin/operator + Rona saat booking baru dibuat
+     * lewat sunat bot — mirror perilaku JadwalSunatController::store di
+     * atika. Gagalnya kirim DIAM (log warning only) supaya tidak
+     * rollback booking yang sudah berhasil.
      */
     private function notifyOperatorBooking(JadwalSunat $row): void
     {
-        $operator = (string) config('sunatbot.nomor_operator', '6281381912803');
-        if ($operator === '') {
-            return;
-        }
-
         try {
             $idMonths = [
                 1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
@@ -1331,10 +1326,22 @@ class SunatBotEngine
                 '🧑‍⚕️ Mohon dipersiapkan tindakan.',
             ]);
 
-            // Kirim via gowa sunat device (bukan Meta/Watzap). Helper
-            // enqueue ke gowa_outbound_messages → dispatcher atika
-            // pick up tiap menit dgn flow typing → pause → send.
-            \App\Services\GowaSunatNotifier::notifyStaff($operator, $msg, 'booking_notif_operator');
+            $recipients = [
+                'operator' => (string) config('sunatbot.nomor_operator', '6281381912803'),
+                'rona'     => (string) config('sunatbot.nomor_rona', ''),
+            ];
+
+            foreach ($recipients as $label => $phone) {
+                $phone = preg_replace('/\D+/', '', $phone);
+                if (str_starts_with($phone, '0')) {
+                    $phone = '62' . substr($phone, 1);
+                } elseif (str_starts_with($phone, '8')) {
+                    $phone = '62' . $phone;
+                }
+                if ($phone === '') continue;
+
+                \App\Services\GowaSunatNotifier::notifyStaff($phone, $msg, 'booking_notif_' . $label);
+            }
         } catch (\Throwable $e) {
             Log::warning('SUNAT_BOOKING_OPERATOR_NOTIFY_FAIL', [
                 'jadwal_id' => $row->id ?? null,
