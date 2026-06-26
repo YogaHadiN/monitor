@@ -862,10 +862,22 @@ class SunatBotEngine
     private function enterBookingFlow(BotSession $session, array $prefill = []): array
     {
         // PRE-FILL dari agent (info yg sudah disebut customer di chat).
-        if (!empty($prefill['tanggal']))
-            $session->setData('booking_tanggal', $prefill['tanggal']);
-        if (!empty($prefill['jam']))
-            $session->setData('booking_jam', $prefill['jam']);
+        // Tanggal — parse via parseBookingDate (support YYYY-MM-DD, "5 Juli 2026", dst).
+        if (!empty($prefill['tanggal'])) {
+            $tglParsed = $this->parseBookingDate((string) $prefill['tanggal']);
+            if ($tglParsed !== null) {
+                $session->setData('booking_tanggal', $tglParsed->format('Y-m-d'));
+            }
+        }
+        // Jam — terima "10", "10:00", "10.00", "jam 10", normalize ke HH:MM.
+        if (!empty($prefill['jam'])) {
+            $jamRaw = (string) $prefill['jam'];
+            if (preg_match('/(\d{1,2})[:.]?(\d{0,2})/', $jamRaw, $m)) {
+                $hh = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+                $mm = $m[2] !== '' ? str_pad($m[2], 2, '0', STR_PAD_LEFT) : '00';
+                $session->setData('booking_jam', "$hh:$mm");
+            }
+        }
         if (!empty($prefill['nama_anak']))
             $session->setData('booking_nama_anak', $prefill['nama_anak']);
         if (!empty($prefill['nama_panggilan']))
@@ -879,6 +891,18 @@ class SunatBotEngine
         }
         if (isset($prefill['berat_badan_anak']) && is_numeric($prefill['berat_badan_anak']))
             $session->setData('booking_berat_badan_anak', (float) $prefill['berat_badan_anak']);
+
+        Log::info('SUNAT_BOOKING_PREFILL', [
+            'phone'   => $session->no_telp,
+            'prefill' => $prefill,
+            'set'     => [
+                'tanggal' => $session->getData('booking_tanggal'),
+                'jam'     => $session->getData('booking_jam'),
+                'nama'    => $session->getData('booking_nama_anak'),
+                'usia'    => $session->getData('booking_usia_anak'),
+                'bb'      => $session->getData('booking_berat_badan_anak'),
+            ],
+        ]);
 
         // Cek apakah semua field lengkap → auto-finalize (tidak nanya apa-apa).
         $hasAll = $session->getData('booking_tanggal') !== null

@@ -625,18 +625,14 @@ PROMPT;
     }
 
     /**
-     * Filter argument trigger_booking_flow yang valid + parse jam/tanggal.
+     * Filter argument trigger_booking_flow yang valid. Pass-through string
+     * untuk tanggal/jam — engine parser yang akan validate (parseBookingDate
+     * support YYYY-MM-DD, DD/MM/YYYY, "5 Juli 2026", "besok", dll).
      */
     private function normalizeBookingArgs(array $args): array
     {
         $out = [];
-        if (!empty($args['tanggal']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $args['tanggal'])) {
-            $out['tanggal'] = (string) $args['tanggal'];
-        }
-        if (!empty($args['jam']) && preg_match('/^\d{1,2}:\d{2}$/', (string) $args['jam'])) {
-            $out['jam'] = (string) $args['jam'];
-        }
-        $strKeys = ['nama_anak', 'nama_panggilan', 'usia_anak'];
+        $strKeys = ['tanggal', 'jam', 'nama_anak', 'nama_panggilan', 'usia_anak'];
         foreach ($strKeys as $k) {
             $v = trim((string) ($args[$k] ?? ''));
             if ($v !== '') $out[$k] = $v;
