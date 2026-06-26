@@ -146,34 +146,9 @@ class SunatBotAgent
                 $args     = json_decode($argsRaw, true) ?: [];
                 $callId   = (string) ($call['id'] ?? '');
 
-                // Enforce: redirect / trigger flow hanya boleh setelah
-                // lookup_knowledge dipanggil 1x. Kalau belum, reject
-                // call ini + kasih instruksi ke agent untuk lookup
-                // dulu. Mencegah false-positive redirect tanpa explore.
-                if (
-                    !$lookupCalled
-                    && in_array($toolName, ['trigger_harga_flow', 'trigger_booking_flow'], true)
-                    // redirect_ke_klinik_utama TIDAK kena gate ini —
-                    // untuk customer yg bilang "mau daftar dokter umum"
-                    // setelah ditanya keperluan, agent sudah tau non-sunat
-                    // dan harus langsung redirect tanpa lookup_knowledge.
-                ) {
-                    Log::info('SUNAT_BOT_AGENT_REJECT_PREMATURE_ROUTING', [
-                        'phone' => $session->no_telp,
-                        'tool'  => $toolName,
-                        'iter'  => $iter,
-                    ]);
-                    $toolResult = [
-                        'ok'    => false,
-                        'error' => "Wajib panggil lookup_knowledge dulu sebelum $toolName. Cari intent yg cocok di knowledge base — kalau tidak ada baru routing.",
-                    ];
-                    $messages[] = [
-                        'role'         => 'tool',
-                        'tool_call_id' => $callId,
-                        'content'      => json_encode($toolResult, JSON_UNESCAPED_UNICODE),
-                    ];
-                    continue;
-                }
+                // Gate lookup_knowledge mandatory sudah dihapus (option C):
+                // FAKTA sudah ada di system prompt, agent boleh langsung
+                // trigger flow tanpa lookup dulu.
 
                 if ($toolName === 'lookup_knowledge') {
                     $lookupCalled = true;

@@ -128,8 +128,8 @@ class SunatBotEngine
             if ($field === 'usia_anak' && is_string($value)) {
                 $parsed = $this->parseUsia('', $value);
                 if ($parsed !== null) {
-                    $session->setData('usia_anak', (int) $parsed['value']);
-                    $session->setData('usia_anak_satuan', $parsed['unit']);
+                    $session->setData('usia_anak', (int) $parsed[0]);
+                    $session->setData('usia_anak_satuan', (string) $parsed[1]);
                 }
             } elseif ($field === 'berat_badan_anak' && is_numeric($value)) {
                 $session->setData('berat_badan_anak', (float) $value);
@@ -873,8 +873,8 @@ class SunatBotEngine
         if (!empty($prefill['usia_anak']) && is_string($prefill['usia_anak'])) {
             $parsed = $this->parseUsia('', $prefill['usia_anak']);
             if ($parsed !== null) {
-                $session->setData('booking_usia_anak', (int) $parsed['value']);
-                $session->setData('booking_usia_anak_satuan', $parsed['unit']);
+                $session->setData('booking_usia_anak', (int) $parsed[0]);
+                $session->setData('booking_usia_anak_satuan', (string) $parsed[1]);
             }
         }
         if (isset($prefill['berat_badan_anak']) && is_numeric($prefill['berat_badan_anak']))
