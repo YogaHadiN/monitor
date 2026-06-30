@@ -36,11 +36,14 @@ class GowaSunatNotifier
         }
 
         try {
+            // FLAG: kalau gowa sunat device sedang di-block, fallback ke
+            // gowa atika. Re-enable: set env GOWA_SUNAT_NOTIFIER_DEVICE=sunat.
+            $device = (string) env('GOWA_SUNAT_NOTIFIER_DEVICE', 'sunat');
             DB::table('gowa_outbound_messages')->insert([
                 'kind'         => $label,
                 'to_phone'     => $normalized,
                 'to_label'     => 'staff',
-                'device_id'    => 'sunat',
+                'device_id'    => $device,
                 'body'         => $message,
                 'status'       => 'pending',
                 'scheduled_at' => now(),
