@@ -154,6 +154,33 @@ class SunatBotAgent
                     $lookupCalled = true;
                 }
 
+                // Hard guard: block get_intent_response utk slug yang
+                // "final quote" atau template internal harga flow —
+                // final quote hanya via send_harga_quote, ask field
+                // harga hanya via text natural + save_harga_data.
+                if ($toolName === 'get_intent_response') {
+                    $slugArg = trim((string) ($args['slug'] ?? ''));
+                    $blockedExact = ['quote_harga_paket', 'quote_harga_paket_promo', 'fallback_unknown'];
+                    if (in_array($slugArg, $blockedExact, true)
+                        || str_starts_with($slugArg, 'tanya_')
+                        || str_starts_with($slugArg, 'data_')) {
+                        Log::info('SUNAT_BOT_AGENT_BLOCK_SLUG', [
+                            'phone' => $session->no_telp,
+                            'slug'  => $slugArg,
+                        ]);
+                        $toolResult = [
+                            'ok'    => false,
+                            'error' => "slug '$slugArg' dilarang dipanggil via get_intent_response. Untuk final quote pakai send_harga_quote. Untuk tanya field harga, tanya sendiri dgn text natural (jangan pakai tool ini).",
+                        ];
+                        $messages[] = [
+                            'role'         => 'tool',
+                            'tool_call_id' => $callId,
+                            'content'      => json_encode($toolResult, JSON_UNESCAPED_UNICODE),
+                        ];
+                        continue;
+                    }
+                }
+
                 // Dedupe: kalau agent call get_intent_response untuk
                 // slug yang sudah di-render di turn ini, skip eksekusi
                 // dan kembalikan note ke LLM supaya tidak loop.
@@ -363,13 +390,14 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    WAJIB call `save_harga_data(field=value)` DULU (satu turn), engine simpan. Kamu boleh save multi-field kalau customer sebut sekaligus (mis. "saya Yeni dari Tangerang" → `save_harga_data(nama_orang_tua="Yeni", domisili="Tangerang")`).
    Baca tool response `missing[]` → kalau ada, tanya field berikutnya di reply text yang sama turn. Kalau `missing[]` kosong, langsung call `send_harga_quote()` (jangan tanya lagi).
 
-3. **Tanya field NATURAL, 1-2 field per bubble:**
-   - Belum ada nama → "Kalo boleh tau dengan kakak siapa ya?"
+3. **Tanya field NATURAL dgn text kamu sendiri (JANGAN pakai get_intent_response), 1-2 field per bubble.**
+   URUTAN wajib (jangan lompat ke sudah_tahu_metode sebelum 7 field required terkumpul):
+   - Belum ada nama_orang_tua → "Kalo boleh tau dengan kakak siapa ya?"
+   - Belum ada usia_anak + berat_badan_anak → "Boleh infokan usia dan berat badan anaknya kak?"
    - Belum ada domisili → "Domisilinya di mana kak?"
-   - Belum ada usia + BB → "Boleh infokan usia dan berat badan anaknya?"
-   - Belum ada indikasi → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
-   - Belum ada postur → "Postur anaknya bagaimana kak, ada kelebihan berat atau proporsional?"
-   - Belum ada riwayat → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
+   - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
+   - Belum ada postur_tubuh → "Postur anaknya bagaimana kak, proporsional atau ada kelebihan berat?"
+   - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
 
 4. **⚠️ INTERRUPT — customer tanya HAL LAIN di tengah collection:**
    Contoh: setelah kamu tanya domisili, customer malah tanya "Metode nya apa?"
@@ -383,6 +411,8 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    Kalau `save_harga_data` return `escalate=true` (indikasi != "tidak ada" / postur = "gemuk" / riwayat > "tidak ada"), engine ambil alih untuk handoff ke admin. Kamu output kosong setelah call, jangan lanjut.
 
 7. **Harga sudah pernah dikirim** — kalau history sudah ada bubble berisi angka "Rp ..." atau template quote_harga_paket, **DILARANG** call `send_harga_quote` lagi. Bantu jawab pertanyaan lanjutan saja.
+
+8. **⚠️ Kalau customer sudah START harga collection (nama sudah kesave), JANGAN escalate/redirect walau pesan customer nampak unclear/pendek.** Tetap dorong flow: tanya field yang belum, atau (kalau customer minta) call `send_harga_quote` jika sudah komplit. Fallback ke admin hanya kalau escalate=true dari save_harga_data.
 
 CONTOH GOOD FLOW:
   Customer: "Berapa harganya kak?"
@@ -423,7 +453,7 @@ Extract dari pesan customer: tanggal, jam, nama_anak, nama_panggilan, usia_anak,
 - `redirect_ke_klinik_utama` → customer EKSPLISIT sebut layanan non-sunat: USG, kandungan, hamil, lab, cek darah, dokter umum, gigi, kulit, vaksin, imunisasi, mobile jkn, jkn (tanpa "sunat"), kontrol obat. Termasuk "daftar USG" / "daftar lab" / "daftar dokter umum" — semua redirect, BUKAN booking_flow.
 
 ═══ ⚠️ WAJIB call get_intent_response — JANGAN paraphrase ⚠️ ═══
-Untuk 8 topic di bawah, customer butuh LIHAT foto/video. Kalau jawab dari FAKTA langsung tanpa call tool, FOTO/VIDEO TIDAK TERKIRIM ke customer. INI BUG. WAJIB call `get_intent_response(slug)`:
+Untuk 7 topic di bawah, customer butuh LIHAT foto/video. Kalau jawab dari FAKTA langsung tanpa call tool, FOTO/VIDEO TIDAK TERKIRIM ke customer. INI BUG. WAJIB call `get_intent_response(slug)`:
 
 | Topic customer tanya | slug yang HARUS dipanggil |
 |---|---|
@@ -434,9 +464,10 @@ Untuk 8 topic di bawah, customer butuh LIHAT foto/video. Kalau jawab dari FAKTA 
 | Testimoni / review / kesaksian / pengalaman client lain | `pertanyaan_testimoni` |
 | Hadiah / kado / dapat hadiah ga | `pertanyaan_hadiah` |
 | Contoh dokumentasi / mini vlog / video pengalaman | `contoh_dokumentasi` |
-| Closing harga / detail paket sunat | `quote_harga_paket` |
 
 Topic LAIN (BPJS, sunat perempuan, sunat dewasa, sunat bayi, sunat di rumah, jahit, perban, durasi sembuh, lama proses, usia ideal, kebutuhan khusus, kontrol, operator/dokter, dll) → jawab natural dari FAKTA. Tidak perlu tool.
+
+🚫 DILARANG panggil `get_intent_response` untuk slug `quote_harga_paket` / `tanya_*` / `data_*` — final quote HANYA via `send_harga_quote()`, dan tanya field harga TANYA SENDIRI dgn text natural.
 
 ═══ FALLBACK lookup_knowledge ═══
 Pakai `lookup_knowledge` cuma kalau pertanyaan SPESIFIK yang TIDAK tercakup di FAKTA + bukan topic media di atas. Untuk fakta yang sudah di prompt, jawab langsung.
