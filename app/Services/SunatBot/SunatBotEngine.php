@@ -2299,6 +2299,18 @@ class SunatBotEngine
     {
         $v = trim($value);
         if ($v === '') return $v;
+        // Multi-line: user chat 2 bubble di-debounce jadi 1 msg (mis.
+        // "Yoga Hadi\nMetode nya apa?"). Ambil baris pertama saja.
+        $lines = preg_split('/\R+/u', $v) ?: [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line !== '' && !str_contains($line, '?')) {
+                $v = $line;
+                break;
+            }
+        }
+        // Buang segmen setelah '?' / '.' — pertanyaan bukan bagian nama.
+        $v = trim(preg_replace('/[?.].*$/us', '', $v));
         $patterns = [
             '/^nama\s+saya\s+(adalah\s+)?/iu',
             '/^nama\s+orang\s+tua\s+(adalah\s+)?/iu',
