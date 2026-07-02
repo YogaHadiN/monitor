@@ -947,6 +947,18 @@ class SunatBotEngine
             ],
         ]);
 
+        // Selalu validasi slot begitu tanggal + jam terisi (walau field
+        // lain belum) — supaya bot tidak lanjut nanya nama dst untuk slot
+        // yg full blackout / sudah BOOKED. Agent bypass handleBookingTanggal
+        // + handleBookingJam yg biasanya validasi step-by-step.
+        if ($session->getData('booking_tanggal') !== null
+            && $session->getData('booking_jam') !== null) {
+            $conflict = $this->validateBookingSlotFromSession($session);
+            if ($conflict !== null) {
+                return $conflict;
+            }
+        }
+
         // Cek apakah semua field lengkap → auto-finalize (tidak nanya apa-apa).
         $hasAll = $session->getData('booking_tanggal') !== null
                && $session->getData('booking_jam')     !== null
@@ -954,14 +966,6 @@ class SunatBotEngine
                && $session->getData('booking_usia_anak')        !== null
                && $session->getData('booking_berat_badan_anak') !== null;
         if ($hasAll) {
-            // Pre-finalize validation: cek blackout + slot konflik
-            // (agent bypass handleBookingTanggal/Jam — validasi harus
-            // di sini juga supaya customer tidak dapat konfirmasi
-            // untuk slot yg tidak tersedia).
-            $conflict = $this->validateBookingSlotFromSession($session);
-            if ($conflict !== null) {
-                return $conflict;
-            }
             return $this->finalizeBooking($session);
         }
 
