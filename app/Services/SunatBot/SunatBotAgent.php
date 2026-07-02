@@ -335,18 +335,68 @@ Sinonim positif yang BOLEH dipakai: "bius nyaman", "proses pembiusan", "tindakan
    - Riwayat penyakit (jantung, kelainan pembekuan darah, dll)
    → Engine otomatis handoff kalau customer sebut kondisi ini, jangan kamu reply panjang sendiri.
 
-═══ ATURAN HARGA (MUTLAK — DILARANG sebut angka harga apapun di teks) ═══
+═══ ATURAN HARGA (natural collection — KAMU yang drive percakapan) ═══
 
-🚫 DILARANG MUTLAK menulis angka harga sunat di reply text kamu, BAHKAN KALAU CUSTOMER MEMINTA. Contoh angka yang DILARANG kamu tulis:
-- "Rp 2.500.000", "Rp 3.000.000", "Rp 4.500.000", "Rp 750.000" (apapun)
-- "2,5 juta", "3jt", "750rb" (apapun bentuk)
-- "all-in untuk semua benefit di atas: ..." dgn angka
+🚫 DILARANG MUTLAK menulis angka harga sunat di reply text kamu, BAHKAN KALAU CUSTOMER MEMINTA. Contoh angka yang DILARANG:
+- "Rp 2.500.000", "Rp 3.000.000", "Rp 4.500.000" (apapun)
+- "2,5 juta", "3jt" (apapun bentuk)
+Angka harga HANYA muncul dari tool `send_harga_quote` (template quote_harga_paket). Kamu JANGAN PERNAH tebak atau sebut angka sendiri.
 
-Total harga sunat HANYA muncul dari engine output setelah trigger_harga_flow selesai (engine calculate berdasarkan usia + BB). Kamu sebagai agent JANGAN PERNAH tebak atau sebut angka.
+📋 FIELD WAJIB TERKUMPUL sebelum kasih quote (7 field):
+1. `nama_orang_tua`       — nama depan ortu / pengirim pesan (contoh "Yeni")
+2. `domisili`             — kota / kecamatan (Tangerang / Jakarta / dst)
+3. `usia_anak`            — usia + satuan ("7 tahun" atau "8 bulan")
+4. `berat_badan_anak`     — kg, angka (mis. 22)
+5. `indikasi_khitan`      — keluhan medis atau "tidak ada"
+6. `postur_tubuh`         — "gemuk" / "tidak gemuk" / "normal"
+7. `riwayat_kesehatan`    — kondisi medis (jantung, autisme, dll) atau "tidak ada"
 
-Untuk request harga / PL / price list / penawaran / "berapa biaya":
-- WAJIB panggil tool `trigger_harga_flow`. Engine akan flow: nama → domisili → usia → BB → edukasi → quote (engine yg keluarkan angka).
-- Kalau customer tanya "berapa harganya sih?" sebelum edukasi → text: "Untuk biaya sunat tergantung usia dan berat badan anak kak. Boleh saya bantu hitungin?" Lalu call `trigger_harga_flow`.
+Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
+
+🎯 CARA KERJA:
+
+1. **Customer minta harga / PL / berapa biaya:**
+   Reply text pengantar (satu bubble singkat): "Untuk biaya sunat tergantung usia dan berat badan kak."
+   Lalu langsung tanya field pertama yang belum terisi (mulai dari nama).
+
+2. **Customer JAWAB pertanyaan field:**
+   WAJIB call `save_harga_data(field=value)` DULU (satu turn), engine simpan. Kamu boleh save multi-field kalau customer sebut sekaligus (mis. "saya Yeni dari Tangerang" → `save_harga_data(nama_orang_tua="Yeni", domisili="Tangerang")`).
+   Baca tool response `missing[]` → kalau ada, tanya field berikutnya di reply text yang sama turn. Kalau `missing[]` kosong, langsung call `send_harga_quote()` (jangan tanya lagi).
+
+3. **Tanya field NATURAL, 1-2 field per bubble:**
+   - Belum ada nama → "Kalo boleh tau dengan kakak siapa ya?"
+   - Belum ada domisili → "Domisilinya di mana kak?"
+   - Belum ada usia + BB → "Boleh infokan usia dan berat badan anaknya?"
+   - Belum ada indikasi → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
+   - Belum ada postur → "Postur anaknya bagaimana kak, ada kelebihan berat atau proporsional?"
+   - Belum ada riwayat → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
+
+4. **⚠️ INTERRUPT — customer tanya HAL LAIN di tengah collection:**
+   Contoh: setelah kamu tanya domisili, customer malah tanya "Metode nya apa?"
+   → **JAWAB DULU** pertanyaan interrupt dengan `get_intent_response(slug="pertanyaan_metode")` atau paraphrase dari FAKTA.
+   → Lalu di bubble PENUTUP, kembali ke field yang belum: "Balik ke tadi kak, domisilinya di mana?"
+
+5. **Semua 7 field terkumpul → `send_harga_quote()`:**
+   Tool emit bundle final (testimoni + delay + quote + closing). Setelah call, output text kosong.
+
+6. **Escalation gate:**
+   Kalau `save_harga_data` return `escalate=true` (indikasi != "tidak ada" / postur = "gemuk" / riwayat > "tidak ada"), engine ambil alih untuk handoff ke admin. Kamu output kosong setelah call, jangan lanjut.
+
+7. **Harga sudah pernah dikirim** — kalau history sudah ada bubble berisi angka "Rp ..." atau template quote_harga_paket, **DILARANG** call `send_harga_quote` lagi. Bantu jawab pertanyaan lanjutan saja.
+
+CONTOH GOOD FLOW:
+  Customer: "Berapa harganya kak?"
+  Bot: "Untuk biaya sunat tergantung usia dan berat badan kak."
+       "Kalo boleh tau dengan kakak siapa?"
+  Customer: "Saya Yeni dari Tangerang, anak 8 tahun 25 kg"
+  → save_harga_data(nama_orang_tua="Yeni", domisili="Tangerang", usia_anak="8 tahun", berat_badan_anak=25)
+  Bot: "Baik Bunda Yeni." "Ada keluhan medis atau alasan khusus mau khitan kak?"
+  Customer: "Metode nya apa dulu ya?"
+  → get_intent_response(slug="pertanyaan_metode")  [emit foto+text]
+  Bot: (di penutup) "Balik ke tadi kak, ada keluhan medis atau alasan khusus?"
+  Customer: "Ga ada. Postur normal, riwayat kesehatan juga ga ada."
+  → save_harga_data(indikasi_khitan="tidak ada", postur_tubuh="normal", riwayat_kesehatan="tidak ada")
+  → missing[] kosong → send_harga_quote()  [emit quote bundle]
 
 ═══ ATURAN BOOKING (MUTLAK — customer sebut "daftar/book/nyunatin" + tanggal/jam HARUS trigger_booking_flow) ═══
 
@@ -362,8 +412,8 @@ Extract dari pesan customer: tanggal, jam, nama_anak, nama_panggilan, usia_anak,
 
 ═══ ROUTING TOOL (untuk action, bukan info) ═══
 
-- `trigger_harga_flow` → request quote harga (PL/penawaran). Wajib utk angka real.
-  - WAJIB extract dari current message + history: nama_orang_tua, domisili, usia_anak, berat_badan_anak, dll → pass sbg parameter. JANGAN call dgn args kosong kalau info ada.
+- `save_harga_data` → simpan field harga yang customer sebut (nama, domisili, usia, BB, indikasi, postur, riwayat). Tool return `missing[]` — tanya field berikut natural.
+- `send_harga_quote` → emit quote bundle final (WAJIB semua 7 field terkumpul). Setelah call, output text KOSONG.
 - `trigger_booking_flow` → customer mau booking jadwal SUNAT (pesan WAJIB ada kata "sunat"/"khitan"/"sirkumsisi"). DILARANG utk non-sunat.
   - WAJIB extract dari current message + history: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak → pass sbg parameter. Engine akan auto-store jadwal kalau semua complete.
   - CONTOH: customer "mau daftar sunat anak Faiz BB 22 tanggal 5 Juli 2026 jam 10" + history sebut "umur 7 tahun":
@@ -392,7 +442,8 @@ Topic LAIN (BPJS, sunat perempuan, sunat dewasa, sunat bayi, sunat di rumah, jah
 Pakai `lookup_knowledge` cuma kalau pertanyaan SPESIFIK yang TIDAK tercakup di FAKTA + bukan topic media di atas. Untuk fakta yang sudah di prompt, jawab langsung.
 
 ═══ ATURAN OUTPUT SETELAH TOOL ═══
-Setelah `get_intent_response` / `trigger_harga_flow` / `trigger_booking_flow` / `redirect_ke_klinik_utama` → output string KOSONG. Tool sudah render bubble.
+- Setelah `get_intent_response` / `send_harga_quote` / `trigger_booking_flow` / `redirect_ke_klinik_utama` → output string KOSONG. Tool sudah render bubble.
+- Setelah `save_harga_data` → BOLEH ada text reply (untuk tanya field berikutnya secara natural).
 
 ═══ STYLE ═══
 - Reply MAKSIMAL 2 KALIMAT PENDEK = 1-2 bubble (splitter pecah per kalimat). 1 bubble lebih bagus. JANGAN 4-5 bubble.
@@ -474,20 +525,31 @@ PROMPT;
             [
                 'type' => 'function',
                 'function' => [
-                    'name'        => 'trigger_harga_flow',
-                    'description' => 'Customer minta quote harga / paket / penawaran. Engine masuk ke harga flow (capture nama, domisili, usia/BB, dst). KASIH parameter utk field yang SUDAH disebut customer di percakapan supaya engine tidak nanya ulang. Setelah call tool, output text KOSONG.',
+                    'name'        => 'save_harga_data',
+                    'description' => 'Simpan 1+ field harga yang customer sebut di turn ini (nama_orang_tua, domisili, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan, sudah_tahu_metode). Tool return {ok, filled[], missing[], escalate?, reason?}. Baca missing[] untuk tanya field berikutnya natural di reply text. Kalau escalate=true, output text KOSONG (engine ambil alih handoff ke admin). Kalau missing[] kosong, langsung call send_harga_quote().',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
-                            'nama_orang_tua'    => ['type' => 'string', 'description' => 'kalau sudah disebut, mis. "Ibu Yeni"'],
-                            'domisili'          => ['type' => 'string', 'description' => 'kalau sudah disebut, mis. "Tangerang"'],
-                            'usia_anak'         => ['type' => 'string', 'description' => 'angka usia dgn satuan, mis. "7 tahun" atau "8 bulan"'],
-                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'dalam kg, mis. 18 atau 25.5'],
-                            'sudah_tahu_metode' => ['type' => 'string', 'description' => '"ya" atau "tidak" kalau customer udah bilang'],
+                            'nama_orang_tua'    => ['type' => 'string', 'description' => 'nama depan ortu, mis. "Yeni"'],
+                            'domisili'          => ['type' => 'string', 'description' => 'kota/kecamatan, mis. "Tangerang"'],
+                            'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan"'],
+                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg, mis. 22 atau 25.5'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'keluhan medis atau "tidak ada"'],
-                            'postur_tubuh'      => ['type' => 'string', 'description' => '"gemuk" atau "tidak gemuk" / "normal"'],
+                            'postur_tubuh'      => ['type' => 'string', 'description' => '"gemuk" / "tidak gemuk" / "normal"'],
                             'riwayat_kesehatan' => ['type' => 'string', 'description' => 'kondisi medis (jantung, autisme dll) atau "tidak ada"'],
+                            'sudah_tahu_metode' => ['type' => 'string', 'description' => '"ya" atau "tidak"'],
                         ],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name'        => 'send_harga_quote',
+                    'description' => 'Emit quote bundle final ke customer: testimoni google review + delay 40s + quote_harga_paket + tanya_pertanyaan_lanjutan. WAJIB dipanggil HANYA setelah semua 7 field wajib terkumpul (nama_orang_tua, domisili, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), DILARANG panggil lagi. Setelah call, output text KOSONG.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => new \stdClass(),
                     ],
                 ],
             ],
@@ -531,11 +593,15 @@ PROMPT;
                 [$summary, $bubbles] = $this->toolRedirectKeKlinikUtama($session, $reason);
                 return [$summary, ['replies' => $bubbles, 'signal' => 'redirected']];
 
-            case 'trigger_harga_flow':
-                return [['ok' => true, 'note' => 'engine akan ambil alih flow harga'], [
-                    'signal'  => 'enter_harga',
-                    'prefill' => $this->normalizeHargaArgs($args),
-                ]];
+            case 'save_harga_data':
+                [$summary, $sideEffect] = $this->toolSaveHargaData($args, $session);
+                return [$summary, $sideEffect];
+
+            case 'send_harga_quote':
+                [$summary, $bubbles, $escalate] = $this->toolSendHargaQuote($session);
+                $sideEffect = ['replies' => $bubbles];
+                if ($escalate) $sideEffect['escalate'] = true;
+                return [$summary, $sideEffect];
 
             case 'trigger_booking_flow':
                 return [['ok' => true, 'note' => 'engine akan ambil alih flow booking'], [
@@ -657,24 +723,6 @@ PROMPT;
      * @return array{0:array, 1:array<array{text:string,media:?string}>}
      */
     /**
-     * Filter argument trigger_harga_flow yang valid (skip kosong/null).
-     * Output: assoc array siap pakai utk pre-fill session collected_data.
-     */
-    private function normalizeHargaArgs(array $args): array
-    {
-        $out = [];
-        $strKeys = ['nama_orang_tua', 'domisili', 'usia_anak', 'sudah_tahu_metode', 'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan'];
-        foreach ($strKeys as $k) {
-            $v = trim((string) ($args[$k] ?? ''));
-            if ($v !== '') $out[$k] = $v;
-        }
-        if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
-            $out['berat_badan_anak'] = (float) $args['berat_badan_anak'];
-        }
-        return $out;
-    }
-
-    /**
      * Filter argument trigger_booking_flow yang valid. Pass-through string
      * untuk tanggal/jam — engine parser yang akan validate (parseBookingDate
      * support YYYY-MM-DD, DD/MM/YYYY, "5 Juli 2026", "besok", dll).
@@ -747,6 +795,179 @@ PROMPT;
         Log::info('SUNAT_BOT_AGENT_REDIRECT', ['phone' => $phone, 'reason' => $reason, 'target' => 'klinik-utama']);
 
         return [['ok' => true, 'redirected' => true], [['text' => $text, 'media' => null]]];
+    }
+
+    // ----- HARGA (natural collection, agent-driven) -----------------
+
+    private const HARGA_REQUIRED_FIELDS = [
+        'nama_orang_tua', 'domisili', 'usia_anak', 'berat_badan_anak',
+        'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan',
+    ];
+
+    /**
+     * Save fields ke collected_data. Return status + missing[] utk LLM
+     * kasih tanya field berikutnya. Cek escalation gate:
+     *   - indikasi_khitan != "tidak ada" → escalate
+     *   - postur_tubuh = "gemuk" / "obesitas" → escalate
+     *   - riwayat_kesehatan positif (bukan "tidak ada"/"tidak"/kosong) → escalate
+     *
+     * @return array{0:array,1:array} tuple [tool_result, side_effect]
+     */
+    private function toolSaveHargaData(array $args, BotSession $session): array
+    {
+        $strKeys = ['nama_orang_tua', 'domisili', 'usia_anak', 'sudah_tahu_metode',
+                    'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan'];
+        $saved = [];
+        foreach ($strKeys as $k) {
+            $v = trim((string) ($args[$k] ?? ''));
+            if ($v !== '') {
+                $session->setData($k, $v);
+                $saved[] = $k;
+            }
+        }
+        if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
+            $session->setData('berat_badan_anak', (float) $args['berat_badan_anak']);
+            $saved[] = 'berat_badan_anak';
+        }
+        $session->save();
+
+        // Escalation gates (medical safety — bot tidak boleh kasih quote
+        // untuk kasus yg butuh assessment dokter).
+        $escalate = false;
+        $reason   = null;
+
+        $indikasi = mb_strtolower(trim((string) $session->getData('indikasi_khitan')));
+        if ($indikasi !== '' && !$this->isNoValue($indikasi)) {
+            $escalate = true;
+            $reason   = "indikasi_khitan: {$indikasi}";
+        }
+        $postur = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
+        if (!$escalate && str_contains($postur, 'gemuk') || str_contains($postur, 'obesitas')) {
+            $escalate = true;
+            $reason   = "postur_tubuh: {$postur}";
+        }
+        $riwayat = mb_strtolower(trim((string) $session->getData('riwayat_kesehatan')));
+        if (!$escalate && $riwayat !== '' && !$this->isNoValue($riwayat)) {
+            $escalate = true;
+            $reason   = "riwayat_kesehatan: {$riwayat}";
+        }
+
+        // Compute filled/missing utk LLM know what to ask next.
+        $filled  = [];
+        $missing = [];
+        foreach (self::HARGA_REQUIRED_FIELDS as $f) {
+            $v = $session->getData($f);
+            if ($v === null || $v === '') {
+                $missing[] = $f;
+            } else {
+                $filled[] = $f;
+            }
+        }
+
+        Log::info('SUNAT_BOT_AGENT_HARGA_SAVE', [
+            'phone'    => $session->no_telp,
+            'saved'    => $saved,
+            'filled'   => $filled,
+            'missing'  => $missing,
+            'escalate' => $escalate,
+        ]);
+
+        $result = [
+            'ok'       => true,
+            'filled'   => $filled,
+            'missing'  => $missing,
+            'escalate' => $escalate,
+        ];
+        if ($reason !== null) $result['reason'] = $reason;
+
+        $sideEffect = [];
+        if ($escalate) {
+            $sideEffect['escalate'] = true;
+        }
+        return [$result, $sideEffect];
+    }
+
+    /**
+     * Emit quote bundle final: testimoni_google_review + delay 40s +
+     * quote_harga_paket + tanya_pertanyaan_lanjutan. Kalau field belum
+     * lengkap, return error — LLM harus panggil save_harga_data dulu.
+     *
+     * @return array{0:array, 1:array<array>, 2:bool} [result, bubbles, escalate]
+     */
+    private function toolSendHargaQuote(BotSession $session): array
+    {
+        $missing = [];
+        foreach (self::HARGA_REQUIRED_FIELDS as $f) {
+            $v = $session->getData($f);
+            if ($v === null || $v === '') $missing[] = $f;
+        }
+        if ($missing !== []) {
+            return [
+                ['ok' => false, 'error' => 'field belum lengkap', 'missing' => $missing],
+                [],
+                false,
+            ];
+        }
+
+        // Dedupe: kalau quote sudah pernah dikirim, jangan dobel.
+        if ($session->getData('_harga_sent')) {
+            return [
+                ['ok' => false, 'error' => 'quote sudah pernah dikirim, jangan dobel'],
+                [],
+                false,
+            ];
+        }
+
+        $bubbles = [];
+        // 1. Testimoni Google review (media + text)
+        [$_, $testimoni] = $this->toolGetIntentResponse('testimoni_google_review');
+        $bubbles = array_merge($bubbles, $testimoni);
+
+        // 2. Delay marker 40s (dispatcher sleep tanpa kirim).
+        $bubbles[] = ['text' => '', 'media' => null, 'delay_seconds' => 40];
+
+        // 3. Quote harga paket (respect promo slug swap kalau ada).
+        $quoteSlug = 'quote_harga_paket';
+        $promoIntent = BotIntent::where('intent', 'quote_harga_paket_promo')
+            ->where('active', true)->first();
+        if ($promoIntent !== null) {
+            $quoteSlug = 'quote_harga_paket_promo';
+        }
+        [$_, $quote] = $this->toolGetIntentResponse($quoteSlug);
+        $bubbles = array_merge($bubbles, $quote);
+
+        // 4. Tanya pertanyaan lanjutan / closing.
+        [$_, $closing] = $this->toolGetIntentResponse('tanya_pertanyaan_lanjutan');
+        $bubbles = array_merge($bubbles, $closing);
+
+        $session->setData('_harga_sent', true);
+        $session->save();
+
+        Log::info('SUNAT_BOT_AGENT_HARGA_QUOTE_SENT', [
+            'phone'   => $session->no_telp,
+            'bubbles' => count($bubbles),
+            'promo'   => $quoteSlug === 'quote_harga_paket_promo',
+        ]);
+
+        return [
+            ['ok' => true, 'bubbles' => count($bubbles), 'slug' => $quoteSlug],
+            $bubbles,
+            false,
+        ];
+    }
+
+    /**
+     * Nilai yg dianggap "tidak ada / kosong" untuk field indikasi/riwayat.
+     * Case-insensitive substring check.
+     */
+    private function isNoValue(string $v): bool
+    {
+        $v = mb_strtolower(trim($v));
+        if ($v === '') return true;
+        foreach (['tidak ada', 'tidak', 'gak ada', 'ga ada', 'ngga ada', 'nggak', 'ndak ada', 'nihil', 'gapapa', 'ga apa', 'sehat', 'normal', 'baik'] as $needle) {
+            if ($v === $needle || str_contains($v, $needle)) return true;
+        }
+        return false;
     }
 
     // ----- HISTORY ---------------------------------------------------

@@ -182,6 +182,28 @@ class SunatBotEngine
         $hasTrigger = $this->hasTrigger($msgLower);
         $session    = BotSession::where('no_telp', $noTelp)->first();
 
+        // MIGRATION SHIM (2026-07-02): natural harga flow refactor — agent AI
+        // sekarang drive harga collection via save_harga_data. Session lama
+        // dengan expecting_field di HARGA_FLOW legacy → reset agar agent
+        // ambil alih. collected_data preserved supaya agent tahu field mana
+        // yg sudah terisi.
+        if ($session && $session->expecting_field !== null) {
+            $legacyHargaFields = [
+                'nama_orang_tua', 'domisili', 'usia_anak', 'berat_badan_anak',
+                'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan',
+                'sudah_tahu_metode', 'pengalaman_medis', 'pertanyaan_lanjutan',
+                'usia_bb',
+            ];
+            if (in_array($session->expecting_field, $legacyHargaFields, true)) {
+                Log::info('SUNAT_BOT_HARGA_LEGACY_MIGRATED', [
+                    'phone' => $noTelp,
+                    'from'  => $session->expecting_field,
+                ]);
+                $session->expecting_field = null;
+                $session->save();
+            }
+        }
+
         // Admin reset: dari nomor operator, ketik "ulang sunat" → hapus
         // session + clear awaiting_human + re-trigger dari awal seakan
         // ketik "sunat" untuk pertama kali.
@@ -391,9 +413,6 @@ class SunatBotEngine
 
                 if ($signal === 'enter_booking') {
                     return $this->enterBookingFlow($session, $prefill, $message);
-                }
-                if ($signal === 'enter_harga') {
-                    return $this->enterHargaFlow($session, $replies, $message, $prefill);
                 }
                 if (!empty($agentResult['escalate'])) {
                     return $this->escalate($session, $replies !== [] ? $replies : null);
