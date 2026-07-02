@@ -212,7 +212,14 @@ class SunatBotAgent
                 // walaupun X = USG/lab/dokter umum. Reject + arahkan ke
                 // redirect_ke_klinik_utama.
                 if ($toolName === 'save_booking_data') {
-                    $rejectReason = $this->validateBookingFlowMessage($this->currentUserMessage);
+                    // Skip sunat-keyword guard kalau booking collection sudah
+                    // aktif (booking_tanggal atau booking_jam sudah terisi).
+                    // Customer melanjutkan flow, pesan lanjutan (mis. "Yoga"
+                    // = nama anak) tidak perlu ulang sebut "sunat".
+                    $bookingAktif = $session->getData('booking_tanggal') !== null
+                                 || $session->getData('booking_jam') !== null
+                                 || trim((string) $session->getData('booking_nama_anak')) !== '';
+                    $rejectReason = $bookingAktif ? null : $this->validateBookingFlowMessage($this->currentUserMessage);
                     if ($rejectReason !== null) {
                         Log::info('SUNAT_BOT_AGENT_REJECT_BOOKING_FLOW', [
                             'phone'   => $session->no_telp,
@@ -446,8 +453,8 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
 🎯 CARA KERJA:
 
 1. **Customer minta booking sunat** (mis. "Saya mau daftar sunat 5 juli jam 7 pagi"):
-   WAJIB extract semua field yang customer sebut di pesan (tanggal, jam, nama_anak, nama_panggilan, usia_anak, BB) → `save_booking_data(...)`.
-   Baca tool response — kalau `slot_status != "ok"` (blackout / already_booked / dll), sampaikan alasan ke customer + tanya tanggal/jam baru. Kalau `missing[]` masih ada → tanya field itu.
+   **WAJIB LANGSUNG** call `save_booking_data(...)` di TURN ITU JUGA — extract semua field yg customer sebut (tanggal, jam, nama_anak, nama_panggilan, usia_anak, BB). JANGAN cuma reply text "Boleh tau nama anaknya siapa" tanpa call tool — itu bug (bot skip validasi slot + tidak simpan tanggal/jam yg sudah disebut).
+   Baca tool response — kalau `slot_status != "ok"` (blackout / already_booked / dll), sampaikan alasan ke customer + tanya tanggal/jam baru. Kalau `missing[]` masih ada → tanya field itu di text reply setelah tool call.
 
 2. **⚠️ GUARD SUNAT:** Kalau customer minta booking NON-SUNAT (USG, dokter umum, gigi, kulit, BPJS, dll), JANGAN call save_booking_data. Pakai `redirect_ke_klinik_utama`. `save_booking_data` di-reject engine kalau pesan tidak ada kata "sunat"/"khitan"/"sirkumsisi".
 
