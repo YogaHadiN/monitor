@@ -847,7 +847,7 @@ PROMPT;
      */
     private function toolSaveHargaData(array $args, BotSession $session): array
     {
-        $strKeys = ['nama_orang_tua', 'domisili', 'usia_anak', 'sudah_tahu_metode',
+        $strKeys = ['nama_orang_tua', 'domisili', 'sudah_tahu_metode',
                     'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan'];
         $saved = [];
         foreach ($strKeys as $k) {
@@ -856,6 +856,23 @@ PROMPT;
                 $session->setData($k, $v);
                 $saved[] = $k;
             }
+        }
+        // usia_anak: parse ke integer + simpan satuan terpisah, supaya
+        // template render "8 tahun" (bukan "8 tahun tahun").
+        $usiaRaw = trim((string) ($args['usia_anak'] ?? ''));
+        if ($usiaRaw !== '') {
+            $lower = mb_strtolower($usiaRaw);
+            if (preg_match('/(\d+)\s*(?:bln|bulan|bulanan)\b/u', $lower, $m)) {
+                $session->setData('usia_anak', (int) $m[1]);
+                $session->setData('usia_anak_satuan', 'bulan');
+            } elseif (preg_match('/(\d+)\s*(?:thn|tahun|taun|th)\b/u', $lower, $m)) {
+                $session->setData('usia_anak', (int) $m[1]);
+                $session->setData('usia_anak_satuan', 'tahun');
+            } elseif (preg_match('/(\d+)/', $lower, $m)) {
+                $session->setData('usia_anak', (int) $m[1]);
+                $session->setData('usia_anak_satuan', 'tahun');
+            }
+            $saved[] = 'usia_anak';
         }
         if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
             $session->setData('berat_badan_anak', (float) $args['berat_badan_anak']);

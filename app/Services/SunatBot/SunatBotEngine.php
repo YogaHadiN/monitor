@@ -954,6 +954,14 @@ class SunatBotEngine
                && $session->getData('booking_usia_anak')        !== null
                && $session->getData('booking_berat_badan_anak') !== null;
         if ($hasAll) {
+            // Pre-finalize validation: cek blackout + slot konflik
+            // (agent bypass handleBookingTanggal/Jam — validasi harus
+            // di sini juga supaya customer tidak dapat konfirmasi
+            // untuk slot yg tidak tersedia).
+            $conflict = $this->validateBookingSlotFromSession($session);
+            if ($conflict !== null) {
+                return $conflict;
+            }
             return $this->finalizeBooking($session);
         }
 
@@ -1632,6 +1640,68 @@ class SunatBotEngine
             }
         }
         return implode("\n", $lines);
+    }
+
+    /**
+     * Validate slot booking (tanggal + jam) di session sebelum finalize.
+     * Return null kalau OK, atau reply array + adjust expecting_field
+     * kalau slot tidak tersedia. Dipakai dari enterBookingFlow saat
+     * auto-finalize (semua field prefilled dari agent) — agent bypass
+     * handleBookingTanggal/Jam yg biasanya validasi.
+     */
+    private function validateBookingSlotFromSession(BotSession $session): ?array
+    {
+        $tanggalStr = (string) $session->getData('booking_tanggal');
+        $jam        = (string) $session->getData('booking_jam');
+
+        // Tanggal di masa lalu
+        try {
+            $dt = Carbon::parse($tanggalStr);
+            if ($dt->lt(Carbon::today())) {
+                $session->setData('booking_tanggal', null);
+                $session->expecting_field = 'booking_tanggal';
+                $session->save();
+                return $this->reAskWithFallback('booking_tanggal_invalid', $session);
+            }
+        } catch (\Throwable $e) {}
+
+        // Full-day blackout
+        $blackout = $this->blackoutForDate($tanggalStr);
+        if ($blackout !== null && empty($blackout->blocked_slots)) {
+            $session->setData('booking_tanggal', null);
+            $session->setData('booking_jam', null);
+            $session->expecting_field = 'booking_tanggal';
+            $session->save();
+            return $this->reAskWithFallback('booking_tanggal_invalid', $session);
+        }
+
+        // Partial blackout blocks the jam
+        if ($blackout !== null && is_array($blackout->blocked_slots)
+            && in_array($jam, $blackout->blocked_slots, true)) {
+            $session->setData('booking_jam', null);
+            $session->expecting_field = 'booking_jam';
+            $session->save();
+            return $this->reAskWithFallback('booking_jam_tidak_tersedia', $session);
+        }
+
+        // Konflik existing BOOKED (slot sama X atau spillover dari X-1)
+        $jamHour = (int) substr($jam, 0, 2);
+        $taken   = JadwalSunat::where('tenant_id', 1)
+            ->where('tanggal', $tanggalStr)
+            ->where('status', 'BOOKED')
+            ->pluck('jam')
+            ->first(function ($j) use ($jamHour) {
+                $diff = $jamHour - (int) substr((string) $j, 0, 2);
+                return $diff === 0 || $diff === 1;
+            });
+        if ($taken) {
+            $session->setData('booking_jam', null);
+            $session->expecting_field = 'booking_jam';
+            $session->save();
+            return $this->reAskWithFallback('booking_jam_tidak_tersedia', $session);
+        }
+
+        return null;
     }
 
     /**
