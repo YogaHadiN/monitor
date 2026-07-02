@@ -122,12 +122,13 @@ class SunatBotAgent
 
             if (empty($toolCalls)) {
                 // Tidak ada tool call → agent jawab text langsung.
-                // HARD GUARD: kalau tool sudah pernah emit reply
-                // (mis. get_intent_response sudah render template),
-                // text ini pasti improvisation/hallucination — drop.
-                // Tool result adalah otoritas; agent tidak boleh
-                // nambahin info faktual sendiri.
-                if ($toolEmittedReplies) {
+                // GUARD: kalau tool sudah emit reply DAN tidak ada
+                // active collection (harga/booking) — text ini
+                // kemungkinan improvisation. Drop.
+                // Tapi kalau ada collection in-progress dgn field
+                // belum terisi, text = resume "Balik ke tadi kak,
+                // [pertanyaan]" yang WAJIB dikirim (interrupt handling).
+                if ($toolEmittedReplies && !$this->hasActiveCollection($session)) {
                     Log::info('SUNAT_BOT_AGENT_DROPPED_POST_TOOL_TEXT', [
                         'phone' => $session->no_telp,
                         'iter'  => $iter,
@@ -463,9 +464,10 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
    - `slot_status="jam_blocked"` → "Jam tersebut tidak tersedia. Slot yang bisa: 07-11 dan 13-17."
    - `slot_status="invalid_date"` → "Tanggal itu sudah lewat kak. Mau pilih tanggal ke depan?"
 
-5. **⚠️ INTERRUPT** — customer tanya HAL LAIN di tengah collection:
-   Contoh: setelah kamu tanya jam, customer malah tanya "Metode nya apa?"
-   → JAWAB DULU (get_intent_response atau paraphrase FAKTA) → bubble penutup: "Balik ke tadi kak, jamnya mau jam berapa?"
+5. **⚠️ INTERRUPT** — customer tanya HAL LAIN di tengah collection (misal tanya metode/testimoni/fasilitas saat lagi collection booking):
+   → JAWAB DULU dengan `get_intent_response(slug)`.
+   → **WAJIB** di reply text yang SAMA turn (setelah tool call selesai), tambah bubble penutup "Balik ke tadi kak, [pertanyaan field belum]". CONTOH: setelah get_intent_response("pertanyaan_metode"), reply text: "Balik ke tadi kak, nama panggilan anaknya apa?"
+   → Kalau kamu SKIP resume text ini, customer terputus tanpa arahan lanjutan — BUG.
 
 6. **Semua 6 field terkumpul + slot OK → `finalize_booking()`** (tool emit booking_sukses). Setelah call, output text KOSONG.
 
@@ -1206,6 +1208,40 @@ PROMPT;
             $bubbles,
             false,
         ];
+    }
+
+    /**
+     * Cek apakah session sedang di tengah harga OR booking collection —
+     * ada field terisi tapi belum semua wajib terkumpul. Dipakai utk
+     * relax hard-guard drop-post-tool-text: kalau resume interrupt,
+     * agent perlu emit follow-up "Balik ke tadi kak, [pertanyaan]".
+     */
+    private function hasActiveCollection(BotSession $session): bool
+    {
+        // Harga: ada field terisi + belum quote_sent
+        if (!$session->getData('_harga_sent')) {
+            foreach (self::HARGA_REQUIRED_FIELDS as $f) {
+                if ($session->getData($f) !== null && $session->getData($f) !== '') {
+                    // ada field harga terisi → cek apakah ada yg belum
+                    foreach (self::HARGA_REQUIRED_FIELDS as $g) {
+                        $v = $session->getData($g);
+                        if ($v === null || $v === '') return true;
+                    }
+                }
+            }
+        }
+        // Booking: ada field terisi + belum finalize (session belum is_complete)
+        if (!$session->is_complete) {
+            foreach (self::BOOKING_REQUIRED_FIELDS as $f) {
+                if ($session->getData($f) !== null && $session->getData($f) !== '') {
+                    foreach (self::BOOKING_REQUIRED_FIELDS as $g) {
+                        $v = $session->getData($g);
+                        if ($v === null || $v === '') return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
