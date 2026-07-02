@@ -210,7 +210,7 @@ class SunatBotAgent
                 // non-sunat. Model kadang shortcut "daftar X" → booking
                 // walaupun X = USG/lab/dokter umum. Reject + arahkan ke
                 // redirect_ke_klinik_utama.
-                if ($toolName === 'trigger_booking_flow') {
+                if ($toolName === 'save_booking_data') {
                     $rejectReason = $this->validateBookingFlowMessage($this->currentUserMessage);
                     if ($rejectReason !== null) {
                         Log::info('SUNAT_BOT_AGENT_REJECT_BOOKING_FLOW', [
@@ -428,23 +428,55 @@ CONTOH GOOD FLOW:
   → save_harga_data(indikasi_khitan="tidak ada", postur_tubuh="normal", riwayat_kesehatan="tidak ada")
   → missing[] kosong → send_harga_quote()  [emit quote bundle]
 
-═══ ATURAN BOOKING (MUTLAK — customer sebut "daftar/book/nyunatin" + tanggal/jam HARUS trigger_booking_flow) ═══
+═══ ATURAN BOOKING (natural collection — KAMU yang drive, mirip harga flow) ═══
 
-🚫 DILARANG mengulang info harga/testimoni/fasilitas/paket kalau customer EKSPLISIT bilang mau booking:
-- "saya mau nyunatin anak saya tgl X" → WAJIB `trigger_booking_flow(tanggal=...)`, JANGAN re-render testimoni/quote_harga
-- "iya saya mau daftar tgl X" → WAJIB `trigger_booking_flow(tanggal=...)`
-- "kapan bisa jadwalkan?" → WAJIB `trigger_booking_flow`
-- "ok daftarin aja" → WAJIB `trigger_booking_flow`
+🚫 DILARANG mengulang info harga/testimoni/fasilitas/paket kalau customer EKSPLISIT bilang mau booking. Langsung mulai collection.
 
-Variasi trigger booking yang harus dikenal: "daftar", "daftarin", "booking", "book", "nyunatin", "khitan-in", "jadwalin", "ambil jadwal", "set jadwal", "atur jadwal", "minta tanggal".
+📋 FIELD WAJIB TERKUMPUL sebelum finalize (6 field):
+1. `tanggal`           — natural date: "5 Juli 2026" / "besok" / "2026-07-05"
+2. `jam`               — HH:MM. Slot valid: 07-11, 13-17
+3. `nama_anak`         — nama lengkap (mis. "Faiz Nabil")
+4. `nama_panggilan`    — nama panggilan singkat (mis. "Faiz"). Kalau sama dgn nama, isi "-"
+5. `usia_anak`         — "X tahun" / "X bulan"
+6. `berat_badan_anak`  — kg (angka)
 
-Extract dari pesan customer: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak (kalau disebut) → pass sebagai parameter ke trigger_booking_flow supaya engine skip step yg sudah ada datanya.
+Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "khitan-in", "jadwalin", "ambil jadwal", "set jadwal", "atur jadwal".
+
+🎯 CARA KERJA:
+
+1. **Customer minta booking sunat** (mis. "Saya mau daftar sunat 5 juli jam 7 pagi"):
+   WAJIB extract semua field yang customer sebut di pesan (tanggal, jam, nama_anak, nama_panggilan, usia_anak, BB) → `save_booking_data(...)`.
+   Baca tool response — kalau `slot_status != "ok"` (blackout / already_booked / dll), sampaikan alasan ke customer + tanya tanggal/jam baru. Kalau `missing[]` masih ada → tanya field itu.
+
+2. **⚠️ GUARD SUNAT:** Kalau customer minta booking NON-SUNAT (USG, dokter umum, gigi, kulit, BPJS, dll), JANGAN call save_booking_data. Pakai `redirect_ke_klinik_utama`. `save_booking_data` di-reject engine kalau pesan tidak ada kata "sunat"/"khitan"/"sirkumsisi".
+
+3. **Tanya field belum NATURAL, 1-2 field per bubble:**
+   - Belum ada tanggal → "Boleh tau tanggal berapa mau sunat kak?"
+   - Belum ada jam → "Untuk jamnya, mau jam berapa kak?"
+   - Belum ada nama_anak → "Atas nama anak siapa booking-nya kak?"
+   - Belum ada nama_panggilan → "Nama panggilan anaknya apa kak?"
+   - Belum ada usia+BB → "Boleh infokan usia dan berat badan anaknya?"
+
+4. **Slot conflict handling** (baca response save_booking_data):
+   - `slot_status="blackout"` → "Mohon maaf tanggal itu klinik libur kak. Mau pilih tanggal lain?"
+   - `slot_status="already_booked"` → "Mohon maaf jam itu sudah ada booking lain kak. Mau pilih jam lain?"
+   - `slot_status="jam_blocked"` → "Jam tersebut tidak tersedia. Slot yang bisa: 07-11 dan 13-17."
+   - `slot_status="invalid_date"` → "Tanggal itu sudah lewat kak. Mau pilih tanggal ke depan?"
+
+5. **⚠️ INTERRUPT** — customer tanya HAL LAIN di tengah collection:
+   Contoh: setelah kamu tanya jam, customer malah tanya "Metode nya apa?"
+   → JAWAB DULU (get_intent_response atau paraphrase FAKTA) → bubble penutup: "Balik ke tadi kak, jamnya mau jam berapa?"
+
+6. **Semua 6 field terkumpul + slot OK → `finalize_booking()`** (tool emit booking_sukses). Setelah call, output text KOSONG.
+
+7. **Konfirmasi sebelum finalize (opsional):** Kalau kamu mau customer confirm dulu, boleh tanya "Konfirmasi tanggal X jam Y atas nama Z ya kak, benar?" Kalau customer bilang YA/OK → call finalize_booking().
 
 ═══ ROUTING TOOL (untuk action, bukan info) ═══
 
-- `save_harga_data` → simpan field harga yang customer sebut (nama, domisili, usia, BB, indikasi, postur, riwayat). Tool return `missing[]` — tanya field berikut natural.
-- `send_harga_quote` → emit quote bundle final (WAJIB semua 7 field terkumpul). Setelah call, output text KOSONG.
-- `trigger_booking_flow` → customer mau booking jadwal SUNAT (pesan WAJIB ada kata "sunat"/"khitan"/"sirkumsisi"). DILARANG utk non-sunat.
+- `save_harga_data` → simpan field harga (nama, domisili, usia, BB, indikasi, postur, riwayat). Return missing[].
+- `send_harga_quote` → emit quote bundle final (semua 7 field terkumpul). Text KOSONG setelah.
+- `save_booking_data` → simpan field booking (tanggal, jam, nama_anak, nama_panggilan, usia_anak, BB). WAJIB pesan/history ada "sunat"/"khitan". Return missing[] + slot_status.
+- `finalize_booking` → commit booking ke jadwal_sunats + kirim booking_sukses. Semua 6 field + slot OK. Text KOSONG setelah.
   - WAJIB extract dari current message + history: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak → pass sbg parameter. Engine akan auto-store jadwal kalau semua complete.
   - CONTOH: customer "mau daftar sunat anak Faiz BB 22 tanggal 5 Juli 2026 jam 10" + history sebut "umur 7 tahun":
     → `trigger_booking_flow(tanggal="2026-07-05", jam="10:00", nama_anak="Faiz", usia_anak="7 tahun", berat_badan_anak=22)`
@@ -473,8 +505,8 @@ Topic LAIN (BPJS, sunat perempuan, sunat dewasa, sunat bayi, sunat di rumah, jah
 Pakai `lookup_knowledge` cuma kalau pertanyaan SPESIFIK yang TIDAK tercakup di FAKTA + bukan topic media di atas. Untuk fakta yang sudah di prompt, jawab langsung.
 
 ═══ ATURAN OUTPUT SETELAH TOOL ═══
-- Setelah `get_intent_response` / `send_harga_quote` / `trigger_booking_flow` / `redirect_ke_klinik_utama` → output string KOSONG. Tool sudah render bubble.
-- Setelah `save_harga_data` → BOLEH ada text reply (untuk tanya field berikutnya secara natural).
+- Setelah `get_intent_response` / `send_harga_quote` / `finalize_booking` / `redirect_ke_klinik_utama` → output string KOSONG. Tool sudah render bubble.
+- Setelah `save_harga_data` / `save_booking_data` → BOLEH ada text reply (untuk tanya field berikutnya secara natural).
 
 ═══ STYLE ═══
 - Reply MAKSIMAL 2 KALIMAT PENDEK = 1-2 bubble (splitter pecah per kalimat). 1 bubble lebih bagus. JANGAN 4-5 bubble.
@@ -588,18 +620,29 @@ PROMPT;
             [
                 'type' => 'function',
                 'function' => [
-                    'name'        => 'trigger_booking_flow',
-                    'description' => 'HANYA untuk booking SUNAT — pesan customer WAJIB ada kata "sunat" / "khitan" / "sirkumsisi". DILARANG utk USG, lab, dokter umum, gigi, kulit, vaksin, kandungan, BPJS umum, dll → pakai redirect_ke_klinik_utama. KASIH parameter utk field yang sudah disebut customer di percakapan (tanggal, jam, nama_anak, usia, BB) supaya engine skip step itu. Kalau semua complete, engine auto-store jadwal_sunats. Output text KOSONG setelah call.',
+                    'name'        => 'save_booking_data',
+                    'description' => 'Simpan 1+ field booking yang customer sebut (tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak). WAJIB pesan customer atau history mengandung "sunat"/"khitan"/"sirkumsisi" — DILARANG utk USG, lab, dokter umum, gigi, kulit, vaksin, kandungan, dll. Tool validate slot (blackout / BOOKED / spillover 2 jam). Return {filled[], missing[], slot_status: "ok"|"invalid_date"|"blackout"|"jam_blocked"|"already_booked", slot_error?}. Kalau slot_status != "ok", tanya customer ganti tanggal/jam. Kalau missing[] kosong + slot_status="ok" langsung call finalize_booking().',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
-                            'tanggal'           => ['type' => 'string', 'description' => 'format YYYY-MM-DD, mis. "2026-07-15"'],
-                            'jam'               => ['type' => 'string', 'description' => 'format HH:MM, mis. "10:00"'],
-                            'nama_anak'         => ['type' => 'string', 'description' => 'nama lengkap anak'],
-                            'nama_panggilan'    => ['type' => 'string', 'description' => 'nama panggilan, mis. "Nio"'],
-                            'usia_anak'         => ['type' => 'string', 'description' => 'usia dgn satuan, mis. "7 tahun"'],
-                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'dalam kg'],
+                            'tanggal'           => ['type' => 'string', 'description' => 'natural date: YYYY-MM-DD / "5 Juli 2026" / "besok" / "lusa" / "hari ini"'],
+                            'jam'               => ['type' => 'string', 'description' => 'HH:MM atau angka (7, 10, dst). Slot valid: 07-11, 13-17'],
+                            'nama_anak'         => ['type' => 'string', 'description' => 'nama lengkap anak (mis. "Faiz Nabil")'],
+                            'nama_panggilan'    => ['type' => 'string', 'description' => 'nama panggilan singkat (mis. "Nio"). Kalau customer bilang sama dgn nama, isi dgn "-".'],
+                            'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan (mis. "7 tahun" / "8 bulan")'],
+                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg (mis. 22)'],
                         ],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name'        => 'finalize_booking',
+                    'description' => 'Commit booking ke jadwal_sunats + kirim bubble booking_sukses ke customer. WAJIB dipanggil HANYA setelah semua 6 field terkumpul (tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak) dan save_booking_data terakhir return slot_status="ok". Kalau field belum lengkap atau slot terpakai, tool return error — panggil save_booking_data dulu. Setelah call, output text KOSONG.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => new \stdClass(),
                     ],
                 ],
             ],
@@ -635,11 +678,13 @@ PROMPT;
                 if ($escalate) $sideEffect['escalate'] = true;
                 return [$summary, $sideEffect];
 
-            case 'trigger_booking_flow':
-                return [['ok' => true, 'note' => 'engine akan ambil alih flow booking'], [
-                    'signal'  => 'enter_booking',
-                    'prefill' => $this->normalizeBookingArgs($args),
-                ]];
+            case 'save_booking_data':
+                [$summary, $sideEffect] = $this->toolSaveBookingData($args, $session);
+                return [$summary, $sideEffect];
+
+            case 'finalize_booking':
+                [$summary, $bubbles] = $this->toolFinalizeBooking($session);
+                return [$summary, ['replies' => $bubbles]];
 
             default:
                 return [['ok' => false, 'error' => "unknown tool: $name"], []];
@@ -754,23 +799,181 @@ PROMPT;
      *
      * @return array{0:array, 1:array<array{text:string,media:?string}>}
      */
+    // ----- BOOKING (natural collection, agent-driven) -----------------
+
+    private const BOOKING_REQUIRED_FIELDS = [
+        'booking_tanggal', 'booking_jam', 'booking_nama_anak',
+        'booking_nama_panggilan', 'booking_usia_anak', 'booking_berat_badan_anak',
+    ];
+
     /**
-     * Filter argument trigger_booking_flow yang valid. Pass-through string
-     * untuk tanggal/jam — engine parser yang akan validate (parseBookingDate
-     * support YYYY-MM-DD, DD/MM/YYYY, "5 Juli 2026", "besok", dll).
+     * Save fields booking ke collected_data. Validate slot (blackout,
+     * konflik BOOKED, spillover 2 jam). Return status + missing[] utk LLM
+     * lanjut nanya field berikutnya atau alihkan ke jam/tanggal lain.
+     *
+     * @return array{0:array,1:array}
      */
-    private function normalizeBookingArgs(array $args): array
+    private function toolSaveBookingData(array $args, BotSession $session): array
     {
-        $out = [];
-        $strKeys = ['tanggal', 'jam', 'nama_anak', 'nama_panggilan', 'usia_anak'];
-        foreach ($strKeys as $k) {
-            $v = trim((string) ($args[$k] ?? ''));
-            if ($v !== '') $out[$k] = $v;
+        $engine = app(\App\Services\SunatBot\SunatBotEngine::class);
+        $saved  = [];
+
+        // tanggal — parse via engine helper (support "5 Juli 2026", "besok", "2026-07-05", dst)
+        $tglRaw = trim((string) ($args['tanggal'] ?? ''));
+        if ($tglRaw !== '') {
+            $parsed = $engine->parseBookingDate($tglRaw);
+            if ($parsed !== null) {
+                $session->setData('booking_tanggal', $parsed->format('Y-m-d'));
+                $saved[] = 'booking_tanggal';
+            } else {
+                Log::info('SUNAT_BOT_AGENT_BOOKING_DATE_INVALID', [
+                    'phone' => $session->no_telp,
+                    'raw'   => $tglRaw,
+                ]);
+            }
         }
+
+        // jam — normalize via engine helper ke slot resmi
+        $jamRaw = trim((string) ($args['jam'] ?? ''));
+        if ($jamRaw !== '') {
+            $parsed = $engine->parseBookingJam($jamRaw);
+            if ($parsed !== null) {
+                $session->setData('booking_jam', $parsed);
+                $saved[] = 'booking_jam';
+            }
+        }
+
+        // nama_anak
+        $namaAnak = trim((string) ($args['nama_anak'] ?? ''));
+        if ($namaAnak !== '') {
+            $session->setData('booking_nama_anak', $namaAnak);
+            $saved[] = 'booking_nama_anak';
+        }
+
+        // nama_panggilan — "-" means "same as nama_anak"
+        $panggilan = trim((string) ($args['nama_panggilan'] ?? ''));
+        if ($panggilan !== '') {
+            if ($panggilan === '-') {
+                $fallback = (string) $session->getData('booking_nama_anak');
+                $panggilan = $fallback !== '' ? $fallback : $panggilan;
+            }
+            $session->setData('booking_nama_panggilan', $panggilan);
+            $saved[] = 'booking_nama_panggilan';
+        }
+
+        // usia_anak — parse int + satuan terpisah (mirror parseUsia engine)
+        $usiaRaw = trim((string) ($args['usia_anak'] ?? ''));
+        if ($usiaRaw !== '') {
+            $lower = mb_strtolower($usiaRaw);
+            if (preg_match('/(\d+)\s*(?:bln|bulan|bulanan)\b/u', $lower, $m)) {
+                $session->setData('booking_usia_anak', (int) $m[1]);
+                $session->setData('booking_usia_anak_satuan', 'bulan');
+            } elseif (preg_match('/(\d+)\s*(?:thn|tahun|taun|th)\b/u', $lower, $m)) {
+                $session->setData('booking_usia_anak', (int) $m[1]);
+                $session->setData('booking_usia_anak_satuan', 'tahun');
+            } elseif (preg_match('/(\d+)/', $lower, $m)) {
+                $session->setData('booking_usia_anak', (int) $m[1]);
+                $session->setData('booking_usia_anak_satuan', 'tahun');
+            }
+            $saved[] = 'booking_usia_anak';
+        }
+
         if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
-            $out['berat_badan_anak'] = (float) $args['berat_badan_anak'];
+            $session->setData('booking_berat_badan_anak', (float) $args['berat_badan_anak']);
+            $saved[] = 'booking_berat_badan_anak';
         }
-        return $out;
+
+        $session->save();
+
+        // Compute filled/missing
+        $filled  = [];
+        $missing = [];
+        foreach (self::BOOKING_REQUIRED_FIELDS as $f) {
+            $v = $session->getData($f);
+            if ($v === null || $v === '') {
+                $missing[] = str_replace('booking_', '', $f);
+            } else {
+                $filled[] = str_replace('booking_', '', $f);
+            }
+        }
+
+        // Validate slot kalau tanggal + jam sudah terisi
+        $slotStatus = 'ok';
+        $slotError  = null;
+        if ($session->getData('booking_tanggal') !== null
+            && $session->getData('booking_jam') !== null) {
+            $conflict = $engine->validateBookingSlotFromSession($session);
+            if ($conflict !== null) {
+                // Bubble content dari reAskWithFallback — pakai template
+                // untuk classify status. Cek slug expecting_field yg baru
+                // di-reset di dalam validateBookingSlotFromSession.
+                $newExpecting = (string) $session->expecting_field;
+                if ($newExpecting === 'booking_tanggal') {
+                    $slotStatus = 'blackout_or_invalid_date';
+                } elseif ($newExpecting === 'booking_jam') {
+                    $slotStatus = 'jam_blocked_or_booked';
+                } else {
+                    $slotStatus = 'conflict';
+                }
+                // Reset expecting_field lagi (validateBookingSlotFromSession
+                // set utk state machine legacy — kita di agent path, tidak butuh).
+                $session->expecting_field = null;
+                $session->save();
+                $slotError = 'Slot tidak tersedia. Ajak customer pilih tanggal/jam lain.';
+            }
+        }
+
+        Log::info('SUNAT_BOT_AGENT_BOOKING_SAVE', [
+            'phone'       => $session->no_telp,
+            'saved'       => $saved,
+            'filled'      => $filled,
+            'missing'     => $missing,
+            'slot_status' => $slotStatus,
+        ]);
+
+        $result = [
+            'ok'          => true,
+            'filled'      => $filled,
+            'missing'     => $missing,
+            'slot_status' => $slotStatus,
+        ];
+        if ($slotError !== null) $result['slot_error'] = $slotError;
+
+        return [$result, []];
+    }
+
+    /**
+     * Commit booking ke jadwal_sunats + emit bubble booking_sukses.
+     * Pastikan semua 6 field terkumpul + slot masih valid saat commit.
+     *
+     * @return array{0:array, 1:array<array>}
+     */
+    private function toolFinalizeBooking(BotSession $session): array
+    {
+        $missing = [];
+        foreach (self::BOOKING_REQUIRED_FIELDS as $f) {
+            $v = $session->getData($f);
+            if ($v === null || $v === '') $missing[] = str_replace('booking_', '', $f);
+        }
+        if ($missing !== []) {
+            return [
+                ['ok' => false, 'error' => 'field belum lengkap', 'missing' => $missing],
+                [],
+            ];
+        }
+
+        $engine  = app(\App\Services\SunatBot\SunatBotEngine::class);
+        $bubbles = $engine->finalizeBooking($session);
+
+        Log::info('SUNAT_BOT_AGENT_BOOKING_FINALIZE', [
+            'phone'   => $session->no_telp,
+            'bubbles' => count($bubbles),
+        ]);
+
+        return [
+            ['ok' => true, 'bubbles' => count($bubbles)],
+            $bubbles,
+        ];
     }
 
     /**

@@ -182,20 +182,25 @@ class SunatBotEngine
         $hasTrigger = $this->hasTrigger($msgLower);
         $session    = BotSession::where('no_telp', $noTelp)->first();
 
-        // MIGRATION SHIM (2026-07-02): natural harga flow refactor — agent AI
-        // sekarang drive harga collection via save_harga_data. Session lama
-        // dengan expecting_field di HARGA_FLOW legacy → reset agar agent
-        // ambil alih. collected_data preserved supaya agent tahu field mana
-        // yg sudah terisi.
+        // MIGRATION SHIM (2026-07-02): natural harga + booking flow refactor
+        // — agent AI sekarang drive kedua flow via save_harga_data +
+        // save_booking_data. Session lama dgn expecting_field di state
+        // machine legacy → reset agar agent ambil alih. collected_data
+        // preserved supaya agent tahu field mana yg sudah terisi.
         if ($session && $session->expecting_field !== null) {
-            $legacyHargaFields = [
+            $legacyFields = [
+                // Harga state machine
                 'nama_orang_tua', 'domisili', 'usia_anak', 'berat_badan_anak',
                 'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan',
                 'sudah_tahu_metode', 'pengalaman_medis', 'pertanyaan_lanjutan',
                 'usia_bb',
+                // Booking state machine
+                'booking_tanggal', 'booking_jam', 'booking_nama_anak',
+                'booking_nama_panggilan', 'booking_usia', 'booking_berat_badan',
+                'booking_konfirmasi', 'booking_usia_bb',
             ];
-            if (in_array($session->expecting_field, $legacyHargaFields, true)) {
-                Log::info('SUNAT_BOT_HARGA_LEGACY_MIGRATED', [
+            if (in_array($session->expecting_field, $legacyFields, true)) {
+                Log::info('SUNAT_BOT_LEGACY_MIGRATED', [
                     'phone' => $noTelp,
                     'from'  => $session->expecting_field,
                 ]);
@@ -292,7 +297,7 @@ class SunatBotEngine
         // (state machine 4 langkah: tanggal → jam → nama anak →
         // konfirmasi → INSERT jadwal_sunats). Looser phrasing via AI
         // ditangani classifyAndRespond.
-        if ((!$session || !$session->is_complete) && $this->isBookingKeyword($msgLower)) {
+        if ((!$session || !$session->is_complete) && !$this->shouldUseAgent($noTelp) && $this->isBookingKeyword($msgLower)) {
             // Customer baru bisa pakai deep-link kalender — buat session dulu.
             if ($session === null) {
                 $session = BotSession::create([
@@ -411,9 +416,6 @@ class SunatBotEngine
                 $replies = $agentResult['replies'] ?? [];
                 $prefill = (array) ($agentResult['prefill'] ?? []);
 
-                if ($signal === 'enter_booking') {
-                    return $this->enterBookingFlow($session, $prefill, $message);
-                }
                 if (!empty($agentResult['escalate'])) {
                     return $this->escalate($session, $replies !== [] ? $replies : null);
                 }
@@ -1363,8 +1365,9 @@ class SunatBotEngine
     /**
      * INSERT jadwal_sunats + kirim bubble sukses. Validasi konflik
      * terakhir (race-condition safety) sebelum benar-benar insert.
+     * Public agar bisa dipanggil dari SunatBotAgent::toolFinalizeBooking.
      */
-    private function finalizeBooking(BotSession $session): array
+    public function finalizeBooking(BotSession $session): array
     {
         $tanggalStr    = (string) $session->getData('booking_tanggal');
         $jam           = (string) $session->getData('booking_jam');
@@ -1525,7 +1528,7 @@ class SunatBotEngine
      *   - "besok", "lusa" (kata waktu sederhana)
      * Return Carbon (start of day) atau null bila tidak dikenali.
      */
-    private function parseBookingDate(string $raw): ?Carbon
+    public function parseBookingDate(string $raw): ?Carbon
     {
         $raw = trim($raw);
         if ($raw === '') return null;
@@ -1562,7 +1565,7 @@ class SunatBotEngine
      * dari BOOKING_JAM_SLOTS), atau "07"/"7" (single hour).
      * Return string "HH:MM" yang ada di slot resmi, atau null.
      */
-    private function parseBookingJam(string $raw): ?string
+    public function parseBookingJam(string $raw): ?string
     {
         $raw = trim($raw);
         if ($raw === '') return null;
@@ -1653,7 +1656,7 @@ class SunatBotEngine
      * auto-finalize (semua field prefilled dari agent) — agent bypass
      * handleBookingTanggal/Jam yg biasanya validasi.
      */
-    private function validateBookingSlotFromSession(BotSession $session): ?array
+    public function validateBookingSlotFromSession(BotSession $session): ?array
     {
         $tanggalStr = (string) $session->getData('booking_tanggal');
         $jam        = (string) $session->getData('booking_jam');
