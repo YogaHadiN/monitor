@@ -920,6 +920,10 @@ PROMPT;
         $calendarUrl    = null;
         if ($session->getData('booking_tanggal') !== null
             && $session->getData('booking_jam') !== null) {
+            // Capture tanggal SEBELUM validate karena engine internal
+            // reset booking_tanggal ke null saat blackout — kita butuh
+            // untuk prefill URL kalender.
+            $tglIsoForLink = (string) $session->getData('booking_tanggal');
             $conflict = $engine->validateBookingSlotFromSession($session);
             if ($conflict !== null) {
                 $newExpecting = (string) $session->expecting_field;
@@ -930,9 +934,6 @@ PROMPT;
                 } else {
                     $slotStatus = 'conflict';
                 }
-                // Ambil tanggal SEBELUM reset — untuk prefill link kalender.
-                $tglIsoForLink = (string) $session->getData('booking_tanggal');
-
                 // Reset expecting_field lagi (validateBookingSlotFromSession
                 // set utk state machine legacy — kita di agent path, tidak butuh).
                 $session->expecting_field = null;
@@ -1263,22 +1264,16 @@ PROMPT;
         if (!$session->getData('_harga_sent')) {
             foreach (self::HARGA_REQUIRED_FIELDS as $f) {
                 if ($session->getData($f) !== null && $session->getData($f) !== '') {
-                    // ada field harga terisi → cek apakah ada yg belum
-                    foreach (self::HARGA_REQUIRED_FIELDS as $g) {
-                        $v = $session->getData($g);
-                        if ($v === null || $v === '') return true;
-                    }
+                    return true;
                 }
             }
         }
-        // Booking: ada field terisi + belum finalize (session belum is_complete)
+        // Booking: flag booking_started ATAU ada field terisi
         if (!$session->is_complete) {
+            if ($session->getData('booking_started')) return true;
             foreach (self::BOOKING_REQUIRED_FIELDS as $f) {
                 if ($session->getData($f) !== null && $session->getData($f) !== '') {
-                    foreach (self::BOOKING_REQUIRED_FIELDS as $g) {
-                        $v = $session->getData($g);
-                        if ($v === null || $v === '') return true;
-                    }
+                    return true;
                 }
             }
         }
