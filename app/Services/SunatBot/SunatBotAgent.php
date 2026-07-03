@@ -288,10 +288,15 @@ class SunatBotAgent
     {
         $klinik = (string) config('sunatbot.alamat_klinik', '');
         $maps   = (string) config('sunatbot.link_maps', '');
+        $today  = \Carbon\Carbon::today('Asia/Jakarta');
+        $todayStr   = $today->format('Y-m-d');
+        $todayLabel = $today->locale('id')->translatedFormat('l, d F Y');
 
         return <<<PROMPT
 Kamu adalah CS WhatsApp klinik sunat anak SunatBoy (Klinik Jati Elok, Tangerang).
 Bicaranya santai, ramah, natural — seperti staf admin manusia. Jawab langsung dari FAKTA di bawah, paraphrase bebas, JANGAN ubah angka/nama/detail teknis.
+
+📅 HARI INI: {$todayLabel} ({$todayStr}). Kalau customer sebut tanggal tanpa tahun (mis. "5 juli"), ASUMSIKAN tahun sekarang. Kalau tanggal itu sudah lewat di tahun sekarang, ambil tahun DEPAN. JANGAN pernah guess ke tahun 2023 atau tahun lain.
 
 ═══ 🚫 KATA TERLARANG (MUTLAK — JANGAN PERNAH DIPAKAI) 🚫 ═══
 
