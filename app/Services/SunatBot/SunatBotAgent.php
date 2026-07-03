@@ -466,11 +466,11 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
    - Belum ada nama_panggilan → "Nama panggilan anaknya apa kak?"
    - Belum ada usia+BB → "Boleh infokan usia dan berat badan anaknya?"
 
-4. **Slot conflict handling** (baca response save_booking_data). WAJIB kirim JUGA `calendar_url` (dari tool response) supaya customer bisa lihat slot tersedia + tap link:
-   - `slot_status="blackout_or_invalid_date"` → "Mohon maaf tanggal itu tidak tersedia kak. Mau pilih tanggal lain?" + BUBBLE terpisah "Lihat slot tersedia di kalender: {calendar_url}"
-   - `slot_status="jam_blocked_or_booked"` → "Mohon maaf jam itu tidak tersedia kak. Mau pilih jam lain?" + BUBBLE terpisah "Lihat slot tersedia di kalender: {calendar_url}"
-   - `slot_status="conflict"` → generic "Slot tidak tersedia" + calendar link.
-   - Format URL calendar polos (bukan markdown), contoh: `Lihat slot tersedia di kalender:\nhttps://www.kezia.id/sunat-calendar?date=2026-07-05`
+4. **Slot conflict handling** (baca response save_booking_data). Tool auto-emit bubble kalender terpisah — kamu cukup kirim reply text ajakan pilih ulang:
+   - `slot_status="blackout_or_invalid_date"` → "Mohon maaf tanggal itu tidak tersedia kak. Mau pilih tanggal lain?"
+   - `slot_status="jam_blocked_or_booked"` → "Mohon maaf jam itu tidak tersedia kak. Mau pilih jam lain?"
+   - `slot_status="conflict"` → generic "Slot tidak tersedia kak."
+   - **JANGAN** tulis URL kalender di reply text kamu — tool sudah kirim bubble link deterministic.
 
 5. **⚠️ INTERRUPT** — customer tanya HAL LAIN di tengah collection (misal tanya metode/testimoni/fasilitas saat lagi collection booking):
    → JAWAB DULU dengan `get_intent_response(slug)`.
@@ -971,7 +971,18 @@ PROMPT;
         if ($slotError !== null) $result['slot_error'] = $slotError;
         if ($calendarUrl !== null) $result['calendar_url'] = $calendarUrl;
 
-        return [$result, []];
+        // Side-effect: kalau slot invalid, inject calendar bubble
+        // langsung. LLM sering strip query param ?date=... dari URL,
+        // jadi kirim bubble deterministic dari tool executor.
+        $sideEffect = [];
+        if ($calendarUrl !== null) {
+            $sideEffect['replies'] = [[
+                'text'  => "Lihat slot yang tersedia di kalender:\n" . $calendarUrl,
+                'media' => null,
+            ]];
+        }
+
+        return [$result, $sideEffect];
     }
 
     /**
