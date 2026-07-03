@@ -922,6 +922,9 @@ PROMPT;
                 } else {
                     $slotStatus = 'conflict';
                 }
+                // Ambil tanggal SEBELUM reset — untuk prefill link kalender.
+                $tglIsoForLink = (string) $session->getData('booking_tanggal');
+
                 // Reset expecting_field lagi (validateBookingSlotFromSession
                 // set utk state machine legacy — kita di agent path, tidak butuh).
                 $session->expecting_field = null;
@@ -936,10 +939,10 @@ PROMPT;
                 $session->save();
                 $slotError = 'Slot tidak tersedia. Ajak customer pilih tanggal/jam lain.';
                 // Public calendar link — customer bisa lihat semua slot.
-                // Kalau tanggal masih ke-remember, prefill ke tanggal itu.
-                $tglIso = (string) $session->getData('booking_tanggal');
+                // Prefill dgn tanggal yang tadi ditolak supaya kalender
+                // langsung auto-open detail slot per tanggal itu.
                 $calendarUrl = 'https://www.kezia.id/sunat-calendar'
-                             . ($tglIso !== '' ? '?date=' . $tglIso : '');
+                             . ($tglIsoForLink !== '' ? '?date=' . $tglIsoForLink : '');
             }
         }
 
