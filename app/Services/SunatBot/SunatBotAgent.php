@@ -465,11 +465,11 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
    - Belum ada nama_panggilan → "Nama panggilan anaknya apa kak?"
    - Belum ada usia+BB → "Boleh infokan usia dan berat badan anaknya?"
 
-4. **Slot conflict handling** (baca response save_booking_data):
-   - `slot_status="blackout"` → "Mohon maaf tanggal itu klinik libur kak. Mau pilih tanggal lain?"
-   - `slot_status="already_booked"` → "Mohon maaf jam itu sudah ada booking lain kak. Mau pilih jam lain?"
-   - `slot_status="jam_blocked"` → "Jam tersebut tidak tersedia. Slot yang bisa: 07-11 dan 13-17."
-   - `slot_status="invalid_date"` → "Tanggal itu sudah lewat kak. Mau pilih tanggal ke depan?"
+4. **Slot conflict handling** (baca response save_booking_data). WAJIB kirim JUGA `calendar_url` (dari tool response) supaya customer bisa lihat slot tersedia + tap link:
+   - `slot_status="blackout_or_invalid_date"` → "Mohon maaf tanggal itu tidak tersedia kak. Mau pilih tanggal lain?" + BUBBLE terpisah "Lihat slot tersedia di kalender: {calendar_url}"
+   - `slot_status="jam_blocked_or_booked"` → "Mohon maaf jam itu tidak tersedia kak. Mau pilih jam lain?" + BUBBLE terpisah "Lihat slot tersedia di kalender: {calendar_url}"
+   - `slot_status="conflict"` → generic "Slot tidak tersedia" + calendar link.
+   - Format URL calendar polos (bukan markdown), contoh: `Lihat slot tersedia di kalender:\nhttps://www.kezia.id/sunat-calendar?date=2026-07-05`
 
 5. **⚠️ INTERRUPT** — customer tanya HAL LAIN di tengah collection (misal tanya metode/testimoni/fasilitas saat lagi collection booking):
    → JAWAB DULU dengan `get_intent_response(slug)`.
@@ -907,15 +907,13 @@ PROMPT;
         }
 
         // Validate slot kalau tanggal + jam sudah terisi
-        $slotStatus = 'ok';
-        $slotError  = null;
+        $slotStatus     = 'ok';
+        $slotError      = null;
+        $calendarUrl    = null;
         if ($session->getData('booking_tanggal') !== null
             && $session->getData('booking_jam') !== null) {
             $conflict = $engine->validateBookingSlotFromSession($session);
             if ($conflict !== null) {
-                // Bubble content dari reAskWithFallback — pakai template
-                // untuk classify status. Cek slug expecting_field yg baru
-                // di-reset di dalam validateBookingSlotFromSession.
                 $newExpecting = (string) $session->expecting_field;
                 if ($newExpecting === 'booking_tanggal') {
                     $slotStatus = 'blackout_or_invalid_date';
@@ -927,8 +925,21 @@ PROMPT;
                 // Reset expecting_field lagi (validateBookingSlotFromSession
                 // set utk state machine legacy — kita di agent path, tidak butuh).
                 $session->expecting_field = null;
+                // Reset booking_tanggal + booking_jam supaya customer bisa
+                // pilih ulang tanpa nilai lama stuck di session.
+                if ($slotStatus === 'blackout_or_invalid_date') {
+                    $session->setData('booking_tanggal', null);
+                    $session->setData('booking_jam', null);
+                } elseif ($slotStatus === 'jam_blocked_or_booked') {
+                    $session->setData('booking_jam', null);
+                }
                 $session->save();
                 $slotError = 'Slot tidak tersedia. Ajak customer pilih tanggal/jam lain.';
+                // Public calendar link — customer bisa lihat semua slot.
+                // Kalau tanggal masih ke-remember, prefill ke tanggal itu.
+                $tglIso = (string) $session->getData('booking_tanggal');
+                $calendarUrl = 'https://www.kezia.id/sunat-calendar'
+                             . ($tglIso !== '' ? '?date=' . $tglIso : '');
             }
         }
 
@@ -947,6 +958,7 @@ PROMPT;
             'slot_status' => $slotStatus,
         ];
         if ($slotError !== null) $result['slot_error'] = $slotError;
+        if ($calendarUrl !== null) $result['calendar_url'] = $calendarUrl;
 
         return [$result, []];
     }
