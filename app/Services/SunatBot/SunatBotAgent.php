@@ -213,10 +213,11 @@ class SunatBotAgent
                 // redirect_ke_klinik_utama.
                 if ($toolName === 'save_booking_data') {
                     // Skip sunat-keyword guard kalau booking collection sudah
-                    // aktif (booking_tanggal atau booking_jam sudah terisi).
-                    // Customer melanjutkan flow, pesan lanjutan (mis. "Yoga"
-                    // = nama anak) tidak perlu ulang sebut "sunat".
-                    $bookingAktif = $session->getData('booking_tanggal') !== null
+                    // pernah dimulai (flag booking_started set saat pertama kali
+                    // save berhasil). Ini juga survive slot-invalid reset yg
+                    // null-in booking_tanggal/jam supaya customer bisa retry.
+                    $bookingAktif = (bool) $session->getData('booking_started')
+                                 || $session->getData('booking_tanggal') !== null
                                  || $session->getData('booking_jam') !== null
                                  || trim((string) $session->getData('booking_nama_anak')) !== '';
                     $rejectReason = $bookingAktif ? null : $this->validateBookingFlowMessage($this->currentUserMessage);
@@ -890,6 +891,13 @@ PROMPT;
         if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
             $session->setData('booking_berat_badan_anak', (float) $args['berat_badan_anak']);
             $saved[] = 'booking_berat_badan_anak';
+        }
+
+        // Mark flag booking_started supaya guard sunat-keyword di turn
+        // berikutnya skip cek — walau field lain di-reset (slot invalid),
+        // customer tetap dianggap dalam booking flow.
+        if ($saved !== []) {
+            $session->setData('booking_started', true);
         }
 
         $session->save();
