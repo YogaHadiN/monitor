@@ -211,6 +211,43 @@ class SunatBotAgent
                 // non-sunat. Model kadang shortcut "daftar X" → booking
                 // walaupun X = USG/lab/dokter umum. Reject + arahkan ke
                 // redirect_ke_klinik_utama.
+                // Hard guard MUTUAL EXCLUSION antara harga vs booking flow.
+                // Kalau harga collection sedang aktif (belum kirim quote) dan
+                // LLM mau save_booking_data, tolak. Kebalikannya juga —
+                // booking aktif tapi LLM call save_harga_data → tolak.
+                if ($toolName === 'save_harga_data' && (bool) $session->getData('booking_started') && !$session->is_complete) {
+                    Log::info('SUNAT_BOT_AGENT_BLOCK_HARGA_DURING_BOOKING', ['phone' => $session->no_telp]);
+                    $toolResult = [
+                        'ok'    => false,
+                        'error' => 'Booking flow sedang aktif. Selesaikan booking dulu (panggil save_booking_data / finalize_booking). save_harga_data + send_harga_quote di-block.',
+                    ];
+                    $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
+                    continue;
+                }
+                if ($toolName === 'send_harga_quote' && (bool) $session->getData('booking_started') && !$session->is_complete) {
+                    Log::info('SUNAT_BOT_AGENT_BLOCK_HARGA_QUOTE_DURING_BOOKING', ['phone' => $session->no_telp]);
+                    $toolResult = ['ok' => false, 'error' => 'Booking flow aktif, send_harga_quote di-block.'];
+                    $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
+                    continue;
+                }
+                $hargaAktif = !((bool) $session->getData('_harga_sent'));
+                if ($hargaAktif) {
+                    $hargaAktif = false;
+                    foreach (self::HARGA_REQUIRED_FIELDS as $hf) {
+                        $v = $session->getData($hf);
+                        if ($v !== null && $v !== '') { $hargaAktif = true; break; }
+                    }
+                }
+                if ($toolName === 'save_booking_data' && $hargaAktif && !$session->getData('booking_started')) {
+                    Log::info('SUNAT_BOT_AGENT_BLOCK_BOOKING_DURING_HARGA', ['phone' => $session->no_telp]);
+                    $toolResult = [
+                        'ok'    => false,
+                        'error' => 'Harga collection sedang aktif. Selesaikan harga dulu (panggil send_harga_quote setelah 7 field lengkap), atau kalau customer beralih ke booking, tanya konfirmasi eksplisit dulu.',
+                    ];
+                    $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
+                    continue;
+                }
+
                 if ($toolName === 'save_booking_data') {
                     // Skip sunat-keyword guard kalau booking collection sudah
                     // pernah dimulai (flag booking_started set saat pertama kali
@@ -375,6 +412,21 @@ Sinonim positif yang BOLEH dipakai: "bius nyaman", "proses pembiusan", "tindakan
    - Anak gemuk / obesitas (faktor risiko anestesi)
    - Riwayat penyakit (jantung, kelainan pembekuan darah, dll)
    → Engine otomatis handoff kalau customer sebut kondisi ini, jangan kamu reply panjang sendiri.
+
+═══ ⚠️ HARGA vs BOOKING — 2 FLOW BERBEDA, JANGAN CAMPUR ⚠️ ═══
+
+Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
+
+**HARGA** (tanya biaya/PL) — pakai `save_harga_data` + `send_harga_quote`. Field wajib: nama_orang_tua, domisili, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada tanggal/jam.
+
+**BOOKING** (daftar/pendaftaran pasien) — pakai `save_booking_data` + `finalize_booking`. Field wajib: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak. Tidak ada domisili/indikasi/postur/riwayat.
+
+🚫 **DILARANG mixing:**
+- Kalau customer bilang "mau daftar/booking/nyunatin/jadwalin" → BOOKING flow. **JANGAN** panggil save_harga_data. **JANGAN** tanya nama_orang_tua/domisili/indikasi/postur/riwayat — bukan bagian booking.
+- Kalau customer bilang "berapa harganya / PL / biaya" → HARGA flow. **JANGAN** panggil save_booking_data. **JANGAN** tanya tanggal/jam.
+- Kalau customer beralih flow di tengah (mis. sudah kasih quote harga, lalu bilang "ok mau daftar"), boleh transisi ke booking — tapi mulai save_booking_data secara fresh, jangan re-tanya field yang sama.
+
+Executor engine akan REJECT tool call yang salah flow (mis. save_harga_data saat booking aktif). Kalau kamu dapat error "Booking flow aktif" → berarti kamu salah pick tool, ganti ke save_booking_data.
 
 ═══ ATURAN HARGA (natural collection — KAMU yang drive percakapan) ═══
 
