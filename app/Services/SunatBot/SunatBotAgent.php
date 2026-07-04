@@ -726,7 +726,12 @@ PROMPT;
                 return [$this->toolLookupKnowledge((string) ($args['query'] ?? '')), []];
 
             case 'get_intent_response':
-                [$summary, $bubbles] = $this->toolGetIntentResponse((string) ($args['slug'] ?? ''));
+                $slug = (string) ($args['slug'] ?? '');
+                [$summary, $bubbles] = $this->toolGetIntentResponse($slug);
+                // Track slug yang sudah di-render di session utk dedupe
+                // cross-turn (mis. metode sudah dijelaskan sebelum harga,
+                // send_harga_quote skip prepend metode lagi).
+                $this->recordSlugShown($session, $slug);
                 return [$summary, ['replies' => $bubbles]];
 
             case 'redirect_ke_klinik_utama':
@@ -1272,23 +1277,37 @@ PROMPT;
         }
 
         $bubbles = [];
+        $shown   = (array) $session->getData('_slugs_shown');
 
         // 1. Edukasi metode (foto teknoklamp + text) — customer perlu tau
         //    metode sebelum lihat harga supaya bisa evaluate value.
-        [$_, $metode] = $this->toolGetIntentResponse('pertanyaan_metode');
-        $bubbles = array_merge($bubbles, $metode);
+        //    Skip kalau sudah dirender di turn sebelumnya.
+        if (!in_array('pertanyaan_metode', $shown, true)) {
+            [$_, $metode] = $this->toolGetIntentResponse('pertanyaan_metode');
+            $bubbles = array_merge($bubbles, $metode);
+            $this->recordSlugShown($session, 'pertanyaan_metode');
+        }
 
         // 2. Contoh dokumentasi (video mini vlog / dokumentasi pengalaman).
-        [$_, $doc] = $this->toolGetIntentResponse('contoh_dokumentasi');
-        $bubbles = array_merge($bubbles, $doc);
+        if (!in_array('contoh_dokumentasi', $shown, true)) {
+            [$_, $doc] = $this->toolGetIntentResponse('contoh_dokumentasi');
+            $bubbles = array_merge($bubbles, $doc);
+            $this->recordSlugShown($session, 'contoh_dokumentasi');
+        }
 
         // 3. Testimoni Google review (media + text)
-        [$_, $testimoni] = $this->toolGetIntentResponse('testimoni_google_review');
-        $bubbles = array_merge($bubbles, $testimoni);
+        if (!in_array('testimoni_google_review', $shown, true)) {
+            [$_, $testimoni] = $this->toolGetIntentResponse('testimoni_google_review');
+            $bubbles = array_merge($bubbles, $testimoni);
+            $this->recordSlugShown($session, 'testimoni_google_review');
+        }
 
         // 4. Delay marker 40s (dispatcher sleep tanpa kirim) — biar customer
         //    sempat lihat semua konten pre-quote sebelum harga muncul.
-        $bubbles[] = ['text' => '', 'media' => null, 'delay_seconds' => 40];
+        //    Hanya inject delay kalau ada konten pre-quote yg terkirim.
+        if ($bubbles !== []) {
+            $bubbles[] = ['text' => '', 'media' => null, 'delay_seconds' => 40];
+        }
 
         // 5. Quote harga paket (respect promo slug swap kalau ada).
         $quoteSlug = 'quote_harga_paket';
@@ -1346,6 +1365,19 @@ PROMPT;
             }
         }
         return false;
+    }
+
+    /**
+     * Track intent slug yg sudah di-render di session (dedupe cross-turn).
+     */
+    private function recordSlugShown(BotSession $session, string $slug): void
+    {
+        if ($slug === '') return;
+        $shown = (array) $session->getData('_slugs_shown');
+        if (in_array($slug, $shown, true)) return;
+        $shown[] = $slug;
+        $session->setData('_slugs_shown', $shown);
+        $session->save();
     }
 
     /**
