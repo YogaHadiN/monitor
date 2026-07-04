@@ -182,6 +182,31 @@ class SunatBotAgent
                     }
                 }
 
+                // Dedupe CROSS-TURN: kalau slug sudah pernah dirender
+                // di session (persist di collected_data._slugs_shown),
+                // block. LLM sering re-call pertanyaan_metode dst di
+                // turn berbeda -> customer terima foto dobel.
+                if ($toolName === 'get_intent_response') {
+                    $slugArg = trim((string) ($args['slug'] ?? ''));
+                    $slugsShownSession = (array) $session->getData('_slugs_shown');
+                    if ($slugArg !== '' && in_array($slugArg, $slugsShownSession, true)) {
+                        Log::info('SUNAT_BOT_AGENT_BLOCK_REPEAT_SLUG', [
+                            'phone' => $session->no_telp,
+                            'slug'  => $slugArg,
+                        ]);
+                        $toolResult = [
+                            'ok'    => false,
+                            'error' => "slug '$slugArg' SUDAH dirender di session ini. DILARANG re-render. Kalau customer tanya hal yang sama, paraphrase singkat dari FAKTA saja, jangan call tool ini lagi.",
+                        ];
+                        $messages[] = [
+                            'role'         => 'tool',
+                            'tool_call_id' => $callId,
+                            'content'      => json_encode($toolResult, JSON_UNESCAPED_UNICODE),
+                        ];
+                        continue;
+                    }
+                }
+
                 // Dedupe: kalau agent call get_intent_response untuk
                 // slug yang sudah di-render di turn ini, skip eksekusi
                 // dan kembalikan note ke LLM supaya tidak loop.
@@ -551,8 +576,10 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
   - JANGAN call dgn args kosong kalau customer sudah kasih info — itu bug, customer harus ulang ngetik.
 - `redirect_ke_klinik_utama` → customer EKSPLISIT sebut layanan non-sunat: USG, kandungan, hamil, lab, cek darah, dokter umum, gigi, kulit, vaksin, imunisasi, mobile jkn, jkn (tanpa "sunat"), kontrol obat. Termasuk "daftar USG" / "daftar lab" / "daftar dokter umum" — semua redirect, BUKAN booking_flow.
 
-═══ ⚠️ WAJIB call get_intent_response — JANGAN paraphrase ⚠️ ═══
-Untuk 7 topic di bawah, customer butuh LIHAT foto/video. Kalau jawab dari FAKTA langsung tanpa call tool, FOTO/VIDEO TIDAK TERKIRIM ke customer. INI BUG. WAJIB call `get_intent_response(slug)`:
+═══ ⚠️ WAJIB call get_intent_response — HANYA 1x per slug per session ⚠️ ═══
+Untuk 7 topic di bawah, customer butuh LIHAT foto/video. Kalau jawab dari FAKTA langsung tanpa call tool, FOTO/VIDEO TIDAK TERKIRIM ke customer. INI BUG. WAJIB call `get_intent_response(slug)`.
+
+🚫 **DILARANG re-call slug yang sudah pernah dirender di session ini.** Executor akan reject dgn error. Kalau customer tanya topic yg sama lagi, paraphrase singkat dari FAKTA saja (tanpa media dobel).
 
 | Topic customer tanya | slug yang HARUS dipanggil |
 |---|---|
