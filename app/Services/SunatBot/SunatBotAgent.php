@@ -1272,14 +1272,25 @@ PROMPT;
         }
 
         $bubbles = [];
-        // 1. Testimoni Google review (media + text)
+
+        // 1. Edukasi metode (foto teknoklamp + text) — customer perlu tau
+        //    metode sebelum lihat harga supaya bisa evaluate value.
+        [$_, $metode] = $this->toolGetIntentResponse('pertanyaan_metode');
+        $bubbles = array_merge($bubbles, $metode);
+
+        // 2. Contoh dokumentasi (video mini vlog / dokumentasi pengalaman).
+        [$_, $doc] = $this->toolGetIntentResponse('contoh_dokumentasi');
+        $bubbles = array_merge($bubbles, $doc);
+
+        // 3. Testimoni Google review (media + text)
         [$_, $testimoni] = $this->toolGetIntentResponse('testimoni_google_review');
         $bubbles = array_merge($bubbles, $testimoni);
 
-        // 2. Delay marker 40s (dispatcher sleep tanpa kirim).
+        // 4. Delay marker 40s (dispatcher sleep tanpa kirim) — biar customer
+        //    sempat lihat semua konten pre-quote sebelum harga muncul.
         $bubbles[] = ['text' => '', 'media' => null, 'delay_seconds' => 40];
 
-        // 3. Quote harga paket (respect promo slug swap kalau ada).
+        // 5. Quote harga paket (respect promo slug swap kalau ada).
         $quoteSlug = 'quote_harga_paket';
         $promoIntent = BotIntent::where('intent', 'quote_harga_paket_promo')
             ->where('active', true)->first();
@@ -1289,7 +1300,7 @@ PROMPT;
         [$_, $quote] = $this->toolGetIntentResponse($quoteSlug);
         $bubbles = array_merge($bubbles, $quote);
 
-        // 4. Tanya pertanyaan lanjutan / closing.
+        // 6. Tanya pertanyaan lanjutan / closing.
         [$_, $closing] = $this->toolGetIntentResponse('tanya_pertanyaan_lanjutan');
         $bubbles = array_merge($bubbles, $closing);
 
