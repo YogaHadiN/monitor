@@ -1102,7 +1102,7 @@ class SunatBotEngine
      */
     private function bookingFallbackBubble(): array
     {
-        $sunatJid = '62882015192532';
+        $sunatJid = '6282278065959';
         $autoText = rawurlencode('saya butuh bantuan booking sunat');
 
         $rona       = (string) config('sunatbot.nomor_rona', '0895-3692-69190');

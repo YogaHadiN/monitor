@@ -372,7 +372,7 @@ class WablasController extends Controller
 
             if (!$sunatBotShouldRun && $hasSunatWord) {
                 if ($hasDaftarWord) {
-                    $sunatJid = preg_replace('/\D+/', '', (string) config('services.gowa.sunat_device_jid', '')) ?: '62882015192532';
+                    $sunatJid = preg_replace('/\D+/', '', (string) config('services.gowa.sunat_device_jid', '')) ?: '6282278065959';
                     $autoText = rawurlencode('saya mau daftar sunat');
                     $calendar = 'https://www.kezia.id/sunat-calendar';
 
