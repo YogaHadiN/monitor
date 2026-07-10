@@ -1151,8 +1151,13 @@ PROMPT;
         }
         \Cache::put($key, 1, now()->endOfDay());
 
+        $klinikUtama = '6282113781271';
+        $waLink      = "https://wa.me/{$klinikUtama}";
+
         $text = "Halo kak 🙏\n\n"
-              . "Nomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum, jadwal dokter, BPJS, atau informasi klinik lainnya, silakan langsung chat admin klinik utama kami ya kak. Terima kasih.";
+              . "Nomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum, jadwal dokter, BPJS, atau informasi klinik lainnya, silakan tap link berikut untuk langsung chat admin klinik utama kami:\n\n"
+              . $waLink . "\n\n"
+              . "Terima kasih 🙏";
 
         Log::info('SUNAT_BOT_AGENT_REDIRECT', ['phone' => $phone, 'reason' => $reason, 'target' => 'klinik-utama']);
 
