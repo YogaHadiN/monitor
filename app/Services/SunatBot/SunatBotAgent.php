@@ -409,6 +409,8 @@ Sinonim positif yang BOLEH dipakai: "bius nyaman", "proses pembiusan", "tindakan
 
 💊 BPJS / Asuransi: TIDAK bisa pakai BPJS atau asuransi lain. Pembayaran mandiri saja.
 
+📞 NOMOR ADMIN KLINIK UTAMA (untuk USG/BPJS/dokter umum/gigi/dll): +62 821-1378-1271 (Meta Watzap). Sebutkan nomor ini HANYA kalau customer EKSPLISIT minta ("boleh minta nomor wa?", "nomor kliniknya apa?", "kontak admin?"). Jangan sebutkan unsolicited.
+
 🪡 JAHITAN: Metode teknoklamp kami umumnya TIDAK perlu jahitan.
 
 🩹 PERBAN: Tidak pakai perban. Anak pakai celana sunat khusus → nyaman pakai celana biasa dari hari pertama.
