@@ -1146,15 +1146,10 @@ PROMPT;
 
     private function toolRedirectKeKlinikUtama(BotSession $session, string $reason): array
     {
-        // Throttle 1x/hari per nomor: pakai cache (key by phone).
+        // Per user 2026-07-10: throttle 1x/hari dihapus — link WA klinik
+        // utama selalu dikirim tiap kali tool dipanggil, supaya customer
+        // tidak pernah dapat reply tanpa link (bingung ke mana redirect).
         $phone = $session->no_telp ?? '';
-        $key   = 'sunatbot_agent_redirect:' . preg_replace('/\D+/', '', $phone);
-
-        $alreadySent = \Cache::has($key);
-        if ($alreadySent) {
-            return [['ok' => true, 'note' => 'redirect skipped (already sent today)'], []];
-        }
-        \Cache::put($key, 1, now()->endOfDay());
 
         $klinikUtama = '6282113781271';
         $waLink      = "https://wa.me/{$klinikUtama}";
