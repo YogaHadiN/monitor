@@ -669,7 +669,7 @@ PROMPT;
             [
                 'type' => 'function',
                 'function' => [
-                    'description' => 'Panggil ini saat customer EKSPLISIT punya keperluan BUKAN sunat: USG, lab, dokter umum, BPJS umum (bukan BPJS sunat), gigi, poli kulit, vaksin umum, dll. Bot kirim pesan redirect ke admin klinik utama Meta (6282113781271) dgn wa.me link. DILARANG dipanggil utk greeting kosong/pendek ("halo", "sore", "p") — utk itu tanya keperluan dulu. Throttled 1x/hari per nomor.',
+                    'description' => 'Panggil ini saat customer EKSPLISIT punya keperluan BUKAN sunat: USG, lab, dokter umum, BPJS umum (bukan BPJS sunat), gigi, poli kulit, vaksin umum, dll. Bot kirim pesan singkat suruh chat admin klinik utama. DILARANG dipanggil utk greeting kosong/pendek ("halo", "sore", "p") — utk itu tanya keperluan dulu. Throttled 1x/hari per nomor.',
                     'name'        => 'redirect_ke_klinik_utama',
                     'parameters'  => [
                         'type' => 'object',
@@ -1149,16 +1149,8 @@ PROMPT;
         }
         \Cache::put($key, 1, now()->endOfDay());
 
-        // Nomor klinik utama Meta — hardcoded per user spec. Bukan
-        // pakai nomor_operator (Dr Yoga) yg dulu — operator adalah
-        // staf internal, bukan jalur customer service umum.
-        $klinikUtama = '6282113781271';
-        $waLink      = "https://wa.me/{$klinikUtama}";
-
         $text = "Halo kak 🙏\n\n"
-              . "Nomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum, jadwal dokter, BPJS, atau informasi klinik lainnya, silakan langsung chat admin kami di nomor utama:\n\n"
-              . $waLink . "\n\n"
-              . "Tap link di atas untuk langsung membuka chat ya kak. Terima kasih.";
+              . "Nomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum, jadwal dokter, BPJS, atau informasi klinik lainnya, silakan langsung chat admin klinik utama kami ya kak. Terima kasih.";
 
         Log::info('SUNAT_BOT_AGENT_REDIRECT', ['phone' => $phone, 'reason' => $reason, 'target' => 'klinik-utama']);
 
