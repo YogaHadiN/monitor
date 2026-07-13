@@ -240,6 +240,22 @@ class SunatBotAgent
                 // Kalau harga collection sedang aktif (belum kirim quote) dan
                 // LLM mau save_booking_data, tolak. Kebalikannya juga —
                 // booking aktif tapi LLM call save_harga_data → tolak.
+                // Block redirect_ke_klinik_utama saat booking flow aktif.
+                // Setelah bot mulai booking (booking_started=true), user reply
+                // "19 juli" atau "atas nama X" tidak ada kata sunat → LLM
+                // salah pick redirect. Force lanjut booking.
+                if ($toolName === 'redirect_ke_klinik_utama'
+                    && (bool) $session->getData('booking_started')
+                    && !$session->is_complete) {
+                    Log::info('SUNAT_BOT_AGENT_BLOCK_REDIRECT_DURING_BOOKING', ['phone' => $session->no_telp]);
+                    $toolResult = [
+                        'ok'    => false,
+                        'error' => 'Booking flow sedang aktif. DILARANG redirect — customer sedang booking sunat, reply-nya (tanggal/nama/dll) bagian flow. Panggil save_booking_data untuk simpan field.',
+                    ];
+                    $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
+                    continue;
+                }
+
                 if ($toolName === 'save_harga_data' && (bool) $session->getData('booking_started') && !$session->is_complete) {
                     Log::info('SUNAT_BOT_AGENT_BLOCK_HARGA_DURING_BOOKING', ['phone' => $session->no_telp]);
                     $toolResult = [
