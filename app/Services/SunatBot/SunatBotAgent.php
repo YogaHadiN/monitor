@@ -290,15 +290,28 @@ class SunatBotAgent
                 }
 
                 if ($toolName === 'save_booking_data') {
-                    // Skip sunat-keyword guard kalau booking collection sudah
-                    // pernah dimulai (flag booking_started set saat pertama kali
-                    // save berhasil). Ini juga survive slot-invalid reset yg
-                    // null-in booking_tanggal/jam supaya customer bisa retry.
+                    // Skip sunat-keyword guard kalau:
+                    // - booking sudah pernah dimulai (booking_started flag), ATAU
+                    // - ada field booking sudah terisi, ATAU
+                    // - conversation history sudah pernah menyebut sunat/khitan
+                    //   (bot follow-up: user reply "19 juli" tanpa kata sunat,
+                    //   tapi history sebelumnya user bilang "saya mau daftar
+                    //   sunat" → context booking sunat sudah jelas).
                     $bookingAktif = (bool) $session->getData('booking_started')
                                  || $session->getData('booking_tanggal') !== null
                                  || $session->getData('booking_jam') !== null
                                  || trim((string) $session->getData('booking_nama_anak')) !== '';
-                    $rejectReason = $bookingAktif ? null : $this->validateBookingFlowMessage($this->currentUserMessage);
+                    $historyHasSunatKw = false;
+                    if (!$bookingAktif) {
+                        $historyText = mb_strtolower(implode("\n", array_map(
+                            fn ($m) => (string) ($m['content'] ?? ''),
+                            $history ?? []
+                        )));
+                        foreach (self::SUNAT_KEYWORDS as $kw) {
+                            if (str_contains($historyText, $kw)) { $historyHasSunatKw = true; break; }
+                        }
+                    }
+                    $rejectReason = ($bookingAktif || $historyHasSunatKw) ? null : $this->validateBookingFlowMessage($this->currentUserMessage);
                     if ($rejectReason !== null) {
                         Log::info('SUNAT_BOT_AGENT_REJECT_BOOKING_FLOW', [
                             'phone'   => $session->no_telp,
