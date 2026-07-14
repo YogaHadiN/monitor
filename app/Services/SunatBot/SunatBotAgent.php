@@ -549,8 +549,8 @@ CONTOH GOOD FLOW:
 📋 FIELD WAJIB TERKUMPUL sebelum finalize (6 field):
 1. `tanggal`           — natural date: "5 Juli 2026" / "besok" / "2026-07-05"
 2. `jam`               — HH:MM. Slot valid: 07-11, 13-17
-3. `nama_anak`         — nama lengkap (mis. "Faiz Nabil")
-4. `nama_panggilan`    — nama panggilan singkat (mis. "Faiz"). Kalau sama dgn nama, isi "-"
+3. `nama_anak`         — nama LENGKAP anak (mis. "Aiman Ghani Adyaksa", "Faiz Nabil Rahman"). Bukan panggilan.
+4. `nama_panggilan`    — nama PANGGILAN singkat / nickname (mis. "Aiman", "Faiz"). Biasanya kata pertama dari nama lengkap.
 5. `usia_anak`         — "X tahun" / "X bulan"
 6. `berat_badan_anak`  — kg (angka)
 
@@ -567,8 +567,15 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
 3. **Tanya field belum NATURAL, 1-2 field per bubble:**
    - Belum ada tanggal → "Boleh tau tanggal berapa mau sunat kak?"
    - Belum ada jam → "Untuk jamnya, mau jam berapa kak?"
-   - Belum ada nama_anak → "Atas nama anak siapa booking-nya kak?"
-   - Belum ada nama_panggilan → "Nama panggilan anaknya apa kak?"
+   - Belum ada nama_anak → "Boleh tau nama LENGKAP anaknya kak?"
+   - Belum ada nama_panggilan → "Kalau nama panggilan sehari-hari, biasanya dipanggil apa kak?"
+
+   ⚠️ **INTERPRETASI NAMA LENGKAP vs PANGGILAN:**
+   - Kalau customer kasih 1 kata (mis. "Aiman"), itu kemungkinan PANGGILAN. Tanya nama lengkapnya.
+   - Kalau customer kasih ≥2 kata (mis. "Aiman Ghani Adyaksa"), itu nama LENGKAP. Kata pertama biasanya = nama panggilan (Aiman).
+   - Kalau customer eksplisit sebut "nama lengkapnya X" → save `nama_anak=X`. Kalau customer eksplisit sebut "panggilannya Y" → save `nama_panggilan=Y`.
+   - Kalau customer kasih nama lengkap + panggilan dalam 1 turn (mis. "Aiman, panggilan Aiman" / "nama lengkapnya Aiman Ghani Adyaksa, panggilannya Aiman"), save keduanya sekaligus.
+   - JANGAN pukul rata pakai jawaban 1-kata sebagai `nama_anak`. Kalau ragu, tanya lagi konfirmasi.
    - Belum ada usia+BB → "Boleh infokan usia dan berat badan anaknya?"
 
 4. **Slot conflict handling** (baca response save_booking_data). Tool auto-emit bubble kalender terpisah — kamu cukup kirim reply text ajakan pilih ulang:
@@ -744,8 +751,8 @@ PROMPT;
                         'properties' => [
                             'tanggal'           => ['type' => 'string', 'description' => 'natural date: YYYY-MM-DD / "5 Juli 2026" / "besok" / "lusa" / "hari ini"'],
                             'jam'               => ['type' => 'string', 'description' => 'HH:MM atau angka (7, 10, dst). Slot valid: 07-11, 13-17'],
-                            'nama_anak'         => ['type' => 'string', 'description' => 'nama lengkap anak (mis. "Faiz Nabil")'],
-                            'nama_panggilan'    => ['type' => 'string', 'description' => 'nama panggilan singkat (mis. "Nio"). Kalau customer bilang sama dgn nama, isi dgn "-".'],
+                            'nama_anak'         => ['type' => 'string', 'description' => 'nama LENGKAP anak (mis. "Aiman Ghani Adyaksa" / "Faiz Nabil Rahman"). Biasanya 2-4 kata. Kalau customer cuma kasih 1 kata, itu PANGGILAN, JANGAN save di sini — tanya nama lengkap dulu.'],
+                            'nama_panggilan'    => ['type' => 'string', 'description' => 'nama PANGGILAN / nickname (mis. "Aiman", "Nio"). Biasanya 1 kata, sering = kata pertama dari nama lengkap.'],
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan (mis. "7 tahun" / "8 bulan")'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg (mis. 22)'],
                         ],
