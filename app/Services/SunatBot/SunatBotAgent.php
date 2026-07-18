@@ -1374,7 +1374,9 @@ PROMPT;
         //    sempat lihat semua konten pre-quote sebelum harga muncul.
         //    Hanya inject delay kalau ada konten pre-quote yg terkirim.
         if ($bubbles !== []) {
-            $bubbles[] = ['text' => '', 'media' => null, 'delay_seconds' => 40];
+            // Delay pre-quote random 35-50 detik supaya customer sempat baca
+            // testimoni + tidak feel robotic dgn 40 detik fixed.
+            $bubbles[] = ['text' => '', 'media' => null, 'delay_seconds' => random_int(35, 50)];
         }
 
         // 5. Quote harga paket (respect promo slug swap kalau ada).
