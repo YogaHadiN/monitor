@@ -269,8 +269,10 @@ class WablasController extends Controller
         if (!is_null($this->message) && !is_null($this->no_telp)) {
             $earlyAction = $this->detectSunatFollowupButton($this->message);
             if ($earlyAction === 'opt_out') {
-                // Simpan pesan inbound dulu di chat history (opt-out
-                // adalah bagian percakapan sunat — chat_sunat=1).
+                // Simpan pesan inbound dulu di chat history. chat_sunat=0
+                // karena inbound ini datang lewat Meta/Watzap resmi —
+                // flag chat_sunat dikhususkan traffic gowa sunat device
+                // (SunatBoy JID). Meta traffic masuk chat umum.
                 Message::create([
                     'no_telp'       => $this->no_telp,
                     'message'       => $this->message,
@@ -283,7 +285,7 @@ class WablasController extends Controller
                     'tenant_id'     => 1,
                     'touched'       => 0,
                     'chat_admin'    => 0,
-                    'chat_sunat'    => 1,
+                    'chat_sunat'    => 0,
                 ]);
                 $this->handleSunatFollowupOptOut((string) $this->no_telp);
                 return;
@@ -6853,23 +6855,17 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     /**
      * Simpan reply otomatis (bot / sistem) ke tabel messages supaya
-     * muncul di thread atika untuk audit/traceability. Flag chat_sunat
-     * di-set bila nomor sedang dalam konteks sunat (BotSession aktif,
-     * manual tag, atau sunat_chat_sessions follow-up aktif). chat_admin
-     * di-biarkan 0 — reply ini bukan dari staf manual; sudah_dibalas=1
-     * supaya tidak men-trigger badge "perlu dibalas".
+     * muncul di thread atika untuk audit/traceability. chat_sunat
+     * SELALU 0 — auto-reply ini keluar via Meta/Watzap (bukan gowa
+     * sunat), dan flag chat_sunat dikhususkan traffic gowa sunat.
+     * chat_admin di-biarkan 0 — reply ini bukan dari staf manual;
+     * sudah_dibalas=1 supaya tidak men-trigger badge "perlu dibalas".
      */
     private function logOutboundAutoReply(string $text): void
     {
         if (empty($this->no_telp) || trim($text) === '') return;
         try {
             $phone = (string) $this->no_telp;
-            $isSunat = \App\Models\BotSession::where('no_telp', $phone)->exists()
-                || \DB::table('chat_sunat_manual_flags')->where('no_telp', $phone)->exists()
-                || \App\Models\SunatChatSession::where('phone', $phone)
-                       ->where('followup_status', 'active')
-                       ->whereIn('status', ['active', 'booked'])
-                       ->exists();
 
             // chat_admin diset 1 kalau customer sedang dalam konteks
             // chat dengan admin (mis. pilih menu 5). Tanpa flag ini,
@@ -6887,7 +6883,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 'tenant_id'     => 1,
                 'touched'       => 1,
                 'chat_admin'    => $isAdmin ? 1 : 0,
-                'chat_sunat'    => $isSunat ? 1 : 0,
+                'chat_sunat'    => 0,
             ]);
         } catch (\Throwable $e) {
             Log::warning('AUTO_REPLY_LOG_OUTBOUND_FAIL', [
