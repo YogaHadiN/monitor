@@ -476,6 +476,28 @@ Kapan sebutkan nomor/link ini:
    - Riwayat penyakit (jantung, kelainan pembekuan darah, dll)
    → Engine otomatis handoff kalau customer sebut kondisi ini, jangan kamu reply panjang sendiri.
 
+═══ LEAD CAPTURE (proaktif — di awal conversation sunat) ═══
+
+Setelah kamu jawab pertanyaan pertama customer soal sunat (lokasi, jam, metode, jadwal, dll — APA SAJA KECUALI harga), APPEND satu bubble singkat & natural nanya nama + tempat tinggal (kota/kecamatan) untuk data lead. Kalau customer kasih info → panggil `save_lead_sunat(nama, alamat)`.
+
+Aturan:
+- **Kalau pertanyaan pertama customer langsung soal HARGA/PL/biaya → SKIP lead capture. Langsung masuk HARGA flow (save_harga_data)** — nama_orang_tua + domisili akan terkumpul sebagai bagian 7 field wajib harga.
+- Tanya HANYA 1x. Kalau customer skip (jawab hal lain, ganti topik) → JANGAN retry, lanjut normal flow. Data partial (nama saja / alamat saja) juga boleh disave.
+- Kalau session data `nama_orang_tua` + `domisili` sudah ada (via lead capture sebelumnya atau via HARGA flow) → JANGAN tanya lagi.
+- Kalau customer greeting kosong / unclear ("halo", "p", "sore") tanpa nanya apa-apa → jawab "Silakan kak 🙏 Ada yang bisa dibantu?" DULU, JANGAN tanya nama/alamat sebelum ada pertanyaan sunat konkret.
+
+CONTOH:
+  Customer: "Sunat buka jam berapa kak?"
+  Bot: "Buka jam 08.00-20.00 kak, setiap hari 🙏"
+       "Btw sebelumnya boleh minta nama kakak sama domisilinya buat data admin? 🙏"
+  Customer: "Bunda Rina, di Depok"
+  → save_lead_sunat(nama="Rina", alamat="Depok")
+  Bot: "Baik Bunda Rina. Ada yang mau ditanyakan lagi?"
+
+CONTOH SKIP (customer langsung harga):
+  Customer: "Berapa biaya sunat kak?"
+  Bot: [langsung masuk HARGA flow — save_harga_data collects nama_orang_tua + domisili sebagai 2 dari 7 field]
+
 ═══ ⚠️ HARGA vs BOOKING — 2 FLOW BERBEDA, JANGAN CAMPUR ⚠️ ═══
 
 Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
@@ -620,6 +642,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
     Engine populate semua → langsung INSERT jadwal_sunats, customer dapat konfirmasi sukses.
   - JANGAN call dgn args kosong kalau customer sudah kasih info — itu bug, customer harus ulang ngetik.
 - `redirect_ke_klinik_utama` → customer EKSPLISIT sebut layanan non-sunat: USG, kandungan, hamil, lab, cek darah, dokter umum, gigi, kulit, vaksin, imunisasi, mobile jkn, jkn (tanpa "sunat"), kontrol obat. Termasuk "daftar USG" / "daftar lab" / "daftar dokter umum" — semua redirect, BUKAN booking_flow.
+- `save_lead_sunat` → simpan nama + alamat customer di awal conversation sunat (bukan harga/booking). Skip kalau pertanyaan pertama sudah HARGA (biar HARGA flow yg collect).
 
 ═══ ⚠️ WAJIB call get_intent_response — HANYA 1x per slug per session ⚠️ ═══
 Semua topic di bawah punya foto/video edukasi. Kalau jawab dari FAKTA langsung tanpa call tool, FOTO/VIDEO TIDAK TERKIRIM ke customer. INI BUG. WAJIB call `get_intent_response(slug)`.
@@ -649,7 +672,7 @@ Pakai `lookup_knowledge` cuma kalau pertanyaan SPESIFIK yang TIDAK tercakup di F
 
 ═══ ATURAN OUTPUT SETELAH TOOL ═══
 - Setelah `get_intent_response` / `send_harga_quote` / `finalize_booking` / `redirect_ke_klinik_utama` → output string KOSONG. Tool sudah render bubble.
-- Setelah `save_harga_data` / `save_booking_data` → BOLEH ada text reply (untuk tanya field berikutnya secara natural).
+- Setelah `save_harga_data` / `save_booking_data` / `save_lead_sunat` → BOLEH ada text reply (untuk tanya field berikutnya secara natural, atau ack singkat setelah lead capture).
 
 ═══ STYLE ═══
 - Reply MAKSIMAL 2 KALIMAT PENDEK = 1-2 bubble (splitter pecah per kalimat). 1 bubble lebih bagus. JANGAN 4-5 bubble.
@@ -789,6 +812,21 @@ PROMPT;
                     ],
                 ],
             ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name'        => 'save_lead_sunat',
+                    'description' => 'Simpan lead sunat (nama + alamat customer) ke leads_sunats table. Dipanggil di AWAL conversation sunat setelah customer kasih info nama & domisili — sekali per phone. Tool juga set nama_orang_tua + domisili di session data, jadi HARGA flow (save_harga_data) nanti tidak perlu re-tanya field itu. Return {ok, saved:[fields], already_captured:bool}.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => [
+                            'nama'   => ['type' => 'string', 'description' => 'nama panggilan customer (ortu/lawan bicara), mis. "Rina" / "Yeni"'],
+                            'alamat' => ['type' => 'string', 'description' => 'kota / kecamatan domisili, mis. "Depok" / "Tangerang Selatan"'],
+                        ],
+                        'required' => ['nama', 'alamat'],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -833,6 +871,9 @@ PROMPT;
             case 'finalize_booking':
                 [$summary, $bubbles] = $this->toolFinalizeBooking($session);
                 return [$summary, ['replies' => $bubbles]];
+
+            case 'save_lead_sunat':
+                return [$this->toolSaveLeadSunat($args, $session), []];
 
             default:
                 return [['ok' => false, 'error' => "unknown tool: $name"], []];
@@ -1311,6 +1352,55 @@ PROMPT;
             $sideEffect['escalate'] = true;
         }
         return [$result, $sideEffect];
+    }
+
+    /**
+     * Simpan lead sunat ke leads_sunats table (atika shared DB) + set
+     * nama_orang_tua / domisili di session data supaya HARGA flow bisa
+     * reuse. Upsert by no_telp — aman kalau dipanggil ulang.
+     */
+    private function toolSaveLeadSunat(array $args, BotSession $session): array
+    {
+        $nama   = trim((string) ($args['nama'] ?? ''));
+        $alamat = trim((string) ($args['alamat'] ?? ''));
+        if ($nama === '' || $alamat === '') {
+            return ['ok' => false, 'error' => 'nama & alamat wajib diisi'];
+        }
+
+        $phone = (string) $session->no_telp;
+        $existing = \DB::table('leads_sunats')
+            ->where('no_telp', $phone)
+            ->where('tenant_id', 1)
+            ->first();
+
+        \DB::table('leads_sunats')->updateOrInsert(
+            ['no_telp' => $phone, 'tenant_id' => 1],
+            [
+                'nama_lawan_bicara' => $nama,
+                'alamat'            => $alamat,
+                'updated_at'        => now(),
+                'created_at'        => $existing->created_at ?? now(),
+            ]
+        );
+
+        // Share dgn HARGA flow: kalau nanti customer tanya biaya,
+        // save_harga_data tidak perlu re-tanya nama_orang_tua + domisili.
+        $session->setData('nama_orang_tua', $nama);
+        $session->setData('domisili', $alamat);
+        $session->save();
+
+        Log::info('SUNAT_BOT_AGENT_LEAD_SAVE', [
+            'phone'            => $phone,
+            'nama'             => $nama,
+            'alamat'           => $alamat,
+            'already_captured' => $existing !== null,
+        ]);
+
+        return [
+            'ok'               => true,
+            'saved'            => ['nama', 'alamat'],
+            'already_captured' => $existing !== null,
+        ];
     }
 
     /**
