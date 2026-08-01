@@ -504,10 +504,12 @@ Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
 
 **HARGA** (tanya biaya/PL) — pakai `save_harga_data` + `send_harga_quote`. Field wajib: nama_orang_tua, domisili, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada tanggal/jam.
 
-**BOOKING** (daftar/pendaftaran pasien) — pakai `save_booking_data` + `finalize_booking`. Field wajib: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak. Tidak ada domisili/indikasi/postur/riwayat.
+**BOOKING** (daftar/pendaftaran pasien) — pakai `save_booking_data` + `finalize_booking`. Field wajib: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada nama_orang_tua/domisili.
+
+3 field safety (indikasi/postur/riwayat) SHARED dgn HARGA flow — kalau customer sudah jawab di HARGA sebelumnya, tidak perlu re-tanya di BOOKING.
 
 🚫 **DILARANG mixing:**
-- Kalau customer bilang "mau daftar/booking/nyunatin/jadwalin" → BOOKING flow. **JANGAN** panggil save_harga_data. **JANGAN** tanya nama_orang_tua/domisili/indikasi/postur/riwayat — bukan bagian booking.
+- Kalau customer bilang "mau daftar/booking/nyunatin/jadwalin" → BOOKING flow. **JANGAN** panggil save_harga_data. **JANGAN** tanya nama_orang_tua/domisili — bukan bagian booking.
 - Kalau customer bilang "berapa harganya / PL / biaya" → HARGA flow. **JANGAN** panggil save_booking_data. **JANGAN** tanya tanggal/jam.
 - Kalau customer beralih flow di tengah (mis. sudah kasih quote harga, lalu bilang "ok mau daftar"), boleh transisi ke booking — tapi mulai save_booking_data secara fresh, jangan re-tanya field yang sama.
 
@@ -547,7 +549,7 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    - Belum ada usia_anak + berat_badan_anak → "Boleh infokan usia dan berat badan anaknya kak?"
    - Belum ada domisili → "Domisilinya di mana kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
-   - Belum ada postur_tubuh → "Postur anaknya bagaimana kak, proporsional atau ada kelebihan berat?"
+   - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
    - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
 
 4. **⚠️ INTERRUPT — customer tanya HAL LAIN di tengah collection:**
@@ -583,13 +585,18 @@ CONTOH GOOD FLOW:
 
 🚫 DILARANG mengulang info harga/testimoni/fasilitas/paket kalau customer EKSPLISIT bilang mau booking. Langsung mulai collection.
 
-📋 FIELD WAJIB TERKUMPUL sebelum finalize (6 field):
+📋 FIELD WAJIB TERKUMPUL sebelum finalize (9 field — 6 base + 3 safety):
 1. `tanggal`           — natural date: "5 Juli 2026" / "besok" / "2026-07-05"
 2. `jam`               — HH:MM. Slot valid: 07-11, 13-17
 3. `nama_anak`         — nama LENGKAP anak (mis. "Aiman Ghani Adyaksa", "Faiz Nabil Rahman"). Bukan panggilan.
 4. `nama_panggilan`    — nama PANGGILAN singkat / nickname (mis. "Aiman", "Faiz"). Biasanya kata pertama dari nama lengkap.
 5. `usia_anak`         — "X tahun" / "X bulan"
 6. `berat_badan_anak`  — kg (angka)
+7. `indikasi_khitan`   — keluhan medis / alasan khusus atau "tidak ada"
+8. `postur_tubuh`      — "gemuk" / "tidak gemuk" / "normal"
+9. `riwayat_kesehatan` — kondisi medis (jantung, autisme, dll) atau "tidak ada"
+
+⚠️ Field 7-9 kalau customer sudah jawab di HARGA flow sebelumnya (session data sudah ada) → JANGAN tanya ulang, cukup lanjut. save_booking_data + finalize_booking share session data dgn HARGA flow.
 
 Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "khitan-in", "jadwalin", "ambil jadwal", "set jadwal", "atur jadwal".
 
@@ -606,6 +613,9 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
    - Belum ada jam → "Untuk jamnya, mau jam berapa kak?"
    - Belum ada nama_anak → "Boleh tau nama LENGKAP anaknya kak?"
    - Belum ada nama_panggilan → "Kalau nama panggilan sehari-hari, biasanya dipanggil apa kak?"
+   - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
+   - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
+   - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau kelainan pembekuan darah kak?"
 
    ⚠️ **INTERPRETASI NAMA LENGKAP vs PANGGILAN:**
    - Kalau customer kasih 1 kata (mis. "Aiman"), itu kemungkinan PANGGILAN. Tanya nama lengkapnya.
@@ -626,9 +636,11 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
    → **WAJIB** di reply text yang SAMA turn (setelah tool call selesai), tambah bubble penutup "Balik ke tadi kak, [pertanyaan field belum]". CONTOH: setelah get_intent_response("pertanyaan_metode"), reply text: "Balik ke tadi kak, nama panggilan anaknya apa?"
    → Kalau kamu SKIP resume text ini, customer terputus tanpa arahan lanjutan — BUG.
 
-6. **Semua 6 field terkumpul + slot OK → `finalize_booking()`** (tool emit booking_sukses). Setelah call, output text KOSONG.
+6. **Semua 9 field terkumpul + slot OK + escalate=false → `finalize_booking()`** (tool emit booking_sukses). Setelah call, output text KOSONG.
 
 7. **Konfirmasi sebelum finalize (opsional):** Kalau kamu mau customer confirm dulu, boleh tanya "Konfirmasi tanggal X jam Y atas nama Z ya kak, benar?" Kalau customer bilang YA/OK → call finalize_booking().
+
+8. **⚠️ ESCALATION GATE (safety):** Kalau `save_booking_data` return `escalate=true` (indikasi != "tidak ada" / postur = "gemuk" / riwayat > "tidak ada"), engine ambil alih handoff ke admin. Output text KOSONG setelah tool call. **JANGAN** call finalize_booking. Booking tidak boleh commit untuk kasus yg butuh assessment dokter.
 
 ═══ ROUTING TOOL (untuk action, bukan info) ═══
 
@@ -787,7 +799,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'save_booking_data',
-                    'description' => 'Simpan 1+ field booking yang customer sebut (tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak). WAJIB pesan customer atau history mengandung "sunat"/"khitan"/"sirkumsisi" — DILARANG utk USG, lab, dokter umum, gigi, kulit, vaksin, kandungan, dll. Tool validate slot (blackout / BOOKED / spillover 2 jam). Return {filled[], missing[], slot_status: "ok"|"invalid_date"|"blackout"|"jam_blocked"|"already_booked", slot_error?}. Kalau slot_status != "ok", tanya customer ganti tanggal/jam. Kalau missing[] kosong + slot_status="ok" langsung call finalize_booking().',
+                    'description' => 'Simpan 1+ field booking yang customer sebut: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak + 3 field safety (indikasi_khitan, postur_tubuh, riwayat_kesehatan). WAJIB pesan customer atau history mengandung "sunat"/"khitan"/"sirkumsisi" — DILARANG utk USG, lab, dokter umum, gigi, kulit, vaksin, kandungan, dll. Tool validate slot (blackout / BOOKED / spillover 2 jam) + escalation gate (kalau ada keluhan/gemuk/kondisi khusus → return escalate=true, engine ambil alih handoff ke admin, JANGAN call finalize_booking). Return {filled[], missing[], slot_status, slot_error?, escalate?, reason?}. Kalau missing[] kosong + slot_status="ok" + escalate=false → langsung call finalize_booking().',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
@@ -797,6 +809,9 @@ PROMPT;
                             'nama_panggilan'    => ['type' => 'string', 'description' => 'nama PANGGILAN / nickname (mis. "Aiman", "Nio"). Biasanya 1 kata, sering = kata pertama dari nama lengkap.'],
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan (mis. "7 tahun" / "8 bulan")'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg (mis. 22)'],
+                            'indikasi_khitan'   => ['type' => 'string', 'description' => 'keluhan medis / alasan khusus atau "tidak ada"'],
+                            'postur_tubuh'      => ['type' => 'string', 'description' => '"gemuk" / "tidak gemuk" / "normal"'],
+                            'riwayat_kesehatan' => ['type' => 'string', 'description' => 'kondisi medis (jantung, autisme, kelainan pembekuan darah, dll) atau "tidak ada"'],
                         ],
                     ],
                 ],
@@ -995,6 +1010,13 @@ PROMPT;
         'booking_nama_panggilan', 'booking_usia_anak', 'booking_berat_badan_anak',
     ];
 
+    // Safety fields — shared dgn HARGA flow (unprefixed). Wajib dijawab
+    // sebelum finalize_booking. Escalation gate: kalau ada keluhan /
+    // gemuk / kondisi khusus → engine handoff ke admin, JANGAN commit.
+    private const BOOKING_SAFETY_FIELDS = [
+        'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan',
+    ];
+
     /**
      * Save fields booking ke collected_data. Validate slot (blackout,
      * konflik BOOKED, spillover 2 jam). Return status + missing[] utk LLM
@@ -1072,6 +1094,15 @@ PROMPT;
             $saved[] = 'booking_berat_badan_anak';
         }
 
+        // Safety fields (shared dgn HARGA flow — unprefixed).
+        foreach (self::BOOKING_SAFETY_FIELDS as $sf) {
+            $v = trim((string) ($args[$sf] ?? ''));
+            if ($v !== '') {
+                $session->setData($sf, $v);
+                $saved[] = $sf;
+            }
+        }
+
         // Mark flag booking_started supaya guard sunat-keyword di turn
         // berikutnya skip cek — walau field lain di-reset (slot invalid),
         // customer tetap dianggap dalam booking flow.
@@ -1081,7 +1112,7 @@ PROMPT;
 
         $session->save();
 
-        // Compute filled/missing
+        // Compute filled/missing (base booking fields + safety fields)
         $filled  = [];
         $missing = [];
         foreach (self::BOOKING_REQUIRED_FIELDS as $f) {
@@ -1091,6 +1122,39 @@ PROMPT;
             } else {
                 $filled[] = str_replace('booking_', '', $f);
             }
+        }
+        foreach (self::BOOKING_SAFETY_FIELDS as $sf) {
+            $v = $session->getData($sf);
+            if ($v === null || $v === '') {
+                $missing[] = $sf;
+            } else {
+                $filled[] = $sf;
+            }
+        }
+
+        // Escalation gate — mirror HARGA flow. Kalau ada indikator risiko,
+        // engine handoff ke admin, LLM output text KOSONG, JANGAN call
+        // finalize_booking.
+        $escalate = false;
+        $reason   = null;
+        $indikasi = mb_strtolower(trim((string) $session->getData('indikasi_khitan')));
+        if ($indikasi !== '' && !$this->isNoValue($indikasi)) {
+            $escalate = true;
+            $reason   = "indikasi_khitan: {$indikasi}";
+        }
+        $postur = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
+        if (!$escalate) {
+            $hasGemuk    = str_contains($postur, 'gemuk') && !str_contains($postur, 'tidak gemuk');
+            $hasObesitas = str_contains($postur, 'obesitas');
+            if ($hasGemuk || $hasObesitas) {
+                $escalate = true;
+                $reason   = "postur_tubuh: {$postur}";
+            }
+        }
+        $riwayat = mb_strtolower(trim((string) $session->getData('riwayat_kesehatan')));
+        if (!$escalate && $riwayat !== '' && !$this->isNoValue($riwayat)) {
+            $escalate = true;
+            $reason   = "riwayat_kesehatan: {$riwayat}";
         }
 
         // Validate slot kalau tanggal + jam sudah terisi
@@ -1140,6 +1204,7 @@ PROMPT;
             'filled'      => $filled,
             'missing'     => $missing,
             'slot_status' => $slotStatus,
+            'escalate'    => $escalate,
         ]);
 
         $result = [
@@ -1147,14 +1212,19 @@ PROMPT;
             'filled'      => $filled,
             'missing'     => $missing,
             'slot_status' => $slotStatus,
+            'escalate'    => $escalate,
         ];
         if ($slotError !== null) $result['slot_error'] = $slotError;
         if ($calendarUrl !== null) $result['calendar_url'] = $calendarUrl;
+        if ($reason !== null)     $result['reason'] = $reason;
 
         // Side-effect: kalau slot invalid, inject calendar bubble
         // langsung. LLM sering strip query param ?date=... dari URL,
         // jadi kirim bubble deterministic dari tool executor.
         $sideEffect = [];
+        if ($escalate) {
+            $sideEffect['escalate'] = true;
+        }
         if ($calendarUrl !== null) {
             $sideEffect['replies'] = [[
                 'text'  => "Lihat slot yang tersedia di kalender:\n" . $calendarUrl,
@@ -1178,9 +1248,30 @@ PROMPT;
             $v = $session->getData($f);
             if ($v === null || $v === '') $missing[] = str_replace('booking_', '', $f);
         }
+        foreach (self::BOOKING_SAFETY_FIELDS as $sf) {
+            $v = $session->getData($sf);
+            if ($v === null || $v === '') $missing[] = $sf;
+        }
         if ($missing !== []) {
             return [
                 ['ok' => false, 'error' => 'field belum lengkap', 'missing' => $missing],
+                [],
+            ];
+        }
+
+        // Safety gate: JANGAN commit booking kalau ada indikator risiko.
+        // Sudah di-flag escalate=true di save_booking_data, tapi guard
+        // di sini juga sbg failsafe (misal LLM force-call finalize).
+        $indikasi = mb_strtolower(trim((string) $session->getData('indikasi_khitan')));
+        $postur   = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
+        $riwayat  = mb_strtolower(trim((string) $session->getData('riwayat_kesehatan')));
+        $unsafe   = ($indikasi !== '' && !$this->isNoValue($indikasi))
+                 || (str_contains($postur, 'gemuk') && !str_contains($postur, 'tidak gemuk'))
+                 || str_contains($postur, 'obesitas')
+                 || ($riwayat !== '' && !$this->isNoValue($riwayat));
+        if ($unsafe) {
+            return [
+                ['ok' => false, 'error' => 'safety_gate: ada indikator risiko, butuh assessment admin — engine akan handoff', 'escalate' => true],
                 [],
             ];
         }
