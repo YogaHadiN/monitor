@@ -1403,9 +1403,13 @@ PROMPT;
             $reason   = "indikasi_khitan: {$indikasi}";
         }
         $postur = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
-        if (!$escalate && str_contains($postur, 'gemuk') || str_contains($postur, 'obesitas')) {
-            $escalate = true;
-            $reason   = "postur_tubuh: {$postur}";
+        if (!$escalate) {
+            $hasGemuk    = str_contains($postur, 'gemuk') && !str_contains($postur, 'tidak gemuk');
+            $hasObesitas = str_contains($postur, 'obesitas');
+            if ($hasGemuk || $hasObesitas) {
+                $escalate = true;
+                $reason   = "postur_tubuh: {$postur}";
+            }
         }
         $riwayat = mb_strtolower(trim((string) $session->getData('riwayat_kesehatan')));
         if (!$escalate && $riwayat !== '' && !$this->isNoValue($riwayat)) {
