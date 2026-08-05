@@ -563,8 +563,14 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
 5. **Semua 7 field terkumpul → `send_harga_quote()`:**
    Tool emit bundle final (testimoni + delay + quote + closing). Setelah call, output text kosong.
 
-6. **Escalation gate:**
-   Kalau `save_harga_data` return `escalate=true` (indikasi != "tidak ada" / postur = "gemuk" / riwayat > "tidak ada"), engine ambil alih untuk handoff ke admin. Kamu output kosong setelah call, jangan lanjut.
+6. **Escalation gate — KAMU yang klasifikasi:**
+   Setiap kali save salah satu safety-field (indikasi_khitan / postur_tubuh / riwayat_kesehatan), WAJIB pass parameter `perlu_review_dokter` (boolean):
+   - `true` kalau ADA faktor risiko yang butuh assessment dokter:
+     * postur → "gemuk" / "obesitas" / "gendut" / "besar"
+     * indikasi → keluhan medis nyata (fimosis, parafimosis, kelainan penis, infeksi, dll) — BUKAN "cuma mau khitan" / "sunat aja"
+     * riwayat → penyakit signifikan (jantung, kelainan pembekuan darah, autisme berat, asma berat, alergi anestesi, dll)
+   - `false` kalau semua safety-field benign (postur normal/tidak gemuk, indikasi "tidak ada"/"cuma mau khitan", riwayat "tidak ada"/"sehat")
+   Kalau `perlu_review_dokter=true`, engine ambil alih handoff. Output text kosong, jangan call `send_harga_quote`.
 
 7. **Harga sudah pernah dikirim** — kalau history sudah ada bubble berisi angka "Rp ..." atau template quote_harga_paket, **DILARANG** call `send_harga_quote` lagi. Bantu jawab pertanyaan lanjutan saja.
 
@@ -643,7 +649,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
 
 7. **Konfirmasi sebelum finalize (opsional):** Kalau kamu mau customer confirm dulu, boleh tanya "Konfirmasi tanggal X jam Y atas nama Z ya kak, benar?" Kalau customer bilang YA/OK → call finalize_booking().
 
-8. **⚠️ ESCALATION GATE (safety):** Kalau `save_booking_data` return `escalate=true` (indikasi != "tidak ada" / postur = "gemuk" / riwayat > "tidak ada"), engine ambil alih handoff ke admin. Output text KOSONG setelah tool call. **JANGAN** call finalize_booking. Booking tidak boleh commit untuk kasus yg butuh assessment dokter.
+8. **⚠️ ESCALATION GATE (safety) — KAMU klasifikasi:** Sama seperti HARGA flow, saat save salah satu safety-field di `save_booking_data`, WAJIB pass `perlu_review_dokter` (bool) berdasarkan judgment kamu terhadap jawaban customer. Kalau `escalate=true` di return, engine handoff, **JANGAN** call finalize_booking.
 
 ═══ ROUTING TOOL (untuk action, bukan info) ═══
 
@@ -771,7 +777,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'save_harga_data',
-                    'description' => 'Simpan 1+ field harga yang customer sebut di turn ini (nama_orang_tua, domisili, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan, sudah_tahu_metode). Tool return {ok, filled[], missing[], escalate?, reason?}. Baca missing[] untuk tanya field berikutnya natural di reply text. Kalau escalate=true, output text KOSONG (engine ambil alih handoff ke admin). Kalau missing[] kosong, langsung call send_harga_quote().',
+                    'description' => 'Simpan 1+ field harga yang customer sebut di turn ini. Tool return {ok, filled[], missing[], escalate?, reason?}. Kalau escalate=true, output text KOSONG (engine handoff ke admin). Kalau missing[] kosong, langsung call send_harga_quote().',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
@@ -779,9 +785,10 @@ PROMPT;
                             'domisili'          => ['type' => 'string', 'description' => 'kota/kecamatan, mis. "Tangerang"'],
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan"'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg, mis. 22 atau 25.5'],
-                            'indikasi_khitan'   => ['type' => 'string', 'description' => 'keluhan medis atau "tidak ada"'],
-                            'postur_tubuh'      => ['type' => 'string', 'description' => '"gemuk" / "tidak gemuk" / "normal"'],
-                            'riwayat_kesehatan' => ['type' => 'string', 'description' => 'kondisi medis (jantung, autisme dll) atau "tidak ada"'],
+                            'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas isi jawaban customer soal keluhan/alasan medis. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
+                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU (agent) yang klasifikasi berdasarkan jawaban customer. "tidak gemuk" / "biasa" / "kurus" → "tidak gemuk". "proporsional" / "sedang" → "normal". "gemuk" / "obesitas" / "gendut" / "besar" → "gemuk".'],
+                            'riwayat_kesehatan' => ['type' => 'string', 'description' => 'ringkas isi jawaban. Kalau customer bilang "tidak ada"/"sehat"/"gak ada"/"nihil", save "tidak ada".'],
+                            'perlu_review_dokter' => ['type' => 'boolean', 'description' => 'HASIL KLASIFIKASI KAMU: true jika ada faktor risiko yg butuh assessment dokter (postur gemuk/obesitas, indikasi keluhan medis nyata BUKAN cuma "mau khitan", atau riwayat penyakit signifikan seperti jantung/autisme/kelainan pembekuan darah/asma berat). false jika semua safety-field benign (tidak gemuk, tidak ada keluhan, tidak ada riwayat). WAJIB pass ketika kamu save salah satu field: indikasi_khitan / postur_tubuh / riwayat_kesehatan.'],
                             'sudah_tahu_metode' => ['type' => 'string', 'description' => '"ya" atau "tidak"'],
                         ],
                     ],
@@ -802,7 +809,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'save_booking_data',
-                    'description' => 'Simpan 1+ field booking yang customer sebut: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak + 3 field safety (indikasi_khitan, postur_tubuh, riwayat_kesehatan). WAJIB pesan customer atau history mengandung "sunat"/"khitan"/"sirkumsisi" — DILARANG utk USG, lab, dokter umum, gigi, kulit, vaksin, kandungan, dll. Tool validate slot (blackout / BOOKED / spillover 2 jam) + escalation gate (kalau ada keluhan/gemuk/kondisi khusus → return escalate=true, engine ambil alih handoff ke admin, JANGAN call finalize_booking). Return {filled[], missing[], slot_status, slot_error?, escalate?, reason?}. Kalau missing[] kosong + slot_status="ok" + escalate=false → langsung call finalize_booking().',
+                    'description' => 'Simpan 1+ field booking yang customer sebut: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak + 3 field safety (indikasi_khitan, postur_tubuh, riwayat_kesehatan). WAJIB pesan customer atau history mengandung "sunat"/"khitan"/"sirkumsisi" — DILARANG utk USG, lab, dokter umum, gigi, kulit, vaksin, kandungan, dll. Tool validate slot (blackout / BOOKED / spillover 2 jam) + escalation gate (kalau perlu_review_dokter=true → return escalate=true, engine handoff ke admin, JANGAN call finalize_booking). Return {filled[], missing[], slot_status, slot_error?, escalate?, reason?}. Kalau missing[] kosong + slot_status="ok" + escalate=false → langsung call finalize_booking().',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
@@ -812,9 +819,10 @@ PROMPT;
                             'nama_panggilan'    => ['type' => 'string', 'description' => 'nama PANGGILAN / nickname (mis. "Aiman", "Nio"). Biasanya 1 kata, sering = kata pertama dari nama lengkap.'],
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan (mis. "7 tahun" / "8 bulan")'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg (mis. 22)'],
-                            'indikasi_khitan'   => ['type' => 'string', 'description' => 'keluhan medis / alasan khusus atau "tidak ada"'],
-                            'postur_tubuh'      => ['type' => 'string', 'description' => '"gemuk" / "tidak gemuk" / "normal"'],
-                            'riwayat_kesehatan' => ['type' => 'string', 'description' => 'kondisi medis (jantung, autisme, kelainan pembekuan darah, dll) atau "tidak ada"'],
+                            'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas jawaban customer. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
+                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU klasifikasi berdasarkan jawaban customer. "tidak gemuk"/"biasa"/"kurus" → "tidak gemuk". "proporsional"/"sedang" → "normal". "gemuk"/"obesitas"/"gendut"/"besar" → "gemuk".'],
+                            'riwayat_kesehatan' => ['type' => 'string', 'description' => 'ringkas jawaban. Kalau customer bilang "tidak ada"/"sehat"/"gak ada"/"nihil", save "tidak ada".'],
+                            'perlu_review_dokter' => ['type' => 'boolean', 'description' => 'HASIL KLASIFIKASI KAMU: true jika ada faktor risiko yg butuh assessment dokter (postur gemuk/obesitas, indikasi keluhan medis nyata BUKAN cuma "mau khitan", riwayat penyakit signifikan spt jantung/autisme/kelainan pembekuan/asma berat). false jika semua safety-field benign. WAJIB pass ketika save salah satu field: indikasi_khitan / postur_tubuh / riwayat_kesehatan.'],
                         ],
                     ],
                 ],
@@ -1135,29 +1143,18 @@ PROMPT;
             }
         }
 
-        // Escalation gate — mirror HARGA flow. Kalau ada indikator risiko,
-        // engine handoff ke admin, LLM output text KOSONG, JANGAN call
-        // finalize_booking.
+        // Escalation gate — LLM (agent) yang klasifikasi lewat param
+        // `perlu_review_dokter` di tool call. Backend cuma baca bool.
         $escalate = false;
         $reason   = null;
-        $indikasi = mb_strtolower(trim((string) $session->getData('indikasi_khitan')));
-        if ($indikasi !== '' && !$this->isNoValue($indikasi)) {
-            $escalate = true;
-            $reason   = "indikasi_khitan: {$indikasi}";
+
+        if (array_key_exists('perlu_review_dokter', $args)) {
+            $session->setData('perlu_review_dokter', (bool) $args['perlu_review_dokter']);
+            $session->save();
         }
-        $postur = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
-        if (!$escalate) {
-            $hasGemuk    = str_contains($postur, 'gemuk') && !str_contains($postur, 'tidak gemuk');
-            $hasObesitas = str_contains($postur, 'obesitas');
-            if ($hasGemuk || $hasObesitas) {
-                $escalate = true;
-                $reason   = "postur_tubuh: {$postur}";
-            }
-        }
-        $riwayat = mb_strtolower(trim((string) $session->getData('riwayat_kesehatan')));
-        if (!$escalate && $riwayat !== '' && !$this->isNoValue($riwayat)) {
+        if ((bool) $session->getData('perlu_review_dokter')) {
             $escalate = true;
-            $reason   = "riwayat_kesehatan: {$riwayat}";
+            $reason   = 'LLM classified perlu_review_dokter=true (postur/indikasi/riwayat berisiko)';
         }
 
         // Validate slot kalau tanggal + jam sudah terisi
@@ -1262,19 +1259,11 @@ PROMPT;
             ];
         }
 
-        // Safety gate: JANGAN commit booking kalau ada indikator risiko.
-        // Sudah di-flag escalate=true di save_booking_data, tapi guard
-        // di sini juga sbg failsafe (misal LLM force-call finalize).
-        $indikasi = mb_strtolower(trim((string) $session->getData('indikasi_khitan')));
-        $postur   = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
-        $riwayat  = mb_strtolower(trim((string) $session->getData('riwayat_kesehatan')));
-        $unsafe   = ($indikasi !== '' && !$this->isNoValue($indikasi))
-                 || (str_contains($postur, 'gemuk') && !str_contains($postur, 'tidak gemuk'))
-                 || str_contains($postur, 'obesitas')
-                 || ($riwayat !== '' && !$this->isNoValue($riwayat));
-        if ($unsafe) {
+        // Safety gate: JANGAN commit booking kalau LLM sudah flag
+        // perlu_review_dokter=true di save_booking_data sebelumnya.
+        if ((bool) $session->getData('perlu_review_dokter')) {
             return [
-                ['ok' => false, 'error' => 'safety_gate: ada indikator risiko, butuh assessment admin — engine akan handoff', 'escalate' => true],
+                ['ok' => false, 'error' => 'safety_gate: perlu_review_dokter=true — engine akan handoff', 'escalate' => true],
                 [],
             ];
         }
@@ -1350,10 +1339,9 @@ PROMPT;
 
     /**
      * Save fields ke collected_data. Return status + missing[] utk LLM
-     * kasih tanya field berikutnya. Cek escalation gate:
-     *   - indikasi_khitan != "tidak ada" → escalate
-     *   - postur_tubuh = "gemuk" / "obesitas" → escalate
-     *   - riwayat_kesehatan positif (bukan "tidak ada"/"tidak"/kosong) → escalate
+     * kasih tanya field berikutnya. Escalation gate: baca bool
+     * `perlu_review_dokter` dari args (LLM klasifikasi berdasarkan
+     * jawaban customer). Kalau true → engine handoff ke admin.
      *
      * @return array{0:array,1:array} tuple [tool_result, side_effect]
      */
@@ -1392,30 +1380,22 @@ PROMPT;
         }
         $session->save();
 
-        // Escalation gates (medical safety — bot tidak boleh kasih quote
-        // untuk kasus yg butuh assessment dokter).
+        // Escalation gate — LLM (agent) yang klasifikasi lewat param
+        // `perlu_review_dokter` di tool call. Backend cuma baca bool.
+        // Kalau LLM belum pass field ini di turn ini, cek nilai lama
+        // yg tersimpan di session (persisted dari turn sebelumnya).
         $escalate = false;
         $reason   = null;
 
-        $indikasi = mb_strtolower(trim((string) $session->getData('indikasi_khitan')));
-        if ($indikasi !== '' && !$this->isNoValue($indikasi)) {
+        if (array_key_exists('perlu_review_dokter', $args)) {
+            $classifiedNow = (bool) $args['perlu_review_dokter'];
+            $session->setData('perlu_review_dokter', $classifiedNow);
+        }
+        if ((bool) $session->getData('perlu_review_dokter')) {
             $escalate = true;
-            $reason   = "indikasi_khitan: {$indikasi}";
+            $reason   = 'LLM classified perlu_review_dokter=true (postur/indikasi/riwayat berisiko)';
         }
-        $postur = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
-        if (!$escalate) {
-            $hasGemuk    = str_contains($postur, 'gemuk') && !str_contains($postur, 'tidak gemuk');
-            $hasObesitas = str_contains($postur, 'obesitas');
-            if ($hasGemuk || $hasObesitas) {
-                $escalate = true;
-                $reason   = "postur_tubuh: {$postur}";
-            }
-        }
-        $riwayat = mb_strtolower(trim((string) $session->getData('riwayat_kesehatan')));
-        if (!$escalate && $riwayat !== '' && !$this->isNoValue($riwayat)) {
-            $escalate = true;
-            $reason   = "riwayat_kesehatan: {$riwayat}";
-        }
+        $session->save();
 
         // Compute filled/missing utk LLM know what to ask next.
         $filled  = [];
