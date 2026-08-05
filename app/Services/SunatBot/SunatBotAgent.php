@@ -367,7 +367,10 @@ class SunatBotAgent
         $this->saveHistory($session, $history, $userMessage, $replies);
 
         return [
-            'handled'  => $replies !== [] || $signal !== null,
+            // escalate juga dianggap "handled" — engine harus route
+            // ke escalate() (handoff admin), BUKAN fall-through ke
+            // classifier (yg bisa return 0 replies → bot silent).
+            'handled'  => $replies !== [] || $signal !== null || $escalate,
             'replies'  => $replies,
             'signal'   => $signal,
             'escalate' => $escalate,
