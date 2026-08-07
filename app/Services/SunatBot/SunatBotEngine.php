@@ -1789,6 +1789,11 @@ class SunatBotEngine
             'data'    => $session->collected_data,
         ]);
 
+        // Notif WA ke Rona + operator dgn ringkasan medical (dedupe per
+        // session — kalau escalate() dipanggil ulang untuk session yg
+        // sama, tidak double-notif).
+        $this->notifyOperatorHandoff($session);
+
         if ($replies !== null) {
             return $replies;
         }
@@ -1796,6 +1801,81 @@ class SunatBotEngine
             'text'  => (string) config('sunatbot.handover_message'),
             'media' => null,
         ]];
+    }
+
+    /**
+     * Kirim notifikasi WA ke Rona + operator saat bot handoff ke admin
+     * (medical safety escalation). Mirror pattern notifyOperatorBooking
+     * — target sama, format berbeda (data medical bukan booking slot).
+     * Gagal DIAM (log warning) supaya escalate flow tidak break.
+     * Dedupe: pakai session data flag `_handoff_notified` supaya kalau
+     * escalate() dipanggil ulang untuk session sama, tidak double-kirim.
+     */
+    private function notifyOperatorHandoff(BotSession $session): void
+    {
+        try {
+            if ((bool) $session->getData('_handoff_notified')) {
+                return;
+            }
+
+            $nama    = trim((string) ($session->getData('nama_orang_tua')
+                ?? $session->getData('booking_nama_panggilan')
+                ?? $session->getData('booking_nama_anak')
+                ?? ''));
+            $usia    = $session->getData('usia_anak') ?? $session->getData('booking_usia_anak');
+            $satuan  = $session->getData('usia_anak_satuan') ?? $session->getData('booking_usia_anak_satuan') ?? 'tahun';
+            $bb      = $session->getData('berat_badan_anak') ?? $session->getData('booking_berat_badan_anak');
+            $domisili = trim((string) ($session->getData('domisili') ?? ''));
+            $indikasi = trim((string) ($session->getData('indikasi_khitan') ?? ''));
+            $postur   = trim((string) ($session->getData('postur_tubuh') ?? ''));
+            $riwayat  = trim((string) ($session->getData('riwayat_kesehatan') ?? ''));
+
+            $lines = [
+                '⚠️ *HANDOFF SUNAT BOT → ADMIN*',
+                '',
+                'No. HP     : ' . $session->no_telp,
+            ];
+            if ($nama !== '')     $lines[] = 'Nama       : ' . $nama;
+            if ($usia !== null && $usia !== '') $lines[] = 'Usia anak  : ' . $usia . ' ' . $satuan;
+            if ($bb !== null && $bb !== '')     $lines[] = 'BB anak    : ' . $bb . ' kg';
+            if ($domisili !== '') $lines[] = 'Domisili   : ' . $domisili;
+            $lines[] = '';
+            $lines[] = '🩺 Data safety:';
+            $lines[] = '• Indikasi : ' . ($indikasi !== '' ? $indikasi : '-');
+            $lines[] = '• Postur   : ' . ($postur !== '' ? $postur : '-');
+            $lines[] = '• Riwayat  : ' . ($riwayat !== '' ? $riwayat : '-');
+            $lines[] = '';
+            $lines[] = '👨‍⚕️ Mohon di-follow up manual. Customer sudah dikasih tahu admin akan hubungi.';
+            $lines[] = 'Chat: https://www.kezia.id/chat_sunats/' . $session->no_telp;
+
+            $msg = implode("\n", $lines);
+
+            $recipients = [
+                'operator' => (string) config('sunatbot.nomor_operator', '6281381912803'),
+                'rona'     => (string) config('sunatbot.nomor_rona', ''),
+            ];
+
+            foreach ($recipients as $label => $phone) {
+                $phone = preg_replace('/\D+/', '', $phone);
+                if (str_starts_with($phone, '0')) {
+                    $phone = '62' . substr($phone, 1);
+                } elseif (str_starts_with($phone, '8')) {
+                    $phone = '62' . $phone;
+                }
+                if ($phone === '') continue;
+
+                \App\Services\GowaSunatNotifier::notifyStaff($phone, $msg, 'handoff_notif_' . $label);
+            }
+
+            $session->setData('_handoff_notified', true);
+            $session->save();
+        } catch (\Throwable $e) {
+            Log::warning('SUNAT_HANDOFF_NOTIFY_FAIL', [
+                'phone'   => $session->no_telp ?? null,
+                'session' => $session->id ?? null,
+                'error'   => $e->getMessage(),
+            ]);
+        }
     }
 
     private function nextMissingHargaField(BotSession $session): ?string
