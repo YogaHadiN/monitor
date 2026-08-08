@@ -1417,6 +1417,7 @@ class SunatBotEngine
                     'nama_panggilan' => $namaPanggilan !== '' ? $namaPanggilan : null,
                     'no_telp'        => (string) $session->no_telp,
                     'catatan'        => $catatan,
+                    'source'         => $this->leadSourceForPhone((string) $session->no_telp),
                     'created_by'     => null,
                 ]);
                 $row = $existing->fresh();
@@ -1431,6 +1432,7 @@ class SunatBotEngine
                     'nama_panggilan' => $namaPanggilan !== '' ? $namaPanggilan : null,
                     'no_telp'        => (string) $session->no_telp,
                     'catatan'        => $catatan,
+                    'source'         => $this->leadSourceForPhone((string) $session->no_telp),
                     'created_by'     => null,
                 ]);
             }
@@ -1472,6 +1474,44 @@ class SunatBotEngine
      * atika. Gagalnya kirim DIAM (log warning only) supaya tidak
      * rollback booking yang sudah berhasil.
      */
+    /**
+     * Lookup source lead untuk nomor telp — cek leads_sunats table.
+     * Return string source ('meta_ads', dll) atau null kalau tidak ada.
+     * Nomor telp dinormalisasi ke E.164 sederhana (628xx) untuk match.
+     */
+    private function leadSourceForPhone(string $phone): ?string
+    {
+        $clean = preg_replace('/\D+/', '', $phone);
+        if ($clean === '') return null;
+        if (str_starts_with($clean, '0')) $clean = '62' . substr($clean, 1);
+
+        try {
+            $src = \DB::table('leads_sunats')
+                ->where('tenant_id', 1)
+                ->where('no_telp', $clean)
+                ->value('source');
+            return $src ? (string) $src : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Ubah source key jadi label display untuk notif WA.
+     * Return null utk source kosong (skip line di message).
+     */
+    private function formatSourceLabel(?string $source): ?string
+    {
+        if ($source === null || $source === '') return null;
+        $map = [
+            'meta_ads' => '🎯 Meta Ads',
+            'organic'  => 'Organik',
+            'referral' => 'Referral',
+            'walkin'   => 'Walk-in',
+        ];
+        return $map[$source] ?? $source;
+    }
+
     private function notifyOperatorBooking(JadwalSunat $row): void
     {
         try {
@@ -1482,19 +1522,25 @@ class SunatBotEngine
             $tgl       = Carbon::parse($row->tanggal);
             $tglFormat = $tgl->day . ' ' . $idMonths[(int) $tgl->month] . ' ' . $tgl->year;
 
-            $msg = implode("\n", [
+            $lines = [
                 '📌 *BOOKING SUNAT BARU (SunatBot)*',
                 '',
                 'Nama Pasien : ' . $row->nama_pasien,
                 'Tanggal     : ' . $tglFormat,
                 'Jam         : ' . substr((string) $row->jam, 0, 5),
                 'No. HP      : ' . $row->no_telp,
-                '',
-                'Catatan:',
-                $row->catatan ?: '-',
-                '',
-                '🧑‍⚕️ Mohon dipersiapkan tindakan.',
-            ]);
+            ];
+            $sourceLabel = $this->formatSourceLabel($row->source);
+            if ($sourceLabel !== null) {
+                $lines[] = 'Sumber Lead : ' . $sourceLabel;
+            }
+            $lines[] = '';
+            $lines[] = 'Catatan:';
+            $lines[] = $row->catatan ?: '-';
+            $lines[] = '';
+            $lines[] = '🧑‍⚕️ Mohon dipersiapkan tindakan.';
+
+            $msg = implode("\n", $lines);
 
             $recipients = [
                 'operator' => (string) config('sunatbot.nomor_operator', '6281381912803'),
