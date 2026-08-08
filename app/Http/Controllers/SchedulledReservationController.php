@@ -27,8 +27,41 @@ class SchedulledReservationController extends Controller
     public function qr($schedulled_reservation_id)
     {
         $schedulled_reservation_id = decrypt_string( $schedulled_reservation_id );
-        // Ambil data reservasi
-        $schedulled_reservation = SchedulledReservation::findOrFail($schedulled_reservation_id);
+
+        // Ambil data reservasi — include trashed supaya kalau row sudah
+        // soft-deleted (auto-hapus 15min sebelum praktik / self-cancel),
+        // customer tetap dapat state page bermakna, bukan 404.
+        $schedulled_reservation = SchedulledReservation::withTrashed()->find($schedulled_reservation_id);
+        if (!$schedulled_reservation) {
+            abort(404, 'Reservasi tidak ditemukan');
+        }
+
+        // Kalau sudah soft-deleted → render halaman "deleted state"
+        // dengan info kapan + oleh siapa + arahan daftar manual.
+        if ($schedulled_reservation->trashed()) {
+            $deletedVia = (string) ($schedulled_reservation->deleted_via ?? '');
+            $isSystem   = str_contains($deletedVia, 'console')
+                       || str_contains($deletedVia, 'HapusReservasiScheduled');
+            $isSelfCancel = str_contains($deletedVia, 'hapus_schedulled_reservation')
+                       || str_contains($deletedVia, 'WebRegistration');
+            $deletedByLabel = $isSystem
+                ? 'sistem otomatis (karena telat scan QR — batas 15 menit sebelum praktik)'
+                : ($isSelfCancel
+                    ? 'Anda sendiri (via halaman pendaftaran)'
+                    : ($schedulled_reservation->deleted_by
+                        ? 'admin klinik'
+                        : 'sistem'));
+
+            return view('schedulled_reservations.qr-view-deleted', [
+                'schedulled_reservation' => $schedulled_reservation,
+                'pasienNama' => $schedulled_reservation->nama ?? optional($schedulled_reservation->pasien)->nama ?? 'Pasien',
+                'dokterNama' => optional($schedulled_reservation->staf)->nama_dengan_gelar ?? 'Dokter',
+                'deletedByLabel' => $deletedByLabel,
+                'deletedAt'      => $schedulled_reservation->deleted_at,
+                'isSystem'       => $isSystem,
+                'isSelfCancel'   => $isSelfCancel,
+            ]);
+        }
 
         // Siapkan informasi tambahan
         $pasienNama  = $schedulled_reservation->nama ?? optional($schedulled_reservation->pasien)->nama;
