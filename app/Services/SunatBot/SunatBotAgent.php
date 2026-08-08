@@ -484,7 +484,7 @@ Kapan sebutkan nomor/link ini:
 Di **turn pertama** kamu di sebuah conversation sunat baru (session data `nama_orang_tua` dan `domisili` KEDUANYA masih kosong), APPEND satu bubble singkat & natural nanya nama customer + tempat tinggal (kota/kecamatan). Kalau customer kasih info di turn berikutnya → panggil `save_lead_sunat(nama, alamat)`.
 
 Aturan:
-- **Kalau pertanyaan pertama customer langsung soal HARGA/PL/biaya → SKIP lead capture. Langsung masuk HARGA flow (save_harga_data)** — nama_orang_tua + domisili akan terkumpul sebagai bagian 7 field wajib harga. Kalau kamu SUDAH capture lead lewat save_lead_sunat sebelumnya, HARGA flow otomatis skip 2 field itu (nama + domisili sudah tersimpan di session).
+- **Kalau pertanyaan pertama customer langsung soal HARGA/PL/biaya → SKIP lead capture. Langsung masuk HARGA flow (save_harga_data)** — nama_orang_tua + domisili akan terkumpul sebagai bagian 8 field wajib harga. Kalau kamu SUDAH capture lead lewat save_lead_sunat sebelumnya, HARGA flow otomatis skip 2 field itu (nama + domisili sudah tersimpan di session).
 - Tanya HANYA 1x. Kalau customer skip (jawab hal lain, ganti topik) → JANGAN retry, lanjut normal flow. Data partial (nama saja / alamat saja) juga boleh disave.
 - **Kalau session data `nama_orang_tua` + `domisili` sudah ada** (via lead capture sebelumnya atau via HARGA flow) → JANGAN tanya lagi. Ini SUMBER KEBENARAN — cek session state, bukan asumsi.
 - Timing di reply: taruh pertanyaan nama+alamat setelah greeting/jawaban utama, di bubble terpisah (biar natural, bukan interogasi).
@@ -518,7 +518,7 @@ CONTOH 4 SKIP (lead sudah pernah tercapture, customer lanjut nanya harga):
 
 Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
 
-**HARGA** (tanya biaya/PL) — pakai `save_harga_data` + `send_harga_quote`. Field wajib: nama_orang_tua, domisili, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada tanggal/jam.
+**HARGA** (tanya biaya/PL) — pakai `save_harga_data` + `send_harga_quote`. Field wajib: nama_orang_tua, domisili, jumlah_anak, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada tanggal/jam.
 
 **BOOKING** (daftar/pendaftaran pasien) — pakai `save_booking_data` + `finalize_booking`. Field wajib: tanggal, jam, nama_anak, nama_panggilan, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada nama_orang_tua/domisili.
 
@@ -560,20 +560,23 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    Baca tool response `missing[]` → kalau ada, tanya field berikutnya di reply text yang sama turn. Kalau `missing[]` kosong, langsung call `send_harga_quote()` (jangan tanya lagi).
 
 3. **Tanya field NATURAL dgn text kamu sendiri (JANGAN pakai get_intent_response), 1-2 field per bubble.**
-   URUTAN wajib (jangan lompat ke sudah_tahu_metode sebelum 7 field required terkumpul):
+   URUTAN wajib (jangan lompat ke sudah_tahu_metode sebelum 8 field required terkumpul):
    - Belum ada nama_orang_tua → "Kalo boleh tau dengan kakak siapa ya?"
-   - Belum ada usia_anak + berat_badan_anak → "Boleh infokan usia dan berat badan anaknya kak?"
+   - Belum ada jumlah_anak → "Sunat untuk berapa anak kak?" (default 1 kalau customer sebut singular / cuma "anak saya")
+   - Belum ada usia_anak + berat_badan_anak → "Boleh infokan usia dan berat badan anaknya kak?" (kalau >1 anak, minta info tiap anak)
    - Belum ada domisili → "Domisilinya di mana kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
    - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
    - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
+
+   💰 **Diskon rombongan (otomatis di quote):** 1 anak normal, 2 anak diskon Rp 500rb (total Rp 4.5jt), 3 anak diskon Rp 1jt (total Rp 6.5jt), ≥4 anak → template arahkan admin. Kamu TIDAK perlu sebut angka diskon manual — bubble diskon otomatis di-append oleh tool `send_harga_quote` berdasarkan `jumlah_anak`.
 
 4. **⚠️ INTERRUPT — customer tanya HAL LAIN di tengah collection:**
    Contoh: setelah kamu tanya domisili, customer malah tanya "Metode nya apa?"
    → **JAWAB DULU** pertanyaan interrupt dengan `get_intent_response(slug="pertanyaan_metode")` atau paraphrase dari FAKTA.
    → Lalu di bubble PENUTUP, kembali ke field yang belum: "Balik ke tadi kak, domisilinya di mana?"
 
-5. **Semua 7 field terkumpul → `send_harga_quote()`:**
+5. **Semua 8 field terkumpul → `send_harga_quote()`:**
    Tool emit bundle final (testimoni + delay + quote + closing). Setelah call, output text kosong.
 
 6. **Escalation gate — KAMU yang klasifikasi:**
@@ -796,8 +799,9 @@ PROMPT;
                         'properties' => [
                             'nama_orang_tua'    => ['type' => 'string', 'description' => 'nama depan ortu, mis. "Yeni"'],
                             'domisili'          => ['type' => 'string', 'description' => 'kota/kecamatan, mis. "Tangerang"'],
-                            'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan"'],
-                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg, mis. 22 atau 25.5'],
+                            'jumlah_anak'       => ['type' => 'integer', 'description' => 'JUMLAH anak yg mau sunat (1, 2, 3, dst). Kalau customer sebut singular ("anak saya"), default 1. Kalau customer sebut "2 anak" / "kembar" / "sepupu juga ikut sunat", pass jumlah aktual. Dipakai utk hitung diskon rombongan (2 anak: -500rb, 3 anak: -1jt).'],
+                            'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan". Kalau >1 anak, sebutkan usia setiap anak dgn koma (mis. "7 tahun, 5 tahun").'],
+                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg, mis. 22 atau 25.5. Kalau >1 anak, agent gunakan BB anak tertinggi (paling berat) sbg reference.'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas isi jawaban customer soal keluhan/alasan medis. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
                             'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU (agent) yang klasifikasi berdasarkan jawaban customer. "tidak gemuk" / "biasa" / "kurus" → "tidak gemuk". "proporsional" / "sedang" → "normal". "gemuk" / "obesitas" / "gendut" / "besar" → "gemuk".'],
                             'riwayat_kesehatan' => ['type' => 'string', 'description' => 'ringkas isi jawaban. Kalau customer bilang "tidak ada"/"sehat"/"gak ada"/"nihil", save "tidak ada".'],
@@ -811,7 +815,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'send_harga_quote',
-                    'description' => 'Emit quote bundle final ke customer: testimoni google review + delay 40s + quote_harga_paket + tanya_pertanyaan_lanjutan. WAJIB dipanggil HANYA setelah semua 7 field wajib terkumpul (nama_orang_tua, domisili, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), DILARANG panggil lagi. Setelah call, output text KOSONG.',
+                    'description' => 'Emit quote bundle final ke customer: testimoni google review + delay 40s + quote_harga_paket + diskon rombongan (kalau jumlah_anak≥2) + tanya_pertanyaan_lanjutan. WAJIB dipanggil HANYA setelah semua 8 field wajib terkumpul (nama_orang_tua, domisili, jumlah_anak, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), DILARANG panggil lagi. Setelah call, output text KOSONG.',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => new \stdClass(),
@@ -1346,7 +1350,7 @@ PROMPT;
     // ----- HARGA (natural collection, agent-driven) -----------------
 
     private const HARGA_REQUIRED_FIELDS = [
-        'nama_orang_tua', 'domisili', 'usia_anak', 'berat_badan_anak',
+        'nama_orang_tua', 'domisili', 'jumlah_anak', 'usia_anak', 'berat_badan_anak',
         'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan',
     ];
 
@@ -1390,6 +1394,11 @@ PROMPT;
         if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
             $session->setData('berat_badan_anak', (float) $args['berat_badan_anak']);
             $saved[] = 'berat_badan_anak';
+        }
+        if (isset($args['jumlah_anak']) && is_numeric($args['jumlah_anak'])) {
+            $jml = max(1, (int) $args['jumlah_anak']);
+            $session->setData('jumlah_anak', $jml);
+            $saved[] = 'jumlah_anak';
         }
         $session->save();
 
@@ -1569,6 +1578,28 @@ PROMPT;
         }
         [$_, $quote] = $this->toolGetIntentResponse($quoteSlug);
         $bubbles = array_merge($bubbles, $quote);
+
+        // 5b. Diskon rombongan — kalau jumlah_anak ≥ 2, append bubble
+        //     info diskon setelah quote base. Angka:
+        //       2 anak: diskon Rp 500rb → total Rp 4.500.000
+        //       3 anak: diskon Rp 1jt   → total Rp 6.500.000
+        //       ≥4 anak: hubungi admin utk custom quote.
+        $jml = (int) $session->getData('jumlah_anak');
+        if ($jml >= 2) {
+            $diskonBubble = null;
+            if ($jml === 2) {
+                $diskonBubble = "🎉 *Diskon Rombongan* untuk 2 anak:\n"
+                              . "• Diskon Rp 500.000\n"
+                              . "• Total setelah diskon: *Rp 4.500.000* untuk 2 anak kak 🙏";
+            } elseif ($jml === 3) {
+                $diskonBubble = "🎉 *Diskon Rombongan* untuk 3 anak:\n"
+                              . "• Diskon Rp 1.000.000\n"
+                              . "• Total setelah diskon: *Rp 6.500.000* untuk 3 anak kak 🙏";
+            } else {
+                $diskonBubble = "🎉 Untuk sunat rombongan {$jml} anak, silakan chat admin utk quote khusus ya kak 🙏 Diskon rombongan lebih besar bisa dinegosiasi.";
+            }
+            $bubbles[] = ['text' => $diskonBubble, 'media' => null];
+        }
 
         // 6. Tanya pertanyaan lanjutan / closing.
         [$_, $closing] = $this->toolGetIntentResponse('tanya_pertanyaan_lanjutan');
