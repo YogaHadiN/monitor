@@ -641,12 +641,16 @@ class WablasController extends Controller
                 // di bawah; engine akan mendeteksi keyword "booking" dan
                 // masuk enterBookingFlow.
             } else {
-                // Phase C handoff: bila session follow-up sudah aktif dan
-                // pesan ini balasan client (selain button khusus di atas),
-                // set awaiting_human=true supaya bot tidak auto-reply.
-                if ($this->maybeHandoffSunatFollowup()) {
-                    return;
-                }
+                // Phase C handoff: bila session follow-up sudah aktif,
+                // set awaiting_human=true sbg marker admin perlu handle
+                // konteks sunat. TAPI JANGAN return early — chat Meta
+                // klinik utama (nomor beda dari SunatBoy) tetap harus
+                // proses autoReply normal utk pesan generic (mis. "daftar"
+                // → registrasi antrian umum). Sebelumnya sunat session
+                // aktif memblokir semua autoReply, itu bug (chat meta
+                // di-hijack oleh sunat session yg technically nomor
+                // beda).
+                $this->maybeHandoffSunatFollowup();
             }
 
             // PWA push hanya fire untuk gowa sunat device (di-handle
