@@ -4976,6 +4976,8 @@ class WablasController extends Controller
         $lines[] = '*Dengan melanjutkan berarti Anda setuju dengan ketentuan berikut:*';
 
         $lines[] = '- Jika antrean terlewat, silakan mengambil antrean kembali.';
+        $lines[] = '- *Nomor antrian ditentukan berdasarkan urutan scan QR / konfirmasi kehadiran di klinik*, bukan berdasarkan urutan booking online.';
+        $lines[] = '- Pasien yang lebih dulu scan QR / konfirmasi kehadiran akan mendapatkan nomor antrian lebih awal. Yang lebih dulu booking online *belum tentu* mendapatkan nomor antrian paling awal.';
         if ($tipe_id === 1) {
             // Poli umum
             $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
