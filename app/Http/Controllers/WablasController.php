@@ -5712,7 +5712,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 $now = \Carbon\Carbon::now('Asia/Jakarta');
                 for ($n = 1; $n <= 7; $n++) {
                     $scheduledAt = $now->copy()->addDays(2 * $n)
-                                       ->setTime(9, 0, 0); // 09:00 WIB
+                                       ->setTime(6, 0, 0); // 06:00 WIB (dispatcher window mulai 06:00 + limit=1/run utk stagger)
 
                     \App\Models\SunatFollowup::create([
                         'session_id'    => $session->id,
