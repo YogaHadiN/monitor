@@ -256,6 +256,39 @@ class SunatBotAgent
                     continue;
                 }
 
+                // Guard: LLM kadang salah-pick redirect_ke_klinik_utama untuk
+                // pertanyaan harga sunat (mis. "Mau tanya brp y kak" →
+                // reason="tanya harga sunat"). Redirect ini SALAH karena
+                // context SunatBot default = sunat, tanya harga = HARGA flow.
+                // Reject + arahkan LLM ke save_harga_data.
+                if ($toolName === 'redirect_ke_klinik_utama') {
+                    $reason = mb_strtolower((string) ($args['reason'] ?? ''));
+                    $userMsg = mb_strtolower((string) $this->currentUserMessage);
+                    $hargaKw = ['harga', 'biaya', 'berapa', 'brp', 'pl', 'price'];
+                    $nonSunatKw = ['usg', 'kandungan', 'hamil', 'lab', 'dokter umum', 'gigi', 'kulit', 'vaksin', 'imunisasi', 'kontrol obat', 'bpjs'];
+                    $reasonMentionsHarga = false;
+                    foreach ($hargaKw as $kw) { if (str_contains($reason, $kw)) { $reasonMentionsHarga = true; break; } }
+                    $userMsgHasHarga = false;
+                    foreach ($hargaKw as $kw) {
+                        if (preg_match('/(^|\W)' . preg_quote($kw, '/') . '($|\W)/u', $userMsg)) { $userMsgHasHarga = true; break; }
+                    }
+                    $userMsgHasNonSunat = false;
+                    foreach ($nonSunatKw as $kw) { if (str_contains($userMsg, $kw)) { $userMsgHasNonSunat = true; break; } }
+                    if (($reasonMentionsHarga || $userMsgHasHarga) && !$userMsgHasNonSunat) {
+                        Log::info('SUNAT_BOT_AGENT_BLOCK_REDIRECT_HARGA', [
+                            'phone'  => $session->no_telp,
+                            'reason' => $reason,
+                            'msg'    => mb_substr($userMsg, 0, 200),
+                        ]);
+                        $toolResult = [
+                            'ok'    => false,
+                            'error' => 'DILARANG redirect utk pertanyaan harga sunat. Customer di SunatBot default context = sunat, "brp/berapa/biaya/PL" = tanya harga sunat, MASUK HARGA FLOW (save_harga_data), BUKAN redirect_ke_klinik_utama.',
+                        ];
+                        $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
+                        continue;
+                    }
+                }
+
                 if ($toolName === 'save_harga_data' && (bool) $session->getData('booking_started') && !$session->is_complete) {
                     Log::info('SUNAT_BOT_AGENT_BLOCK_HARGA_DURING_BOOKING', ['phone' => $session->no_telp]);
                     $toolResult = [
@@ -679,6 +712,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
     Engine populate semua → langsung INSERT jadwal_sunats, customer dapat konfirmasi sukses.
   - JANGAN call dgn args kosong kalau customer sudah kasih info — itu bug, customer harus ulang ngetik.
 - `redirect_ke_klinik_utama` → customer EKSPLISIT sebut layanan non-sunat: USG, kandungan, hamil, lab, cek darah, dokter umum, gigi, kulit, vaksin, imunisasi, mobile jkn, jkn (tanpa "sunat"), kontrol obat. Termasuk "daftar USG" / "daftar lab" / "daftar dokter umum" — semua redirect, BUKAN booking_flow.
+  🚫 **DILARANG redirect kalau customer tanya HARGA/BIAYA/BERAPA/BRP/PL** — itu HARGA flow sunat, bukan non-sunat. Contoh salah: reason="tanya harga sunat" → JANGAN redirect, pakai save_harga_data. Customer di SunatBot default context = sunat, "brp y kak"/"berapa"/"biaya" = tanya harga sunat.
 - `save_lead_sunat` → simpan nama + alamat customer di awal conversation sunat (bukan harga/booking). Skip kalau pertanyaan pertama sudah HARGA (biar HARGA flow yg collect).
 
 ═══ ⚠️ WAJIB call get_intent_response — HANYA 1x per slug per session ⚠️ ═══
@@ -778,7 +812,7 @@ PROMPT;
             [
                 'type' => 'function',
                 'function' => [
-                    'description' => 'Panggil ini saat customer EKSPLISIT punya keperluan BUKAN sunat: USG, lab, dokter umum, BPJS umum (bukan BPJS sunat), gigi, poli kulit, vaksin umum, dll. Bot kirim pesan singkat suruh chat admin klinik utama. DILARANG dipanggil utk greeting kosong/pendek ("halo", "sore", "p") — utk itu tanya keperluan dulu. Throttled 1x/hari per nomor.',
+                    'description' => 'Panggil ini saat customer EKSPLISIT punya keperluan BUKAN sunat: USG, lab, dokter umum, BPJS umum (bukan BPJS sunat), gigi, poli kulit, vaksin umum, dll. Bot kirim pesan singkat suruh chat admin klinik utama. DILARANG dipanggil utk greeting kosong/pendek ("halo", "sore", "p") — utk itu tanya keperluan dulu. 🚫 DILARANG dipanggil kalau customer tanya HARGA/BIAYA/BERAPA/BRP/PL — itu HARGA flow sunat (pakai save_harga_data), BUKAN redirect. Customer di SunatBot = context sunat, jadi "brp y", "berapa kak", "biaya" default = harga sunat. Throttled 1x/hari per nomor.',
                     'name'        => 'redirect_ke_klinik_utama',
                     'parameters'  => [
                         'type' => 'object',
