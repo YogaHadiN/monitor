@@ -128,7 +128,25 @@ class SunatBotAgent
                 // Tapi kalau ada collection in-progress dgn field
                 // belum terisi, text = resume "Balik ke tadi kak,
                 // [pertanyaan]" yang WAJIB dikirim (interrupt handling).
-                if ($toolEmittedReplies && !$this->hasActiveCollection($session)) {
+                //
+                // ALSO KEEP: kalau user message mengandung trigger
+                // keyword HARGA / BOOKING dan flow-nya belum aktif,
+                // text ini kemungkinan = flow opener ("Untuk biaya
+                // sunat tergantung usia..." / "Boleh tau tanggal
+                // berapa..."). Multi-topic message spt "sistem, lokasi,
+                // mahar berapa?" bakal panggil pertanyaan_metode +
+                // pertanyaan_lokasi tools, lalu iter2 text = opener
+                // HARGA — tanpa exception ini text di-drop dan
+                // pertanyaan mahar tidak ter-address.
+                $userMsgLower = mb_strtolower((string) $this->currentUserMessage);
+                $hargaTriggerRe = '/(mahar|harga|biaya|berapa|brp|\bpl\b|price)/u';
+                $bookingTriggerRe = '/(mau daftar|mau booking|nyunatin|khitan[- ]?in|jadwalin|ambil jadwal|set jadwal|atur jadwal|booking\b|book\b)/u';
+                $userAskedHarga = (bool) preg_match($hargaTriggerRe, $userMsgLower);
+                $userAskedBooking = (bool) preg_match($bookingTriggerRe, $userMsgLower);
+                $keepAsFlowOpener = ($userAskedHarga && !$session->getData('_harga_sent'))
+                                 || ($userAskedBooking && !$session->is_complete);
+
+                if ($toolEmittedReplies && !$this->hasActiveCollection($session) && !$keepAsFlowOpener) {
                     Log::info('SUNAT_BOT_AGENT_DROPPED_POST_TOOL_TEXT', [
                         'phone' => $session->no_telp,
                         'iter'  => $iter,
@@ -559,7 +577,7 @@ Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
 
 🚫 **DILARANG mixing:**
 - Kalau customer bilang "mau daftar/booking/nyunatin/jadwalin" → BOOKING flow. **JANGAN** panggil save_harga_data. **JANGAN** tanya nama_orang_tua/domisili — bukan bagian booking.
-- Kalau customer bilang "berapa harganya / PL / biaya" → HARGA flow. **JANGAN** panggil save_booking_data. **JANGAN** tanya tanggal/jam.
+- Kalau customer bilang "berapa harganya / PL / biaya / mahar / mahar berapa / brp" → HARGA flow. **JANGAN** panggil save_booking_data. **JANGAN** tanya tanggal/jam. Kata "mahar" (istilah lokal untuk biaya sunat) = SAMA persis dgn "harga/biaya".
 - Kalau customer beralih flow di tengah (mis. sudah kasih quote harga, lalu bilang "ok mau daftar"), boleh transisi ke booking — tapi mulai save_booking_data secara fresh, jangan re-tanya field yang sama.
 
 Executor engine akan REJECT tool call yang salah flow (mis. save_harga_data saat booking aktif). Kalau kamu dapat error "Booking flow aktif" → berarti kamu salah pick tool, ganti ke save_booking_data.
@@ -584,9 +602,11 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
 
 🎯 CARA KERJA:
 
-1. **Customer minta harga / PL / berapa biaya:**
+1. **Customer minta harga / PL / berapa biaya / mahar:**
    Reply text pengantar (satu bubble singkat): "Untuk biaya sunat tergantung usia dan berat badan kak."
    Lalu langsung tanya field pertama yang belum terisi (mulai dari nama).
+   Catatan: "mahar" = istilah lokal untuk biaya sunat, sama persis dgn "harga/biaya" → tetap masuk HARGA flow.
+   ⚠️ Kalau customer tanya multi-topic dalam 1 pesan (mis. "sistem, lokasi, mahar berapa?"), setelah call get_intent_response utk topic media (metode/lokasi), TETAP wajib open HARGA flow di text penutup — jangan biarkan pertanyaan mahar tidak ter-address.
 
 2. **Customer JAWAB pertanyaan field:**
    WAJIB call `save_harga_data(field=value)` DULU (satu turn), engine simpan. Kamu boleh save multi-field kalau customer sebut sekaligus (mis. "saya Yeni dari Tangerang" → `save_harga_data(nama_orang_tua="Yeni", domisili="Tangerang")`).
