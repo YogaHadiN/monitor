@@ -835,7 +835,7 @@ PROMPT;
                             'domisili'          => ['type' => 'string', 'description' => 'kota/kecamatan, mis. "Tangerang"'],
                             'jumlah_anak'       => ['type' => 'integer', 'description' => 'JUMLAH anak yg mau sunat (1, 2, 3, dst). Kalau customer sebut singular ("anak saya"), default 1. Kalau customer sebut "2 anak" / "kembar" / "sepupu juga ikut sunat", pass jumlah aktual. Dipakai utk hitung diskon rombongan (2 anak: -500rb, 3 anak: -1jt).'],
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan". Kalau >1 anak, sebutkan usia setiap anak dgn koma (mis. "7 tahun, 5 tahun").'],
-                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg, mis. 22 atau 25.5. Kalau >1 anak, agent gunakan BB anak tertinggi (paling berat) sbg reference.'],
+                            'berat_badan_anak'  => ['type' => 'number', 'description' => 'kg, mis. 22 atau 25.5. HARUS > 0 — kalau customer bilang "lupa"/"gak tau"/tidak sebut angka, JANGAN pass 0 (0 ditolak engine + BB tetap dianggap belum terisi). Skip param ini dan tanya ulang: "Kalau boleh tau kira-kira berat badan anaknya berapa kg kak?". Kalau >1 anak, agent gunakan BB anak tertinggi (paling berat) sbg reference.'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas isi jawaban customer soal keluhan/alasan medis. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
                             'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU (agent) yang klasifikasi berdasarkan jawaban customer. "tidak gemuk" / "biasa" / "kurus" → "tidak gemuk". "proporsional" / "sedang" → "normal". "gemuk" / "obesitas" / "gendut" / "besar" → "gemuk".'],
                             'riwayat_kesehatan' => ['type' => 'string', 'description' => 'ringkas isi jawaban. Kalau customer bilang "tidak ada"/"sehat"/"gak ada"/"nihil", save "tidak ada".'],
@@ -1426,8 +1426,11 @@ PROMPT;
             $saved[] = 'usia_anak';
         }
         if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
-            $session->setData('berat_badan_anak', (float) $args['berat_badan_anak']);
-            $saved[] = 'berat_badan_anak';
+            $bb = (float) $args['berat_badan_anak'];
+            if ($bb > 0) {
+                $session->setData('berat_badan_anak', $bb);
+                $saved[] = 'berat_badan_anak';
+            }
         }
         if (isset($args['jumlah_anak']) && is_numeric($args['jumlah_anak'])) {
             $jml = max(1, (int) $args['jumlah_anak']);
@@ -1458,7 +1461,11 @@ PROMPT;
         $missing = [];
         foreach (self::HARGA_REQUIRED_FIELDS as $f) {
             $v = $session->getData($f);
-            if ($v === null || $v === '') {
+            $isMissing = ($v === null || $v === '');
+            if ($f === 'berat_badan_anak' && is_numeric($v) && (float) $v <= 0) {
+                $isMissing = true;
+            }
+            if ($isMissing) {
                 $missing[] = $f;
             } else {
                 $filled[] = $f;
@@ -1549,7 +1556,11 @@ PROMPT;
         $missing = [];
         foreach (self::HARGA_REQUIRED_FIELDS as $f) {
             $v = $session->getData($f);
-            if ($v === null || $v === '') $missing[] = $f;
+            $isMissing = ($v === null || $v === '');
+            if ($f === 'berat_badan_anak' && is_numeric($v) && (float) $v <= 0) {
+                $isMissing = true;
+            }
+            if ($isMissing) $missing[] = $f;
         }
         if ($missing !== []) {
             return [
