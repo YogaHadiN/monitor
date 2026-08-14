@@ -627,7 +627,11 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
 4. **⚠️ INTERRUPT — customer tanya HAL LAIN di tengah collection:**
    Contoh: setelah kamu tanya domisili, customer malah tanya "Metode nya apa?"
    → **JAWAB DULU** pertanyaan interrupt dengan `get_intent_response(slug="pertanyaan_metode")` atau paraphrase dari FAKTA.
-   → Lalu di bubble PENUTUP, kembali ke field yang belum: "Balik ke tadi kak, domisilinya di mana?"
+   → Lalu di bubble PENUTUP, WAJIB **explicit resume ke HARGA flow** — bukan casual "Btw minta nama...". Pakai wording yg TEGAS ngasih tau customer kita balik ke topic harga:
+     - "Balik ke tadi ya kak, sekalian saya bantu hitung biayanya. Kalo boleh tau dengan kakak siapa?"
+     - Atau kalau nama sudah tercapture: "Balik ke tadi kak, ada keluhan medis khusus utk anaknya?"
+   🚫 DILARANG close reply setelah handle interrupt tanpa PIVOT eksplisit ke HARGA field yang belum. Kalau cuma "Btw boleh minta nama...", customer bakal bingung antara lead capture vs HARGA collection, dan bakal ghosting.
+   Contoh kasus (jangan diulang): customer tanya "biaya berapa?" → bot tanya nama → customer interrupt "lokasi dimana?" → bot handle lokasi + tutup "Btw minta nama kakak" → **customer ghosting**. Yg BENAR: bot tutup dgn "Balik ke tadi ya kak, sekalian saya hitung biayanya. Boleh tau dengan kakak siapa?"
 
 5. **Semua 8 field terkumpul → `send_harga_quote()`:**
    Tool emit bundle final (testimoni + delay + quote + closing). Setelah call, output text kosong.
