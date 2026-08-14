@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BotSession;
+use App\Models\SunatChatSession;
+use App\Models\SunatFollowup;
 use App\Models\Tenant;
 use App\Services\SunatBot\SunatBotEngine;
 use App\Services\SunatBot\SunatBotReplyDispatcher;
@@ -180,6 +182,16 @@ class SunatBotInternalController extends Controller
         $phone   = (string) $data['no_telp'];
         $message = (string) $data['message'];
 
+        // Opt-out guard — customer balas "stop" / "berhenti" / "unsubscribe"
+        // / "hentikan" (whole word, case-insensitive) → set opt_out=1 di
+        // sunat_chat_sessions + stop pending sunat_followups + return
+        // konfirmasi. Bypass agent + dispatcher. Tujuan: kurangi risk
+        // WA number di-block karena spam.
+        $optOutReply = $this->maybeHandleOptOut($phone, $message);
+        if ($optOutReply !== null) {
+            return response()->json($optOutReply);
+        }
+
         try {
             $result  = $this->engine->handle($phone, $message);
             $replies = (array) ($result['replies'] ?? []);
@@ -223,5 +235,77 @@ class SunatBotInternalController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Deteksi opt-out keyword di pesan customer + eksekusi handoff:
+     *   1. Match regex /\b(stop|berhenti|unsubscribe|hentikan)\b/iu
+     *   2. Set sunat_chat_sessions.opt_out=1 (create session kalau belum ada)
+     *   3. Stop semua sunat_followups pending untuk session ini
+     *   4. Return array reply konfirmasi (bypass agent)
+     *
+     * Return null kalau bukan opt-out message → caller lanjut normal flow.
+     * Return array {ok,handled,replies} kalau opt-out ditrigger → caller
+     * langsung response tanpa call engine.
+     */
+    private function maybeHandleOptOut(string $phone, string $message): ?array
+    {
+        if (!preg_match('/\b(stop|berhenti|unsubscribe|hentikan)\b/iu', $message)) {
+            return null;
+        }
+
+        $session = SunatChatSession::firstOrCreate(
+            ['phone' => $phone],
+            [
+                'contact_name'    => null,
+                'status'          => 'active',
+                'followup_status' => 'inactive',
+                'awaiting_human'  => false,
+                'reply_emailed'   => false,
+                'opt_out'         => false,
+            ]
+        );
+
+        if ($session->opt_out) {
+            Log::info('SUNAT_OPT_OUT_REPEAT', [
+                'phone'      => $phone,
+                'session_id' => $session->id,
+            ]);
+            return [
+                'ok'      => true,
+                'handled' => true,
+                'replies' => [[
+                    'text'      => 'Baik kak, pesan follow-up sudah kami hentikan sebelumnya 🙏 Kalau nanti butuh info sunat, silakan chat kami kapan saja.',
+                    'media_url' => '',
+                ]],
+            ];
+        }
+
+        $session->opt_out = true;
+        $session->save();
+
+        $stopped = SunatFollowup::where('session_id', $session->id)
+            ->where('status', 'pending')
+            ->update([
+                'status'     => 'stopped',
+                'error'      => 'opt_out',
+                'updated_at' => now(),
+            ]);
+
+        Log::info('SUNAT_OPT_OUT_TRIGGERED', [
+            'phone'           => $phone,
+            'session_id'      => $session->id,
+            'stopped_pending' => $stopped,
+            'message'         => mb_substr($message, 0, 100),
+        ]);
+
+        return [
+            'ok'      => true,
+            'handled' => true,
+            'replies' => [[
+                'text'      => 'Baik kak, kami hentikan pesan follow-up ya 🙏 Kalau nanti butuh info sunat, silakan chat kami kapan saja.',
+                'media_url' => '',
+            ]],
+        ];
     }
 }
