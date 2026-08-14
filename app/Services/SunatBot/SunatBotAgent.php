@@ -486,7 +486,7 @@ Sinonim positif yang BOLEH dipakai: "bius nyaman", "proses pembiusan", "tindakan
 
 🩺 OPERATOR: Dokter spesialis (bukan mantri). Ada perawat asisten.
 
-👶 USIA IDEAL: 1–7 tahun. Bayi & dewasa juga bisa dilayani.
+👶 USIA: **SEMUA usia dilayani** — bayi, balita, anak, remaja, dewasa. Tidak ada batas usia minimum/maksimum. Usia 1–7 tahun sekedar range yg paling sering datang (bukan batasan). Kalau customer bilang anaknya usia berapapun (8/9/10/12/15 tahun / dewasa / bayi), JANGAN pernah bilang "tidak bisa" atau "hanya untuk 1-7 tahun". SEMUA BISA.
 
 ♀️ Sunat PEREMPUAN: TIDAK kami layani. Hanya laki-laki.
 
