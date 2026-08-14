@@ -560,13 +560,17 @@ Aturan:
 - **Kalau session data `nama_orang_tua` + `domisili` sudah ada** (via lead capture sebelumnya atau via HARGA flow) → JANGAN tanya lagi. Ini SUMBER KEBENARAN — cek session state, bukan asumsi.
 - Timing di reply: taruh pertanyaan nama+alamat setelah greeting/jawaban utama, di bubble terpisah (biar natural, bukan interogasi).
 
-CONTOH 1 (greeting kosong):
+CONTOH 1 (greeting kosong — customer cuma sapa):
   Customer: "Halo kak"
-  Bot: "Halo kak 🙏 Silakan, ada yang bisa dibantu?"
-       "Btw sebelumnya boleh minta nama kakak sama domisilinya buat data admin kami? 🙏"
+  Bot: "Halo kak 🙏 Boleh minta nama kakak sama domisilinya buat data admin kami? 🙏"
   Customer: "Bunda Rina, Depok"
   → save_lead_sunat(nama="Rina", alamat="Depok")
-  Bot: "Baik Bunda Rina 🙏 Ada yang mau ditanyakan?"
+  Bot: "Baik terima kasih Ka Rina 🙏 Ada yang mau ditanyakan tentang sunat?"
+
+CONTOH 1b (customer buka dgn intent jelas — SKIP "silakan ada yang bisa dibantu"):
+  Customer: "Halo kak, mau nanya seputar Sunatboy dulu boleh?"
+  Bot: "Halo kak 🙏 Boleh, sebelumnya boleh minta nama kakak sama domisilinya buat data admin kami? 🙏"
+  Bot: ❌ "Silakan, ada yang bisa dibantu?" (bertele-tele — customer sudah bilang mau nanya)
 
 CONTOH 2 (nanya konten sunat):
   Customer: "Sunat buka jam berapa kak?"
@@ -822,9 +826,21 @@ CONTOH BURUK (cerewet, 4 bubble):
        "😊"
 
 ═══ TEMPLATE FRASA YANG SERING DIPAKAI (penting — jangan tukar tempat) ═══
-- GREETING / pesan unclear / customer baru mulai chat → "Silakan kak 🙏 Ada yang bisa dibantu?"
+- GREETING kosong (customer cuma "halo" / "hai" / stiker) → "Halo kak 🙏 Ada yang bisa dibantu?"
+- Customer BUKA dgn PERTANYAAN atau intent yg jelas (mis. "mau nanya seputar Sunatboy", "tertarik khitan", "berapa biaya", "buka jam berapa") → **JANGAN** balas "Silakan kak" / "Ada yang bisa dibantu?" — itu bertele-tele karena customer sudah nyatakan minat. LANGSUNG lanjut ke lead capture (nama+domisili) atau jawab pertanyaannya. Contoh:
+    Customer: "Halo kak, mau nanya seputar Sunatboy dulu boleh?"
+    Bot: ❌ "Halo kak 🙏 Silakan, ada yang bisa dibantu?"
+    Bot: ✅ "Halo kak 🙏 Boleh, sebelumnya boleh minta nama kakak sama domisilinya buat data admin kami? 🙏"
 - Customer BILANG TERIMA KASIH / closing → "Sama-sama kak 🙏 Kalau ada pertanyaan lain silakan."
 - DILARANG pakai "Sama-sama kak" sebagai opening — itu reply utk terima kasih, BUKAN sapaan awal.
+
+═══ ATURAN PASCA LEAD CAPTURE / PASCA COLLECT NAMA+DOMISILI ═══
+Setelah `save_lead_sunat` atau `save_harga_data` yg pertama kali capture nama_orang_tua + domisili:
+- Reply harus PANGGIL NAMA + tanya rencana khitan kapan (kalau HARGA flow) atau lanjut field berikutnya (kalau BOOKING flow). Contoh:
+    Customer: "Sy Euis domisili Cengkareng Jakarta Barat"
+    Bot: ✅ "Baik terima kasih Ka Euis 🙏 Kira-kira mau rencana khitan putranya kapan ka? Biar saya bantu cek jadwal yg tersedianya."
+    Bot: ❌ "Kami buatkan mini vlog pengalaman kakak..." (jangan info dokumentasi/vlog di sini — TERLALU TIBA-TIBA)
+- DILARANG render `contoh_dokumentasi` / `pertanyaan_hadiah` / `pertanyaan_testimoni` setelah lead capture. Kalau customer sendiri tanya, baru render lewat `get_intent_response`.
 PROMPT;
     }
 
@@ -913,7 +929,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'send_harga_quote',
-                    'description' => 'Emit quote bundle final ke customer: testimoni google review + delay 40s + quote_harga_paket + diskon rombongan (kalau jumlah_anak≥2) + tanya_pertanyaan_lanjutan. WAJIB dipanggil HANYA setelah semua 8 field wajib terkumpul (nama_orang_tua, domisili, jumlah_anak, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), DILARANG panggil lagi. Setelah call, output text KOSONG.',
+                    'description' => 'Emit quote bundle final ke customer: edukasi metode (teknoklamp, 1 bubble) + quote_harga_paket + diskon rombongan (kalau jumlah_anak≥2) + tanya_pertanyaan_lanjutan. Testimoni Google review, pemberian hadiah, dan mini vlog dokumentasi SENGAJA TIDAK di-bundle (feedback client: terlalu spam / terburu-buru). Ketiganya hanya keluar via intent eksplisit (pertanyaan_testimoni / pertanyaan_hadiah / pertanyaan_dokumentasi) atau followup H+1 kalau leads tidak reply. WAJIB dipanggil HANYA setelah semua 8 field wajib terkumpul (nama_orang_tua, domisili, jumlah_anak, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), DILARANG panggil lagi. Setelah call, output text KOSONG.',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => new \stdClass(),
@@ -1628,9 +1644,19 @@ PROMPT;
     }
 
     /**
-     * Emit quote bundle final: testimoni_google_review + delay 40s +
-     * quote_harga_paket + tanya_pertanyaan_lanjutan. Kalau field belum
-     * lengkap, return error — LLM harus panggil save_harga_data dulu.
+     * Emit quote bundle final: pertanyaan_metode (1 bubble) +
+     * quote_harga_paket + diskon rombongan + tanya_pertanyaan_lanjutan.
+     * Kalau field belum lengkap, return error — LLM harus panggil
+     * save_harga_data dulu.
+     *
+     * NB (per feedback client 2026-08-14): TIGA hal SENGAJA dihapus dari
+     * bundle karena terkesan spam / terburu-buru:
+     *   - `testimoni_google_review` — 1 menit setelah vlog terasa buru2
+     *   - `contoh_dokumentasi` (mini vlog) — bukan info yg dibutuhkan
+     *     saat customer tanya harga; pindahkan ke followup H+1
+     *   - `pertanyaan_hadiah` — tidak pernah di-bundle, catat aja disini
+     * Ketiganya HANYA keluar via intent trigger eksplisit (customer tanya
+     * langsung) atau followup H+1 kalau leads tidak reply.
      *
      * @return array{0:array, 1:array<array>, 2:bool} [result, bubbles, escalate]
      */
@@ -1674,28 +1700,19 @@ PROMPT;
             $this->recordSlugShown($session, 'pertanyaan_metode');
         }
 
-        // 2. Contoh dokumentasi (video mini vlog / dokumentasi pengalaman).
-        if (!in_array('contoh_dokumentasi', $shown, true)) {
-            [$_, $doc] = $this->toolGetIntentResponse('contoh_dokumentasi');
-            $bubbles = array_merge($bubbles, $doc);
-            $this->recordSlugShown($session, 'contoh_dokumentasi');
-        }
+        // 2. (dihapus) contoh_dokumentasi mini vlog — feedback client
+        //    2026-08-14: bukan info relevan saat customer tanya harga,
+        //    bikin bubble jadi terlalu banyak / spam. Pindah ke followup
+        //    H+1 kalau leads tidak reply, atau intent trigger eksplisit
+        //    `pertanyaan_dokumentasi` kalau customer tanya sendiri.
 
-        // 3. Testimoni Google review (media + text)
-        if (!in_array('testimoni_google_review', $shown, true)) {
-            [$_, $testimoni] = $this->toolGetIntentResponse('testimoni_google_review');
-            $bubbles = array_merge($bubbles, $testimoni);
-            $this->recordSlugShown($session, 'testimoni_google_review');
-        }
+        // 3. (dihapus) testimoni_google_review — feedback client 2026-08-14:
+        //    1 menit setelah vlog terasa terburu-buru. Pindah ke followup H+1.
 
-        // 4. Delay marker 40s (dispatcher sleep tanpa kirim) — biar customer
-        //    sempat lihat semua konten pre-quote sebelum harga muncul.
-        //    Hanya inject delay kalau ada konten pre-quote yg terkirim.
-        if ($bubbles !== []) {
-            // Delay pre-quote random 35-50 detik supaya customer sempat baca
-            // testimoni + tidak feel robotic dgn 40 detik fixed.
-            $bubbles[] = ['text' => '', 'media' => null, 'delay_seconds' => random_int(35, 50)];
-        }
+        // 4. Delay pre-quote SENGAJA dihapus juga — sebelumnya 35-50s makes
+        //    sense saat ada mini vlog + testimoni sebelumnya (kasih waktu
+        //    menonton). Sekarang bundle cuma metode → quote, delay bikin
+        //    bot silent tanpa konteks.
 
         // 5. Quote harga paket (respect promo slug swap kalau ada).
         $quoteSlug = 'quote_harga_paket';

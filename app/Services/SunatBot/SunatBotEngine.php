@@ -40,7 +40,10 @@ class SunatBotEngine
      * handlePertanyaanLanjutan instead of advancing fields.
      */
     private const HARGA_CLOSING = [
-        'testimoni_google_review',
+        // NB: `testimoni_google_review` dihapus dari bundle 2026-08-14 —
+        // feedback client, terasa terburu-buru kalau muncul 1 menit setelah
+        // mini vlog. Testimoni sekarang hanya keluar via intent
+        // `pertanyaan_testimoni` (customer eksplisit tanya) atau followup H+1.
         'quote_harga_paket',
         'tanya_pertanyaan_lanjutan',
     ];
@@ -593,13 +596,13 @@ class SunatBotEngine
             $extra = array_merge($extra, $this->renderIntent('pertanyaan_metode', $session));
         }
         if ($field === 'pengalaman_medis') {
-            // 2.8 — testimonial video + penjelasan kelebihan, selalu kirim.
-            // contoh_dokumentasi (video kesaksian) ikut di-render sekalian
-            // karena tahap "minta izin dokumentasi" sudah dihapus (per
-            // permintaan operator: bubble "berkenan kami buatkan
-            // dokumentasi?" diasumsikan default boleh, tidak perlu tanya).
+            // 2.8 — edukasi_kelebihan tetap dikirim.
+            // contoh_dokumentasi (mini vlog) SENGAJA dihapus 2026-08-14
+            // per feedback client: bikin bubble jadi terlalu banyak / spam
+            // di tengah collection harga. Vlog hanya keluar kalau customer
+            // eksplisit tanya (intent `pertanyaan_dokumentasi`) atau di
+            // followup H+1 leads.
             $extra = array_merge($extra, $this->renderIntent('edukasi_kelebihan', $session));
-            $extra = array_merge($extra, $this->renderIntent('contoh_dokumentasi', $session));
         }
 
         // ---- Advance ----------------------------------------------
@@ -850,17 +853,11 @@ class SunatBotEngine
         $replies = [];
         foreach (self::HARGA_CLOSING as $slug) {
             $resolved = $this->resolveHargaSlug($slug);
-
-            // Suspense delay: sebelum quote_harga_paket (atau varian
-            // promo-nya), inject marker bubble dengan field `delay_seconds`
-            // = 40. Dispatcher mendeteksi marker ini → sleep tanpa kirim
-            // bubble, lalu lanjut. Tujuan: kasih testimoni Google review
-            // (slot sebelumnya) waktu untuk ditonton + biar harga muncul
-            // sebagai jawaban, bukan info yang di-spam.
-            if (in_array($resolved, ['quote_harga_paket', 'quote_harga_paket_promo'], true)) {
-                $replies[] = ['text' => '', 'media' => null, 'delay_seconds' => random_int(35, 50)];
-            }
-
+            // Delay marker sebelum quote SENGAJA dihapus 2026-08-14 —
+            // dulu 35-50s makes sense saat testimoni_google_review masih
+            // bubble sebelumnya (kasih waktu menonton). Sekarang tanpa
+            // testimoni, delay di depan quote = bot silent 35-50s tanpa
+            // konteks, bikin customer bingung.
             $replies = array_merge($replies, $this->renderIntent($resolved, $session));
         }
         return $replies;
