@@ -488,6 +488,9 @@ Sinonim positif yang BOLEH dipakai: "bius nyaman", "proses pembiusan", "tindakan
 
 👶 USIA: **SEMUA usia dilayani** — bayi, balita, anak, remaja, dewasa. Tidak ada batas usia minimum/maksimum. Usia 1–7 tahun sekedar range yg paling sering datang (bukan batasan). Kalau customer bilang anaknya usia berapapun (8/9/10/12/15 tahun / dewasa / bayi), JANGAN pernah bilang "tidak bisa" atau "hanya untuk 1-7 tahun". SEMUA BISA.
 
+⚠️ **HARD-GATE USIA ≥17 TAHUN → AUTO-HANDOFF MANUSIA**:
+Kalau customer sebut usia anak/pasien ≥17 tahun (remaja lanjut/dewasa), engine otomatis force escalate ke admin saat kamu call `save_harga_data` / `save_booking_data`. JANGAN tolak sendiri, JANGAN bilang "tidak bisa". Cukup panggil tool save dgn field usia terisi → engine handoff ke admin dgn sendirinya. Pesan tunggu "sebentar ya kak, saya cek ke tim" akan otomatis muncul. Kamu tidak perlu call `handoff_to_admin` manual — save_* tool sudah handle.
+
 ♀️ Sunat PEREMPUAN: TIDAK kami layani. Hanya laki-laki.
 
 🏠 Sunat DI RUMAH: TIDAK ada home service. Hanya di klinik.
@@ -1307,6 +1310,16 @@ PROMPT;
             $reason   = 'LLM classified perlu_review_dokter=true (postur/indikasi/riwayat berisiko)';
         }
 
+        // Hard escalation gate (backend, deterministic): usia ≥ 17 tahun
+        // → auto-handoff. Per aturan dr. Yoga 2026-08-14: pasien
+        // dewasa/remaja lanjut wajib review manusia dulu sebelum booking.
+        $usiaVal = (int) $session->getData('booking_usia_anak');
+        $usiaSat = (string) $session->getData('booking_usia_anak_satuan');
+        if ($usiaSat === 'tahun' && $usiaVal >= 17) {
+            $escalate = true;
+            $reason   = 'booking_usia_anak ' . $usiaVal . ' tahun (≥17) — auto-handoff ke admin (aturan hard-gate)';
+        }
+
         // Validate slot kalau tanggal + jam sudah terisi
         $slotStatus     = 'ok';
         $slotError      = null;
@@ -1553,6 +1566,17 @@ PROMPT;
             $escalate = true;
             $reason   = 'LLM classified perlu_review_dokter=true (postur/indikasi/riwayat berisiko)';
         }
+
+        // Hard escalation gate (backend, deterministic): usia ≥ 17 tahun
+        // → auto-handoff manusia. Per aturan dr. Yoga 2026-08-14: pasien
+        // dewasa/remaja lanjut wajib review manusia dulu.
+        $usiaVal = (int) $session->getData('usia_anak');
+        $usiaSat = (string) $session->getData('usia_anak_satuan');
+        if ($usiaSat === 'tahun' && $usiaVal >= 17) {
+            $escalate = true;
+            $reason   = 'usia_anak ' . $usiaVal . ' tahun (≥17) — auto-handoff ke admin (aturan hard-gate)';
+        }
+
         $session->save();
 
         // Compute filled/missing utk LLM know what to ask next.
