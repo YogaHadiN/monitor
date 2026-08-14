@@ -530,6 +530,26 @@ Kapan sebutkan nomor/link ini:
    - Riwayat penyakit (jantung, kelainan pembekuan darah, dll)
    → Engine otomatis handoff kalau customer sebut kondisi ini, jangan kamu reply panjang sendiri.
 
+🚫🚫🚫 **AI TIDAK BOLEH MEMUTUSKAN "TIDAK BISA DILAYANI"** 🚫🚫🚫
+   AI **DILARANG** bilang kalimat-kalimat berikut ke customer:
+   - "Kami tidak bisa melayani..."
+   - "Maaf tidak bisa..."
+   - "Kami hanya melayani untuk ... (usia/BB/kondisi tertentu)"
+   - "Untuk kondisi kakak, kami tidak menerima..."
+   - "Kasus itu di luar layanan kami"
+
+   Keputusan "tidak bisa dilayani" adalah keputusan **manusia** (dr. Yoga / admin). AI cuma boleh **mengarahkan ke admin** — kalau kamu ragu apakah customer bisa dilayani (usia unusual, request unusual, kondisi khusus di luar checklist safety, dsb) → **WAJIB call `handoff_to_admin(reason)`**. Tool akan escalate + bot kirim pesan singkat "sebentar ya kak, saya cek ke tim".
+
+   Contoh kasus WAJIB handoff (JANGAN tolak sendiri):
+   - Customer bilang "anak saya usia 12 tahun / dewasa / bayi 2 minggu" — jangan bilang tidak bisa, handoff.
+   - Customer minta "sunat malam hari / sunat panggil rumah / sunat massal 10 anak / sunat perempuan / sunat kucing" — handoff (bahkan kalau kamu yakin "tidak bisa", biar admin yg konfirm).
+   - Customer BB extreme (mis. 5 kg atau 50 kg bilang normal) — handoff.
+   - Customer kondisi khusus yg belum tercover di safety-checklist (mis. celah bibir, hemofilia berat, alergi anestesi tertentu) — handoff.
+   - Semua permintaan yg kamu tergoda jawab "tidak bisa" atau "hanya bisa untuk X" — STOP, handoff dulu.
+
+   Format handoff yg BENAR:
+   → call `handoff_to_admin(reason="anak usia 9th mau sunat, AI ragu apakah bisa dilayani")` → output text KOSONG (tool udah kirim pesan tunggu).
+
 ═══ LEAD CAPTURE (WAJIB — di TURN PERTAMA bot utk conversation sunat baru) ═══
 
 Di **turn pertama** kamu di sebuah conversation sunat baru (session data `nama_orang_tua` dan `domisili` KEDUANYA masih kosong), APPEND satu bubble singkat & natural nanya nama customer + tempat tinggal (kota/kecamatan). Kalau customer kasih info di turn berikutnya → panggil `save_lead_sunat(nama, alamat)`.
@@ -856,6 +876,20 @@ PROMPT;
             [
                 'type' => 'function',
                 'function' => [
+                    'name'        => 'handoff_to_admin',
+                    'description' => '⚠️ WAJIB dipanggil SEBELUM kamu bilang "tidak bisa dilayani / tidak melayani / maaf tidak bisa / kami tidak menerima" ke customer. AI TIDAK BOLEH memutuskan sendiri bahwa customer tidak bisa dilayani — itu keputusan manusia (dr. Yoga / admin). Tool ini escalate ke admin + bot kirim pesan singkat ke customer bilang "sebentar ya kak saya cek ke tim dulu". Contoh trigger: customer kondisi khusus di luar checklist safety (ADHD/autisme/jantung sudah di-handle otomatis), request unusual (sunat malam hari, sunat panggil rumah, sunat massal >5 anak, sunat untuk hewan, dsb), permintaan yg kamu ragu apakah bisa dilayani, atau kamu tergoda bilang "hanya bisa untuk X". Untuk kondisi safety yg jelas (fimosis, gemuk, riwayat penyakit) pakai perlu_review_dokter=true di save_harga_data / save_booking_data — TIDAK PERLU tool ini juga.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => [
+                            'reason' => ['type' => 'string', 'description' => 'alasan singkat kenapa perlu handoff (untuk log + operator konteks), mis. "customer tanya sunat malam hari", "customer minta sunat panggil rumah", "customer usia 9 tahun (AI mau tolak, wajib konfirm ke admin dulu)"'],
+                        ],
+                        'required' => ['reason'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
                     'name'        => 'save_harga_data',
                     'description' => 'Simpan 1+ field harga yang customer sebut di turn ini. Tool return {ok, filled[], missing[], escalate?, reason?}. Kalau escalate=true, output text KOSONG (engine handoff ke admin). Kalau missing[] kosong, langsung call send_harga_quote().',
                     'parameters'  => [
@@ -960,6 +994,25 @@ PROMPT;
                 $reason = (string) ($args['reason'] ?? '');
                 [$summary, $bubbles] = $this->toolRedirectKeKlinikUtama($session, $reason);
                 return [$summary, ['replies' => $bubbles, 'signal' => 'redirected']];
+
+            case 'handoff_to_admin':
+                $reason = (string) ($args['reason'] ?? 'AI request handoff (no reason)');
+                Log::info('SUNAT_BOT_AGENT_HANDOFF_TO_ADMIN', [
+                    'phone'  => $session->no_telp,
+                    'reason' => $reason,
+                ]);
+                $session->setData('_handoff_reason', $reason);
+                $session->save();
+                return [
+                    ['ok' => true, 'handoff' => true, 'note' => 'engine akan escalate ke admin + kirim pesan tunggu ke customer. Output text KOSONG setelah tool ini.'],
+                    [
+                        'escalate' => true,
+                        'replies'  => [[
+                            'text'  => "Sebentar ya kak 🙏 saya cek dulu ke tim, nanti admin kami balas untuk detail lebih lanjut.",
+                            'media' => null,
+                        ]],
+                    ],
+                ];
 
             case 'save_harga_data':
                 [$summary, $sideEffect] = $this->toolSaveHargaData($args, $session);
