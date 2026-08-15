@@ -1826,6 +1826,32 @@ class SunatBotEngine
         $session->last_activity_at          = Carbon::now();
         $session->save();
 
+        // Per instruksi dr. Yoga 2026-08-15: setelah handoff ke admin,
+        // AI matikan utk nomor itu sampai besok 00:00 WIB. Upsert
+        // sunat_chat_sessions dgn ai_off_until = tomorrow midnight WIB.
+        try {
+            $tomorrow = Carbon::tomorrow('Asia/Jakarta')->startOfDay();
+            $chatSess = \App\Models\SunatChatSession::firstOrCreate(
+                ['phone' => (string) $session->no_telp],
+                [
+                    'contact_name'    => null,
+                    'status'          => 'active',
+                    'followup_status' => 'inactive',
+                    'awaiting_human'  => true,
+                    'reply_emailed'   => false,
+                    'opt_out'         => false,
+                ]
+            );
+            $chatSess->ai_off_until  = $tomorrow;
+            $chatSess->awaiting_human = true;
+            $chatSess->save();
+        } catch (\Throwable $e) {
+            Log::warning('SUNAT_BOT_ESCALATE_AI_OFF_FAIL', [
+                'phone' => $session->no_telp,
+                'err'   => $e->getMessage(),
+            ]);
+        }
+
         Log::info('SUNAT_BOT_ESCALATED', [
             'phone'   => $session->no_telp,
             'session' => $session->id,

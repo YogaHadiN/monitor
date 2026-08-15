@@ -5870,10 +5870,14 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
         if (!$session->awaiting_human) {
             $session->awaiting_human = true;
+            // Per instruksi dr. Yoga 2026-08-15: handoff → matikan AI
+            // sampai besok 00:00 WIB.
+            $session->ai_off_until = \Carbon\Carbon::tomorrow('Asia/Jakarta')->startOfDay();
             $session->save();
             \Log::info('SUNAT_FOLLOWUP_HANDOFF_SET', [
-                'phone'      => $phone,
-                'session_id' => $session->id,
+                'phone'        => $phone,
+                'session_id'   => $session->id,
+                'ai_off_until' => (string) $session->ai_off_until,
             ]);
         }
         return true;

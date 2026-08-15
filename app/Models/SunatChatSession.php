@@ -18,5 +18,6 @@ class SunatChatSession extends Model
         'awaiting_human' => 'boolean',
         'reply_emailed'  => 'boolean',
         'opt_out'        => 'boolean',
+        'ai_off_until'   => 'datetime',
     ];
 }

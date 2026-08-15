@@ -182,6 +182,23 @@ class SunatBotInternalController extends Controller
         $phone   = (string) $data['no_telp'];
         $message = (string) $data['message'];
 
+        // AI OFF guard — per instruksi dr. Yoga 2026-08-15: kalau admin
+        // sudah balas manual dari HP sunat atau bot sudah handoff, AI
+        // dimatikan sampai besok 00:00 WIB. Defense-in-depth: atika
+        // webhook juga guard, tapi kalau lolos, monitor tetap block.
+        $aiOffUntil = SunatChatSession::where('phone', $phone)->value('ai_off_until');
+        if ($aiOffUntil !== null && Carbon::parse($aiOffUntil)->isFuture()) {
+            Log::info('SUNATBOT_AI_OFF', [
+                'phone'        => $phone,
+                'ai_off_until' => (string) $aiOffUntil,
+            ]);
+            return response()->json([
+                'ok'      => true,
+                'handled' => false,
+                'replies' => [],
+            ]);
+        }
+
         // Opt-out guard — customer balas "stop" / "berhenti" / "unsubscribe"
         // / "hentikan" (whole word, case-insensitive) → set opt_out=1 di
         // sunat_chat_sessions + stop pending sunat_followups + return
