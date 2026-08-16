@@ -678,7 +678,7 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    - `false` kalau semua safety-field benign (postur normal/tidak gemuk, indikasi "tidak ada"/"cuma mau khitan", riwayat "tidak ada"/"sehat")
    Kalau `perlu_review_dokter=true`, engine ambil alih handoff. Output text kosong, jangan call `send_harga_quote`.
 
-7. **Harga sudah pernah dikirim** — kalau history sudah ada bubble berisi angka "Rp ..." atau template quote_harga_paket, **DILARANG** call `send_harga_quote` lagi. Bantu jawab pertanyaan lanjutan saja.
+7. **Harga sudah pernah dikirim** — default: JANGAN call `send_harga_quote` lagi, cukup bantu jawab pertanyaan lanjutan. TAPI kalau customer EKSPLISIT minta kirim ulang ("kirim lagi", "ulangi", "bisa dikirim ulang", "coba kirim lagi", "resend", "gambar hargaya tidak muncul", "belum masuk"), boleh call `send_harga_quote` LAGI — customer minta jangan ditolak. Backend akan re-render full bundle (metode + quote + closing).
 
 8. **⚠️ Kalau kamu SUDAH open HARGA flow (turn sebelumnya bot tanya nama/domisili/usia/BB utk harga — cek history bubble seperti "Untuk biaya sunat tergantung..." atau "Kalo boleh tau dengan kakak siapa?"), TETAP LANJUT flow di turn ini walau customer reply belum kasih data.**
    Aturan handling reply-nya:
@@ -938,7 +938,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'send_harga_quote',
-                    'description' => 'Emit quote bundle final ke customer: edukasi metode (teknoklamp, 1 bubble) + quote_harga_paket + diskon rombongan (kalau jumlah_anak≥2) + tanya_pertanyaan_lanjutan. Testimoni Google review, pemberian hadiah, dan mini vlog dokumentasi SENGAJA TIDAK di-bundle (feedback client: terlalu spam / terburu-buru). Ketiganya hanya keluar via intent eksplisit (pertanyaan_testimoni / pertanyaan_hadiah / pertanyaan_dokumentasi) atau followup H+1 kalau leads tidak reply. WAJIB dipanggil HANYA setelah semua 8 field wajib terkumpul (nama_orang_tua, domisili, jumlah_anak, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), DILARANG panggil lagi. Setelah call, output text KOSONG.',
+                    'description' => 'Emit quote bundle final ke customer: edukasi metode (teknoklamp, 1 bubble) + quote_harga_paket + diskon rombongan (kalau jumlah_anak≥2) + tanya_pertanyaan_lanjutan. Testimoni Google review, pemberian hadiah, dan mini vlog dokumentasi SENGAJA TIDAK di-bundle (feedback client: terlalu spam / terburu-buru). Ketiganya hanya keluar via intent eksplisit (pertanyaan_testimoni / pertanyaan_hadiah / pertanyaan_dokumentasi) atau followup H+1 kalau leads tidak reply. WAJIB dipanggil HANYA setelah semua 8 field wajib terkumpul (nama_orang_tua, domisili, jumlah_anak, usia_anak, berat_badan_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), default JANGAN panggil lagi. TAPI kalau customer eksplisit minta kirim ulang ("kirim lagi", "ulangi", "coba lagi", "belum masuk", dll) → BOLEH panggil lagi, backend akan re-render full bundle. Setelah call, output text KOSONG.',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => new \stdClass(),
@@ -1707,14 +1707,16 @@ PROMPT;
             ];
         }
 
-        // Dedupe: kalau quote sudah pernah dikirim, jangan dobel.
-        if ($session->getData('_harga_sent')) {
-            return [
-                ['ok' => false, 'error' => 'quote sudah pernah dikirim, jangan dobel'],
-                [],
-                false,
-            ];
-        }
+        // NB: dedupe backend DIHAPUS per instruksi dr. Yoga 2026-08-16.
+        // Kalau customer minta kirim ulang, agent boleh call ini lagi —
+        // customer eksplisit minta jangan ditolak. Guard di prompt agent
+        // (poin 7 di ATURAN HARGA) sudah membatasi call redundant, tapi
+        // TIDAK MEMBLOKIR eksplisit request. Reset _slugs_shown supaya
+        // pertanyaan_metode (media) juga re-render (kalau tidak reset,
+        // bubble metode di-skip → hanya text quote yg terkirim, terasa
+        // aneh untuk re-send full).
+        $session->setData('_slugs_shown', []);
+        $session->save();
 
         $bubbles = [];
         $shown   = (array) $session->getData('_slugs_shown');
