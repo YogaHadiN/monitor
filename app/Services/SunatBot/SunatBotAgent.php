@@ -488,11 +488,13 @@ Sinonim positif yang BOLEH dipakai: "bius nyaman", "proses pembiusan", "tindakan
 
 👶 USIA: **SEMUA usia dilayani** — bayi, balita, anak, remaja, dewasa. Tidak ada batas usia minimum/maksimum. Usia 1–7 tahun sekedar range yg paling sering datang (bukan batasan). Kalau customer bilang anaknya usia berapapun (8/9/10/12/15 tahun / dewasa / bayi), JANGAN pernah bilang "tidak bisa" atau "hanya untuk 1-7 tahun". SEMUA BISA.
 
-⚠️ **ATURAN USIA ≥17 TAHUN (dewasa)**:
-- **HARGA flow**: usia ≥17 → NORMAL. Kumpulkan 8 field seperti biasa, panggil `send_harga_quote` → engine auto-swap ke template dewasa (Rp 3.500.000, konten manfaat medis dewasa tanpa hadiah anak). Tidak ada handoff. Per instruksi dr. Yoga 2026-08-16.
-- **BOOKING flow**: usia ≥17 → auto-handoff ke admin (aturan hard-gate tetap). Tindakan sunat dewasa butuh assessment dokter langsung sebelum booking. Kamu tetap call `save_booking_data` dgn field usia terisi → engine handoff otomatis.
+⚠️ **ATURAN USIA ≥17 TAHUN (dewasa)** — per instruksi dr. Yoga 2026-08-16:
+- **HARGA flow**: usia ≥17 → NORMAL. Kumpulkan 8 field seperti biasa, panggil `send_harga_quote` → engine auto-swap ke template dewasa (Rp 3.500.000, konten manfaat medis dewasa tanpa hadiah anak). Tidak ada handoff.
+- **BOOKING flow**: usia ≥17 juga NORMAL. Booking dewasa proceed sama seperti anak — kumpulkan 9 field wajib, panggil `save_booking_data` + `finalize_booking`. Tidak ada handoff spesifik usia. Sudah dijawab harganya (3.5jt), jadi tidak perlu review manusia.
 
-JANGAN tolak sendiri, JANGAN bilang "tidak bisa dilayani" untuk usia ≥17. HARGA quote langsung dgn 3.5jt template, BOOKING serahkan ke admin.
+Safety escalation LLM-classified (`perlu_review_dokter=true` untuk postur/indikasi/riwayat berisiko) tetap jalan — kalau customer sebut kondisi medis serius, tetap handoff meskipun bukan karena usia.
+
+JANGAN tolak sendiri, JANGAN bilang "tidak bisa dilayani" untuk usia ≥17. Layani seperti pasien anak, dgn template harga & booking yg sudah adjust otomatis.
 
 ♀️ Sunat PEREMPUAN: TIDAK kami layani. Hanya laki-laki.
 
@@ -1313,15 +1315,15 @@ PROMPT;
             $reason   = 'LLM classified perlu_review_dokter=true (postur/indikasi/riwayat berisiko)';
         }
 
-        // Hard escalation gate (backend, deterministic): usia ≥ 17 tahun
-        // → auto-handoff. Per aturan dr. Yoga 2026-08-14: pasien
-        // dewasa/remaja lanjut wajib review manusia dulu sebelum booking.
-        $usiaVal = (int) $session->getData('booking_usia_anak');
-        $usiaSat = (string) $session->getData('booking_usia_anak_satuan');
-        if ($usiaSat === 'tahun' && $usiaVal >= 17) {
-            $escalate = true;
-            $reason   = 'booking_usia_anak ' . $usiaVal . ' tahun (≥17) — auto-handoff ke admin (aturan hard-gate)';
-        }
+        // NB (per instruksi dr. Yoga 2026-08-16): hard-gate usia ≥17
+        // tahun di BOOKING flow DIHAPUS. Sebelumnya (2026-08-14) auto-
+        // handoff karena "pasien dewasa wajib review manusia". Sekarang
+        // konsisten dgn HARGA flow (2026-08-16 pagi): dewasa proceed
+        // booking normal — sudah dijawab harganya (Rp 3.5jt via
+        // quote_harga_paket_dewasa), tidak perlu handoff lagi.
+        // Escalation gate LLM-classified (perlu_review_dokter) tetap
+        // jalan sebagai safety net untuk riwayat penyakit / postur
+        // berisiko — tidak spesifik untuk usia.
 
         // Validate slot kalau tanggal + jam sudah terisi
         $slotStatus     = 'ok';
