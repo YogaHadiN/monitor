@@ -350,6 +350,24 @@ class SunatBotEngine
                 'collected_data'   => [],
                 'last_activity_at' => Carbon::now(),
             ]);
+            $justCreated = true;
+
+            // Per instruksi dr. Yoga 2026-08-16: first-touch greeting Rona
+            // (format Dumet School + tanya nama+domisili). Kalau bot_intent
+            // `greeting_first_touch` aktif → render + return early. Turn
+            // berikutnya (customer reply nama+domisili) baru masuk agent
+            // flow via save_lead_sunat / save_harga_data.
+            $greetingIntent = BotIntent::where('intent', 'greeting_first_touch')
+                ->where('active', 1)
+                ->first();
+            if ($greetingIntent !== null) {
+                return [
+                    'handled' => true,
+                    'replies' => $this->renderIntent('greeting_first_touch', $session),
+                ];
+            }
+
+            // Fallback (kalau greeting_first_touch belum di-seed):
             // Skip auto trigger_sunat greeting kalau agent enabled — agent
             // punya logic greeting sendiri (tanya keperluan dulu). Tanpa
             // skip, customer kena 3 bubble template + 1 bubble agent greet
@@ -357,7 +375,6 @@ class SunatBotEngine
             if (!$this->shouldUseAgent($noTelp)) {
                 $replies = array_merge($replies, $this->renderIntent('trigger_sunat', $session));
             }
-            $justCreated = true;
         }
 
         if ($session->expecting_field !== null) {
