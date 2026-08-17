@@ -93,6 +93,28 @@ class SunatBotEngine
     }
 
     /**
+     * First-touch guard: pesan pertama customer eksplisit menyebut layanan
+     * non-sunat (gigi, USG, BPJS, dokter umum, dll). Kalau ya, engine
+     * skip greeting_first_touch + skip create session → langsung redirect.
+     * Keyword list mirror SunatBotAgent::NON_SUNAT_KEYWORDS.
+     */
+    private function firstTouchIsNonSunat(string $message): bool
+    {
+        $keywords = [
+            'usg', 'kandungan', 'kehamilan', 'hamil', 'lab',
+            'cek darah', 'dokter umum', 'dokter gigi', 'gigi', 'kulit',
+            'vaksin', 'imunisasi', 'mobile jkn', 'mobile-jkn',
+            'jkn', 'obat', 'resep',
+        ];
+        $lower = mb_strtolower(trim($message));
+        if ($lower === '') return false;
+        foreach ($keywords as $kw) {
+            if (str_contains($lower, $kw)) return true;
+        }
+        return false;
+    }
+
+    /**
      * Cek apakah nomor ini di-route ke SunatBotAgent (tool-calling LLM)
      * atau ke IntentClassifier lama. PR2 = allowlist nomor tertentu;
      * PR3 = default ON untuk semua (allowed_phones boleh dikosongkan).
@@ -345,6 +367,22 @@ class SunatBotEngine
         $justCreated = false;
 
         if ($session === null) {
+            // Guard: first-touch message yang eksplisit non-sunat (dokter
+            // gigi, USG, BPJS, dll) → langsung redirect ke klinik utama,
+            // JANGAN buat session + JANGAN kirim greeting Rona. Kalau tidak
+            // di-guard, greeting bubble tenggelamkan intent asli customer
+            // (contoh: "saya mau daftar dokter gigi" dibalas Rona greeting
+            // biasa, pesan aslinya hilang). Per keluhan dr. Yoga 2026-08-17.
+            if ($this->firstTouchIsNonSunat($msg)) {
+                return [
+                    'handled' => true,
+                    'replies' => [[
+                        'text'  => "Halo kak 🙏\n\nNomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum (dokter gigi, dokter umum, USG, BPJS, dll), silakan tap link berikut untuk langsung chat admin klinik utama kami:\n\nhttps://wa.me/6282113781271\n\nTerima kasih 🙏",
+                        'media' => null,
+                    ]],
+                ];
+            }
+
             $session = BotSession::create([
                 'no_telp'          => $noTelp,
                 'collected_data'   => [],
