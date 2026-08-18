@@ -21,13 +21,14 @@ class SunatBotEngine
      * captured both usia_anak and berat_badan_anak — captureForField
      * marks the usia_bb sentinel so this loop sees it as "filled".
      */
+    // NB: berat_badan_anak dihapus 2026-08-18 — postur_tubuh sudah
+    // capture info "gemuk atau tidak" yang jadi tujuan asking BB.
     private const HARGA_FLOW = [
         'nama_orang_tua'      => 'tanya_nama_orang_tua',     // 2.1
         'domisili'            => 'tanya_domisili',            // 2.2
-        'usia_anak'           => 'tanya_usia_anak',           // 2.3a (split dari usia_bb)
-        'berat_badan_anak'    => 'tanya_berat_badan_anak',    // 2.3b (split dari usia_bb)
+        'usia_anak'           => 'tanya_usia_anak',           // 2.3
         'indikasi_khitan'     => 'tanya_indikasi',            // 2.4
-        'postur_tubuh'        => 'tanya_postur_tubuh',        // 2.4.5
+        'postur_tubuh'        => 'tanya_postur_tubuh',        // 2.4.5 (capture "gemuk/tidak")
         'riwayat_kesehatan'   => 'tanya_riwayat_kesehatan',   // 2.5 (escalation gate)
         'sudah_tahu_metode'   => 'tanya_sudah_tahu_metode',   // 2.6 (conditional render)
         'pengalaman_medis'    => 'tanya_pengalaman',          // 2.7 (emits 2.8 + contoh_dokumentasi)
@@ -556,13 +557,13 @@ class SunatBotEngine
             // keywords let the AI detect price questions) but its
             // template is NOT rendered as a separate bubble — step 2.1
             // (tanya_nama_orang_tua) already opens with "Untuk biaya
-            // sunat tergantung usia dan berat badan kak. ..." per
-            // proposal §2.1, so rendering pertanyaan_harga here would
-            // duplicate that line.
-            // enterHargaFlow ikut scan $message untuk usia/BB
-            // opportunistic — kalau customer sebut umur/BB di pesan
-            // trigger ("anak saya 8 th 30 kg mau tanya harga"),
-            // step 2.3a + 2.3b langsung skip.
+            // sunat tergantung usia dan postur tubuh anaknya kak. ..."
+            // per proposal §2.1, so rendering pertanyaan_harga here
+            // would duplicate that line.
+            // enterHargaFlow ikut scan $message untuk usia
+            // opportunistic — kalau customer sebut umur di pesan
+            // trigger ("anak saya 8 th mau tanya harga"), step 2.3
+            // langsung skip. BB tidak di-ask lagi (postur_tubuh cukup).
             $replies = $this->enterHargaFlow($session, $replies, $message);
         }
 
