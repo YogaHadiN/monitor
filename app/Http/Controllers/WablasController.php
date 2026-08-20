@@ -389,7 +389,7 @@ class WablasController extends Controller
                     $this->autoReply($msg);
                     \Log::info('SUNAT_DAFTAR_AUTO_REPLY', ['phone' => $this->no_telp]);
                 } else {
-                    $rona      = (string) config('sunatbot.nomor_rona', '0895-3692-69190');
+                    $rona      = (string) config('sunatbot.nomor_rona', '6282278065959');
                     $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
                     if (str_starts_with($ronaDigits, '0'))  $ronaE164 = '62' . substr($ronaDigits, 1);
                     elseif (str_starts_with($ronaDigits, '62')) $ronaE164 = $ronaDigits;

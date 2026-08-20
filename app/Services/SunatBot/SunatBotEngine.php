@@ -1158,7 +1158,7 @@ class SunatBotEngine
         $sunatJid = '6282278065959';
         $autoText = rawurlencode('saya butuh bantuan booking sunat');
 
-        $rona       = (string) config('sunatbot.nomor_rona', '0895-3692-69190');
+        $rona       = (string) config('sunatbot.nomor_rona', '6282278065959');
         $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
         if (str_starts_with($ronaDigits, '0'))       $ronaE164 = '62' . substr($ronaDigits, 1);
         elseif (str_starts_with($ronaDigits, '62'))  $ronaE164 = $ronaDigits;

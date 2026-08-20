@@ -3,7 +3,11 @@
 return [
     'alamat_klinik' => env('SUNATBOT_ALAMAT_KLINIK', 'Klinik Jati Elok – SunatBoy, Komp. Bumi Jati Elok Blok A1 No. 4-5, Jl. Raya Legok–Parung Panjang Km. 3, Malangnengah, Pagedangan, Tangerang, Banten 15330'),
     'link_maps'     => env('SUNATBOT_LINK_MAPS', 'https://maps.app.goo.gl/WDWMvex5F9YpgPaE9'),
-    'nomor_rona'    => env('SUNATBOT_NOMOR_RONA', '0895-3692-69190'),
+    // Nomor tujuan redirect "chat admin sunat" — sekarang pakai nomor
+    // gowa sunat device (sunatboy 6282278065959) supaya customer masuk
+    // via bot dulu, bukan langsung ke HP Rona pribadi. Override lewat
+    // env kalau perlu direct-ke-Rona untuk env non-produksi.
+    'nomor_rona'    => env('SUNATBOT_NOMOR_RONA', '6282278065959'),
     // Nomor operator/admin yang dapat notifikasi WA tiap booking baru
     // via sunat bot (mirror atika JadwalSunatController hardcode).
     'nomor_operator' => env('SUNATBOT_NOMOR_OPERATOR', '6281381912803'),
