@@ -2709,6 +2709,26 @@ class WablasController extends Controller
      */
     private function updateNotifikasPanggilanUntukAntrian()
     {
+        // Step-2 ganti dokter: pasien sudah dikirimi list dokter, sekarang
+        // membalas angka pilihan (atau "batal"). Intercept sebelum keyword
+        // matcher di bawah supaya "1" tidak salah lempar ke branch lain.
+        if (
+            !is_null($this->whatsapp_bot)
+            && (int) $this->whatsapp_bot->whatsapp_bot_service_id === self::WA_BOT_SERVICE_GANTI_DOKTER
+        ) {
+            $this->prosesGantiDokter();
+            return;
+        }
+
+        if (
+             str_contains($this->message, 'ganti dokter') ||
+             str_contains($this->message, 'ganti dktr') ||
+             str_contains($this->message, 'gnti dokter')
+        ) {
+            $this->autoReply($this->konfirmasiGantiDokter());
+            return;
+        }
+
         if (
              str_contains( $this->message,'stop' ) ||
              str_contains( $this->message,'setop' )
@@ -2820,6 +2840,121 @@ class WablasController extends Controller
             $this->autoReply($message );
         }
     }
+
+    // Whitelisted service id untuk state "ganti dokter" (list bernomor menunggu
+    // pilihan pasien). Id 1-16 sudah dipakai fitur lain, 20 aman.
+    const WA_BOT_SERVICE_GANTI_DOKTER = 20;
+
+    private function petugasPemeriksaAlternatif(): \Illuminate\Support\Collection
+    {
+        $now = \Carbon\Carbon::now('Asia/Jakarta');
+        $q = \App\Models\PetugasPemeriksa::with('staf.titel')
+            ->whereDate('tanggal', $now->toDateString())
+            ->where('tipe_konsultasi_id', $this->antrian->tipe_konsultasi_id)
+            ->where('staf_id', '!=', $this->antrian->staf_id)
+            ->where('jam_mulai', '<=', $now->format('H:i:s'))
+            ->where('jam_akhir', '>=', $now->format('H:i:s'));
+
+        if (!empty($this->antrian->tenant_id)) {
+            $q->where('tenant_id', $this->antrian->tenant_id);
+        }
+
+        return $q->orderBy('jam_mulai', 'asc')
+            ->get()
+            ->unique('staf_id')
+            ->values();
+    }
+
+    private function konfirmasiGantiDokter(): string
+    {
+        $tipeNama = optional($this->antrian->tipe_konsultasi)->tipe_konsultasi ?? 'ini';
+        $alternatif = $this->petugasPemeriksaAlternatif();
+
+        if ($alternatif->isEmpty()) {
+            return "Mohon maaf, tidak dapat ganti dokter karena dokter *{$tipeNama}* yang sedang bertugas saat ini hanya satu orang.";
+        }
+
+        $dokterSaatIni = optional($this->antrian->staf)->nama_dengan_gelar ?? '-';
+        $lines = [];
+        foreach ($alternatif as $idx => $pp) {
+            $nama = optional($pp->staf)->nama_dengan_gelar ?? optional($pp->staf)->nama ?? '-';
+            $jam  = substr((string) $pp->jam_mulai, 0, 5) . '-' . substr((string) $pp->jam_akhir, 0, 5);
+            $lines[] = ($idx + 1) . ". {$nama} (jaga {$jam})";
+        }
+
+        \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
+        \App\Models\WhatsappBot::create([
+            'no_telp'                 => $this->no_telp,
+            'whatsapp_bot_service_id' => self::WA_BOT_SERVICE_GANTI_DOKTER,
+            'prevent_repetition'      => 0,
+        ]);
+
+        $msg  = "Anda saat ini terdaftar dengan {$dokterSaatIni} untuk konsultasi *{$tipeNama}*.";
+        $msg .= PHP_EOL . PHP_EOL;
+        $msg .= "Dokter *{$tipeNama}* lain yang sedang bertugas:";
+        $msg .= PHP_EOL;
+        $msg .= implode(PHP_EOL, $lines);
+        $msg .= PHP_EOL . PHP_EOL;
+        $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan ganti dokter.';
+        return $msg;
+    }
+
+    private function prosesGantiDokter(): void
+    {
+        $raw = trim((string) $this->message);
+        $msg = mb_strtolower($raw);
+
+        if (in_array($msg, ['batal', 'batalkan', 'tidak', 'no'], true)) {
+            \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
+                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_GANTI_DOKTER)
+                ->delete();
+            $this->autoReply('Ganti dokter dibatalkan. Anda tetap dengan dokter sebelumnya.');
+            return;
+        }
+
+        if (!ctype_digit($raw)) {
+            $this->autoReply('Balasan tidak dikenali. Mohon balas dengan *angka* dokter pilihan, atau ketik *batal*.');
+            return;
+        }
+
+        $pilihan = (int) $raw;
+        $alternatif = $this->petugasPemeriksaAlternatif();
+
+        if ($alternatif->isEmpty()) {
+            \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
+                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_GANTI_DOKTER)
+                ->delete();
+            $tipeNama = optional($this->antrian->tipe_konsultasi)->tipe_konsultasi ?? 'ini';
+            $this->autoReply("Mohon maaf, saat ini sudah tidak ada dokter *{$tipeNama}* lain yang bertugas.");
+            return;
+        }
+
+        if ($pilihan < 1 || $pilihan > $alternatif->count()) {
+            $max = $alternatif->count();
+            $this->autoReply("Nomor pilihan tidak valid. Mohon balas dengan angka *1 - {$max}*, atau ketik *batal*.");
+            return;
+        }
+
+        $pp = $alternatif[$pilihan - 1];
+        $dokterBaru = optional($pp->staf)->nama_dengan_gelar ?? optional($pp->staf)->nama ?? '-';
+
+        $this->antrian->staf_id              = $pp->staf_id;
+        $this->antrian->petugas_pemeriksa_id = $pp->id;
+        $this->antrian->save();
+
+        \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
+            ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_GANTI_DOKTER)
+            ->delete();
+
+        $tipeNama = optional($this->antrian->tipe_konsultasi)->tipe_konsultasi ?? '';
+        $reply  = "Dokter berhasil diganti ke {$dokterBaru}.";
+        if ($tipeNama !== '') {
+            $reply .= PHP_EOL . "Konsultasi: {$tipeNama}";
+        }
+        $reply .= PHP_EOL . 'Nomor antrian Anda tetap sama.';
+        $this->autoReply($reply);
+    }
+
     public function pasienTidakDalamAntrian(){
         $carbon = Carbon::now();
         $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
