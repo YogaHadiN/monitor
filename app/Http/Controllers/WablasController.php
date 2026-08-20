@@ -2878,9 +2878,8 @@ class WablasController extends Controller
         $lines = [];
         foreach ($alternatif as $idx => $pp) {
             $nama  = optional($pp->staf)->nama_dengan_gelar ?? optional($pp->staf)->nama ?? '-';
-            $jam   = substr((string) $pp->jam_mulai, 0, 5) . '-' . substr((string) $pp->jam_akhir, 0, 5);
             $sisa  = (int) $pp->sisa_antrian;
-            $lines[] = ($idx + 1) . ". {$nama} (jaga {$jam}, sisa {$sisa} antrian)";
+            $lines[] = ($idx + 1) . ". {$nama} (sisa {$sisa} antrian)";
         }
 
         \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
