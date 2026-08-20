@@ -2938,20 +2938,58 @@ class WablasController extends Controller
         $pp = $alternatif[$pilihan - 1];
         $dokterBaru = optional($pp->staf)->nama_dengan_gelar ?? optional($pp->staf)->nama ?? '-';
 
-        $this->antrian->staf_id              = $pp->staf_id;
-        $this->antrian->petugas_pemeriksa_id = $pp->id;
-        $this->antrian->save();
+        $oldAntrian   = $this->antrian;
+        $newRuanganId = $pp->ruangan_id ?? $oldAntrian->ruangan_id;
+
+        // antrianPost() dan kodeUnik() membaca dua field ini dari $this,
+        // set dulu supaya antrian baru mewarisi metode pembayaran & nomor
+        // BPJS asli pasien.
+        $this->input_nomor_bpjs               = $oldAntrian->nomor_bpjs;
+        $this->input_registrasi_pembayaran_id = $oldAntrian->registrasi_pembayaran_id;
+
+        $newAntrian = null;
+        \DB::transaction(function () use ($oldAntrian, $pp, $newRuanganId, &$newAntrian) {
+            // antrianPost fires FormSubmitted → assign nomor_antrian baru
+            // di ekor antrian dokter/ruangan target (posisi terakhir).
+            $newAntrian = $this->antrianPost($newRuanganId);
+
+            $newAntrian->nama                  = $oldAntrian->nama;
+            $newAntrian->nomor_bpjs            = $oldAntrian->nomor_bpjs;
+            $newAntrian->no_telp               = $oldAntrian->no_telp;
+            $newAntrian->tanggal_lahir         = $oldAntrian->tanggal_lahir;
+            $newAntrian->alamat                = $oldAntrian->alamat;
+            $newAntrian->pasien_id             = $oldAntrian->pasien_id;
+            $newAntrian->verifikasi_bpjs       = $oldAntrian->verifikasi_bpjs;
+            $newAntrian->tipe_konsultasi_id    = $oldAntrian->tipe_konsultasi_id;
+            $newAntrian->staf_id               = $pp->staf_id;
+            $newAntrian->petugas_pemeriksa_id  = $pp->id;
+            $newAntrian->kartu_asuransi_image  = $oldAntrian->kartu_asuransi_image;
+            $newAntrian->data_bpjs_cocok       = $oldAntrian->data_bpjs_cocok;
+            $newAntrian->reservasi_online      = $oldAntrian->reservasi_online;
+            $newAntrian->sumber_antrian_id     = $oldAntrian->sumber_antrian_id;
+            $newAntrian->sudah_hadir_di_klinik = $oldAntrian->sudah_hadir_di_klinik;
+            $newAntrian->qr_code_path_s3       = $this->generateQrCodeForOnlineReservation('A', $newAntrian);
+            $newAntrian->save();
+            $newAntrian->antriable_id = $newAntrian->id;
+            $newAntrian->save();
+
+            $oldAntrian->delete();
+        });
 
         \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
             ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_GANTI_DOKTER)
             ->delete();
 
-        $tipeNama = optional($this->antrian->tipe_konsultasi)->tipe_konsultasi ?? '';
+        $tipeNama = optional($newAntrian->tipe_konsultasi)->tipe_konsultasi ?? '';
         $reply  = "Dokter berhasil diganti ke {$dokterBaru}.";
         if ($tipeNama !== '') {
             $reply .= PHP_EOL . "Konsultasi: {$tipeNama}";
         }
-        $reply .= PHP_EOL . 'Nomor antrian Anda tetap sama.';
+        $reply .= PHP_EOL . PHP_EOL;
+        $reply .= 'Nomor antrian baru Anda:';
+        $reply .= PHP_EOL . '*' . $newAntrian->nomor_antrian . '*';
+        $reply .= PHP_EOL . PHP_EOL;
+        $reply .= 'Antrian sebelumnya telah dibatalkan.';
         $this->autoReply($reply);
     }
 
