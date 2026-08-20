@@ -2877,9 +2877,10 @@ class WablasController extends Controller
         $dokterSaatIni = optional($this->antrian->staf)->nama_dengan_gelar ?? '-';
         $lines = [];
         foreach ($alternatif as $idx => $pp) {
-            $nama = optional($pp->staf)->nama_dengan_gelar ?? optional($pp->staf)->nama ?? '-';
-            $jam  = substr((string) $pp->jam_mulai, 0, 5) . '-' . substr((string) $pp->jam_akhir, 0, 5);
-            $lines[] = ($idx + 1) . ". {$nama} (jaga {$jam})";
+            $nama  = optional($pp->staf)->nama_dengan_gelar ?? optional($pp->staf)->nama ?? '-';
+            $jam   = substr((string) $pp->jam_mulai, 0, 5) . '-' . substr((string) $pp->jam_akhir, 0, 5);
+            $sisa  = (int) $pp->sisa_antrian;
+            $lines[] = ($idx + 1) . ". {$nama} (jaga {$jam}, sisa {$sisa} antrian)";
         }
 
         \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
@@ -2894,6 +2895,8 @@ class WablasController extends Controller
         $msg .= "Dokter *{$tipeNama}* lain yang sedang bertugas:";
         $msg .= PHP_EOL;
         $msg .= implode(PHP_EOL, $lines);
+        $msg .= PHP_EOL . PHP_EOL;
+        $msg .= '⚠️ Jika pindah dokter, Anda akan mendapatkan *nomor antrian baru di posisi terakhir* pada antrian dokter tersebut. Antrian Anda saat ini akan dibatalkan.';
         $msg .= PHP_EOL . PHP_EOL;
         $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan ganti dokter.';
         return $msg;
