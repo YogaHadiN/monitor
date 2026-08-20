@@ -1875,6 +1875,30 @@ class SunatBotEngine
      * rendered template) by passing $replies; otherwise the
      * sunatbot.handover_message config string is used.
      */
+    /**
+     * Deteksi apakah indikasi_khitan customer menunjuk KELAINAN PENIS
+     * (fimosis, buried penis, hipospadia, dll). Dipakai escalate() untuk
+     * pilih instruksi foto: kalau kelainan penis → minta foto penis +
+     * foto pasien; kalau tidak (mis. postur gemuk / riwayat jantung) →
+     * cukup foto full body pasien.
+     */
+    private function indikasiAdaKelainanPenis(?string $indikasi): bool
+    {
+        $s = mb_strtolower(trim((string) $indikasi));
+        if ($s === '' || $s === 'tidak ada' || $s === 'sehat' || $s === '-') return false;
+        $keywords = [
+            'penis', 'kelainan', 'fimosis', 'phimosis', 'parafimosis',
+            'paraphimosis', 'buried', 'hipospadia', 'hypospadia',
+            'epispadia', 'chordee', 'mikropenis', 'micropenis',
+            'preputium', 'kulup', 'lecet', 'infeksi', 'bengkak',
+            'kemerahan', 'nanah', 'kudis', 'gatal',
+        ];
+        foreach ($keywords as $kw) {
+            if (str_contains($s, $kw)) return true;
+        }
+        return false;
+    }
+
     private function escalate(BotSession $session, ?array $replies = null): array
     {
         $session->requires_special_handling = true;
@@ -1919,13 +1943,24 @@ class SunatBotEngine
         // sama, tidak double-notif).
         $this->notifyOperatorHandoff($session);
 
+        // Pre-handoff photo request: sebelum handover message, kirim
+        // instruksi minta foto ke customer (per instruksi dr. Yoga
+        // 2026-08-20). Kalau indikasi khitan menunjukkan KELAINAN PENIS
+        // (fimosis dll) → minta 2 foto (foto penis + foto full body
+        // pasien). Kalau tidak (mis. postur gemuk / riwayat medis lain)
+        // → cukup foto full body pasien.
+        $indikasi = (string) ($session->getData('indikasi_khitan') ?? '');
+        $photoRequest = $this->indikasiAdaKelainanPenis($indikasi)
+            ? "Sebelum kami sambungkan ke admin, mohon kirim foto berikut kak, supaya dokter kami bisa asesmen kondisinya:\n\n1. Foto area penis (fokus ke bagian yang dikeluhkan)\n2. Foto calon pasien (full body, wajah kelihatan)\n\n🙏"
+            : "Sebelum kami sambungkan ke admin, mohon kirim foto full body calon pasien ya kak, supaya dokter kami bisa asesmen kondisinya 🙏";
+
+        $preBubble  = ['text' => $photoRequest,                            'media' => null];
+        $handoverBubble = ['text' => (string) config('sunatbot.handover_message'), 'media' => null];
+
         if ($replies !== null) {
-            return $replies;
+            return array_merge([$preBubble], $replies);
         }
-        return [[
-            'text'  => (string) config('sunatbot.handover_message'),
-            'media' => null,
-        ]];
+        return [$preBubble, $handoverBubble];
     }
 
     /**
