@@ -98,6 +98,12 @@ class SunatBotAgent
         // (mis. iter1 + iter2 get_intent_response("pertanyaan_lokasi")
         // dua kali → template ke-render dobel). Dedupe di sisi tool.
         $renderedSlugs = [];
+        // Media slug = intent yg tool `get_intent_response` sudah render
+        // bubble komplit (text + foto/video). Track supaya di iter berikut
+        // kita bisa drop text agent kalau content-nya redundant (double
+        // send alamat/maps/dsb). Agent sering bandel walau prompt sudah
+        // suruh "output text KOSONG setelah get_intent_response".
+        $mediaSlugRendered = [];
         // Enforce: agent harus panggil lookup_knowledge minimal 1x
         // sebelum boleh redirect / trigger flow. Model kadang skip
         // lookup dan langsung redirect untuk pertanyaan yg sebenarnya
@@ -146,11 +152,27 @@ class SunatBotAgent
                 $keepAsFlowOpener = ($userAskedHarga && !$session->getData('_harga_sent'))
                                  || ($userAskedBooking && !$session->is_complete);
 
+                // Extra drop condition: kalau media slug (pertanyaan_lokasi/
+                // metode/dsb) sudah di-render via get_intent_response di
+                // turn ini, drop text kecuali text = resume interrupt
+                // ("Balik ke tadi kak..."). Ini nangkap kasus dimana
+                // hasActiveCollection true (misal lead sudah tercapture)
+                // tapi agent tetap output alamat/maps text = double bubble.
+                $isResumeInterrupt = (bool) preg_match('/balik ke tadi/iu', $textContent);
+                $mediaDrop = !empty($mediaSlugRendered) && !$isResumeInterrupt && !$keepAsFlowOpener;
+
                 if ($toolEmittedReplies && !$this->hasActiveCollection($session) && !$keepAsFlowOpener) {
                     Log::info('SUNAT_BOT_AGENT_DROPPED_POST_TOOL_TEXT', [
                         'phone' => $session->no_telp,
                         'iter'  => $iter,
                         'text'  => mb_substr($textContent, 0, 200),
+                    ]);
+                } elseif ($mediaDrop) {
+                    Log::info('SUNAT_BOT_AGENT_DROPPED_POST_MEDIA_TEXT', [
+                        'phone'  => $session->no_telp,
+                        'iter'   => $iter,
+                        'slugs'  => $mediaSlugRendered,
+                        'text'   => mb_substr($textContent, 0, 200),
                     ]);
                 } elseif ($textContent !== '') {
                     $replies = array_merge($replies, $this->splitToTextBubbles($textContent));
@@ -387,6 +409,21 @@ class SunatBotAgent
                 if (isset($sideEffect['replies']) && $sideEffect['replies'] !== []) {
                     $replies = array_merge($replies, $sideEffect['replies']);
                     $toolEmittedReplies = true;
+
+                    // Track media-slug rendered supaya text follow-up
+                    // yg redundant di iter berikut bisa di-drop.
+                    if ($toolName === 'get_intent_response') {
+                        $slugArg = trim((string) ($args['slug'] ?? ''));
+                        $mediaSlugs = [
+                            'pertanyaan_lokasi', 'pertanyaan_metode', 'pertanyaan_jarum_bius',
+                            'pertanyaan_fasilitas', 'pertanyaan_testimoni', 'pertanyaan_hadiah',
+                            'contoh_dokumentasi', 'edukasi_kelebihan', 'trigger_sunat',
+                            'pertanyaan_durasi_sembuh', 'pertanyaan_pengawasan_pasca',
+                        ];
+                        if ($slugArg !== '' && in_array($slugArg, $mediaSlugs, true)) {
+                            $mediaSlugRendered[] = $slugArg;
+                        }
+                    }
                 }
                 if (isset($sideEffect['signal']) && $sideEffect['signal'] !== null) {
                     $signal = $sideEffect['signal'];
