@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\AntrianNumberService;
 use App\Traits\BelongsToTenant;
 use App\Http\Controllers\AntrianOnlineController;
@@ -15,7 +16,7 @@ use Log;
 use Carbon\Carbon;
 class Antrian extends Model
 {
-    use BelongsToTenant,HasFactory;
+    use BelongsToTenant,HasFactory,SoftDeletes;
     public static function boot(){
         parent::boot();
 

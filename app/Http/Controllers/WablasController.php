@@ -5245,12 +5245,16 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $tz    = 'Asia/Jakarta';
         $today = \Carbon\Carbon::now($tz)->toDateString();
 
-        // Ambil semua antrean hari ini utk no_telp ini, belum hadir
-        // OPSIONAL: batasi hanya yang bersumber dari ReservasiOnline/SchedulledReservation
+        // Ambil semua antrean hari ini utk no_telp ini, belum hadir.
+        // whereNull('deleted_at') explicit karena model Antrian di monitor
+        // tidak pakai trait SoftDeletes (beda dgn atika); tanpa ini,
+        // antrian yg sudah di-cancel via pindah-dokter web (soft delete
+        // dari atika) tetap muncul di list batalkan.
         $antrians = \App\Models\Antrian::with(['staf.titel', 'ruangan', 'antriable'])
             ->whereDate('created_at', $today)
             ->where('no_telp', $this->no_telp)
             ->where('sudah_hadir_di_klinik', 0)
+            ->whereNull('deleted_at')
             // ->whereIn('antriable_type', [\App\Models\ReservasiOnline::class, \App\Models\SchedulledReservation::class]) // aktifkan jika ingin exclude walk-in
             ->get();
 
