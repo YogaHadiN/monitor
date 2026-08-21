@@ -105,12 +105,59 @@ class AntrianController extends Controller
         $base64 = $qr->inPdf($url);
         $base64_daftar_online = $qr->inPdf($url_daftar_online);
         $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
+        $ruangan = null;
 
 		return view('monitor_baru', compact(
             'menangani_gawat_darurat',
             'base64',
-            'base64_daftar_online'
+            'base64_daftar_online',
+            'ruangan'
 		));
+    }
+
+    /**
+     * Monitor screen scoped ke ruangan tertentu — layar TV di ruang tunggu
+     * yg khusus utk ruangan itu. Kalau flag ruangans.sedang_tindakan=1
+     * (di-toggle staf dari /ruangans atau /ruangperiksa/{id}), layar
+     * menampilkan overlay flicker "tindakan sedang berlangsung, waktu
+     * tunggu lebih lama" — sama pola dgn overlay Darurat tenant-wide.
+     * Client poll ke tindakanStatus() tiap 5 detik utk sync flag.
+     */
+    public function monitor_baru_ruangan($ruangan_id){
+        $url = 'https://api.whatsapp.com/send?phone=6282113781271&text=komplain';
+        $url_daftar_online = 'https://api.whatsapp.com/send?phone=6282113781271&text=daftar';
+        $qr = new QrCodeController;
+        $base64 = $qr->inPdf($url);
+        $base64_daftar_online = $qr->inPdf($url_daftar_online);
+        $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
+        $ruangan = Ruangan::find($ruangan_id);
+        if (is_null($ruangan)) {
+            abort(404, 'Ruangan tidak ditemukan');
+        }
+
+        return view('monitor_baru', compact(
+            'menangani_gawat_darurat',
+            'base64',
+            'base64_daftar_online',
+            'ruangan'
+        ));
+    }
+
+    /**
+     * JSON status flag tindakan utk ruangan — dipoll dari layar monitor.
+     */
+    public function tindakanStatus($ruangan_id){
+        $ruangan = Ruangan::find($ruangan_id);
+        if (is_null($ruangan)) {
+            return response()->json(['ok' => false, 'sedang_tindakan' => false], 404);
+        }
+        return response()->json([
+            'ok'                  => true,
+            'ruangan_id'          => (int) $ruangan->id,
+            'ruangan_nama'        => (string) $ruangan->nama,
+            'sedang_tindakan'     => (bool) $ruangan->sedang_tindakan,
+            'tindakan_started_at' => $ruangan->tindakan_started_at,
+        ]);
     }
 
 	public function convertSoundToArray($antrian_id){

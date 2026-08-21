@@ -573,13 +573,31 @@
           </div>
       </div>
     <div class="row container_wa align-top text-left">
+            @php
+                $__ruanganTindakan = (isset($ruangan) && $ruangan && (int) ($ruangan->sedang_tindakan ?? 0) === 1);
+                $__daruratOrTindakan = (bool) (\App\Models\Tenant::find(1)->menangani_gawat_darurat || $__ruanganTindakan);
+            @endphp
+
+            {{-- Overlay tindakan per-ruangan (scoped monitor). Layar TV
+                 di ruang tunggu ruangan tsb akan menampilkan flicker warning
+                 saat staf toggle "Mulai Tindakan". JS di bawah polling
+                 tindakanStatus tiap 5s utk auto-update tanpa reload. --}}
+            @if(isset($ruangan) && $ruangan)
+            <div id="activate_if_tindakan_ruangan" class="animate-flicker {{ $__ruanganTindakan ? '' : 'hide' }}">
+                <div id="text_notifikasi_tindakan_ruangan">
+                    Saat ini dokter sedang melakukan tindakan di {{ $ruangan->nama }} <br>
+                    Waktu tunggu akan menjadi lebih lama dari biasanya. Terima kasih atas kesabaran Anda menunggu
+                </div>
+            </div>
+            @endif
+
             <div id="activate_if_danger" class="animate-flicker {{  \App\Models\Tenant::find(1)->menangani_gawat_darurat ? '' : 'hide' }}">
                 <div id="text_notifikasi" style="display: none;">
                     Saat ini dokter sedang melakukan tindakan di UGD <br>
                     Terima kasih atas kesabaran Anda menunggu
                 </div>
             </div>
-        <div id="activate_if_not_danger" class="ibox float-e-margins {{  \App\Models\Tenant::find(1)->menangani_gawat_darurat ? 'hide' : '' }}">
+        <div id="activate_if_not_danger" class="ibox float-e-margins {{ $__daruratOrTindakan ? 'hide' : '' }}">
                 <div class="ibox-title">
                   <div class="ibox-tools">
                   </div>
@@ -860,6 +878,41 @@
 
     var menangani_gawat_darurat = {{ $menangani_gawat_darurat }};
     var status_gawat_darurat_saat_ini = {{ $menangani_gawat_darurat }};
+
+@isset($ruangan)
+    // ===== Ruangan-scoped monitor: poll flag tindakan tiap 5 detik =====
+    // Overlay show/hide follow flag ruangan real-time tanpa reload halaman.
+    // Sinkron dgn tombol "Mulai Tindakan" / "Selesai Tindakan" di atika.
+    (function () {
+        var ruanganId = {{ (int) $ruangan->id }};
+        var pollUrl   = base + '/antrianperiksa/monitor_baru/' + ruanganId + '/tindakan-status';
+        var lastFlag  = {{ $__ruanganTindakan ? 'true' : 'false' }};
+
+        function apply(sedangTindakan) {
+            var $overlay = $('#activate_if_tindakan_ruangan');
+            var $normal  = $('#activate_if_not_danger');
+            var daruratActive = !!status_gawat_darurat_saat_ini;
+            if (sedangTindakan) {
+                $overlay.removeClass('hide');
+                if (!daruratActive) $normal.addClass('hide');
+            } else {
+                $overlay.addClass('hide');
+                if (!daruratActive) $normal.removeClass('hide');
+            }
+        }
+
+        setInterval(function () {
+            $.get(pollUrl, function (res) {
+                if (!res || res.ok !== true) return;
+                var flag = !!res.sedang_tindakan;
+                if (flag !== lastFlag) {
+                    lastFlag = flag;
+                    apply(flag);
+                }
+            });
+        }, 5000);
+    })();
+@endisset
 
 </script>
 

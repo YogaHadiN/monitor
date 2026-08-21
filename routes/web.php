@@ -29,6 +29,8 @@ Route::get('/redis-test', function () {
 Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
 Route::get('antrianperiksa/monitor_baru', [AntrianController::class, 'monitor_baru']);
+Route::get('antrianperiksa/monitor_baru/{ruangan_id}/tindakan-status', [AntrianController::class, 'tindakanStatus']);
+Route::get('antrianperiksa/monitor_baru/{ruangan_id}', [AntrianController::class, 'monitor_baru_ruangan']);
 Route::get('fingerprint/register', [AntrianController::class, 'register']);
 Route::get('antrianperiksa/monitor/convert_sound_to_array/{antrian_id}', [AntrianController::class, 'convertSoundToArray']);
 Route::get('/antrianperiksa/monitor/convert_sound_to_array/mobile/{antrian_id}', [AntrianController::class, 'convertSoundToArrayMobile']);
