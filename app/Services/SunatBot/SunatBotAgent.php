@@ -327,6 +327,31 @@ class SunatBotAgent
                         $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
                         continue;
                     }
+
+                    // Guard: LLM juga sering salah-pick redirect utk pertanyaan
+                    // "sunat pakai BPJS?" / "Bs pk BPJS y" / "ditanggung BPJS?".
+                    // Context SunatBot default = sunat, kalau customer nyebut
+                    // "BPJS" TANPA topic non-sunat lain (usg/gigi/dll), 99%
+                    // maksudnya "sunat pakai BPJS bisa nggak" — ada intent
+                    // dedicated pertanyaan_sunat_menggunakan_bpjs yg jawab
+                    // "Sunat di sunatboy tidak bisa menggunakan BPJS...".
+                    // Reject redirect, arahkan LLM ke get_intent_response.
+                    $nonBpjsNonSunatKw = ['usg', 'kandungan', 'hamil', 'lab', 'dokter umum', 'gigi', 'kulit', 'vaksin', 'imunisasi', 'kontrol obat'];
+                    $userMsgHasOtherNonSunat = false;
+                    foreach ($nonBpjsNonSunatKw as $kw) { if (str_contains($userMsg, $kw)) { $userMsgHasOtherNonSunat = true; break; } }
+                    if (str_contains($userMsg, 'bpjs') && !$userMsgHasOtherNonSunat) {
+                        Log::info('SUNAT_BOT_AGENT_BLOCK_REDIRECT_BPJS', [
+                            'phone'  => $session->no_telp,
+                            'reason' => $reason,
+                            'msg'    => mb_substr($userMsg, 0, 200),
+                        ]);
+                        $toolResult = [
+                            'ok'    => false,
+                            'error' => 'DILARANG redirect utk pertanyaan "sunat pakai BPJS". Pakai get_intent_response(slug="pertanyaan_sunat_menggunakan_bpjs") supaya customer dapat jawaban yang tepat: "Sunat di sunatboy tidak bisa menggunakan BPJS atau asuransi lain, hanya biaya pribadi."',
+                        ];
+                        $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
+                        continue;
+                    }
                 }
 
                 if ($toolName === 'save_harga_data' && (bool) $session->getData('booking_started') && !$session->is_complete) {
@@ -853,8 +878,11 @@ Semua topic di bawah punya foto/video edukasi. Kalau jawab dari FAKTA langsung t
 | Hadiah / kado / dapat hadiah ga | `pertanyaan_hadiah` |
 | Contoh dokumentasi / mini vlog / video pengalaman | `contoh_dokumentasi` |
 | Kelebihan sunat di sini / kenapa pilih kami | `edukasi_kelebihan` |
+| BPJS / asuransi / ditanggung BPJS / bisa pakai BPJS ("Bs pk BPJS", "sunat pakai BPJS?") | `pertanyaan_sunat_menggunakan_bpjs` |
 
-Topic LAIN (BPJS, sunat perempuan, sunat dewasa, sunat bayi, sunat di rumah, jahit, perban, durasi sembuh, lama proses, usia ideal, kebutuhan khusus, kontrol, operator/dokter, dll) → jawab natural dari FAKTA. Tidak perlu tool.
+Topic LAIN (sunat perempuan, sunat dewasa, sunat bayi, sunat di rumah, jahit, perban, durasi sembuh, lama proses, usia ideal, kebutuhan khusus, kontrol, operator/dokter, dll) → jawab natural dari FAKTA. Tidak perlu tool.
+
+🚫 **DILARANG redirect_ke_klinik_utama utk pertanyaan BPJS** — customer nyebut BPJS di SunatBot context = tanya "sunat pakai BPJS bisa nggak", BUKAN inquiry BPJS layanan non-sunat. Jawaban tepat via `pertanyaan_sunat_menggunakan_bpjs` (Sunat di sunatboy tidak bisa menggunakan BPJS, hanya biaya pribadi). Executor akan reject redirect kalau msg cuma sebut "bpjs" tanpa keyword non-sunat lain.
 
 🚫 DILARANG panggil `get_intent_response` untuk slug `quote_harga_paket` / `tanya_*` / `data_*` — final quote HANYA via `send_harga_quote()`, dan tanya field harga TANYA SENDIRI dgn text natural.
 
