@@ -1582,6 +1582,8 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= 'Ketik *batalkan* untuk membatalkan';
         $response .= " reservasi";
+        $response .= PHP_EOL;
+        $response .= 'Balas *pindah dokter* jika ingin pindah ke dokter lain yang praktek di waktu yang sama';
 
         return $response;
     }
@@ -6759,6 +6761,8 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= 'Balas *cek antrian* untuk melihat antrian terakhir';
         $message .= PHP_EOL;
         $message .= 'Balas *kirim qr* untuk mengirim ulang qr code';
+        $message .= PHP_EOL;
+        $message .= 'Balas *pindah dokter* jika ingin pindah ke dokter lain yang praktek di waktu yang sama';
         return $message;
     }
 
