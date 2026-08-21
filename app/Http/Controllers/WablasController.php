@@ -5195,8 +5195,15 @@ class WablasController extends Controller
         $lines[] = '*Dengan melanjutkan berarti Anda setuju dengan ketentuan berikut:*';
 
         $lines[] = '- Jika antrean terlewat, silakan mengambil antrean kembali.';
-        $lines[] = '- *Nomor antrian ditentukan berdasarkan urutan scan QR / konfirmasi kehadiran di klinik*, bukan berdasarkan urutan booking online.';
-        $lines[] = '- Pasien yang lebih dulu scan QR / konfirmasi kehadiran akan mendapatkan nomor antrian lebih awal. Yang lebih dulu booking online *belum tentu* mendapatkan nomor antrian paling awal.';
+        // Bullet urutan scan QR vs booking online hanya relevan utk booking
+        // TERJADWAL (schedulled_booking=1), di mana slot booking + tanggal
+        // spesifik. Utk reservasi langsung (walk-in / same-day), tidak ada
+        // "urutan booking online" yg bisa dibandingkan → skip supaya tidak
+        // membingungkan pasien.
+        if ((int) ($reservasi_online->schedulled_booking ?? 0) === 1) {
+            $lines[] = '- *Nomor antrian ditentukan berdasarkan urutan scan QR / konfirmasi kehadiran di klinik*, bukan berdasarkan urutan booking online.';
+            $lines[] = '- Pasien yang lebih dulu scan QR / konfirmasi kehadiran akan mendapatkan nomor antrian lebih awal. Yang lebih dulu booking online *belum tentu* mendapatkan nomor antrian paling awal.';
+        }
         if ($tipe_id === 1) {
             // Poli umum
             $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
