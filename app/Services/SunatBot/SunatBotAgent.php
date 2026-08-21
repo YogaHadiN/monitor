@@ -356,7 +356,7 @@ class SunatBotAgent
                     Log::info('SUNAT_BOT_AGENT_BLOCK_BOOKING_DURING_HARGA', ['phone' => $session->no_telp]);
                     $toolResult = [
                         'ok'    => false,
-                        'error' => 'Harga collection sedang aktif. Selesaikan harga dulu (panggil send_harga_quote setelah 7 field lengkap), atau kalau customer beralih ke booking, tanya konfirmasi eksplisit dulu.',
+                        'error' => 'Harga collection sedang aktif. Selesaikan harga dulu (panggil send_harga_quote setelah 6 field lengkap), atau kalau customer beralih ke booking, tanya konfirmasi eksplisit dulu.',
                     ];
                     $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
                     continue;
@@ -629,7 +629,7 @@ CONTOH 2 (nanya konten sunat):
 
 CONTOH 3 SKIP (customer langsung harga):
   Customer: "Berapa biaya sunat kak?"
-  Bot: [langsung masuk HARGA flow — save_harga_data collects nama_orang_tua + domisili sebagai 2 dari 7 field]
+  Bot: [langsung masuk HARGA flow — save_harga_data collects nama_orang_tua + domisili sebagai 2 dari 6 field]
 
 CONTOH 4 SKIP (lead sudah pernah tercapture, customer lanjut nanya harga):
   Session data sebelumnya: {nama_orang_tua: "Rina", domisili: "Depok"}
@@ -641,7 +641,7 @@ CONTOH 4 SKIP (lead sudah pernah tercapture, customer lanjut nanya harga):
 
 Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
 
-**HARGA** (tanya biaya/PL) — pakai `save_harga_data` + `send_harga_quote`. Field wajib: nama_orang_tua, domisili, jumlah_anak, usia_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada tanggal/jam. 🚫 JANGAN tanya berat badan — postur_tubuh (gemuk/tidak) sudah cukup.
+**HARGA** (tanya biaya/PL) — pakai `save_harga_data` + `send_harga_quote`. Field wajib: nama_orang_tua, domisili, usia_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada tanggal/jam. 🚫 JANGAN tanya berat badan — postur_tubuh (gemuk/tidak) sudah cukup. 🚫 JANGAN tanya jumlah anak — default 1; kalau customer sebut sendiri "2 anak" / "kembar" / "sepupu ikut", baru save.
 
 **BOOKING** (daftar/pendaftaran pasien) — pakai `save_booking_data` + `finalize_booking`. Field wajib: tanggal, jam, nama_anak, nama_panggilan, usia_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan. Tidak ada nama_orang_tua/domisili. 🚫 JANGAN tanya berat badan — postur_tubuh (gemuk/tidak) sudah cukup.
 
@@ -686,16 +686,15 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    Baca tool response `missing[]` → kalau ada, tanya field berikutnya di reply text yang sama turn. Kalau `missing[]` kosong, langsung call `send_harga_quote()` (jangan tanya lagi).
 
 3. **Tanya field NATURAL dgn text kamu sendiri (JANGAN pakai get_intent_response), 1-2 field per bubble.**
-   URUTAN wajib (jangan lompat ke sudah_tahu_metode sebelum 7 field required terkumpul):
+   URUTAN wajib (jangan lompat ke sudah_tahu_metode sebelum 6 field required terkumpul):
    - Belum ada nama_orang_tua → "Kalo boleh tau dengan kakak siapa ya?"
-   - Belum ada jumlah_anak → "Sunat untuk berapa anak kak?" (default 1 kalau customer sebut singular / cuma "anak saya")
-   - Belum ada usia_anak → "Boleh infokan usia anaknya kak?" (kalau >1 anak, minta info tiap anak)
+   - Belum ada usia_anak → "Boleh infokan usia anaknya kak?"
    - Belum ada domisili → "Domisilinya di mana kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
    - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
    - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
 
-   💰 **Diskon rombongan (otomatis di quote):** 1 anak normal, 2 anak diskon Rp 500rb (total Rp 4.5jt), 3 anak diskon Rp 1jt (total Rp 6.5jt), ≥4 anak → template arahkan admin. Kamu TIDAK perlu sebut angka diskon manual — bubble diskon otomatis di-append oleh tool `send_harga_quote` berdasarkan `jumlah_anak`.
+   💰 **Diskon rombongan (otomatis di quote, JANGAN sebut manual):** kalau customer volunteer info >1 anak (mis. "2 anak", "kembar", "sepupu juga ikut"), save `jumlah_anak` via save_harga_data. Bubble diskon di-append otomatis oleh tool `send_harga_quote` (2 anak: -500rb, 3 anak: -1jt, ≥4 anak → template arahkan admin). Default 1 anak kalau customer tidak sebut. 🚫 JANGAN pernah tanya proaktif "sunat berapa anak" — customer pasti sebut sendiri kalau multi.
 
 4. **⚠️ INTERRUPT — customer tanya HAL LAIN di tengah collection:**
    Contoh: setelah kamu tanya domisili, customer malah tanya "Metode nya apa?"
@@ -706,7 +705,7 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    🚫 DILARANG close reply setelah handle interrupt tanpa PIVOT eksplisit ke HARGA field yang belum. Kalau cuma "Btw boleh minta nama...", customer bakal bingung antara lead capture vs HARGA collection, dan bakal ghosting.
    Contoh kasus (jangan diulang): customer tanya "biaya berapa?" → bot tanya nama → customer interrupt "lokasi dimana?" → bot handle lokasi + tutup "Btw minta nama kakak" → **customer ghosting**. Yg BENAR: bot tutup dgn "Balik ke tadi ya kak, sekalian saya hitung biayanya. Boleh tau dengan kakak siapa?"
 
-5. **Semua 7 field terkumpul → `send_harga_quote()`:**
+5. **Semua 6 field terkumpul → `send_harga_quote()`:**
    Tool emit bundle final (testimoni + delay + quote + closing). Setelah call, output text kosong.
 
 6. **Escalation gate — KAMU yang klasifikasi:**
@@ -996,7 +995,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'send_harga_quote',
-                    'description' => 'Emit quote bundle final ke customer: edukasi metode (teknoklamp, 1 bubble) + quote_harga_paket + diskon rombongan (kalau jumlah_anak≥2) + tanya_pertanyaan_lanjutan. Testimoni Google review, pemberian hadiah, dan mini vlog dokumentasi SENGAJA TIDAK di-bundle (feedback client: terlalu spam / terburu-buru). Ketiganya hanya keluar via intent eksplisit (pertanyaan_testimoni / pertanyaan_hadiah / pertanyaan_dokumentasi) atau followup H+1 kalau leads tidak reply. WAJIB dipanggil HANYA setelah semua 7 field wajib terkumpul (nama_orang_tua, domisili, jumlah_anak, usia_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), default JANGAN panggil lagi. TAPI kalau customer eksplisit minta kirim ulang ("kirim lagi", "ulangi", "coba lagi", "belum masuk", dll) → BOLEH panggil lagi, backend akan re-render full bundle. Setelah call, output text KOSONG.',
+                    'description' => 'Emit quote bundle final ke customer: edukasi metode (teknoklamp, 1 bubble) + quote_harga_paket + diskon rombongan (kalau jumlah_anak≥2) + tanya_pertanyaan_lanjutan. Testimoni Google review, pemberian hadiah, dan mini vlog dokumentasi SENGAJA TIDAK di-bundle (feedback client: terlalu spam / terburu-buru). Ketiganya hanya keluar via intent eksplisit (pertanyaan_testimoni / pertanyaan_hadiah / pertanyaan_dokumentasi) atau followup H+1 kalau leads tidak reply. WAJIB dipanggil HANYA setelah semua 6 field wajib terkumpul (nama_orang_tua, domisili, usia_anak, indikasi_khitan, postur_tubuh, riwayat_kesehatan). jumlah_anak TIDAK wajib — default 1, cuma dipakai kalau customer volunteer info multi-anak. Kalau ada field belum terisi, tool return error — panggil save_harga_data dulu. Kalau harga sudah pernah dikirim (history ada bubble Rp ...), default JANGAN panggil lagi. TAPI kalau customer eksplisit minta kirim ulang ("kirim lagi", "ulangi", "coba lagi", "belum masuk", dll) → BOLEH panggil lagi, backend akan re-render full bundle. Setelah call, output text KOSONG.',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => new \stdClass(),
@@ -1586,8 +1585,12 @@ PROMPT;
     // postur_tubuh (gemuk/tidak) untuk asses risiko. Tool schema masih
     // terima parameter berat_badan_anak (backward compat kalau customer
     // volunteering), tapi tidak wajib.
+    // jumlah_anak sengaja tidak wajib (2026-08-21) — default 1, cuma
+    // di-save kalau customer volunteer info multi-anak. Tool schema masih
+    // terima parameter jumlah_anak (backward compat) supaya diskon
+    // rombongan tetap jalan otomatis di send_harga_quote.
     private const HARGA_REQUIRED_FIELDS = [
-        'nama_orang_tua', 'domisili', 'jumlah_anak', 'usia_anak',
+        'nama_orang_tua', 'domisili', 'usia_anak',
         'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan',
     ];
 
