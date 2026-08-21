@@ -3048,6 +3048,37 @@ class WablasController extends Controller
 
         $newAntrian = null;
         \DB::transaction(function () use ($oldAntrian, $pp, $newRuanganId, &$newAntrian) {
+            // Preserve downstream state: kalau pasien sudah lanjut ke
+            // AntrianPeriksa / AntrianPoli (sudah di ruang periksa), pindah
+            // dokter TIDAK boleh reset ke antrian awal. Cukup: (a) update
+            // ruangan_id + staf_id di record antriable, (b) point Antrian
+            // baru ke antriable_id yg sama. Antrian baru dapat nomor fresh
+            // di ekor ruangan tujuan, tapi status "di ruang periksa" tetap
+            // ter-preserve.
+            $antriableType = (string) $oldAntrian->antriable_type;
+            $antriableId   = (int) $oldAntrian->antriable_id;
+            $preserve      = in_array($antriableType, [
+                'App\\Models\\AntrianPeriksa',
+                'App\\Models\\AntrianPoli',
+            ], true) && $antriableId > 0;
+
+            if ($preserve) {
+                $antriableClass = ltrim($antriableType, '\\');
+                $antriable = $antriableClass::find($antriableId);
+                if (!is_null($antriable)) {
+                    if (\Schema::hasColumn($antriable->getTable(), 'ruangan_id')) {
+                        $antriable->ruangan_id = $pp->ruangan_id;
+                    }
+                    if (\Schema::hasColumn($antriable->getTable(), 'staf_id')) {
+                        $antriable->staf_id = $pp->staf_id;
+                    }
+                    if (\Schema::hasColumn($antriable->getTable(), 'petugas_pemeriksa_id')) {
+                        $antriable->petugas_pemeriksa_id = $pp->id;
+                    }
+                    $antriable->save();
+                }
+            }
+
             // antrianPost fires FormSubmitted → assign nomor_antrian baru
             // di ekor antrian dokter/ruangan target (posisi terakhir).
             $newAntrian = $this->antrianPost($newRuanganId);
@@ -3068,8 +3099,12 @@ class WablasController extends Controller
             $newAntrian->sumber_antrian_id     = $oldAntrian->sumber_antrian_id;
             $newAntrian->sudah_hadir_di_klinik = $oldAntrian->sudah_hadir_di_klinik;
             $newAntrian->qr_code_path_s3       = $this->generateQrCodeForOnlineReservation('A', $newAntrian);
-            $newAntrian->save();
-            $newAntrian->antriable_id = $newAntrian->id;
+            if ($preserve) {
+                $newAntrian->antriable_type = $antriableType;
+                $newAntrian->antriable_id   = $antriableId;
+            } else {
+                $newAntrian->antriable_id = $newAntrian->id;
+            }
             $newAntrian->save();
 
             $oldAntrian->delete();
