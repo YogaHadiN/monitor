@@ -1756,7 +1756,7 @@ class WablasController extends Controller
 
         if (is_null($complain)) {
             $this->chatBotLog(__LINE__);
-            \App\Models\Complain::create([
+            $complain = \App\Models\Complain::create([
                 'tanggal'   => $now,
                 'media'     => 'Whatsapp Bot',
                 'no_telp'   => $this->no_telp,
@@ -1772,6 +1772,48 @@ class WablasController extends Controller
                 : ($existing .  '. ' . ucfirst( strtolower( $incoming ) ));
 
             $complain->save();
+        }
+
+        // Auto-link complain ke antrian pasien supaya muncul di Laporan
+        // Kepuasan Bulanan (kolom Complain). Prefer antrian_id yg sudah
+        // di-set di WhatsappComplaint (via flow satisfaction survey =
+        // "kecewa" / "biasa" → autoReplyComplainMessage($antrian_id)).
+        // Fallback: cari antrian terakhir yg no_telp sama dgn state
+        // sudah_hadir_di_klinik=1 (pasien sudah datang / diperiksa),
+        // supaya tidak nyasar ke antrian booking yg belum dilayani.
+        try {
+            $antrianId = optional($this->whatsapp_complaint)->antrian_id;
+            $antrian = null;
+            if ($antrianId) {
+                $antrian = \App\Models\Antrian::find($antrianId);
+            }
+            if (is_null($antrian)) {
+                $antrian = \App\Models\Antrian::where('no_telp', $this->no_telp)
+                    ->where('sudah_hadir_di_klinik', 1)
+                    ->orderByDesc('created_at')
+                    ->first();
+            }
+            if (!is_null($antrian)) {
+                $antrian->complain_id = $complain->id;
+                $antrian->complaint   = $complain->complain;
+                $antrian->save();
+                Log::info('COMPLAIN_LINKED_TO_ANTRIAN', [
+                    'antrian_id' => $antrian->id,
+                    'complain_id'=> $complain->id,
+                    'no_telp'    => $this->no_telp,
+                ]);
+            } else {
+                Log::info('COMPLAIN_NO_MATCHING_ANTRIAN', [
+                    'complain_id'=> $complain->id,
+                    'no_telp'    => $this->no_telp,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('COMPLAIN_LINK_FAIL', [
+                'complain_id'=> $complain->id,
+                'no_telp'    => $this->no_telp,
+                'err'        => $e->getMessage(),
+            ]);
         }
 
         // Tidak kirim balasan di sini — scheduler yang akan mengirim setelah idle > 10 menit
