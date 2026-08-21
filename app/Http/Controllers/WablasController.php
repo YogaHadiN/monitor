@@ -2764,6 +2764,18 @@ class WablasController extends Controller
             return;
         }
 
+        // Broadcast tindakan (dari atika): pasien reply "1" (pindah) /
+        // "2" (tetap). "1" transisi ke konfirmasiPindahDokter (list dokter
+        // alternatif dgn service_id=20). "2" ack "tetap menunggu" +
+        // hapus state.
+        if (
+            !is_null($this->whatsapp_bot)
+            && (int) $this->whatsapp_bot->whatsapp_bot_service_id === self::WA_BOT_SERVICE_TINDAKAN_PINDAH
+        ) {
+            $this->prosesReplyTindakan();
+            return;
+        }
+
         if (
              str_contains($this->message, 'pindah dokter') ||
              str_contains($this->message, 'pindah dktr') ||
@@ -2889,6 +2901,11 @@ class WablasController extends Controller
     // pilihan pasien). Id 1-16 sudah dipakai fitur lain, 20 aman.
     const WA_BOT_SERVICE_PINDAH_DOKTER = 20;
 
+    // State broadcast tindakan (atika set saat staf klik "Mulai Tindakan"
+    // di /ruangans). Pasien membalas 1 (pindah dokter) / 2 (tetap).
+    // Sinkron dgn atika RuanganController::WA_BOT_SERVICE_TINDAKAN_PINDAH.
+    const WA_BOT_SERVICE_TINDAKAN_PINDAH = 21;
+
     private function petugasPemeriksaAlternatif(): \Illuminate\Support\Collection
     {
         $now = \Carbon\Carbon::now('Asia/Jakarta');
@@ -2943,6 +2960,42 @@ class WablasController extends Controller
         $msg .= PHP_EOL . PHP_EOL;
         $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan pindah dokter.';
         return $msg;
+    }
+
+    private function prosesReplyTindakan(): void
+    {
+        $raw = trim((string) $this->message);
+        $msg = mb_strtolower($raw);
+
+        // "1" atau "pindah" → langsung ke konfirmasiPindahDokter
+        // (kirim list dokter alternatif + set service_id=20 → step-2
+        // handler di atas akan proses pilihan pasien).
+        if ($raw === '1' || $msg === 'pindah' || str_contains($msg, 'pindah')) {
+            $this->autoReply($this->konfirmasiPindahDokter());
+            return;
+        }
+
+        // "2" atau "tetap" → ack + hapus state tindakan supaya reply
+        // pasien berikutnya (mis. "cek antrian") tidak nyasar ke handler
+        // tindakan.
+        if ($raw === '2' || $msg === 'tetap' || str_contains($msg, 'tetap')) {
+            \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
+                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_TINDAKAN_PINDAH)
+                ->delete();
+            $reply  = 'Baik kak 🙏';
+            $reply .= PHP_EOL;
+            $reply .= 'Anda tetap di antrian saat ini. Kami akan memanggil segera setelah tindakan selesai. Terima kasih atas kesabarannya.';
+            $this->autoReply($reply);
+            return;
+        }
+
+        // Balasan lain → ulangi prompt.
+        $reply  = 'Balasan tidak dikenali. Mohon balas:';
+        $reply .= PHP_EOL;
+        $reply .= '*1.* Pindah ke dokter lain';
+        $reply .= PHP_EOL;
+        $reply .= '*2.* Tetap di antrian ini';
+        $this->autoReply($reply);
     }
 
     private function prosesPindahDokter(): void
