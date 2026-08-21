@@ -2709,23 +2709,23 @@ class WablasController extends Controller
      */
     private function updateNotifikasPanggilanUntukAntrian()
     {
-        // Step-2 ganti dokter: pasien sudah dikirimi list dokter, sekarang
+        // Step-2 pindah dokter: pasien sudah dikirimi list dokter, sekarang
         // membalas angka pilihan (atau "batal"). Intercept sebelum keyword
         // matcher di bawah supaya "1" tidak salah lempar ke branch lain.
         if (
             !is_null($this->whatsapp_bot)
-            && (int) $this->whatsapp_bot->whatsapp_bot_service_id === self::WA_BOT_SERVICE_GANTI_DOKTER
+            && (int) $this->whatsapp_bot->whatsapp_bot_service_id === self::WA_BOT_SERVICE_PINDAH_DOKTER
         ) {
-            $this->prosesGantiDokter();
+            $this->prosesPindahDokter();
             return;
         }
 
         if (
-             str_contains($this->message, 'ganti dokter') ||
-             str_contains($this->message, 'ganti dktr') ||
-             str_contains($this->message, 'gnti dokter')
+             str_contains($this->message, 'pindah dokter') ||
+             str_contains($this->message, 'pindah dktr') ||
+             str_contains($this->message, 'pndh dokter')
         ) {
-            $this->autoReply($this->konfirmasiGantiDokter());
+            $this->autoReply($this->konfirmasiPindahDokter());
             return;
         }
 
@@ -2841,9 +2841,9 @@ class WablasController extends Controller
         }
     }
 
-    // Whitelisted service id untuk state "ganti dokter" (list bernomor menunggu
+    // Whitelisted service id untuk state "pindah dokter" (list bernomor menunggu
     // pilihan pasien). Id 1-16 sudah dipakai fitur lain, 20 aman.
-    const WA_BOT_SERVICE_GANTI_DOKTER = 20;
+    const WA_BOT_SERVICE_PINDAH_DOKTER = 20;
 
     private function petugasPemeriksaAlternatif(): \Illuminate\Support\Collection
     {
@@ -2865,13 +2865,13 @@ class WablasController extends Controller
             ->values();
     }
 
-    private function konfirmasiGantiDokter(): string
+    private function konfirmasiPindahDokter(): string
     {
         $tipeNama = optional($this->antrian->tipe_konsultasi)->tipe_konsultasi ?? 'ini';
         $alternatif = $this->petugasPemeriksaAlternatif();
 
         if ($alternatif->isEmpty()) {
-            return "Mohon maaf, tidak dapat ganti dokter karena dokter *{$tipeNama}* yang sedang bertugas saat ini hanya satu orang.";
+            return "Mohon maaf, tidak dapat pindah dokter karena dokter *{$tipeNama}* yang sedang bertugas saat ini hanya satu orang.";
         }
 
         $dokterSaatIni = optional($this->antrian->staf)->nama_dengan_gelar ?? '-';
@@ -2885,7 +2885,7 @@ class WablasController extends Controller
         \App\Models\WhatsappBot::where('no_telp', $this->no_telp)->delete();
         \App\Models\WhatsappBot::create([
             'no_telp'                 => $this->no_telp,
-            'whatsapp_bot_service_id' => self::WA_BOT_SERVICE_GANTI_DOKTER,
+            'whatsapp_bot_service_id' => self::WA_BOT_SERVICE_PINDAH_DOKTER,
             'prevent_repetition'      => 0,
         ]);
 
@@ -2897,20 +2897,20 @@ class WablasController extends Controller
         $msg .= PHP_EOL . PHP_EOL;
         $msg .= '⚠️ Jika pindah dokter, Anda akan mendapatkan *nomor antrian baru di posisi terakhir* pada antrian dokter tersebut. Antrian Anda saat ini akan dibatalkan.';
         $msg .= PHP_EOL . PHP_EOL;
-        $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan ganti dokter.';
+        $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan pindah dokter.';
         return $msg;
     }
 
-    private function prosesGantiDokter(): void
+    private function prosesPindahDokter(): void
     {
         $raw = trim((string) $this->message);
         $msg = mb_strtolower($raw);
 
         if (in_array($msg, ['batal', 'batalkan', 'tidak', 'no'], true)) {
             \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
-                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_GANTI_DOKTER)
+                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_PINDAH_DOKTER)
                 ->delete();
-            $this->autoReply('Ganti dokter dibatalkan. Anda tetap dengan dokter sebelumnya.');
+            $this->autoReply('Pindah dokter dibatalkan. Anda tetap dengan dokter sebelumnya.');
             return;
         }
 
@@ -2924,7 +2924,7 @@ class WablasController extends Controller
 
         if ($alternatif->isEmpty()) {
             \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
-                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_GANTI_DOKTER)
+                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_PINDAH_DOKTER)
                 ->delete();
             $tipeNama = optional($this->antrian->tipe_konsultasi)->tipe_konsultasi ?? 'ini';
             $this->autoReply("Mohon maaf, saat ini sudah tidak ada dokter *{$tipeNama}* lain yang bertugas.");
@@ -2979,11 +2979,11 @@ class WablasController extends Controller
         });
 
         \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
-            ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_GANTI_DOKTER)
+            ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_PINDAH_DOKTER)
             ->delete();
 
         $tipeNama = optional($newAntrian->tipe_konsultasi)->tipe_konsultasi ?? '';
-        $reply  = "Dokter berhasil diganti ke {$dokterBaru}.";
+        $reply  = "Dokter berhasil dipindah ke {$dokterBaru}.";
         if ($tipeNama !== '') {
             $reply .= PHP_EOL . "Konsultasi: {$tipeNama}";
         }
