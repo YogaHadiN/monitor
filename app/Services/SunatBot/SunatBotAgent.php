@@ -736,10 +736,11 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
 6. **Escalation gate — KAMU yang klasifikasi:**
    Setiap kali save salah satu safety-field (indikasi_khitan / postur_tubuh / riwayat_kesehatan), WAJIB pass parameter `perlu_review_dokter` (boolean):
    - `true` kalau ADA faktor risiko yang butuh assessment dokter:
-     * postur → "gemuk" / "obesitas" / "gendut" / "besar"
+     * postur → customer SENDIRI bilang "gemuk"/"obesitas"/"gendut"/"besar"
      * indikasi → keluhan medis nyata (fimosis, parafimosis, kelainan penis, infeksi, dll) — BUKAN "cuma mau khitan" / "sunat aja"
      * riwayat → penyakit signifikan (jantung, kelainan pembekuan darah, autisme berat, asma berat, alergi anestesi, dll)
    - `false` kalau semua safety-field benign (postur normal/tidak gemuk, indikasi "tidak ada"/"cuma mau khitan", riwayat "tidak ada"/"sehat")
+   🚫 DILARANG infer postur=gemuk dari berat badan angka (mis. "40kg utk 11 thn = gemuk" — SALAH, bisa saja tinggi/proporsional). Postur cuma "gemuk" kalau customer eksplisit bilang gemuk/obesitas/gendut. Kalau customer cuma sebut BB angka + belum jawab pertanyaan postur → WAJIB tanya postur dulu sebelum save.
    Kalau `perlu_review_dokter=true`, engine ambil alih handoff. Output text kosong, jangan call `send_harga_quote`.
 
 7. **Harga sudah pernah dikirim** — default: JANGAN call `send_harga_quote` lagi, cukup bantu jawab pertanyaan lanjutan. TAPI kalau customer EKSPLISIT minta kirim ulang ("kirim lagi", "ulangi", "bisa dikirim ulang", "coba kirim lagi", "resend", "gambar hargaya tidak muncul", "belum masuk"), boleh call `send_harga_quote` LAGI — customer minta jangan ditolak. Backend akan re-render full bundle (metode + quote + closing).
@@ -1011,7 +1012,7 @@ PROMPT;
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan". Kalau >1 anak, sebutkan usia setiap anak dgn koma (mis. "7 tahun, 5 tahun").'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'OPSIONAL — jangan pernah TANYA berat badan. Postur_tubuh (gemuk/tidak) sudah cukup utk risk assessment. Field ini masih ada untuk backward compat: kalau customer volunteering angka BB dalam pesan, boleh pass; kalau tidak, SKIP param ini (jangan pass 0).'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas isi jawaban customer soal keluhan/alasan medis. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
-                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU (agent) yang klasifikasi berdasarkan jawaban customer. "tidak gemuk" / "biasa" / "kurus" → "tidak gemuk". "proporsional" / "sedang" → "normal". "gemuk" / "obesitas" / "gendut" / "besar" → "gemuk".'],
+                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU (agent) yang klasifikasi berdasarkan jawaban DIREK customer soal postur. "tidak gemuk"/"biasa"/"kurus" → "tidak gemuk". "proporsional"/"sedang" → "normal". "gemuk"/"obesitas"/"gendut"/"besar" → "gemuk". 🚫 DILARANG infer dari berat badan (mis. "40kg utk 11 thn = gemuk"). BB bukan indikator akurat — anak tinggi 40kg wajar. WAJIB tanya postur eksplisit ke customer dan pakai kata2 customer sendiri.'],
                             'riwayat_kesehatan' => ['type' => 'string', 'description' => 'ringkas isi jawaban. Kalau customer bilang "tidak ada"/"sehat"/"gak ada"/"nihil", save "tidak ada".'],
                             'perlu_review_dokter' => ['type' => 'boolean', 'description' => 'HASIL KLASIFIKASI KAMU: true jika ada faktor risiko yg butuh assessment dokter (postur gemuk/obesitas, indikasi keluhan medis nyata BUKAN cuma "mau khitan", atau riwayat penyakit signifikan seperti jantung/autisme/kelainan pembekuan darah/asma berat). false jika semua safety-field benign (tidak gemuk, tidak ada keluhan, tidak ada riwayat). WAJIB pass ketika kamu save salah satu field: indikasi_khitan / postur_tubuh / riwayat_kesehatan.'],
                             'sudah_tahu_metode' => ['type' => 'string', 'description' => '"ya" atau "tidak"'],
