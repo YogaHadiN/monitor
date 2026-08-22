@@ -62,7 +62,7 @@ return [
     // closing reached at step 2.10). Override via SUNATBOT_HANDOVER_MESSAGE.
     'handover_message' => (string) env(
         'SUNATBOT_HANDOVER_MESSAGE',
-        "Mohon ditunggu kak, admin kami akan menghubungi Anda untuk lanjut konsultasi 🙏\n\nKalau ingin kembali ke bot otomatis, ketik *akhiri*."
+        'Mohon ditunggu kak, admin kami akan menghubungi Anda untuk lanjut konsultasi 🙏'
     ),
     // Substring match (case-insensitive) on the riwayat_kesehatan answer.
     // If any keyword appears, requires_special_handling is set on the
