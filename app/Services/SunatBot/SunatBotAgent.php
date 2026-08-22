@@ -77,11 +77,17 @@ class SunatBotAgent
 
         $history      = $this->loadHistory($session);
         $systemPrompt = $this->buildSystemPrompt();
+        $sessionState = $this->renderSessionStateSnapshot($session);
 
         // Append user turn — disimpan ke history setelah loop selesai.
+        // Session state snapshot di-inject sbg system message TERAKHIR
+        // sebelum user message supaya agent lihat field yang sudah
+        // terkumpul (nama_orang_tua, domisili, usia, dll) — mencegah
+        // re-ask field yg sudah ada.
         $messages = array_merge(
             [['role' => 'system', 'content' => $systemPrompt]],
             $history,
+            $sessionState !== '' ? [['role' => 'system', 'content' => $sessionState]] : [],
             [['role' => 'user', 'content' => $userMessage]]
         );
 
@@ -1983,6 +1989,81 @@ PROMPT;
             if ($v === $needle || str_contains($v, $needle)) return true;
         }
         return false;
+    }
+
+    // ----- SESSION STATE SNAPSHOT ------------------------------------
+
+    /**
+     * Render snapshot session data yg sudah terkumpul supaya agent tahu
+     * field mana yg sudah ada + tidak re-ask. Cuma field yang punya
+     * nilai valid (non-null, non-empty, dan bukan placeholder).
+     * Return string kosong kalau tidak ada data — supaya tidak inject
+     * bubble kosong.
+     */
+    private function renderSessionStateSnapshot(BotSession $session): string
+    {
+        $data = $session->collected_data ?? [];
+        if (!is_array($data)) return '';
+
+        $lines = [];
+
+        // Lead / harga fields
+        $labelMap = [
+            'nama_orang_tua'    => 'Nama customer',
+            'domisili'          => 'Domisili',
+            'usia_anak'         => 'Usia anak',
+            'indikasi_khitan'   => 'Indikasi khitan',
+            'postur_tubuh'      => 'Postur tubuh',
+            'riwayat_kesehatan' => 'Riwayat kesehatan',
+            'sudah_tahu_metode' => 'Sudah tahu metode',
+            'jumlah_anak'       => 'Jumlah anak',
+        ];
+        $placeholders = ['pengirim', 'customer', 'kakak', 'bunda', 'ayah', 'ibu', 'bapak', '-', 'kak'];
+
+        foreach ($labelMap as $key => $label) {
+            $val = $data[$key] ?? null;
+            if ($val === null || $val === '') continue;
+            $strVal = trim((string) $val);
+            if ($strVal === '') continue;
+            // Skip placeholder-looking names
+            if ($key === 'nama_orang_tua' && in_array(mb_strtolower($strVal), $placeholders, true)) {
+                continue;
+            }
+            if ($key === 'usia_anak') {
+                $satuan = trim((string) ($data['usia_anak_satuan'] ?? 'tahun'));
+                $strVal .= ' ' . $satuan;
+            }
+            $lines[] = "- {$label}: {$strVal}";
+        }
+
+        // Booking fields (subset — kalau session in booking mode)
+        $bookingKeys = [
+            'tanggal'         => 'Tanggal booking',
+            'jam'             => 'Jam booking',
+            'nama_anak'       => 'Nama anak',
+            'nama_panggilan'  => 'Nama panggilan anak',
+        ];
+        foreach ($bookingKeys as $key => $label) {
+            $val = $data[$key] ?? null;
+            if ($val === null || $val === '') continue;
+            $strVal = trim((string) $val);
+            if ($strVal === '') continue;
+            $lines[] = "- {$label}: {$strVal}";
+        }
+
+        // Signal flags
+        if (!empty($data['_harga_sent'])) {
+            $lines[] = '- ⚠️ Harga sudah pernah dikirim ke customer (bubble quote sudah tampil di history). JANGAN kirim ulang kecuali customer eksplisit minta.';
+        }
+        if (!empty($data['booking_started'])) {
+            $lines[] = '- ⚠️ Booking flow sedang aktif — save_harga_data akan di-reject engine, pakai save_booking_data.';
+        }
+
+        if (empty($lines)) return '';
+
+        return "═══ SESSION STATE (data yang sudah terkumpul — JANGAN tanya ulang) ═══\n"
+             . implode("\n", $lines)
+             . "\n\nAturan: kalau field di atas sudah ada, LARANG tanya lagi. Lanjut ke field yg belum ada, atau kalau semua field HARGA_REQUIRED sudah lengkap dan customer minta harga → langsung `send_harga_quote()`.";
     }
 
     // ----- HISTORY ---------------------------------------------------
