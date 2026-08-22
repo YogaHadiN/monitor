@@ -629,6 +629,32 @@ Kapan sebutkan nomor/link ini:
    Format handoff yg BENAR:
    → call `handoff_to_admin(reason="anak usia 9th mau sunat, AI ragu apakah bisa dilayani")` → output text KOSONG (tool udah kirim pesan tunggu).
 
+═══ 🩺 KONSUL DOKTER (kelainan / kondisi khusus penis) ═══
+
+Kalau customer sebut kelainan atau kondisi khusus di area penis anaknya — baik istilah medis (fimosis, buried penis, hipospadia, chordee, mikropenis, parafimosis, dll) MAUPUN deskripsi awam ("burung nya kecil bgt", "belum turun", "menempel di badan", "lecet", "bengkak", "kayak ada benjolan", "kulit ujung nempel", "gak bisa ditarik", dsb) → **PANGGIL `request_konsul_dokter(reason)`**. Kamu WAJIB pakai judgment natural language, bukan keyword list.
+
+Flow otomatis setelah tool ini:
+1. Tool emit 1 bubble ke customer: "Boleh dibantu kirim foto area yg dikeluhkan kak? 🙏 Kami akan konsulkan ke dokter kami..."
+2. Customer kirim foto → webhook OTOMATIS forward foto ke dr. Yoga (081381912803) untuk asesmen. Bot mute customer.
+3. Dokter reply via WA → engine OTOMATIS relay reply ke customer via sunat device. Bot resume normal handling.
+
+Aturan:
+- Cuma panggil 1x per session. Session snapshot bakal tunjukkan `konsul_dokter_pending=true` kalau sudah pernah — jangan panggil lagi.
+- Kalau customer nolak kirim foto ("saya malu" / "gak mau foto") → JANGAN retry. Escalate `handoff_to_admin(reason="customer tolak kirim foto, konsul dokter perlu via chat text")` supaya dokter bisa handle via text saja.
+- Reason parameter: pakai bahasa dokter-ready, mis. "customer bilang penis anaknya kecil bgt", "kulit ujung menempel + belum turun". Max ~200 char.
+- ⚠️ JANGAN panggil untuk kondisi non-anatomis: "anak masih kecil" (usia), "adik saya kecil" (relasi), "kelas kecil" (grade), dsb — cek konteks dulu.
+- ⚠️ JANGAN panggil untuk kondisi non-penis: gemuk / postur / autisme / jantung — pakai `perlu_review_dokter=true` di save_harga_data (handoff Rona).
+
+CONTOH:
+  Customer: "Anak saya penis nya kecil bgt kak, bisa disunat?"
+  → call `request_konsul_dokter(reason="customer sebut penis anaknya kecil, minta konsul kondisi")` → output text KOSONG.
+
+  Customer: "Kayaknya belum turun kak, gimana ya?"
+  → call `request_konsul_dokter(reason="customer sebut penis anaknya belum turun (kemungkinan buried penis / kelainan)")` → output text KOSONG.
+
+  Customer: "Anak masih kecil kak, umur 3 bulan"
+  → BUKAN kelainan (itu usia). Lanjut normal flow HARGA.
+
 ═══ LEAD CAPTURE (WAJIB — di TURN PERTAMA bot utk conversation sunat baru) ═══
 
 Di **turn pertama** kamu di sebuah conversation sunat baru (session data `nama_orang_tua` dan `domisili` KEDUANYA masih kosong), APPEND satu bubble singkat & natural nanya nama customer + tempat tinggal (kota/kecamatan). Kalau customer kasih info di turn berikutnya → panggil `save_lead_sunat(nama, alamat)`.
@@ -1014,6 +1040,20 @@ PROMPT;
             [
                 'type' => 'function',
                 'function' => [
+                    'name'        => 'request_konsul_dokter',
+                    'description' => '⚠️ Panggil ketika KAMU (agent) menilai customer sebut kelainan/kondisi khusus di area penis anaknya — baik pakai istilah medis (fimosis, buried penis, hipospadia, chordee, dll) MAUPUN deskripsi awam ("burung nya kecil", "belum turun", "menempel", "kayak nempel di badan", "ujungnya lengket", "lecet", "bengkak", "ada benjolan", "kayaknya ada yg aneh", dsb). Kamu HARUS pakai judgment natural language — TIDAK ada keyword list. Kalau customer cuma bilang "kecil" tapi konteks-nya usia/postur (bukan anatomis) → JANGAN panggil. Kalau customer cuma expressing malu / gambar utk apa → jelaskan dulu, baru minta foto kalau customer setuju. Tool ini set flag `konsul_dokter_pending` di session + emit 1 bubble minta foto ke customer. Setelah customer kirim foto → webhook OTOMATIS forward foto ke dr. Yoga (081381912803) untuk asesmen. Bot mute customer selama menunggu instruksi dokter (dokter reply → bot auto-relay ke customer). ⚠️ Cuma panggil 1x per session — kalau sudah pernah request, jangan panggil lagi (session state akan tunjukkan `konsul_dokter_pending=true` di snapshot). Kalau customer nolak kirim foto ("saya malu" / "gak bisa foto") → jangan retry, escalate ke handoff_to_admin supaya dokter bisa konsul via chat text saja.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => [
+                            'reason' => ['type' => 'string', 'description' => 'ringkasan singkat kondisi yg customer deskripsikan (utk log + context waktu forward foto ke dokter). Contoh: "customer bilang penis anaknya kecil bgt", "kulit ujung menempel + belum turun", "ada bengkak dan lecet setelah aktivitas". Max ~200 char, pakai bahasa dokter-ready.'],
+                        ],
+                        'required' => ['reason'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
                     'name'        => 'save_harga_data',
                     'description' => 'Simpan 1+ field harga yang customer sebut di turn ini. Tool return {ok, filled[], missing[], escalate?, reason?}. Kalau escalate=true, output text KOSONG (engine handoff ke admin). Kalau missing[] kosong, langsung call send_harga_quote().',
                     'parameters'  => [
@@ -1158,6 +1198,28 @@ PROMPT;
 
             case 'save_lead_sunat':
                 return [$this->toolSaveLeadSunat($args, $session), []];
+
+            case 'request_konsul_dokter':
+                $reason = trim((string) ($args['reason'] ?? ''));
+                Log::info('SUNAT_BOT_AGENT_REQUEST_KONSUL_DOKTER', [
+                    'phone'  => $session->no_telp,
+                    'reason' => $reason,
+                ]);
+                // Simpan konteks utk webhook image handler pakai saat
+                // forward foto ke dr. Yoga.
+                $session->setData('konsul_dokter_pending', true);
+                $session->setData('konsul_dokter_reason', $reason);
+                $session->setData('konsul_dokter_requested_at', now()->toDateTimeString());
+                $session->save();
+                return [
+                    ['ok' => true, 'note' => 'engine akan minta foto ke customer. Setelah customer kirim foto, webhook akan forward otomatis ke dr. Yoga (6281381912803). Bot mute customer selama menunggu instruksi dokter. Output text KOSONG.'],
+                    [
+                        'replies' => [[
+                            'text'  => "Boleh dibantu kirim foto area yg dikeluhkan kak? 🙏\n\nKami akan langsung konsulkan ke dokter kami untuk asesmen kondisinya. Setelah dokter review, kami kabari balik ya.",
+                            'media' => null,
+                        ]],
+                    ],
+                ];
 
             default:
                 return [['ok' => false, 'error' => "unknown tool: $name"], []];

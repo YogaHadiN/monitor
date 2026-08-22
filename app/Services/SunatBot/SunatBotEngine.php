@@ -1901,6 +1901,28 @@ class SunatBotEngine
 
     private function escalate(BotSession $session, ?array $replies = null): array
     {
+        // KONSUL DOKTER PATH — per instruksi dr. Yoga 2026-08-22:
+        // Kalau session flag `konsul_dokter_pending=true` (di-set oleh
+        // agent via tool `request_konsul_dokter`), JANGAN handoff full
+        // ke Rona. Sebaliknya: keep session active, tunggu foto dari
+        // customer. Webhook image handler yang forward ke dr. Yoga.
+        //
+        // NB: deteksi "apakah kelainan" dilakukan oleh LLM agent
+        // (bukan keyword match di engine) supaya nangkap deskripsi
+        // awam customer ("burung nya kecil", "belum keluar", dll)
+        // tanpa false-positive utk kalimat non-anatomis.
+        $konsulPending   = (bool) $session->getData('konsul_dokter_pending');
+        $konsulCompleted = (bool) $session->getData('konsul_dokter_completed');
+        if ($konsulPending && !$konsulCompleted) {
+            Log::info('SUNAT_BOT_KONSUL_DOKTER_STILL_PENDING', [
+                'phone'   => $session->no_telp,
+                'session' => $session->id,
+            ]);
+            return [
+                ['text' => 'Baik kak 🙏 Kami masih menunggu fotonya ya, biar bisa dikonsulkan ke dokter kami.', 'media' => null],
+            ];
+        }
+
         $session->requires_special_handling = true;
         $session->is_complete               = true;
         $session->last_activity_at          = Carbon::now();
