@@ -1945,18 +1945,34 @@ class SunatBotEngine
 
         // Pre-handoff photo request: sebelum handover message, kirim
         // instruksi minta foto ke customer (per instruksi dr. Yoga
-        // 2026-08-20). Kalau indikasi khitan menunjukkan KELAINAN PENIS
-        // (fimosis dll) → minta 2 foto (foto penis + foto full body
-        // pasien). Kalau tidak (mis. postur gemuk / riwayat medis lain)
-        // → cukup foto full body pasien.
+        // 2026-08-20). Kombinasi:
+        //   - Kelainan penis (fimosis dll) → foto penis + foto full body
+        //   - Postur gemuk/obesitas → cukup foto full body
+        //   - Selain itu → skip minta foto, langsung handover
+        // Update 2026-08-22: kalau anak tidak gemuk & tidak ada kelainan,
+        // tidak perlu minta foto full body (dulu selalu diminta → noise).
         $indikasi = (string) ($session->getData('indikasi_khitan') ?? '');
-        $photoRequest = $this->indikasiAdaKelainanPenis($indikasi)
-            ? "Sebelum kami sambungkan ke admin, mohon kirim foto berikut kak, supaya dokter kami bisa asesmen kondisinya:\n\n1. Foto area penis (fokus ke bagian yang dikeluhkan)\n2. Foto calon pasien (full body, wajah kelihatan)\n\n🙏"
-            : "Sebelum kami sambungkan ke admin, mohon kirim foto full body calon pasien ya kak, supaya dokter kami bisa asesmen kondisinya 🙏";
+        $postur   = (string) ($session->getData('postur_tubuh') ?? '');
+        $adaKelainanPenis = $this->indikasiAdaKelainanPenis($indikasi);
+        $gemuk            = $this->isPosturGemuk($postur);
 
-        $preBubble  = ['text' => $photoRequest,                            'media' => null];
+        $photoRequest = null;
+        if ($adaKelainanPenis) {
+            $photoRequest = "Sebelum kami sambungkan ke admin, mohon kirim foto berikut kak, supaya dokter kami bisa asesmen kondisinya:\n\n1. Foto area penis (fokus ke bagian yang dikeluhkan)\n2. Foto calon pasien (full body, wajah kelihatan)\n\n🙏";
+        } elseif ($gemuk) {
+            $photoRequest = "Sebelum kami sambungkan ke admin, mohon kirim foto full body calon pasien ya kak, supaya dokter kami bisa asesmen kondisinya 🙏";
+        }
+
         $handoverBubble = ['text' => (string) config('sunatbot.handover_message'), 'media' => null];
 
+        if ($photoRequest === null) {
+            if ($replies !== null) {
+                return $replies;
+            }
+            return [$handoverBubble];
+        }
+
+        $preBubble = ['text' => $photoRequest, 'media' => null];
         if ($replies !== null) {
             return array_merge([$preBubble], $replies);
         }
