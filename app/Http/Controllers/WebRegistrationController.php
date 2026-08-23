@@ -339,13 +339,13 @@ class WebRegistrationController extends Controller
         $tipe_konsultasi_id = Input::get('value');
         $no_telp            = Input::get('no_telp');
 
-        // Guard anti double-daftar: kalau sudah ada antrian/reservasi terjadwal
-        // aktif hari ini, jangan boleh mulai pendaftaran baru.
-        if ($this->sudahPunyaPendaftaranHariIni($no_telp)) {
-            $this->message = 'Anda sudah memiliki pendaftaran hari ini. Tidak bisa daftar ulang sebelum yang lama dibatalkan.';
-            $message = view('web_registrations.message', ['message' => $this->message])->render();
-            return compact('message');
-        }
+        // NB (per instruksi dr. Yoga 2026-08-23, task #6): guard
+        // `sudahPunyaPendaftaranHariIni` dihapus di sini supaya bisa
+        // daftar pasien BERBEDA (mis. anak kedua, sepupu) dgn nomor
+        // HP yg sama. Dulu guard block SEMUA daftar baru — bikin ortu
+        // stuck kalau punya multi-anak yg mau sunat/periksa bareng.
+        // Idempotensi tetap dijaga per-pasien di level Antrian creation
+        // (pasien_id unique per periksa).
 
         // Untuk dokter gigi (tipe=2): aturan disamakan dengan WablasController
         // validasiDokterPengambilanAntrianDokterGigi (line 6347-6463) — kecuali
@@ -928,11 +928,12 @@ class WebRegistrationController extends Controller
     public function daftar_lagi(){
         $no_telp = Input::get('no_telp');
 
-        if ($this->sudahPunyaPendaftaranHariIni($no_telp)) {
-            $this->message = 'Anda sudah memiliki pendaftaran hari ini. Tidak bisa daftar ulang sebelum yang lama dibatalkan.';
-            $message = view('web_registrations.message', ['message' => $this->message])->render();
-            return compact('message');
-        }
+        // NB (per instruksi dr. Yoga 2026-08-23, task #6): guard
+        // `sudahPunyaPendaftaranHariIni` dihapus di sini. Tombol
+        // "Daftar Lagi" = explicit intent user mau daftar pasien
+        // BERBEDA (bukan pasien yg sudah tercantum di antrian).
+        // Kalau di-block, ortu multi-anak stuck total. Idempotensi
+        // dijaga di level Antrian creation (pasien_id per periksa).
 
         WebRegistration::create([
             'no_telp' => $no_telp,
