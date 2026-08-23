@@ -441,15 +441,28 @@ class SunatBotAgent
                     $replies = array_merge($replies, $sideEffect['replies']);
                     $toolEmittedReplies = true;
 
-                    // Track media-slug rendered supaya text follow-up
-                    // yg redundant di iter berikut bisa di-drop.
+                    // Track intent slug rendered supaya text follow-up
+                    // yg redundant (agent paraphrase isi template) di
+                    // iter berikut bisa di-drop. List berisi SEMUA
+                    // "answer" intents — baik text-only maupun media —
+                    // supaya agent gak double-emit BPJS/lokasi/metode/dll.
                     if ($toolName === 'get_intent_response') {
                         $slugArg = trim((string) ($args['slug'] ?? ''));
                         $mediaSlugs = [
+                            // Media (text + foto/video)
                             'pertanyaan_lokasi', 'pertanyaan_metode', 'pertanyaan_jarum_bius',
                             'pertanyaan_fasilitas', 'pertanyaan_testimoni', 'pertanyaan_hadiah',
                             'contoh_dokumentasi', 'edukasi_kelebihan', 'trigger_sunat',
                             'pertanyaan_durasi_sembuh', 'pertanyaan_pengawasan_pasca',
+                            // Text-only "answer" intents (agent suka paraphrase → duplikat)
+                            'pertanyaan_sunat_menggunakan_bpjs',
+                            'pertanyaan_bpjs', 'pertanyaan_asuransi',
+                            'pertanyaan_jam_praktik', 'pertanyaan_jadwal',
+                            'pertanyaan_dokter', 'pertanyaan_perempuan',
+                            'pertanyaan_home_service', 'pertanyaan_di_rumah',
+                            'pertanyaan_promo', 'pertanyaan_diskon',
+                            'pertanyaan_jahitan', 'pertanyaan_perban',
+                            'pertanyaan_durasi_tindakan', 'pertanyaan_konsultasi',
                         ];
                         if ($slugArg !== '' && in_array($slugArg, $mediaSlugs, true)) {
                             $mediaSlugRendered[] = $slugArg;
