@@ -113,6 +113,13 @@ class WablasController extends Controller
     public $chats_bot_id = null;
     public $filename = null;
     public $inbound_message = null;
+    /**
+     * Set true untuk skip Message::create baik inbound maupun outbound
+     * autoreply. Dipakai untuk pesan yg bukan chat admin (mis. survey
+     * response '(pqid)' + ack template). Diset di webhook() setelah
+     * deteksi marker; dibaca di logOutboundAutoReply.
+     */
+    public $skipMessageLog = false;
 
     public function __construct()
     {
@@ -555,6 +562,28 @@ class WablasController extends Controller
             // pesan lain diberi chat_admin = 0 — tetap tersimpan untuk
             // arsip namun tidak ditampilkan, dan dihapus otomatis setelah
             // 50 hari oleh command messages:prune-non-admin.
+            //
+            // GUARD: skip logging kalau ini SURVEY response (pesan
+            // mengandung marker '(pqid' — recovery-index rating dari
+            // template kepuasan pasien). Per instruksi dr. Yoga
+            // 2026-08-24: survey rating + ack-nya bukan chat admin,
+            // tidak perlu clutter messages/{no_telp} thread. Flag
+            // `$this->skipMessageLog` juga dipakai di logOutboundAutoReply
+            // supaya ack "Terima kasih atas kesediaan memberikan masukan..."
+            // tidak ke-save juga.
+            if (str_contains((string) $this->message, '(pqid')) {
+                $this->skipMessageLog = true;
+            }
+            if ($this->skipMessageLog) {
+                Log::info('WABLAS_SKIP_INBOUND_LOG_SURVEY', [
+                    'phone'   => $this->no_telp ?? null,
+                    'message' => mb_substr((string) $this->message, 0, 60),
+                ]);
+                // Skip inbound Message::create + outbound ack (guard di
+                // logOutboundAutoReply). Autoreply text tetap dikirim ke
+                // customer via provider (autoReply() switch), cuma tidak
+                // di-log ke DB.
+            }
             $dalamChatAdmin = $this->noTelpDalamChatWithAdmin();
             // Chat sunat = OR dari tiga sumber:
             //   1. Sudah/pernah masuk alur sunat bot (entry di bot_sessions).
@@ -593,23 +622,25 @@ class WablasController extends Controller
                 ? 0
                 : ($dalamChatSunat ? ($botAkanBalas ? 1 : 0) : 1);
 
-            $this->inbound_message = Message::create([
-                'no_telp'       => $this->no_telp,
-                'message'       => $this->message,
-                'tanggal'       => date('Y-m-d H:i:s'),
-                'image_url'     => $this->image_url,
-                'video_url'     => $this->video_url,
-                'audio_url'     => $this->audio_url,
-                'sending'       => 0,
-                'sudah_dibalas' => $sudahDibalas,
-                'tenant_id'     => 1,
-                'touched'       => 0,
-                'chat_admin'    => $dalamChatAdmin ? 1 : 0,
-                // chat_sunat selalu 0 untuk chat umum (Wablas/Watzap).
-                // Flag chat_sunat khusus traffic gowa sunat device,
-                // di-set di atika GowaWebhookController::handleSunatBotText.
-                'chat_sunat'    => 0,
-            ]);
+            if (!$this->skipMessageLog) {
+                $this->inbound_message = Message::create([
+                    'no_telp'       => $this->no_telp,
+                    'message'       => $this->message,
+                    'tanggal'       => date('Y-m-d H:i:s'),
+                    'image_url'     => $this->image_url,
+                    'video_url'     => $this->video_url,
+                    'audio_url'     => $this->audio_url,
+                    'sending'       => 0,
+                    'sudah_dibalas' => $sudahDibalas,
+                    'tenant_id'     => 1,
+                    'touched'       => 0,
+                    'chat_admin'    => $dalamChatAdmin ? 1 : 0,
+                    // chat_sunat selalu 0 untuk chat umum (Wablas/Watzap).
+                    // Flag chat_sunat khusus traffic gowa sunat device,
+                    // di-set di atika GowaWebhookController::handleSunatBotText.
+                    'chat_sunat'    => 0,
+                ]);
+            }
 
             // Sunat follow-up session detect — bila pesan inbound mengandung
             // kata kunci "sunat"/"khitan" dan belum ada session aktif untuk
@@ -7194,6 +7225,17 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     private function logOutboundAutoReply(string $text): void
     {
         if (empty($this->no_telp) || trim($text) === '') return;
+        // GUARD: kalau webhook() sudah tandai skipMessageLog=true (mis.
+        // survey response), skip save outbound ack juga. Text tetap
+        // dikirim ke customer via provider (autoReply main switch),
+        // cuma tidak di-log ke DB.
+        if ($this->skipMessageLog) {
+            Log::info('AUTO_REPLY_SKIP_LOG_SURVEY', [
+                'phone' => $this->no_telp,
+                'text'  => mb_substr($text, 0, 80),
+            ]);
+            return;
+        }
         try {
             $phone = (string) $this->no_telp;
 
