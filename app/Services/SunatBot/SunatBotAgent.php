@@ -358,6 +358,30 @@ class SunatBotAgent
                         $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
                         continue;
                     }
+
+                    // Guard STRIKT: default context SunatBot = sunat.
+                    // Redirect_ke_klinik_utama HANYA valid kalau user message
+                    // eksplisit sebut layanan non-sunat (usg/gigi/dokter umum/
+                    // dll di $nonSunatKw). Kalau user cuma jawab lead capture
+                    // (nama/domisili spt "Saya opes", "Lok di perumahan benua
+                    // indah"), atau tanya lokasi klinik sunat, JANGAN redirect.
+                    // Reject + arahkan LLM ke tool yang tepat.
+                    // Kasus bug 2026-08-23 (6285285926533): customer jawab
+                    // "Lok di perumahan benua indah" (domisili) → agent malah
+                    // redirect_ke_klinik_utama.
+                    if (!$userMsgHasNonSunat) {
+                        Log::info('SUNAT_BOT_AGENT_BLOCK_REDIRECT_NO_NONSUNAT_KW', [
+                            'phone'  => $session->no_telp,
+                            'reason' => $reason,
+                            'msg'    => mb_substr($userMsg, 0, 200),
+                        ]);
+                        $toolResult = [
+                            'ok'    => false,
+                            'error' => 'DILARANG redirect_ke_klinik_utama kalau user message TIDAK sebut layanan non-sunat eksplisit (usg/gigi/dokter umum/kulit/vaksin/kandungan/hamil/lab/bpjs/dll). Default context SunatBot = sunat. Kalau user answering lead capture (nama/domisili), pakai save_lead_sunat. Kalau tanya lokasi klinik, pakai get_intent_response("pertanyaan_lokasi"). Kalau ragu, jangan redirect.',
+                        ];
+                        $messages[] = ['role' => 'tool', 'tool_call_id' => $callId, 'content' => json_encode($toolResult, JSON_UNESCAPED_UNICODE)];
+                        continue;
+                    }
                 }
 
                 if ($toolName === 'save_harga_data' && (bool) $session->getData('booking_started') && !$session->is_complete) {
