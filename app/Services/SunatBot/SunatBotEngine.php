@@ -391,6 +391,20 @@ class SunatBotEngine
             ]);
             $justCreated = true;
 
+            // Guard "bukan first-touch beneran" (per instruksi dr. Yoga
+            // 2026-08-24): kalau ada chat_sunat outbound (bot atau admin
+            // dari HP) dlm 7 hari terakhir utk nomor ini, ini kemungkinan
+            // continuation dari chat lama (mis. admin tanya usia+BB dari
+            // HP 2 hari lalu, customer baru bales sekarang dgn "Umur 5th
+            // BB 32kg"). Skip greeting_first_touch — langsung route ke
+            // agent supaya bisa handle jawaban customer sebagai konteks,
+            // BUKAN treat sbg first-touch greeting Rona.
+            $hasRecentChatSunat = \App\Models\Message::where('no_telp', $noTelp)
+                ->where('chat_sunat', 1)
+                ->where('sending', 1)
+                ->where('created_at', '>=', Carbon::now()->subDays(7))
+                ->exists();
+
             // Per instruksi dr. Yoga 2026-08-16: first-touch greeting Rona
             // (format Dumet School + tanya nama+domisili). Kalau bot_intent
             // `greeting_first_touch` aktif → render + return early. Turn
@@ -399,11 +413,18 @@ class SunatBotEngine
             $greetingIntent = BotIntent::where('intent', 'greeting_first_touch')
                 ->where('active', 1)
                 ->first();
-            if ($greetingIntent !== null) {
+            if ($greetingIntent !== null && !$hasRecentChatSunat) {
                 return [
                     'handled' => true,
                     'replies' => $this->renderIntent('greeting_first_touch', $session),
                 ];
+            }
+            if ($greetingIntent !== null && $hasRecentChatSunat) {
+                Log::info('SUNAT_BOT_SKIP_GREETING_FIRST_TOUCH_HAS_RECENT_CHAT', [
+                    'phone' => $noTelp,
+                    'msg'   => mb_substr($msg, 0, 100),
+                ]);
+                // Fall through — biar agent flow handle
             }
 
             // Fallback (kalau greeting_first_touch belum di-seed):
