@@ -487,6 +487,7 @@ class SunatBotAgent
                             'pertanyaan_promo', 'pertanyaan_diskon',
                             'pertanyaan_jahitan', 'pertanyaan_perban',
                             'pertanyaan_durasi_tindakan', 'pertanyaan_konsultasi',
+                            'pertanyaan_laser',
                         ];
                         if ($slugArg !== '' && in_array($slugArg, $mediaSlugs, true)) {
                             $mediaSlugRendered[] = $slugArg;
