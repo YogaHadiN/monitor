@@ -2179,28 +2179,69 @@ PROMPT;
 
     private function loadHistory(BotSession $session): array
     {
-        $raw = $session->agent_history ?? null;
-        if ($raw === null) return [];
-        if (is_string($raw)) {
-            $decoded = json_decode($raw, true);
-        } else {
-            $decoded = $raw;
-        }
-        if (!is_array($decoded)) return [];
+        // Sumber KEBENARAN untuk history = tabel `messages` (chat_sunat=1),
+        // BUKAN cuma session.agent_history (JSON). Alasan (per instruksi
+        // dr. Yoga 2026-08-24):
+        //   - `from_me_sunat` (admin Rona ketik dari HP) tidak masuk
+        //     agent_history JSON, jadi agent kehilangan konteks kalau
+        //     admin sudah tanya sesuatu manual.
+        //   - Jawaban customer ke pertanyaan admin tersebut harus juga
+        //     jadi konteks utk agent lanjut ke pertanyaan berikutnya.
+        //   - Session bisa lifetime pendek (is_complete/reset) — history
+        //     Messages lebih tahan.
+        //
+        // Ambil last N pesan chat_sunat dari phone ini (7 hari terakhir,
+        // capped HISTORY_MAX_TURNS*2). Skip noise: template followup,
+        // template allowlist redirect, template konsul dokter ack, dsb.
+        $phone = (string) $session->no_telp;
+        if ($phone === '') return [];
 
-        // Cuma role user/assistant yang di-keep di history persistensi
-        // (assistant tanpa tool_calls — final reply). Tool roles dan
-        // assistant-with-tool-calls hidup di dalam 1 turn aja.
+        $skipIntents = [
+            'sunat_followup',
+            'sunat_allowlist_redirect',
+            'konsul_dokter_ack',
+            'konsul_dokter_reply', // ini reply dokter, jangan double-count
+            'dev_reset_ack',
+        ];
+
+        $rows = \App\Models\Message::where('no_telp', $phone)
+            ->where('chat_sunat', 1)
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->where(function ($q) use ($skipIntents) {
+                $q->whereNull('flagged_intent')
+                  ->orWhereNotIn('flagged_intent', $skipIntents);
+            })
+            ->orderBy('id', 'asc')
+            ->limit(self::HISTORY_MAX_TURNS * 4) // buffer sblm filter final
+            ->get(['id', 'message', 'sending', 'flagged_intent']);
+
         $clean = [];
-        foreach ($decoded as $m) {
-            $role = (string) ($m['role'] ?? '');
-            if ($role === 'user' || $role === 'assistant') {
+        foreach ($rows as $row) {
+            $content = trim((string) $row->message);
+            if ($content === '') continue;
+            // sending=1 = outbound (bot/admin/system) → 'assistant'
+            // sending=0 = inbound (customer) → 'user'
+            $role = ((int) $row->sending === 1) ? 'assistant' : 'user';
+            $clean[] = ['role' => $role, 'content' => $content];
+        }
+
+        // Fallback: kalau tidak ada Message rows sama sekali (mis. brand
+        // new phone), pakai session.agent_history JSON kalau ada.
+        if (empty($clean)) {
+            $raw = $session->agent_history ?? null;
+            if ($raw === null) return [];
+            $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+            if (!is_array($decoded)) return [];
+            foreach ($decoded as $m) {
+                $role = (string) ($m['role'] ?? '');
+                if ($role !== 'user' && $role !== 'assistant') continue;
                 if (!empty($m['tool_calls'])) continue;
                 $content = (string) ($m['content'] ?? '');
                 if ($content === '') continue;
                 $clean[] = ['role' => $role, 'content' => $content];
             }
         }
+
         return array_slice($clean, -self::HISTORY_MAX_TURNS * 2);
     }
 
