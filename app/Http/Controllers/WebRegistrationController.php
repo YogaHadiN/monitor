@@ -740,6 +740,20 @@ class WebRegistrationController extends Controller
                                         ->first();
         $bisa_digunakan = true;
         $this->message = null;
+
+        // Guard anti-duplikat per pasien (per instruksi dr. Yoga 2026-08-26):
+        // Kalau pasien_id yg dipilih sudah punya antrian aktif hari ini,
+        // TOLAK. Beda dgn sudahPunyaPendaftaranHariIni() yg cek per
+        // no_telp (dihapus di task #6 supaya multi-anak boleh) — guard
+        // di sini spesifik per pasien.
+        if (!is_null($pasien_id) && $this->pasienSudahPunyaAntrianHariIni((int) $pasien_id)) {
+            $pasien = Pasien::find($pasien_id);
+            $namaPasien = $pasien?->nama ?? 'Pasien';
+            $this->message = "Pasien *{$namaPasien}* sudah memiliki antrian aktif hari ini. Batalkan antrian yang lama terlebih dahulu, atau pilih pasien yang berbeda.";
+            $message = view('web_registrations.message', ['message' => $this->message])->render();
+            return compact('message');
+        }
+
         if (!is_null( $pasien_id )) {
             $pasien = Pasien::find( $pasien_id );
             if (!is_null( $pasien )) {
@@ -939,6 +953,34 @@ class WebRegistrationController extends Controller
             'no_telp' => $no_telp,
             'tipe_konsultasi_id' => null
         ]);
+    }
+
+    /**
+     * Cek apakah PASIEN (bukan phone) sudah punya antrian aktif hari ini.
+     * Per instruksi dr. Yoga 2026-08-26 — dipakai di pasien() untuk cegah
+     * duplikat antrian atas nama pasien sama. Beda dgn
+     * sudahPunyaPendaftaranHariIni() yg cek per no_telp (dihapus task #6).
+     */
+    private function pasienSudahPunyaAntrianHariIni(int $pasien_id): bool
+    {
+        $today = date('Y-m-d');
+
+        $hasAntrian = Antrian::where('pasien_id', $pasien_id)
+            ->whereDate('created_at', $today)
+            ->whereRaw(
+                "(antriable_type = 'App\\\Models\\\Antrian' or
+                  antriable_type = 'App\\\Models\\\AntrianPeriksa' or
+                  antriable_type = 'App\\\Models\\\AntrianPoli')"
+            )
+            ->exists();
+
+        if ($hasAntrian) {
+            return true;
+        }
+
+        return SchedulledReservation::where('pasien_id', $pasien_id)
+            ->whereDate('created_at', $today)
+            ->exists();
     }
 
     /**
