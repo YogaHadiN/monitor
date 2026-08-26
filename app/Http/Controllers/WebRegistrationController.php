@@ -1048,7 +1048,38 @@ class WebRegistrationController extends Controller
         $antrian_id = Input::get('antrian_id');
         $antrian = Antrian::find( $antrian_id );
         if (!is_null( $antrian )) {
+            // Capture data BEFORE delete — Antrian::delete() bikin field
+            // eager-loaded jadi stale kalau diakses setelah delete.
+            $noTelp        = (string) ($antrian->no_telp ?? '');
+            $nomorAntrian  = (string) ($antrian->nomor_antrian ?? '');
+            $namaRuangan   = optional($antrian->ruangan)->nama ?? '';
+            $namaPasien    = optional($antrian->pasien)->nama ?? '';
+
             $antrian->delete();
+
+            // Kirim notifikasi WA ke pasien (per instruksi dr. Yoga
+            // 2026-08-26): konfirmasi antrian sudah dihapus via web.
+            if ($noTelp !== '') {
+                try {
+                    $lines = ['✅ *Antrian dihapus*', ''];
+                    if ($nomorAntrian !== '') $lines[] = 'Nomor antrian: *' . $nomorAntrian . '*';
+                    if ($namaPasien !== '')  $lines[] = 'Atas nama: ' . $namaPasien;
+                    if ($namaRuangan !== '') $lines[] = 'Poli/Ruangan: ' . $namaRuangan;
+                    $lines[] = '';
+                    $lines[] = 'Antrian ini telah dihapus melalui aplikasi web Klinik Jati Elok oleh pasien.';
+                    $lines[] = '';
+                    $lines[] = 'Kalau bukan Anda yang menghapus, mohon konfirmasi ke admin klinik. Terima kasih.';
+                    $msg = implode(PHP_EOL, $lines);
+
+                    app(\App\Services\WatzapService::class)->sendText($noTelp, $msg);
+                } catch (\Throwable $e) {
+                    \Log::warning('WEB_REG_HAPUS_ANTRIAN_NOTIF_FAIL', [
+                        'antrian_id' => $antrian_id,
+                        'no_telp'    => $noTelp,
+                        'err'        => $e->getMessage(),
+                    ]);
+                }
+            }
         }
     }
     public function cek_antrian(){
