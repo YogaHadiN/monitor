@@ -1799,6 +1799,30 @@ PROMPT;
                 $saved[] = $k;
             }
         }
+
+        // DUAL-WRITE ke leads_sunats (per instruksi dr. Yoga 2026-08-26):
+        // Kalau HARGA flow capture nama_orang_tua atau domisili, sekaligus
+        // upsert ke leads_sunats table supaya UI /chat_sunats + followup
+        // pipeline dapat nama+alamat. Sebelumnya cuma save_lead_sunat yg
+        // write ke leads_sunats — kalau customer langsung minta harga
+        // (skip lead capture), leads_sunats stuck NULL selamanya.
+        $namaLeads   = trim((string) ($args['nama_orang_tua'] ?? ''));
+        $alamatLeads = trim((string) ($args['domisili'] ?? ''));
+        if ($namaLeads !== '' || $alamatLeads !== '') {
+            $phone = (string) $session->no_telp;
+            $existing = \DB::table('leads_sunats')
+                ->where('no_telp', $phone)
+                ->where('tenant_id', 1)
+                ->first();
+            $update = ['updated_at' => now()];
+            if ($namaLeads !== '')   $update['nama_lawan_bicara'] = $namaLeads;
+            if ($alamatLeads !== '') $update['alamat']            = $alamatLeads;
+            $update['created_at'] = $existing->created_at ?? now();
+            \DB::table('leads_sunats')->updateOrInsert(
+                ['no_telp' => $phone, 'tenant_id' => 1],
+                $update
+            );
+        }
         // usia_anak: parse ke integer + simpan satuan terpisah, supaya
         // template render "8 tahun" (bukan "8 tahun tahun").
         $usiaRaw = trim((string) ($args['usia_anak'] ?? ''));
