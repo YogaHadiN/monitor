@@ -1615,6 +1615,8 @@ class WablasController extends Controller
         $response .= " reservasi";
         $response .= PHP_EOL;
         $response .= 'Balas *pindah dokter* untuk pindah ke dokter lain yang sedang praktek';
+        $response .= PHP_EOL;
+        $response .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
 
         return $response;
     }

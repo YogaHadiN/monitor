@@ -1118,6 +1118,8 @@ class QiscusController extends Controller
         $response .= PHP_EOL;
         $response .= 'Ketik *batalkan* untuk membatalkan';
         $response .= " reservasi";
+        $response .= PHP_EOL;
+        $response .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
 
         return $response;
     }
