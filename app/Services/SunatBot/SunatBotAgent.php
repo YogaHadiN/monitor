@@ -1813,6 +1813,31 @@ PROMPT;
             }
         }
 
+        // GUARD ANTI-HALLUCINATION safety-fields (per keluhan dr. Yoga
+        // 2026-08-27 nomor 6281289632301): agent set indikasi_khitan
+        // ="tidak ada" + postur_tubuh="normal" + riwayat_kesehatan
+        // ="tidak ada" tanpa customer pernah menyebut → langsung
+        // kasih harga. Sekarang setiap field safety WAJIB punya bukti
+        // di customer messages history (chat_sunat, sending=0). Kalau
+        // tidak ada bukti → reject field itu, kembalikan warning agar
+        // agent tanya langsung ke customer.
+        $safetyFields = ['indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan'];
+        $rejectedNoEvidence = [];
+        foreach ($safetyFields as $sf) {
+            if (!isset($args[$sf])) continue;
+            $val = trim((string) $args[$sf]);
+            if ($val === '') continue;
+            if (!$this->customerMentionedSafetyField($sf, (string) $session->no_telp)) {
+                $rejectedNoEvidence[] = $sf;
+                Log::info('SUNAT_BOT_AGENT_HARGA_REJECT_NO_EVIDENCE', [
+                    'phone'        => (string) $session->no_telp,
+                    'field'        => $sf,
+                    'attempt_val'  => $val,
+                ]);
+                unset($args[$sf]);
+            }
+        }
+
         $strKeys = ['nama_orang_tua', 'domisili', 'sudah_tahu_metode',
                     'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan'];
         $saved = [];
@@ -1935,12 +1960,85 @@ PROMPT;
             'escalate' => $escalate,
         ];
         if ($reason !== null) $result['reason'] = $reason;
+        if (!empty($rejectedNoEvidence)) {
+            $result['rejected_no_evidence'] = $rejectedNoEvidence;
+            $result['warning'] = 'Field berikut DI-REJECT karena customer belum eksplisit menyebut di pesan-nya: '
+                . implode(', ', $rejectedNoEvidence)
+                . '. JANGAN kirim harga. WAJIB tanya field ini ke customer dulu satu per satu. Contoh: "Postur anaknya gemuk atau tidak gemuk kak?" / "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?" / "Ada riwayat kesehatan khusus seperti jantung, autisme, atau kelainan pembekuan darah kak?"';
+        }
 
         $sideEffect = [];
         if ($escalate) {
             $sideEffect['escalate'] = true;
         }
         return [$result, $sideEffect];
+    }
+
+    /**
+     * GUARD ANTI-HALLUCINATION: cek apakah customer pernah menyebut
+     * kata kunci relevan untuk safety-field di history chat_sunat.
+     * Kalau tidak ada bukti eksplisit → agent sedang hallucinate,
+     * reject save field itu.
+     *
+     * Kasus 6281289632301 (2026-08-27): agent langsung set
+     * indikasi_khitan/postur/riwayat="tidak ada"/"normal" tanpa
+     * customer pernah menyebutkan → langsung send_harga_quote.
+     */
+    private function customerMentionedSafetyField(string $field, string $noTelp): bool
+    {
+        // Keyword whitelist per field. "tidak ada" sengaja TIDAK
+        // dimasukin ke semua field karena ambigu (customer sering
+        // bilang "tidak ada" utk salah satu → agent generalize ke
+        // semua). Butuh compound match (mis. "tidak ada keluhan").
+        $keywords = [
+            'indikasi_khitan' => [
+                'keluhan', 'phimosis', 'fimosis', 'balanitis',
+                'lengket', 'menutup', 'nyeri', 'gatal', 'sakit',
+                'kencing', 'susah', 'medis', 'religius', 'religion',
+                'agama', 'muslim', 'islam', 'balig', 'baligh',
+                'wajib', 'sudah waktunya', 'panjang', 'kelamin',
+                'penis', 'burung', 'titit', 'kulup',
+                'tidak ada keluhan', 'ga ada keluhan', 'gak ada keluhan',
+                'tanpa keluhan', 'ga da keluhan', 'nggak ada keluhan',
+            ],
+            'postur_tubuh' => [
+                'gemuk', 'kurus', 'normal', 'chubby', 'gempal',
+                'ideal', 'biasa', 'sedang', 'tidak gemuk',
+                'ga gemuk', 'gak gemuk', 'nggak gemuk',
+                'obesitas', 'proporsional', 'kecil', 'besar',
+                'langsing', 'atletis',
+            ],
+            'riwayat_kesehatan' => [
+                'jantung', 'autis', 'autisme', 'autism',
+                'pembekuan', 'hemofilia', 'alergi', 'asma',
+                'diabetes', 'ginjal', 'epilepsi', 'kejang',
+                'sehat', 'sehat aja', 'sehat semua', 'sehat kok',
+                'sehat wal afiat', 'tidak ada penyakit',
+                'ga ada penyakit', 'gak ada penyakit',
+                'tidak ada riwayat', 'ga ada riwayat',
+                'gak ada riwayat', 'tidak ada sakit',
+                'tanpa riwayat', 'aman', 'nggak ada penyakit',
+            ],
+        ];
+        if (!isset($keywords[$field])) return true; // unknown field → allow
+
+        $msgs = \App\Models\Message::where('no_telp', $noTelp)
+            ->where('chat_sunat', 1)
+            ->where('sending', 0)
+            ->orderBy('id', 'desc')
+            ->limit(50)
+            ->get(['message']);
+
+        foreach ($msgs as $m) {
+            $text = mb_strtolower((string) $m->message);
+            if ($text === '') continue;
+            foreach ($keywords[$field] as $kw) {
+                if (str_contains($text, mb_strtolower($kw))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
