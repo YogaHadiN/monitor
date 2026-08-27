@@ -1202,14 +1202,14 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'save_lead_sunat',
-                    'description' => 'Simpan lead sunat (nama + alamat customer) ke leads_sunats table. Dipanggil di AWAL conversation sunat setelah customer kasih info nama & domisili — sekali per phone. Tool juga set nama_orang_tua + domisili di session data, jadi HARGA flow (save_harga_data) nanti tidak perlu re-tanya field itu. Return {ok, saved:[fields], already_captured:bool}.',
+                    'description' => 'Simpan lead sunat (nama + alamat customer) ke leads_sunats table. Dipanggil di AWAL conversation sunat setelah customer kasih info nama & domisili. Boleh pass parsial (cuma nama SAJA atau cuma alamat SAJA) kalau customer belum kasih keduanya. 🚫 DILARANG pass nama="Rona" — Rona = nama admin bot sendiri (bukan customer). Kalau customer cuma jawab 1 kata dan itu nama daerah/kota (mis. "Tigaraksa", "Depok", "Ciledug"), save alamat SAJA, nama JANGAN pass. Return {ok, saved:[fields]}.',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
-                            'nama'   => ['type' => 'string', 'description' => 'nama panggilan customer (ortu/lawan bicara), mis. "Rina" / "Yeni"'],
-                            'alamat' => ['type' => 'string', 'description' => 'kota / kecamatan domisili, mis. "Depok" / "Tangerang Selatan"'],
+                            'nama'   => ['type' => 'string', 'description' => 'nama panggilan customer (ortu/lawan bicara), mis. "Rina" / "Yeni". OPSIONAL — skip kalau customer belum sebut nama. JANGAN pernah pass "Rona" (nama admin bot).'],
+                            'alamat' => ['type' => 'string', 'description' => 'kota / kecamatan domisili, mis. "Depok" / "Tangerang Selatan". OPSIONAL — skip kalau customer belum sebut.'],
                         ],
-                        'required' => ['nama', 'alamat'],
+                        'required' => [],
                     ],
                 ],
             ],
@@ -1789,6 +1789,20 @@ PROMPT;
      */
     private function toolSaveHargaData(array $args, BotSession $session): array
     {
+        // Reject nama_orang_tua = "Rona" (nama admin bot). Kasus
+        // 6281318081779 2026-08-26: agent hallucinate nama dari greeting.
+        $botNames = ['rona', 'admin', 'admin sunat', 'sunatboy', 'bot', 'cs'];
+        if (isset($args['nama_orang_tua'])) {
+            $namaLower = mb_strtolower(trim((string) $args['nama_orang_tua']));
+            if (in_array($namaLower, $botNames, true)) {
+                Log::info('SUNAT_BOT_AGENT_HARGA_REJECT_BOT_NAME', [
+                    'phone' => (string) $session->no_telp,
+                    'nama'  => $args['nama_orang_tua'],
+                ]);
+                unset($args['nama_orang_tua']);
+            }
+        }
+
         $strKeys = ['nama_orang_tua', 'domisili', 'sudah_tahu_metode',
                     'indikasi_khitan', 'postur_tubuh', 'riwayat_kesehatan'];
         $saved = [];
@@ -1928,8 +1942,24 @@ PROMPT;
     {
         $nama   = trim((string) ($args['nama'] ?? ''));
         $alamat = trim((string) ($args['alamat'] ?? ''));
-        if ($nama === '' || $alamat === '') {
-            return ['ok' => false, 'error' => 'nama & alamat wajib diisi'];
+
+        // GUARD 1: reject nama "Rona" — itu nama ADMIN BOT sendiri,
+        // agent sering keliru extract dari greeting template (kasus
+        // 6281318081779 2026-08-26: customer cuma jawab "Tigaraksa",
+        // agent hallucinate nama="Rona"). Sinonim admin bot juga block.
+        $namaLower = mb_strtolower($nama);
+        $botNames  = ['rona', 'admin', 'admin sunat', 'sunatboy', 'bot', 'cs'];
+        if ($nama !== '' && in_array($namaLower, $botNames, true)) {
+            Log::info('SUNAT_BOT_AGENT_LEAD_REJECT_BOT_NAME', [
+                'phone' => (string) $session->no_telp,
+                'nama'  => $nama,
+            ]);
+            $nama = ''; // drop, jangan simpan
+        }
+
+        // GUARD 2: kedua field kosong = no-op
+        if ($nama === '' && $alamat === '') {
+            return ['ok' => false, 'error' => 'nama atau alamat harus diisi (minimal salah satu). Kalau customer belum sebut, JANGAN panggil tool ini.'];
         }
 
         $phone = (string) $session->no_telp;
@@ -1938,20 +1968,19 @@ PROMPT;
             ->where('tenant_id', 1)
             ->first();
 
+        $update = ['updated_at' => now()];
+        if ($nama !== '')   $update['nama_lawan_bicara'] = $nama;
+        if ($alamat !== '') $update['alamat']            = $alamat;
+        $update['created_at'] = $existing->created_at ?? now();
+
         \DB::table('leads_sunats')->updateOrInsert(
             ['no_telp' => $phone, 'tenant_id' => 1],
-            [
-                'nama_lawan_bicara' => $nama,
-                'alamat'            => $alamat,
-                'updated_at'        => now(),
-                'created_at'        => $existing->created_at ?? now(),
-            ]
+            $update
         );
 
-        // Share dgn HARGA flow: kalau nanti customer tanya biaya,
-        // save_harga_data tidak perlu re-tanya nama_orang_tua + domisili.
-        $session->setData('nama_orang_tua', $nama);
-        $session->setData('domisili', $alamat);
+        // Share dgn HARGA flow: cuma set field yg ada.
+        if ($nama !== '')   $session->setData('nama_orang_tua', $nama);
+        if ($alamat !== '') $session->setData('domisili', $alamat);
         $session->save();
 
         Log::info('SUNAT_BOT_AGENT_LEAD_SAVE', [
@@ -1961,10 +1990,17 @@ PROMPT;
             'already_captured' => $existing !== null,
         ]);
 
+        $saved = [];
+        if ($nama !== '')   $saved[] = 'nama';
+        if ($alamat !== '') $saved[] = 'alamat';
+
         return [
             'ok'               => true,
-            'saved'            => ['nama', 'alamat'],
+            'saved'            => $saved,
             'already_captured' => $existing !== null,
+            'note'             => $nama === '' && !empty($args['nama'])
+                ? 'nama di-reject (bot name / Rona). Tanya nama customer lagi.'
+                : null,
         ];
     }
 
