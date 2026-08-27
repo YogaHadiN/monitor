@@ -405,6 +405,33 @@ class SunatBotEngine
                 ->where('created_at', '>=', Carbon::now()->subDays(7))
                 ->exists();
 
+            // Guard "customer bawa pertanyaan/substansi di pesan pertama"
+            // (per keluhan dr. Yoga 2026-08-27 nomor 6285810866665: pesan
+            // pertama "Halo kak, mau nanya seputar Sunatboy dulu boleh?"
+            // dibalas greeting_first_touch statis (foto team + "Halo kak.")
+            // tanpa menjawab pertanyaan → customer bingung).
+            //
+            // Kalau pesan mengandung tanda tanya atau kata kunci pertanyaan
+            // /kebutuhan, skip greeting_first_touch → agent handle secara
+            // natural (greet + jawab dlm 1 bubble).
+            $msgLower = mb_strtolower(trim($msg));
+            $questionKeywords = [
+                'nanya', 'tanya', 'boleh', 'info', 'biaya', 'harga',
+                'jadwal', 'kapan', 'dimana', 'bagaimana', 'gimana',
+                'tentang', 'seputar', 'daftar', 'booking', 'metode',
+                'laser', 'klamp', 'konvensional', 'sunat',
+            ];
+            $firstTouchHasSubstance = str_contains($msgLower, '?')
+                || mb_strlen($msgLower) >= 30;
+            if (!$firstTouchHasSubstance) {
+                foreach ($questionKeywords as $kw) {
+                    if (str_contains($msgLower, $kw)) {
+                        $firstTouchHasSubstance = true;
+                        break;
+                    }
+                }
+            }
+
             // Per instruksi dr. Yoga 2026-08-16: first-touch greeting Rona
             // (format Dumet School + tanya nama+domisili). Kalau bot_intent
             // `greeting_first_touch` aktif → render + return early. Turn
@@ -413,7 +440,7 @@ class SunatBotEngine
             $greetingIntent = BotIntent::where('intent', 'greeting_first_touch')
                 ->where('active', 1)
                 ->first();
-            if ($greetingIntent !== null && !$hasRecentChatSunat) {
+            if ($greetingIntent !== null && !$hasRecentChatSunat && !$firstTouchHasSubstance) {
                 return [
                     'handled' => true,
                     'replies' => $this->renderIntent('greeting_first_touch', $session),
@@ -425,6 +452,13 @@ class SunatBotEngine
                     'msg'   => mb_substr($msg, 0, 100),
                 ]);
                 // Fall through — biar agent flow handle
+            }
+            if ($greetingIntent !== null && !$hasRecentChatSunat && $firstTouchHasSubstance) {
+                Log::info('SUNAT_BOT_SKIP_GREETING_FIRST_TOUCH_HAS_SUBSTANCE', [
+                    'phone' => $noTelp,
+                    'msg'   => mb_substr($msg, 0, 100),
+                ]);
+                // Fall through — biar agent flow handle greeting+jawaban natural
             }
 
             // Fallback (kalau greeting_first_touch belum di-seed):
