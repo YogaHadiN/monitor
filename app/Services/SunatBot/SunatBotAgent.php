@@ -1987,13 +1987,10 @@ PROMPT;
      */
     private function customerMentionedSafetyField(string $field, string $noTelp): bool
     {
-        // Keyword whitelist per field. "tidak ada" sengaja TIDAK
-        // dimasukin ke semua field karena ambigu (customer sering
-        // bilang "tidak ada" utk salah satu → agent generalize ke
-        // semua). Butuh compound match (mis. "tidak ada keluhan").
+        // Keyword whitelist per field (direct customer mention).
         $keywords = [
             'indikasi_khitan' => [
-                'keluhan', 'phimosis', 'fimosis', 'balanitis',
+                'keluhan', 'keluahan', 'keluh', 'phimosis', 'fimosis', 'balanitis',
                 'lengket', 'menutup', 'nyeri', 'gatal', 'sakit',
                 'kencing', 'susah', 'medis', 'religius', 'religion',
                 'agama', 'muslim', 'islam', 'balig', 'baligh',
@@ -2023,14 +2020,47 @@ PROMPT;
         ];
         if (!isset($keywords[$field])) return true; // unknown field → allow
 
+        // Bot ask patterns — kalau bot sudah tanya field X di history
+        // AND customer reply pakai negation umum ("gak ada"/"tidak ada"/
+        // "gaada"/"nggak"/"blm ada"), itu = jawaban valid → allow save.
+        // Ini penting krn customer sering nulis singkat "Gak ada," tanpa
+        // repeat kata benda (Kasus 6283825566170 2026-08-28: customer
+        // "Gak ada" berkali2 tapi guard reject → agent tanya ulang loop).
+        $botAskPatterns = [
+            'indikasi_khitan' => [
+                'keluhan medis', 'alasan khusus kenapa mau khitan',
+                'alasan khusus mau khitan', 'ada keluhan',
+                'kenapa mau khitan', 'kenapa mau sunat',
+            ],
+            'postur_tubuh' => [
+                'postur anaknya', 'gemuk atau tidak',
+                'gemuk atau tdk', 'postur tubuh',
+            ],
+            'riwayat_kesehatan' => [
+                'riwayat kesehatan', 'jantung, autisme',
+                'jantung autisme', 'kelainan pembekuan',
+                'riwayat penyakit',
+            ],
+        ];
+        $negationPatterns = [
+            'gak ada', 'ga ada', 'gaada', 'ga da', 'gak da',
+            'tidak ada', 'tdk ada', 'tak ada',
+            'ngga ada', 'nggak ada', 'engga ada', 'gada',
+            'belum ada', 'blm ada', 'blum ada',
+            'tidak', 'gak ', ' gak', 'ngga', 'nggak',
+        ];
+
+        // Ambil semua chat history (bot+customer) supaya bisa
+        // pair "bot ask → customer answer".
         $msgs = \App\Models\Message::where('no_telp', $noTelp)
             ->where('chat_sunat', 1)
-            ->where('sending', 0)
-            ->orderBy('id', 'desc')
-            ->limit(50)
-            ->get(['message']);
+            ->orderBy('id', 'asc')
+            ->limit(80)
+            ->get(['sending', 'message']);
 
+        // Pass 1: direct keyword match di customer messages.
         foreach ($msgs as $m) {
+            if ((int) $m->sending !== 0) continue;
             $text = mb_strtolower((string) $m->message);
             if ($text === '') continue;
             foreach ($keywords[$field] as $kw) {
@@ -2039,6 +2069,33 @@ PROMPT;
                 }
             }
         }
+
+        // Pass 2: bot pernah tanya field ini AND ada customer negation.
+        $botAskedThisField    = false;
+        $customerSaidNegation = false;
+        foreach ($msgs as $m) {
+            $text = mb_strtolower((string) $m->message);
+            if ($text === '') continue;
+            if ((int) $m->sending === 1) {
+                foreach ($botAskPatterns[$field] as $ap) {
+                    if (str_contains($text, mb_strtolower($ap))) {
+                        $botAskedThisField = true;
+                        break;
+                    }
+                }
+            } else {
+                foreach ($negationPatterns as $np) {
+                    if (str_contains($text, mb_strtolower($np))) {
+                        $customerSaidNegation = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if ($botAskedThisField && $customerSaidNegation) {
+            return true;
+        }
+
         return false;
     }
 
