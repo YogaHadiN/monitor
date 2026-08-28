@@ -6024,6 +6024,52 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         if (!str_contains($msgLower, 'sunat') && !str_contains($msgLower, 'khitan')) {
             return;
         }
+
+        // GUARD anti-false-positive (kasus 6289629685529, 2026-08-24):
+        // customer kirim single word "sunat" (bukan real inquiry, mungkin
+        // testing bot atau reaction) → langsung enqueue 7 marketing bubble
+        // → customer bingung + akhirnya opt-out.
+        //
+        // Trigger sekarang butuh SALAH SATU:
+        //   1. Pesan mengandung frase intent yg jelas (mau sunat, info
+        //      sunat, harga sunat, biaya sunat, jadwal sunat, sunat anak,
+        //      daftar sunat, tanya sunat, khitan anak, dll)
+        //   2. ATAU pesan cukup panjang (>= 20 char + minimal 3 kata) —
+        //      cukup substantial utk dianggap real inquiry.
+        //
+        // Single word "sunat" / "khitan" / "sunat kak" (dibawah 15 char
+        // + 2 kata) → SKIP.
+        $intentPhrases = [
+            'mau sunat', 'info sunat', 'harga sunat', 'biaya sunat',
+            'jadwal sunat', 'sunat anak', 'daftar sunat', 'tanya sunat',
+            'nanya sunat', 'mau khitan', 'info khitan', 'harga khitan',
+            'biaya khitan', 'jadwal khitan', 'khitan anak', 'daftar khitan',
+            'tanya khitan', 'nanya khitan', 'sunatan', 'khitanan',
+            'sunatin', 'khitanin', 'metode sunat', 'lokasi sunat',
+            'klinik sunat', 'anak sunat', 'anak khitan', 'anak mau sunat',
+            'anak mau khitan',
+        ];
+        $matchedIntent = false;
+        foreach ($intentPhrases as $p) {
+            if (str_contains($msgLower, $p)) {
+                $matchedIntent = true;
+                break;
+            }
+        }
+        if (!$matchedIntent) {
+            $wordCount = count(preg_split('/\s+/', trim($msgLower), -1, PREG_SPLIT_NO_EMPTY) ?: []);
+            $isSubstantial = mb_strlen(trim($msgLower)) >= 20 && $wordCount >= 3;
+            if (!$isSubstantial) {
+                \Log::info('SUNAT_FOLLOWUP_SKIP_WEAK_TRIGGER', [
+                    'phone' => (string) $this->no_telp,
+                    'msg'   => mb_substr($msgLower, 0, 80),
+                    'len'   => mb_strlen(trim($msgLower)),
+                    'words' => $wordCount,
+                ]);
+                return;
+            }
+        }
+
         $phone = (string) $this->no_telp;
 
         // Dedup: jangan buat kalau sudah ada session aktif untuk nomor ini.
