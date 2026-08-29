@@ -29,12 +29,17 @@ class SunatBotAgent
 {
     private const MAX_TOOL_ITERATIONS = 4;
     private const HISTORY_MAX_TURNS   = 6;
-    // Upgrade dari gpt-4o-mini → gpt-4.1-mini per instruksi dr. Yoga
-    // 2026-08-29: mini lama sering skip save_harga_data setelah customer
-    // jawab field → data hilang → bot tanya ulang → customer frustrated
-    // (kasus 628886332272 Kak Ayu). gpt-4.1-mini tool-calling reliability
-    // lebih baik dgn cost tier serupa (~2.5x lipat, masih murah).
-    private const MODEL               = 'gpt-4.1-mini';
+    // Upgrade path model per instruksi dr. Yoga 2026-08-29:
+    //   gpt-4o-mini → gpt-4.1-mini (jam 15:30, commit f13c435e) —
+    //     mini lama sering skip save_harga_data (kasus 628886332272
+    //     Kak Ayu). 4.1-mini tool-calling lebih reliable.
+    //   gpt-4.1-mini → gpt-5.6-luna (jam 23:xx) — generasi baru
+    //     GPT-5.6 series lebih murah AND lebih reliable:
+    //     • input $0.20 vs $0.40 (50% lebih murah)
+    //     • cached $0.02 vs $0.10 (80% lebih murah)
+    //     • output $1.20 vs $1.60 (25% lebih murah)
+    //     Expected: tool calling reliability naik (5.6 vs 4.1 gen).
+    private const MODEL               = 'gpt-5.6-luna';
     private const HTTP_TIMEOUT        = 20;
 
     // Hard guard utk trigger_booking_flow — kalau user message ada kata
