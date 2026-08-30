@@ -39,7 +39,7 @@ class SunatBotAgent
     //     • cached $0.02 vs $0.10 (80% lebih murah)
     //     • output $1.20 vs $1.60 (25% lebih murah)
     //     Expected: tool calling reliability naik (5.6 vs 4.1 gen).
-    private const MODEL               = 'gpt-5.6-luna';
+    private const MODEL               = 'gpt-4.1-mini';
     private const HTTP_TIMEOUT        = 20;
 
     // Hard guard utk trigger_booking_flow — kalau user message ada kata
