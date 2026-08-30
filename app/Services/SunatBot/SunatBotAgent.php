@@ -2560,14 +2560,22 @@ PROMPT;
 
     private function callOpenAI(string $apiKey, array $messages, array $tools, int $iter): ?array
     {
+        // gpt-5.x family (luna/terra/sol) menolak `max_tokens` (harus
+        // `max_completion_tokens`) dan menolak `temperature` != 1.
+        // Kalau di masa depan swap ke model lain, fallback ke param lama.
+        $isGpt5 = str_starts_with(self::MODEL, 'gpt-5');
         $payload = [
             'model'       => self::MODEL,
-            'temperature' => 0.2,
-            'max_tokens'  => 500,
             'messages'    => $messages,
             'tools'       => $tools,
             'tool_choice' => 'auto',
         ];
+        if ($isGpt5) {
+            $payload['max_completion_tokens'] = 500;
+        } else {
+            $payload['temperature'] = 0.2;
+            $payload['max_tokens']  = 500;
+        }
         $start = microtime(true);
 
         try {
@@ -2578,7 +2586,11 @@ PROMPT;
             $this->logCall('agent:iter' . $iter, $messages, $payload, $response, $start);
 
             if (!$response->ok()) {
-                Log::warning('SUNAT_BOT_AGENT_HTTP_FAIL', ['status' => $response->status(), 'iter' => $iter]);
+                Log::warning('SUNAT_BOT_AGENT_HTTP_FAIL', [
+                    'status' => $response->status(),
+                    'iter'   => $iter,
+                    'body'   => mb_substr((string) $response->body(), 0, 500),
+                ]);
                 return null;
             }
 
