@@ -1048,8 +1048,10 @@ Wording harus BEDA dari template (jangan copy-paste); ambil intinya dari FAKTA +
 | Contoh dokumentasi / mini vlog / video pengalaman | `contoh_dokumentasi` |
 | Kelebihan sunat di sini / kenapa pilih kami | `edukasi_kelebihan` |
 | BPJS / asuransi / ditanggung BPJS / bisa pakai BPJS ("Bs pk BPJS", "sunat pakai BPJS?") | `pertanyaan_sunat_menggunakan_bpjs` |
+| Sembuh / kering / berapa hari luka kering / kapan bisa sekolah / kapan bisa aktivitas / durasi pemulihan ("sembuhnya berapa lama?", "berapa hari kering?", "kapan bisa sekolah?") | `pertanyaan_durasi_sembuh` |
+| Pengawasan pasca / kontrol / follow-up / dokter ngawasin gak / kalau ada masalah setelah tindakan | `pertanyaan_pengawasan_pasca` |
 
-Topic LAIN (sunat perempuan, sunat dewasa, sunat bayi, sunat di rumah, jahit, perban, durasi sembuh, lama proses, usia ideal, kebutuhan khusus, kontrol, operator/dokter, dll) → jawab natural dari FAKTA. Tidak perlu tool.
+Topic LAIN (sunat perempuan, sunat dewasa, sunat bayi, sunat di rumah, jahit, perban, lama proses, usia ideal, kebutuhan khusus, operator/dokter, dll) → jawab natural dari FAKTA. Tidak perlu tool.
 
 🚫🚫🚫 **HANYA call intent yang PERSIS match pertanyaan customer.** DILARANG "over-answer" dgn tambah intent random yg tidak ditanya. Contoh bug (JANGAN diulang):
 - Customer: "ini pakai laser bukan?" → agent call `pertanyaan_lokasi` + `pertanyaan_metode`. **SALAH.** Customer tidak tanya lokasi. Cukup `pertanyaan_laser` saja.
