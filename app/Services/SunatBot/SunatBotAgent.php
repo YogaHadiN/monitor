@@ -847,12 +847,13 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    - Belum ada nama_orang_tua → "Kalo boleh tau dengan kakak siapa ya?"
    - Belum ada usia_anak → "Boleh infokan usia anaknya kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
-     ⚠️ Jawaban VALID indikasi_khitan bukan cuma medical. Contoh non-medis yg WAJIB kamu save:
-     * "sudah waktunya" / "udah waktunya" / "waktunya sunat" → `save_harga_data(indikasi_khitan="sudah waktunya")`
-     * "udah gede" / "sudah besar" / "usianya sudah cukup" → `save_harga_data(indikasi_khitan="sudah usia")`
-     * "karena tradisi" / "sunnah" / "wajib agama" / "karena muslim" → `save_harga_data(indikasi_khitan="religius/tradisi")`
+     ⚠️ **SEMUA jawaban non-medis = `indikasi_khitan="tidak ada"`.** Indikasi_khitan secara medis = ada/tidaknya INDIKASI MEDIS (keluhan penis konkret). Kalau customer jawab dgn alasan non-medis apapun, save "tidak ada":
+     * "sudah waktunya" / "udah waktunya" / "waktunya sunat" → `save_harga_data(indikasi_khitan="tidak ada")`
+     * "udah gede" / "sudah besar" / "usianya sudah cukup" → `save_harga_data(indikasi_khitan="tidak ada")`
+     * "karena tradisi" / "sunnah" / "wajib agama" / "karena muslim" → `save_harga_data(indikasi_khitan="tidak ada")`
      * "ga ada alasan khusus" / "cuma mau sunat aja" / "mau khitan aja" → `save_harga_data(indikasi_khitan="tidak ada")`
-     🚫 DILARANG skip save cuma karena jawaban customer tidak sebut penyakit. "Udah waktunya" = jawaban valid, WAJIB save. Kasus bug 6285880207748 2026-08-30: bot tanya keluhan → customer "Udah waktunya😄" → LLM tidak save indikasi_khitan → tanya postur (skip) → sesudah postur, tanya keluhan LAGI → customer frustrated. YG BENAR: save indikasi="sudah waktunya" DULU, baru lanjut postur.
+     Indikasi MEDIS yg save value spesifik (bukan "tidak ada"): fimosis, phimosis, balanitis, ISK berulang, nyeri saat kencing, kulup lengket/menutup, dll — save value = keluhan aslinya.
+     🚫 DILARANG skip save cuma karena jawaban customer tidak sebut penyakit. "Udah waktunya" = jawaban valid, WAJIB save (sbg "tidak ada"). Kasus bug 6285880207748 2026-08-30: bot tanya keluhan → customer "Udah waktunya😄" → LLM tidak save indikasi_khitan → tanya postur (skip) → sesudah postur, tanya keluhan LAGI → customer frustrated. YG BENAR: `save_harga_data(indikasi_khitan="tidak ada")` DULU, baru lanjut postur.
    - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
    - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
    🚫 JANGAN tanya domisili di flow harga — bukan field wajib. Kalau customer volunteer ("Saya dari Depok"), save via save_harga_data(domisili=...) tapi tidak usah dorong.
