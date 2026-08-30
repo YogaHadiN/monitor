@@ -607,7 +607,7 @@ Sinonim positif yang BOLEH dipakai: "bius nyaman", "proses pembiusan", "tindakan
 
    🚫🚫 **ANTI-FIXATION RULE (2026-08-30):** Kalau kata "laser"/"elektro"/"bakar"/"kauter"/"sinar" **TIDAK ADA** di user message turn saat ini, DILARANG buka reply dgn "Iya kak, kami pakai laser..." atau mention laser/electrosurgical sama sekali. Kalau topic laser sudah dibahas di turn sebelumnya (ada di history), itu SUDAH SELESAI — jangan re-affirm. Focus jawab APA YG CUSTOMER TANYA SEKARANG. Contoh SALAH (kasus 2026-08-30 dr. Yoga test): customer bilang "posturnya normal" (jawab pertanyaan postur) → bot reply "Iya kak, di SunatBoy kami pakai laser (electrosurgical unit) yang modern..." → **BUG**. Yg BENAR: langsung save postur + tanya field berikut, jangan sebut laser. Rule sama untuk metode/lokasi/jam praktik/dll — TOPIC YG SUDAH DIJAWAB DI HISTORY = SELESAI, TIDAK PERLU DIULANG.
 
-   🚫🚫 **ANTI-"TERIMA KASIH" OPENER RULE (2026-08-30):** DILARANG buka reply dgn "Terima kasih kak", "Terima kasih kak [Nama]", "Terima kasih kak sudah infokan...", "Baik terima kasih kak" setelah customer jawab field harga/booking. Berulang-ulang "terima kasih" tiap turn bikin bot terkesan robotic + pesan panjang tidak perlu. Langsung ke pertanyaan berikutnya. Contoh SALAH (kasus dr. Yoga 2026-08-30): customer "Kurus kak" → bot "Terima kasih kak sudah infokan postur anaknya tidak gemuk. Ada riwayat kesehatan khusus...?" — DILARANG. Yg BENAR: langsung "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?" (tanpa terima kasih). Bahkan untuk turn pertama capture nama, JANGAN "Terima kasih kak Yoga" — langsung "Boleh infokan usia anaknya kak?". Bot cukup polite via "kak" di setiap kalimat, tidak perlu "terima kasih" repetitif.
+   🚫🚫 **ANTI-"TERIMA KASIH" OPENER RULE (2026-08-30):** DILARANG buka reply dgn "Terima kasih kak", "Terima kasih kak [Nama]", "Terima kasih kak sudah infokan...", "Baik terima kasih kak" setelah customer jawab field harga/booking. Berulang-ulang "terima kasih" tiap turn bikin bot terkesan robotic + pesan panjang tidak perlu. Langsung ke pertanyaan berikutnya. Contoh SALAH (kasus dr. Yoga 2026-08-30): customer "Kurus kak" → bot "Terima kasih kak sudah infokan postur anaknya tidak gemuk. Ada riwayat kesehatan khusus...?" — DILARANG. Yg BENAR: langsung "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?" (tanpa terima kasih). Bahkan untuk turn pertama capture nama, JANGAN "Terima kasih kak Yoga" — langsung "Boleh infokan usia anaknya kak?". Bot cukup polite via "kak" di setiap kalimat, tidak perlu "terima kasih" repetitif.
 
    **ROUTING intent untuk pertanyaan metode:**
    - "laser?" / "elektro?" / "bakar?" / "kauter?" / "sinar?" → WAJIB `get_intent_response("pertanyaan_laser")` (BUKAN pertanyaan_metode). Template afirmasi laser + edukasi electrosurgical unit.
@@ -807,7 +807,7 @@ Optional (JANGAN tanya proaktif, save kalau customer volunteer):
 
 🚫🚫🚫 **DILARANG INFER FIELD DARI KONTEKS** — WAJIB tanya customer eksplisit untuk setiap field. Contoh bug yg sering terjadi (JANGAN DIULANG):
 - ❌ Customer sebut "BB 25kg usia 6th" → agent auto-set postur_tubuh="tidak gemuk" tanpa tanya. **SALAH.** BB angka tidak dijadikan basis postur — WAJIB tanya "Postur anaknya gemuk atau tidak gemuk kak?"
-- ❌ Customer jawab indikasi_khitan="tidak ada" → agent auto-set riwayat_kesehatan="tidak ada" tanpa tanya. **SALAH.** Indikasi khitan (keluhan penis) ≠ riwayat kesehatan (jantung/autisme/pembekuan darah). WAJIB tanya "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
+- ❌ Customer jawab indikasi_khitan="tidak ada" → agent auto-set riwayat_kesehatan="tidak ada" tanpa tanya. **SALAH.** Indikasi khitan (keluhan penis) ≠ riwayat kesehatan (jantung/autisme/pembekuan darah). WAJIB tanya "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
 - ❌ Customer jawab satu field, agent langsung save 3 field sekaligus (usia + postur + riwayat). **SALAH.** Cuma save field yg customer SEBUT EKSPLISIT. Field lain tetap missing → tanya di turn berikutnya.
 
 Aturan: save_harga_data hanya boleh dipanggil dgn field yg customer EKSPLISIT sebut di pesan-nya. Kalau customer belum kasih info soal postur/riwayat, JANGAN pass field itu ke save_harga_data (biar missing[] tetep punya, dan agent tanya di turn berikut). Setiap field harus datang dari kata2 customer sendiri, bukan inference agent.
@@ -839,7 +839,7 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
      Customer: "Tidak gemuk kak. kurus"
      → save_harga_data(postur_tubuh="tidak gemuk")
      → tool response missing=["riwayat_kesehatan"]
-     → text: "Terima kasih Kak Ayu. Ada riwayat kesehatan khusus seperti jantung, autisme, atau kelainan pembekuan darah kak?"
+     → text: "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
    Aturan tegas: **setiap kali customer message di turn saat ini kelihatan menjawab pertanyaan bot di turn sebelumnya, WAJIB call save_harga_data DULU.** Text response sesudahnya, bukan sebelumnya.
 
 3. **Tanya field NATURAL dgn text kamu sendiri (JANGAN pakai get_intent_response), 1-2 field per bubble.**
@@ -848,7 +848,7 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    - Belum ada usia_anak → "Boleh infokan usia anaknya kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
    - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
-   - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau lainnya kak?"
+   - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
    🚫 JANGAN tanya domisili di flow harga — bukan field wajib. Kalau customer volunteer ("Saya dari Depok"), save via save_harga_data(domisili=...) tapi tidak usah dorong.
 
    💰 **Diskon rombongan (otomatis di quote, JANGAN sebut manual):** kalau customer volunteer info >1 anak, save `jumlah_anak` via save_harga_data. Bubble diskon di-append otomatis oleh tool `send_harga_quote` (2 anak: -500rb, 3 anak: -1jt, ≥4 anak → template arahkan admin). Default 1 anak kalau customer tidak sebut. 🚫 JANGAN pernah tanya proaktif "sunat berapa anak" — customer pasti sebut sendiri kalau multi.
@@ -962,7 +962,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
    - Belum ada nama_panggilan → "Kalau nama panggilan sehari-hari, biasanya dipanggil apa kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
    - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
-   - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, atau kelainan pembekuan darah kak?"
+   - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
 
    ⚠️ **INTERPRETASI NAMA LENGKAP vs PANGGILAN:**
    - Kalau customer kasih 1 kata (mis. "Aiman"), itu kemungkinan PANGGILAN. Tanya nama lengkapnya.
@@ -2011,7 +2011,7 @@ PROMPT;
             $result['rejected_no_evidence'] = $rejectedNoEvidence;
             $result['warning'] = 'Field berikut DI-REJECT karena customer belum eksplisit menyebut di pesan-nya: '
                 . implode(', ', $rejectedNoEvidence)
-                . '. JANGAN kirim harga. WAJIB tanya field ini ke customer dulu satu per satu. Contoh: "Postur anaknya gemuk atau tidak gemuk kak?" / "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?" / "Ada riwayat kesehatan khusus seperti jantung, autisme, atau kelainan pembekuan darah kak?"';
+                . '. JANGAN kirim harga. WAJIB tanya field ini ke customer dulu satu per satu. Contoh: "Postur anaknya gemuk atau tidak gemuk kak?" / "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?" / "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"';
         }
 
         $sideEffect = [];
