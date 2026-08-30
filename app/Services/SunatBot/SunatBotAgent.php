@@ -847,6 +847,12 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    - Belum ada nama_orang_tua → "Kalo boleh tau dengan kakak siapa ya?"
    - Belum ada usia_anak → "Boleh infokan usia anaknya kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
+     ⚠️ Jawaban VALID indikasi_khitan bukan cuma medical. Contoh non-medis yg WAJIB kamu save:
+     * "sudah waktunya" / "udah waktunya" / "waktunya sunat" → `save_harga_data(indikasi_khitan="sudah waktunya")`
+     * "udah gede" / "sudah besar" / "usianya sudah cukup" → `save_harga_data(indikasi_khitan="sudah usia")`
+     * "karena tradisi" / "sunnah" / "wajib agama" / "karena muslim" → `save_harga_data(indikasi_khitan="religius/tradisi")`
+     * "ga ada alasan khusus" / "cuma mau sunat aja" / "mau khitan aja" → `save_harga_data(indikasi_khitan="tidak ada")`
+     🚫 DILARANG skip save cuma karena jawaban customer tidak sebut penyakit. "Udah waktunya" = jawaban valid, WAJIB save. Kasus bug 6285880207748 2026-08-30: bot tanya keluhan → customer "Udah waktunya😄" → LLM tidak save indikasi_khitan → tanya postur (skip) → sesudah postur, tanya keluhan LAGI → customer frustrated. YG BENAR: save indikasi="sudah waktunya" DULU, baru lanjut postur.
    - Belum ada postur_tubuh → "Postur anaknya gemuk atau tidak gemuk kak?"
    - Belum ada riwayat_kesehatan → "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
    🚫 JANGAN tanya domisili di flow harga — bukan field wajib. Kalau customer volunteer ("Saya dari Depok"), save via save_harga_data(domisili=...) tapi tidak usah dorong.
@@ -2042,10 +2048,15 @@ PROMPT;
                 'lengket', 'menutup', 'nyeri', 'gatal', 'sakit',
                 'kencing', 'susah', 'medis', 'religius', 'religion',
                 'agama', 'muslim', 'islam', 'balig', 'baligh',
-                'wajib', 'sudah waktunya', 'panjang', 'kelamin',
-                'penis', 'burung', 'titit', 'kulup',
+                'wajib', 'sudah waktunya', 'udah waktunya', 'waktunya',
+                'sudah usia', 'udah usia', 'sudah gede', 'udah gede',
+                'sudah besar', 'udah besar', 'umurnya', 'usianya',
+                'tradisi', 'sunnah', 'sudah cukup', 'udah cukup',
+                'panjang', 'kelamin', 'penis', 'burung', 'titit', 'kulup',
                 'tidak ada keluhan', 'ga ada keluhan', 'gak ada keluhan',
                 'tanpa keluhan', 'ga da keluhan', 'nggak ada keluhan',
+                'ga ada alasan', 'gak ada alasan', 'tidak ada alasan',
+                'cuma mau', 'mau aja', 'mau khitan aja', 'mau sunat aja',
             ],
             'postur_tubuh' => [
                 'gemuk', 'kurus', 'normal', 'chubby', 'gempal',
