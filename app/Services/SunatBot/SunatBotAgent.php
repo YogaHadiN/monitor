@@ -843,6 +843,14 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
    Aturan tegas: **setiap kali customer message di turn saat ini kelihatan menjawab pertanyaan bot di turn sebelumnya, WAJIB call save_harga_data DULU.** Text response sesudahnya, bukan sebelumnya.
 
 3. **Tanya field NATURAL dgn text kamu sendiri (JANGAN pakai get_intent_response), 1-2 field per bubble.**
+
+   🚫🚫🚫 **RULE MUTLAK: MAX 1x TANYA PER FIELD.** (per instruksi dr. Yoga 2026-08-30)
+   Kalau di history bot sudah pernah tanya field X (cek bubble sebelumnya dari `assistant` role — mis. "Postur anaknya gemuk atau tidak gemuk kak?"), DILARANG tanya field X LAGI walaupun customer belum jawab atau jawab ambigu.
+   Kalau customer avoid / deflect / jawab hal lain / tidak jelas → interpret sebisamu (charitable interpretation) + save via save_harga_data, ATAU skip field itu + tanya field berikutnya yg belum pernah ditanya. JANGAN ulangi pertanyaan sama.
+   Kalau SEMUA field belum terkumpul & semuanya sudah pernah ditanya → langsung `send_harga_quote()` — engine akan pakai default aman (indikasi/riwayat="tidak ada", postur="normal") kalau field itu memang tidak pernah dijawab customer.
+   Reasoning: customer yg enggan menjawab pertanyaan tertentu = respect boundary, JANGAN dipaksa. Bot yg ngotot tanya berulang = spam, customer pergi.
+   Contoh SALAH (kasus 6285880207748 2026-08-30 18:20): bot tanya keluhan 18:18 → customer "Udah waktunya" → bot tanya postur 18:19 → customer "Sedang" → bot tanya keluhan LAGI 18:20 → **BUG, DILARANG.** YG BENAR: setelah customer "Udah waktunya", save indikasi="tidak ada", lanjut postur; setelah "Sedang", save postur="normal", lanjut riwayat; kalau customer skip riwayat juga (turn berikutnya jawab hal lain), langsung `send_harga_quote()` — jangan tanya riwayat lagi.
+
    URUTAN wajib (jangan lompat ke sudah_tahu_metode sebelum 5 field required terkumpul):
    - Belum ada nama_orang_tua → "Kalo boleh tau dengan kakak siapa ya?"
    - Belum ada usia_anak → "Boleh infokan usia anaknya kak?"
@@ -2160,6 +2168,51 @@ PROMPT;
     }
 
     /**
+     * Return true kalau bot pernah tanya safety field ini di history
+     * (chat_sunat bot messages). Dipakai utk enforce "max 1x ask" rule:
+     * kalau bot sudah tanya + customer belum jawab, boleh auto-default
+     * ke safe value (indikasi/riwayat="tidak ada", postur="normal")
+     * saat send_harga_quote di-panggil.
+     */
+    private function botAlreadyAskedField(string $field, string $noTelp): bool
+    {
+        $botAskPatterns = [
+            'indikasi_khitan' => [
+                'keluhan medis', 'alasan khusus kenapa mau khitan',
+                'alasan khusus mau khitan', 'ada keluhan',
+                'kenapa mau khitan', 'kenapa mau sunat',
+            ],
+            'postur_tubuh' => [
+                'postur anaknya', 'gemuk atau tidak',
+                'gemuk atau tdk', 'postur tubuh',
+            ],
+            'riwayat_kesehatan' => [
+                'riwayat kesehatan', 'jantung, autisme',
+                'jantung autisme', 'kelainan pembekuan',
+                'riwayat penyakit',
+            ],
+        ];
+        if (!isset($botAskPatterns[$field])) return false;
+
+        $msgs = \App\Models\Message::where('no_telp', $noTelp)
+            ->where('chat_sunat', 1)
+            ->where('sending', 1)
+            ->orderByDesc('id')
+            ->limit(50)
+            ->pluck('message');
+        foreach ($msgs as $m) {
+            $text = mb_strtolower((string) $m);
+            if ($text === '') continue;
+            foreach ($botAskPatterns[$field] as $ap) {
+                if (str_contains($text, mb_strtolower($ap))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Simpan lead sunat ke leads_sunats table (atika shared DB) + set
      * nama_orang_tua / domisili di session data supaya HARGA flow bisa
      * reuse. Upsert by no_telp — aman kalau dipanggil ulang.
@@ -2258,12 +2311,38 @@ PROMPT;
             }
             if ($isMissing) $missing[] = $f;
         }
+
+        // Auto-default safety fields kalau bot sudah tanya di history
+        // tapi customer enggan jawab (max 1x ask per field, per
+        // instruksi dr. Yoga 2026-08-30). Prevent loop tanya berulang.
         if ($missing !== []) {
-            return [
-                ['ok' => false, 'error' => 'field belum lengkap', 'missing' => $missing],
-                [],
-                false,
+            $safetyDefaults = [
+                'indikasi_khitan'   => 'tidak ada',
+                'postur_tubuh'      => 'normal',
+                'riwayat_kesehatan' => 'tidak ada',
             ];
+            $stillMissing = [];
+            foreach ($missing as $f) {
+                if (isset($safetyDefaults[$f]) && $this->botAlreadyAskedField($f, (string) $session->no_telp)) {
+                    $session->setData($f, $safetyDefaults[$f]);
+                    Log::info('SUNAT_BOT_AGENT_HARGA_AUTO_DEFAULT', [
+                        'phone'   => $session->no_telp,
+                        'field'   => $f,
+                        'default' => $safetyDefaults[$f],
+                        'reason'  => 'bot-asked-once + customer-declined',
+                    ]);
+                } else {
+                    $stillMissing[] = $f;
+                }
+            }
+            if ($stillMissing !== []) {
+                return [
+                    ['ok' => false, 'error' => 'field belum lengkap', 'missing' => $stillMissing],
+                    [],
+                    false,
+                ];
+            }
+            $session->save();
         }
 
         // NB: dedupe backend DIHAPUS per instruksi dr. Yoga 2026-08-16.
