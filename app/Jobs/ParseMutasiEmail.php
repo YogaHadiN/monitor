@@ -309,7 +309,7 @@ class ParseMutasiEmail implements ShouldQueue
                 if ($isFooter) { $stopRow = $r; break; }
 
                 $postingDate = $postCol ? ($line[$postCol] ?? null) : null;
-                $remark      = $remCol  ? trim((string) ($line[$remCol]  ?? '')) : '';
+                $remark      = $remCol  ? $this->normalizeRemark((string) ($line[$remCol]  ?? '')) : '';
                 $referenceNo = $refCol  ? trim((string) ($line[$refCol]  ?? '')) : '';
                 $debit       = $debCol  ? $this->parseAmount((string) ($line[$debCol] ?? '')) : 0.0;
                 $credit      = $creCol  ? $this->parseAmount((string) ($line[$creCol] ?? '')) : 0.0;
@@ -348,6 +348,33 @@ class ParseMutasiEmail implements ShouldQueue
         } finally {
             @unlink($tmp);
         }
+    }
+
+    /**
+     * Normalize Kopra "Remark" cell yg multi-line jadi single-line
+     * readable. Per keluhan dr. Yoga 2026-08-30: sebelumnya cuma
+     * trim() → \n internal preserved di PHP tapi hilang saat display
+     * (JSON encode → literal '\n' hilang di rendering) → concat tanpa
+     * spasi jadi "71686846115Klinik Jati Elok08" (jelek).
+     *
+     * Kopra Remark biasanya multi-line:
+     *   baris 1: nomor rekening / reference numerik
+     *   baris 2: nama pengirim / merchant
+     *   baris 3+: keterangan tambahan (jam, VA code, dll)
+     *
+     * Ganti semua line-break dgn " | " sebagai separator jelas +
+     * collapse consecutive whitespace.
+     */
+    private function normalizeRemark(string $raw): string
+    {
+        // Ganti CR/LF variants dgn separator visible.
+        $s = str_replace(["\r\n", "\r", "\n"], ' | ', $raw);
+        // Hapus separator kosong berturut ("| |" → "|") + collapse spasi.
+        $s = preg_replace('/\s*\|\s*(\|\s*)+/', ' | ', $s);
+        $s = preg_replace('/\s+/', ' ', $s);
+        // Hapus separator di awal/akhir.
+        $s = trim($s, " \t\n\r\0\x0B|");
+        return trim($s);
     }
 
     /**
