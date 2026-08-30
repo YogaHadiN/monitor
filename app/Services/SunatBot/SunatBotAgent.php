@@ -2572,6 +2572,9 @@ PROMPT;
         ];
         if ($isGpt5) {
             $payload['max_completion_tokens'] = 500;
+            // gpt-5.x default reasoning_effort tidak support function
+            // tools di /v1/chat/completions — harus di-force 'none'.
+            $payload['reasoning_effort'] = 'none';
         } else {
             $payload['temperature'] = 0.2;
             $payload['max_tokens']  = 500;
