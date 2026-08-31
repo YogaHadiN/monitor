@@ -1605,20 +1605,51 @@ class WablasController extends Controller
         return $response;
     }
 
+    /**
+     * Footer standar utk balasan meta ketika phone punya antrian aktif
+     * hari ini. Semua opsi konsisten pakai "Balas" (sebelumnya campur
+     * "Ketik" / "Balas" — per instruksi dr. Yoga 2026-08-31 seragamkan
+     * ke "Balas" saja + tambah opsi "chat admin").
+     */
     public function footerAntrian(){
-        $response = PHP_EOL;
+        $response  = PHP_EOL;
         $response .= $this->samaDengan();
+        $response .= PHP_EOL;
+        $response .= 'Balas *daftar* untuk mendaftarkan pasien berikutnya';
         $response .= PHP_EOL;
         $response .= 'Balas *cek antrian* untuk melihat antrian terakhir';
         $response .= PHP_EOL;
-        $response .= 'Ketik *batalkan* untuk membatalkan';
-        $response .= " reservasi";
+        $response .= 'Balas *batalkan* untuk membatalkan reservasi / antrian ini';
         $response .= PHP_EOL;
         $response .= 'Balas *pindah dokter* untuk pindah ke dokter lain yang sedang praktek';
         $response .= PHP_EOL;
-        $response .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
+        $response .= 'Balas *chat admin* untuk mendapatkan bantuan dari admin';
 
         return $response;
+    }
+
+    /**
+     * Return true kalau phone $this->no_telp punya antrian aktif hari
+     * ini (belum di-delete + belum jadi Periksa). Dipakai autoReply()
+     * utk decide apakah append footerAntrian ke pesan balasan generik.
+     */
+    private function phoneHasActiveAntrianToday(): bool
+    {
+        if (empty($this->no_telp)) return false;
+        try {
+            $today = Carbon::today();
+            return Antrian::where('no_telp', $this->no_telp)
+                ->whereDate('created_at', $today)
+                ->whereNull('deleted_at')
+                ->whereRaw("antriable_type not like 'App\\\\\\\Models\\\\\\\Periksa'")
+                ->exists();
+        } catch (\Throwable $e) {
+            Log::warning('phoneHasActiveAntrianToday_failed', [
+                'phone' => $this->no_telp,
+                'err'   => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 
 
@@ -5280,9 +5311,9 @@ class WablasController extends Controller
     }
     public function batalkan(){
         $message = PHP_EOL;
-        $message .= 'Ketik *batalkan* untuk membatalkan';
+        $message .= 'Balas *batalkan* untuk membatalkan';
         $message .= PHP_EOL;
-        $message .= 'Ketik *chat admin* untuk mendapatkan bantuan dari admin';
+        $message .= 'Balas *chat admin* untuk mendapatkan bantuan dari admin';
         return $message;
     }
     private function waktuTunggu($sisa_antrian)
@@ -7196,6 +7227,18 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return;
         }
 
+        // Auto-append footerAntrian ke SEMUA balasan meta bila phone
+        // punya antrian aktif hari ini (per instruksi dr. Yoga
+        // 2026-08-31). Skip kalau text sudah punya sentinel footer
+        // (dari pesanBalasanBilaTerdaftar dsb) supaya tidak dobel.
+        $footerSentinel = 'Balas *cek antrian*';
+        if (
+            strpos($text, $footerSentinel) === false
+            && $this->phoneHasActiveAntrianToday()
+        ) {
+            $text .= $this->footerAntrian();
+        }
+
         if ($this->provider === 'barantum' && empty($this->chats_users_id)) {
             Log::warning('AUTO_REPLY_SKIPPED_NO_CHATS_USERS_ID', [
                 'provider' => $this->provider ?? null,
@@ -7958,7 +8001,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= PHP_EOL;
         $message .= $this->batalkan();
         $message .= PHP_EOL;
-        $message .= 'Ketik *daftar* untuk mendaftarkan pasien berikutnya';
+        $message .= 'Balas *daftar* untuk mendaftarkan pasien berikutnya';
         WhatsappBot::where('no_telp', $this->no_telp)->delete();
         return $message;
     }
