@@ -99,8 +99,22 @@ class PetugasPemeriksa extends Model
 
     public function antrian_menunggus()
     {
+        // "Menunggu" = antrian yg belum selesai dilayani dokter, dilihat
+        // dari perspektif customer daftar_online (dia bakal ngantri di
+        // belakang semua ini). Include:
+        //   - Antrian          : walk-in / sudah tiba klinik, menunggu dipanggil
+        //   - ReservasiOnline  : sudah booking online, belum tiba
+        //   - AntrianPoli      : di ruang tunggu poli
+        //   - AntrianPeriksa   : sedang diperiksa dokter
+        // Exclude AntrianKasir (sudah selesai dgn dokter, tinggal bayar)
+        // dan Periksa (fully done).
+        //
+        // Previously missing \App\Models\Antrian → sisa under-report
+        // besar (contoh 2026-09-01: Dr Andri actual 7 pending, tapi
+        // display "3" karena hanya AntrianPeriksa yg terhitung).
         return $this->hasMany(\App\Models\Antrian::class, 'petugas_pemeriksa_id')
                     ->whereIn('antriable_type', [
+                        \App\Models\Antrian::class,
                         \App\Models\ReservasiOnline::class,
                         \App\Models\AntrianPoli::class,
                         \App\Models\AntrianPeriksa::class,
