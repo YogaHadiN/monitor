@@ -72,8 +72,23 @@ class PetugasPemeriksa extends Model
         // selalu 0 ketika waitlist sudah ada → command
         // reservasi:send-waitlist-inquiry skip dan pasien waitlist
         // tidak pernah dapat notifikasi slot kosong.
+        // Exclude SchedulledReservation yg no_telp-nya sudah punya Antrian
+        // hari ini utk petugas yg sama — mencegah double count di gap
+        // antara Antrian dibuat & SchedulledReservation di-soft-delete
+        // (kalau tidak, over-book palsu bikin slot=0 padahal masih ada
+        // slot dari pasien scheduled yg belum tiba → waitlist inquiry
+        // command skip). Per instruksi dr. Yoga 2026-09-01.
+        $today = now('Asia/Jakarta')->toDateString();
         $jumlah_reservasi_schedulled = $this->schedulled_reservations()
             ->where('schedulled_booking', 1)
+            ->whereNotExists(function ($q) use ($today) {
+                $q->select(\DB::raw(1))
+                  ->from('antrians')
+                  ->whereColumn('antrians.no_telp', 'schedulled_reservations.no_telp')
+                  ->whereColumn('antrians.petugas_pemeriksa_id', 'schedulled_reservations.petugas_pemeriksa_id')
+                  ->whereDate('antrians.created_at', $today)
+                  ->whereNull('antrians.deleted_at');
+            })
             ->count();
 
         $existing = $jumlah_antrian + $jumlah_reservasi_schedulled;
