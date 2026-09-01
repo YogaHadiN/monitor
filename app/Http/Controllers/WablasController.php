@@ -2879,11 +2879,14 @@ class WablasController extends Controller
             resetWhatsappRegistration($this->no_telp);
             $message = $this->chatAdmin();
         } else if (
-             str_contains($this->message, 'batalkan') ||
+             str_contains($this->message, 'batal') ||
              str_contains($this->message, 'btlkan') ||
-             str_contains($this->message, 'batalkn') ||
-             str_contains($this->message, 'batlkan')
+             str_contains($this->message, 'batlkan') ||
+             str_contains($this->message, 'cancel')
         ) {
+            // "batal" cover: batal / batalkan / batalkn / membatalkan / dll.
+            // Short form "batal" sering dipakai customer (log 2026-09-01
+            // 08:18 phone 6285715153039 typo → tidak dikenali).
             $message = $this->konfirmasiPembatalan();
         } else if (
              str_contains($this->message, 'cek antrian') ||
@@ -2941,20 +2944,11 @@ class WablasController extends Controller
             $message .= PHP_EOL;
             $message .= 'Balas *stop* untuk berhenti menerima notifikasi panggilan';
         } else {
+            // Footer (auto-appended di autoReply) sudah listing 5 command
+            // options. Block "Notifikasi Panggilan diaktifkan/dinonaktifkan"
+            // dihilangkan supaya response tidak triple-block. Opt-out stop
+            // masih tersedia di notif panggilan itu sendiri (line 7159).
             $message = 'Balasan yang anda masukkan tidak dikenali';
-            if ( $this->antrian->notifikasi_panggilan_aktif ) {
-                $message .= PHP_EOL;
-                $message .= 'Notifikasi Panggilan *diaktifkan*';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= 'Balas *stop* untuk berhenti menerima notifikasi panggilan';
-            } else {
-                $message .= PHP_EOL;
-                $message .= 'Notifikasi Panggilan *dinonaktifkan*';
-                $message .= PHP_EOL;
-                $message .= PHP_EOL;
-                $message .= 'Balas *aktifkan* untuk mengaktifkan kembali notifikasi panggilan';
-            }
         }
         if (isset($message)) {
             $this->autoReply($message );
