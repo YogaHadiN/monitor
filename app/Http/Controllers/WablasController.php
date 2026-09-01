@@ -7604,7 +7604,13 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
 
     protected function pesanWaitlistTercatat($reservasi_online): string
     {
-        return "Siap, Kakak sudah kami masukkan ke *waitlist* untuk jadwal ini. Jika ada slot batal, kami hubungi secara *berurutan*. 🙏. Kode waitlist : " . $reservasi_online->id;
+        return "Siap, Kakak sudah kami masukkan ke *waitlist* untuk jadwal ini. "
+             . "Jika ada slot batal, kami hubungi secara *berurutan* via WhatsApp. 🙏\n"
+             . "Kode waitlist : " . $reservasi_online->id . "\n\n"
+             . "⚠️ *Waitlist BELUM bisa dipakai untuk ambil antrian di klinik.* "
+             . "QR code baru dibuat setelah Kakak menerima WA inquiry dari kami "
+             . "*dan* Kakak balas *ya* untuk konfirmasi. Sebelum itu, mohon jangan "
+             . "datang ke klinik dengan asumsi sudah dapat antrian.";
     }
 
     /**

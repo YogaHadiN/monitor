@@ -1337,8 +1337,12 @@ class WebRegistrationController extends Controller
     {
         return
             "Anda sudah masuk *waitlist*. Kode waitlist: {$schedulled_reservation->id}.\n" .
-            "Bila ada slot batal, Anda akan kami hubungi *secara berurutan*.\n" .
-            "Mohon simpan QR Code; akan aktif begitu slot tersedia.";
+            "Bila ada slot batal, Anda akan kami hubungi *secara berurutan* via WhatsApp.\n" .
+            "\n" .
+            "⚠️ *Waitlist BELUM bisa dipakai untuk ambil antrian di klinik.* " .
+            "QR code baru dibuat setelah Kakak menerima WA inquiry dari kami " .
+            "*dan* Kakak balas *ya* untuk konfirmasi. Sebelum itu, mohon jangan " .
+            "datang ke klinik dengan asumsi sudah dapat antrian.";
     }
     /**
      * undocumented function
