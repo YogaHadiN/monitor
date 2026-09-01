@@ -122,7 +122,26 @@ class PetugasPemeriksa extends Model
     }
 
     public function getSisaAntrianAttribute(){
-        return $this->antrian_menunggus->count();
+        $count = $this->antrian_menunggus->count();
+
+        // Tambah pending ReservasiOnline: customer sudah pick dokter
+        // via WA bot (petugas_pemeriksa_id ter-set) tapi flow belum
+        // finalisasi jadi Antrian. Filter reservasi_selesai=0 +
+        // no_telp belum punya Antrian hari ini supaya tidak double
+        // count kalau customer sudah selesai di path lain.
+        $today = date('Y-m-d');
+        $count += \App\Models\ReservasiOnline::where('petugas_pemeriksa_id', $this->id)
+            ->whereDate('created_at', $today)
+            ->where('reservasi_selesai', 0)
+            ->whereNotExists(function ($q) use ($today) {
+                $q->select(\DB::raw(1))
+                  ->from('antrians')
+                  ->whereColumn('antrians.no_telp', 'reservasi_onlines.no_telp')
+                  ->whereDate('antrians.created_at', $today);
+            })
+            ->count();
+
+        return $count;
     }
 
     public function antrian_panggil(){
