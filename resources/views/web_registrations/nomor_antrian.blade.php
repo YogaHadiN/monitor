@@ -44,12 +44,21 @@
                     @if ($sr->staf)
                         <div>Dokter: {{ $sr->staf->nama_dengan_gelar }}</div>
                     @endif
-                    <div class="mb-10 mt-10">Scan QR berikut saat tiba di klinik</div>
-                    <div>
-                        @if (!is_null($sr->qrcode))
-                            <img class="center-fit" src="{{ \Storage::disk('s3')->url($sr->qrcode) }}" alt=''/>
-                        @endif
-                    </div>
+                    @php $isWaitlist = (int) ($sr->waitlist_flag ?? 0) === 1; @endphp
+                    @if ($isWaitlist)
+                        <div class="mb-10 mt-10 text-warning">
+                            <strong>QR belum aktif</strong> — Kakak masih di waitlist.
+                            Kalau ada slot batal, kami akan kirim WhatsApp inquiry.
+                            Balas <strong>ya</strong> di WA itu untuk konfirmasi, baru QR muncul di sini.
+                        </div>
+                    @else
+                        <div class="mb-10 mt-10">Scan QR berikut saat tiba di klinik</div>
+                        <div>
+                            @if (!is_null($sr->qrcode))
+                                <img class="center-fit" src="{{ \Storage::disk('s3')->url($sr->qrcode) }}" alt=''/>
+                            @endif
+                        </div>
+                    @endif
                     <div class="row mb-10 mt-10">
                         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                             <button class="btn btn-danger btn-block" onclick="hapusSchedulledReservation({{ $sr->id }}, this);return false;">

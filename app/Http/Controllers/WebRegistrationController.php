@@ -841,7 +841,16 @@ class WebRegistrationController extends Controller
 
                 $schedulled_reservation = SchedulledReservation::fromSourceArray($data);
                 $schedulled_reservation->reservasi_selesai = 1;
-                $schedulled_reservation->qrcode = $wablas->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
+                // Skip QR generation utk waitlist — per instruksi dr. Yoga
+                // 2026-09-01: waitlist tidak boleh punya QR yg bisa di-scan.
+                // Kasus Ardhita 2026-09-01: waitlist QR B2386 di-scan sebelum
+                // promotion → over-book Michel. QR baru digenerate saat waitlist
+                // di-promote di WablasController::waitlistReservationConfirmation
+                // (line ~7723).
+                $isWaitlistCreation = (int) ($schedulled_reservation->waitlist_flag ?? 0) === 1;
+                if (!$isWaitlistCreation) {
+                    $schedulled_reservation->qrcode = $wablas->generateQrCodeForOnlineReservation('B', $schedulled_reservation);
+                }
                 $schedulled_reservation->save();
 
                 WebRegistration::where('no_telp', $no_telp)->delete();
