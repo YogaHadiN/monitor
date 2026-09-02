@@ -106,6 +106,13 @@ class WatzapController extends Controller
             ], 422);
         }
 
+        // Per instruksi dr. Yoga 2026-09-02: kalau inbound phone match
+        // rujukan pending PDF (H+1 kalender-based), auto-kirim PDF
+        // rujukan BPJS. Jam ≥ 8 WIB → send now. Jam < 8 WIB → schedule
+        // ke jam 8 pagi. WA bot reply biasa tetap jalan setelahnya
+        // (proceeded ke WablasController::webhook di bawah).
+        $this->maybeAutoSendRujukanPdf((string) $normalized['phone']);
+
         // Inject ke request aktif agar Input::get() di WablasController bisa membaca
         $request->merge($normalized);
         app()->instance('request', $request);
@@ -124,6 +131,171 @@ class WatzapController extends Controller
             'status'  => true,
             'message' => 'Webhook diproses',
         ]);
+    }
+
+    /**
+     * Auto-send PDF rujukan BPJS kalau inbound phone match rujukan
+     * pending. Per instruksi dr. Yoga 2026-09-02.
+     *
+     * Trigger conditions:
+     *   1. Phone match periksa.pasien.no_telp (dari row rujukan)
+     *   2. Rujukan.created_at < today midnight WIB (kalender-based H+1)
+     *   3. Rujukan.pdf_rujukan_bpjs_path NOT NULL
+     *   4. Rujukan.pdf_sent_at IS NULL (belum pernah dikirim)
+     *
+     * Actions:
+     *   - Jam ≥ 8 WIB → sendDocument now + set pdf_sent_at
+     *   - Jam < 8 WIB → set pdf_scheduled_send_at = today 08:00 WIB
+     *     (Phase 3 command akan process saat waktu tiba)
+     *
+     * Runs BEFORE Wablas webhook processing → bot reply biasa tetap
+     * jalan (menu daftar/jadwal/dll).
+     */
+    protected function maybeAutoSendRujukanPdf(string $phone): void
+    {
+        try {
+            $phone = preg_replace('/\D+/', '', $phone);
+            if ($phone === '') {
+                return;
+            }
+
+            $now       = \Carbon\Carbon::now('Asia/Jakarta');
+            $todayWIB  = $now->copy()->startOfDay();
+
+            // Cari rujukan pending untuk phone ini
+            $rujukan = \DB::table('rujukans as r')
+                ->join('periksas as p', 'p.id', '=', 'r.periksa_id')
+                ->join('pasiens as ps', 'ps.id', '=', 'p.pasien_id')
+                ->where('ps.no_telp', $phone)
+                ->whereNotNull('r.pdf_rujukan_bpjs_path')
+                ->whereNull('r.pdf_sent_at')
+                ->where('r.created_at', '<', $todayWIB->toDateTimeString())
+                ->select(
+                    'r.id as rujukan_id',
+                    'r.pdf_rujukan_bpjs_path',
+                    'r.pdf_scheduled_send_at',
+                    'r.tujuan_rujuk_id',
+                    'r.rumah_sakit_id',
+                    'ps.nama as pasien_nama',
+                    'ps.no_telp'
+                )
+                ->orderBy('r.created_at', 'asc')
+                ->first();
+
+            if (!$rujukan) {
+                return;
+            }
+
+            $jam8WIB = $todayWIB->copy()->setTime(8, 0, 0);
+
+            // Kalau jam < 8 → schedule saja, skip send now
+            if ($now->lt($jam8WIB)) {
+                if (empty($rujukan->pdf_scheduled_send_at)) {
+                    \DB::table('rujukans')->where('id', $rujukan->rujukan_id)->update([
+                        'pdf_scheduled_send_at' => $jam8WIB->toDateTimeString(),
+                        'updated_at'            => $now,
+                    ]);
+                    \Log::info('RUJUKAN_PDF_SCHEDULED', [
+                        'rujukan_id'  => $rujukan->rujukan_id,
+                        'phone'       => $phone,
+                        'scheduled'   => (string) $jam8WIB,
+                    ]);
+                }
+                return;
+            }
+
+            // Jam ≥ 8 → send now
+            $this->sendRujukanPdfNow((int) $rujukan->rujukan_id);
+        } catch (\Throwable $e) {
+            \Log::error('RUJUKAN_PDF_AUTO_SEND_EXCEPTION', [
+                'phone' => $phone,
+                'err'   => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Kirim PDF rujukan sekarang. Public karena juga dipanggil oleh
+     * scheduled command Phase 3 (rujukan:send-pending-pdfs).
+     */
+    public function sendRujukanPdfNow(int $rujukanId): array
+    {
+        $rujukan = \DB::table('rujukans as r')
+            ->join('periksas as p', 'p.id', '=', 'r.periksa_id')
+            ->join('pasiens as ps', 'ps.id', '=', 'p.pasien_id')
+            ->leftJoin('tujuan_rujuks as tr', 'tr.id', '=', 'r.tujuan_rujuk_id')
+            ->leftJoin('rumah_sakits as rs', 'rs.id', '=', 'r.rumah_sakit_id')
+            ->where('r.id', $rujukanId)
+            ->select(
+                'r.id',
+                'r.pdf_rujukan_bpjs_path',
+                'r.pdf_sent_at',
+                'ps.nama as pasien_nama',
+                'ps.no_telp',
+                'tr.tujuan_rujuk as spesialisasi',
+                'rs.nama_rumah_sakit as rumah_sakit'
+            )
+            ->first();
+
+        if (!$rujukan) {
+            \Log::warning('RUJUKAN_PDF_SEND_NOT_FOUND', ['rujukan_id' => $rujukanId]);
+            return ['ok' => false, 'reason' => 'rujukan_not_found'];
+        }
+        if (!empty($rujukan->pdf_sent_at)) {
+            \Log::info('RUJUKAN_PDF_SEND_ALREADY_SENT', ['rujukan_id' => $rujukanId]);
+            return ['ok' => true, 'reason' => 'already_sent'];
+        }
+        if (empty($rujukan->pdf_rujukan_bpjs_path)) {
+            \Log::warning('RUJUKAN_PDF_SEND_NO_PDF', ['rujukan_id' => $rujukanId]);
+            return ['ok' => false, 'reason' => 'no_pdf_uploaded'];
+        }
+
+        // Generate signed URL S3 (10 menit TTL — Watzap fetch cepat)
+        try {
+            $signedUrl = \Storage::disk('s3')->temporaryUrl(
+                $rujukan->pdf_rujukan_bpjs_path,
+                \Carbon\Carbon::now()->addMinutes(10)
+            );
+        } catch (\Throwable $e) {
+            \Log::error('RUJUKAN_PDF_S3_SIGNED_URL_FAIL', [
+                'rujukan_id' => $rujukanId,
+                'err'        => $e->getMessage(),
+            ]);
+            return ['ok' => false, 'reason' => 's3_signed_url_fail'];
+        }
+
+        $caption = "Halo Kak " . ($rujukan->pasien_nama ?: '') . " 🙏\n\n"
+                 . "Berikut rujukan BPJS Anda:\n\n"
+                 . "📋 Spesialisasi : " . ($rujukan->spesialisasi ?: '-') . "\n"
+                 . "🏥 Rumah Sakit  : " . ($rujukan->rumah_sakit ?: '-') . "\n\n"
+                 . "PDF rujukan terlampir 📎\n\n"
+                 . "Apabila ada kesalahan rujukan, mohon segera hubungi admin klinik. "
+                 . "Terima kasih 🙏";
+
+        $filename = 'Rujukan_BPJS_' . $rujukan->id . '.pdf';
+
+        $watzap = app(\App\Services\WatzapService::class);
+        $result = $watzap->sendDocument((string) $rujukan->no_telp, $signedUrl, $caption, $filename);
+
+        if ($result['ok'] ?? false) {
+            \DB::table('rujukans')->where('id', $rujukanId)->update([
+                'pdf_sent_at'           => \Carbon\Carbon::now(),
+                'pdf_scheduled_send_at' => null,
+                'updated_at'            => \Carbon\Carbon::now(),
+            ]);
+            \Log::info('RUJUKAN_PDF_SENT', [
+                'rujukan_id' => $rujukanId,
+                'phone'      => $rujukan->no_telp,
+            ]);
+        } else {
+            \Log::warning('RUJUKAN_PDF_SEND_FAIL', [
+                'rujukan_id' => $rujukanId,
+                'phone'      => $rujukan->no_telp,
+                'reason'     => $result['reason'] ?? 'unknown',
+            ]);
+        }
+
+        return $result;
     }
 
     /**

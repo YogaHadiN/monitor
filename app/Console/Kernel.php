@@ -15,7 +15,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Process pending scheduled rujukan PDF sends (customer WA
+        // sebelum jam 8 pagi → schedule ke jam 8 pagi). Runs setiap
+        // 5 menit supaya delayed sends fire cepat setelah jam 8.
+        // Per instruksi dr. Yoga 2026-09-02.
+        $schedule->command('rujukan:send-pending-pdfs')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->timezone('Asia/Jakarta');
     }
 
     /**

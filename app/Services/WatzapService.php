@@ -103,6 +103,72 @@ class WatzapService
         ];
     }
 
+    /**
+     * Send PDF/document ke phone via Watzap waba_send_file_url endpoint.
+     * Pakai signed URL dari S3 supaya Watzap bisa fetch (URL harus
+     * publicly accessible dari Watzap server).
+     */
+    public function sendDocument(string $phone, string $documentUrl, string $caption = '', ?string $filename = null): array
+    {
+        $phone       = $this->normalizePhone($phone);
+        $documentUrl = trim($documentUrl);
+
+        if ($phone === '' || $documentUrl === '') {
+            return ['ok' => false, 'reason' => 'invalid_phone_or_document'];
+        }
+
+        $headStatus = $this->probeUrl($documentUrl);
+        if ($headStatus < 200 || $headStatus >= 300) {
+            Log::error('WATZAP_SEND_DOCUMENT_URL_UNREACHABLE', [
+                'phone' => $phone,
+                'url'   => $documentUrl,
+                'head'  => $headStatus,
+            ]);
+            return ['ok' => false, 'reason' => 'document_url_unreachable_' . $headStatus];
+        }
+
+        $payload = [
+            'api_key'  => env('WATZAP_TOKEN'),
+            'phone_no' => $phone,
+            'url'      => $documentUrl,
+            'caption'  => $caption,
+        ];
+        if ($filename !== null && $filename !== '') {
+            $payload['filename'] = $filename;
+        }
+
+        Log::info('WATZAP_SEND_DOCUMENT_REQUEST', [
+            'phone'   => $phone,
+            'url'     => $documentUrl,
+            'caption' => mb_substr($caption, 0, 100),
+        ]);
+
+        $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_file_url', $payload);
+
+        $body  = $this->safeJson($response->body());
+        $apiOk = $response->ok() && $this->bodyIndicatesSuccess($body);
+
+        if (!$apiOk) {
+            Log::error('WATZAP_SEND_DOCUMENT_FAILED', [
+                'status' => $response->status(),
+                'phone'  => $phone,
+                'resp'   => $body,
+            ]);
+        } else {
+            Log::info('WATZAP_SEND_DOCUMENT_OK', [
+                'phone' => $phone,
+                'url'   => $documentUrl,
+            ]);
+        }
+
+        return [
+            'ok'     => $apiOk,
+            'status' => $response->status(),
+            'resp'   => $body,
+            'reason' => $apiOk ? null : 'http_' . $response->status(),
+        ];
+    }
+
     public function sendVideo(string $phone, string $videoUrl, string $caption = ''): array
     {
         $phone = $this->normalizePhone($phone);
