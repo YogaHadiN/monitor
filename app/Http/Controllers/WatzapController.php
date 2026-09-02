@@ -287,6 +287,30 @@ class WatzapController extends Controller
                 'rujukan_id' => $rujukanId,
                 'phone'      => $rujukan->no_telp,
             ]);
+
+            // Log outbound ke messages table supaya muncul di /chat_sunats
+            // (chat umum) — tim bisa lihat konfirmasi PDF sudah terkirim.
+            // Per instruksi dr. Yoga 2026-09-02.
+            try {
+                \App\Models\Message::create([
+                    'no_telp'        => (string) $rujukan->no_telp,
+                    'message'        => $caption,
+                    'tanggal'        => date('Y-m-d H:i:s'),
+                    'sending'        => 1,
+                    'sudah_dibalas'  => 1,
+                    'sudah_diproses' => 1,
+                    'staf_id'        => null,
+                    'tenant_id'      => 1,
+                    'touched'        => 1,
+                    'document_url'   => $signedUrl,
+                    'flagged_intent' => 'rujukan_pdf_auto_send',
+                ]);
+            } catch (\Throwable $e) {
+                \Log::warning('RUJUKAN_PDF_MESSAGE_LOG_FAIL', [
+                    'rujukan_id' => $rujukanId,
+                    'err'        => $e->getMessage(),
+                ]);
+            }
         } else {
             \Log::warning('RUJUKAN_PDF_SEND_FAIL', [
                 'rujukan_id' => $rujukanId,
