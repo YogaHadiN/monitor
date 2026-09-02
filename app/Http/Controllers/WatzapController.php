@@ -288,9 +288,11 @@ class WatzapController extends Controller
                 'phone'      => $rujukan->no_telp,
             ]);
 
-            // Log outbound ke messages table supaya muncul di /chat_sunats
-            // (chat umum) — tim bisa lihat konfirmasi PDF sudah terkirim.
-            // Per instruksi dr. Yoga 2026-09-02.
+            // Log outbound ke messages table supaya muncul di /messages
+            // (CHAT UMUM), BUKAN /chat_sunats. Per instruksi dr. Yoga
+            // 2026-09-02: chat_admin=1 + chat_sunat=0 supaya masuk
+            // filter chat umum (MessageController query
+            // "chat_admin=1 AND (chat_sunat=0 OR NULL)").
             try {
                 \App\Models\Message::create([
                     'no_telp'        => (string) $rujukan->no_telp,
@@ -302,6 +304,8 @@ class WatzapController extends Controller
                     'staf_id'        => null,
                     'tenant_id'      => 1,
                     'touched'        => 1,
+                    'chat_admin'     => 1,   // ← chat umum
+                    'chat_sunat'     => 0,   // ← explicit: BUKAN chat_sunats
                     'document_url'   => $signedUrl,
                     'flagged_intent' => 'rujukan_pdf_auto_send',
                 ]);
