@@ -1973,10 +1973,26 @@ class SunatBotEngine
         $gemuk            = $this->isPosturGemuk($postur);
 
         $photoRequest = null;
+        $konsulReason = null;
         if ($adaKelainanPenis) {
             $photoRequest = "Sebelum kami sambungkan ke admin, mohon kirim foto berikut kak, supaya dokter kami bisa asesmen kondisinya:\n\n1. Foto area penis (fokus ke bagian yang dikeluhkan)\n2. Foto calon pasien (full body, wajah kelihatan)\n\n🙏";
+            $konsulReason = "Kelainan penis: " . ($indikasi !== '' ? $indikasi : '-');
         } elseif ($gemuk) {
             $photoRequest = "Sebelum kami sambungkan ke admin, mohon kirim foto full body calon pasien ya kak, supaya dokter kami bisa asesmen kondisinya 🙏";
+            $konsulReason = "Postur: " . ($postur !== '' ? $postur : '-');
+        }
+
+        // Set flag `konsul_dokter_pending=true` supaya webhook
+        // GowaWebhookController::maybeForwardKonsulDokterFoto forward foto
+        // customer ke dr. Yoga (6281381912803) begitu customer kirim foto.
+        // Tanpa flag, bot cuma bilang "kirim foto" tapi foto yg masuk
+        // silent-skip (bug 14 hari 0 forward per audit 2026-09-03).
+        if ($photoRequest !== null) {
+            $session->setData('konsul_dokter_pending', true);
+            if ($konsulReason !== null) {
+                $session->setData('konsul_dokter_reason', $konsulReason);
+            }
+            $session->save();
         }
 
         $handoverBubble = ['text' => (string) config('sunatbot.handover_message'), 'media' => null];
