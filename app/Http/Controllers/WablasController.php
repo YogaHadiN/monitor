@@ -1621,7 +1621,7 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= 'Balas *batalkan* untuk membatalkan reservasi / antrian ini';
         $response .= PHP_EOL;
-        $response .= 'Balas *pindah dokter* untuk pindah ke dokter lain yang sedang praktek';
+        $response .= 'Balas *pilih dokter* untuk memilih dokter tertentu';
         $response .= PHP_EOL;
         $response .= 'Balas *chat admin* untuk mendapatkan bantuan dari admin';
 
@@ -2840,7 +2840,13 @@ class WablasController extends Controller
             return;
         }
 
+        // Command "pilih dokter" (primary, per spec dr. Yoga 2026-09-04
+        // rename dari "pindah dokter"). Backward compat: "pindah dokter"
+        // + variasi tetap accepted sebagai silent alias supaya customer
+        // yg pakai kata lama tidak break.
         if (
+             str_contains($this->message, 'pilih dokter') ||
+             str_contains($this->message, 'pilih dktr') ||
              str_contains($this->message, 'pindah dokter') ||
              str_contains($this->message, 'pindah dktr') ||
              str_contains($this->message, 'pndh dokter')
@@ -2990,7 +2996,7 @@ class WablasController extends Controller
         $alternatif = $this->petugasPemeriksaAlternatif();
 
         if ($alternatif->isEmpty()) {
-            return "Mohon maaf, tidak dapat pindah dokter karena dokter *{$tipeNama}* yang sedang bertugas saat ini hanya satu orang.";
+            return "Mohon maaf, tidak dapat pilih dokter karena dokter *{$tipeNama}* yang sedang bertugas saat ini hanya satu orang.";
         }
 
         $dokterSaatIni = optional($this->antrian->staf)->nama_dengan_gelar ?? '-';
@@ -3014,9 +3020,9 @@ class WablasController extends Controller
         $msg .= PHP_EOL;
         $msg .= implode(PHP_EOL, $lines);
         $msg .= PHP_EOL . PHP_EOL;
-        $msg .= '⚠️ Jika pindah dokter, Anda akan mendapatkan *nomor antrian baru di posisi terakhir* pada antrian dokter tersebut. Antrian Anda saat ini akan dibatalkan.';
+        $msg .= '⚠️ Jika pilih dokter, Anda akan mendapatkan *nomor antrian baru di posisi terakhir* pada antrian dokter tersebut. Antrian Anda saat ini akan dibatalkan.';
         $msg .= PHP_EOL . PHP_EOL;
-        $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan pindah dokter.';
+        $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan pilih dokter.';
         return $msg;
     }
 
@@ -7007,7 +7013,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= PHP_EOL;
         $message .= 'Balas *kirim qr* untuk mengirim ulang qr code';
         $message .= PHP_EOL;
-        $message .= 'Balas *pindah dokter* untuk pindah ke dokter lain yang sedang praktek';
+        $message .= 'Balas *pilih dokter* untuk memilih dokter tertentu';
         return $message;
     }
 
