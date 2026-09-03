@@ -2840,6 +2840,17 @@ class WablasController extends Controller
             return;
         }
 
+        // Command "batal pilih dokter": lepas flag antrian ter-flag pasien
+        // → kembali ke pool. Kalau flag klinik, tolak dgn arahan chat
+        // admin. Cek DULUAN sebelum "pilih dokter" karena substring match.
+        if (
+            str_contains($this->message, 'batal pilih dokter') ||
+            str_contains($this->message, 'batal pilih dktr')
+        ) {
+            $this->autoReply($this->handleBatalPilihDokter());
+            return;
+        }
+
         // Command "pilih dokter" (primary, per spec dr. Yoga 2026-09-04
         // rename dari "pindah dokter"). Backward compat: "pindah dokter"
         // + variasi tetap accepted sebagai silent alias supaya customer
@@ -2990,6 +3001,40 @@ class WablasController extends Controller
             ->values();
     }
 
+    /**
+     * Batal pilih dokter: clear flag pasien pada antrian aktif hari ini.
+     * Kalau flag klinik, tolak + arahkan chat admin.
+     * Gated behavior — cuma jalan kalau config('features.pool_antrian_enabled')
+     * true (kalau off, feature Pilih Dokter masih legacy behavior).
+     */
+    private function handleBatalPilihDokter(): string
+    {
+        if (!config('features.pool_antrian_enabled')) {
+            return "Fitur *batal pilih dokter* belum aktif. Balas *chat admin* untuk bantuan.";
+        }
+        if (!$this->antrian) {
+            return "Tidak ada antrian aktif Anda hari ini.";
+        }
+        $antrian = $this->antrian;
+        if (empty($antrian->dokter_dipilih_id)) {
+            return "Antrian Anda tidak sedang dalam status pilih dokter.";
+        }
+        if ($antrian->pilih_dokter_by === 'klinik') {
+            return "Antrian Anda di-flag oleh klinik dan tidak dapat dibatalkan sendiri. Silakan balas *chat admin* untuk bantuan.";
+        }
+
+        \DB::transaction(function () use ($antrian) {
+            $antrian->dokter_dipilih_id = null;
+            $antrian->pilih_dokter_by   = null;
+            $antrian->save();
+        });
+
+        $msg  = "Baik kak 🙏\n\n";
+        $msg .= "Pilih dokter *dibatalkan*. Antrian Anda kembali ke pemeriksa dengan antrian tercepat.\n\n";
+        $msg .= "Nomor antrian Anda *TETAP*: *" . $antrian->nomor_antrian . "*";
+        return $msg;
+    }
+
     private function konfirmasiPindahDokter(): string
     {
         $tipeNama = optional($this->antrian->tipe_konsultasi)->tipe_konsultasi ?? 'ini';
@@ -3020,7 +3065,11 @@ class WablasController extends Controller
         $msg .= PHP_EOL;
         $msg .= implode(PHP_EOL, $lines);
         $msg .= PHP_EOL . PHP_EOL;
-        $msg .= '⚠️ Jika pilih dokter, Anda akan mendapatkan *nomor antrian baru di posisi terakhir* pada antrian dokter tersebut. Antrian Anda saat ini akan dibatalkan.';
+        if (config('features.pool_antrian_enabled')) {
+            $msg .= '⚠️ Dengan memilih dokter tertentu, antrian Anda kemungkinan menjadi lebih lama dan bisa dilewati oleh antrian yang datang setelah Anda. *Nomor antrian tidak berubah.*';
+        } else {
+            $msg .= '⚠️ Jika pilih dokter, Anda akan mendapatkan *nomor antrian baru di posisi terakhir* pada antrian dokter tersebut. Antrian Anda saat ini akan dibatalkan.';
+        }
         $msg .= PHP_EOL . PHP_EOL;
         $msg .= 'Balas dengan *angka* dokter pilihan Anda, atau ketik *batal* untuk membatalkan pilih dokter.';
         return $msg;
@@ -3103,6 +3152,30 @@ class WablasController extends Controller
 
         $oldAntrian   = $this->antrian;
         $newRuanganId = $pp->ruangan_id ?? $oldAntrian->ruangan_id;
+
+        // POOL MODE (behind feature flag): SET flag saja, tidak delete+create.
+        // Nomor antrian tetap.
+        if (config('features.pool_antrian_enabled')) {
+            \DB::transaction(function () use ($oldAntrian, $pp) {
+                $oldAntrian->dokter_dipilih_id = $pp->staf_id;
+                $oldAntrian->pilih_dokter_by   = 'pasien';
+                $oldAntrian->save();
+            });
+            \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
+                ->where('whatsapp_bot_service_id', self::WA_BOT_SERVICE_PINDAH_DOKTER)
+                ->delete();
+            $tipeNama = optional($oldAntrian->tipe_konsultasi)->tipe_konsultasi ?? '';
+            $reply  = "Terima kasih kak 🙏\n\n";
+            $reply .= "Antrian Anda dikunci ke *{$dokterBaru}*.";
+            if ($tipeNama !== '') {
+                $reply .= "\nKonsultasi: {$tipeNama}";
+            }
+            $reply .= "\n\nNomor antrian Anda *TETAP*: *" . $oldAntrian->nomor_antrian . "*";
+            $reply .= "\n\n⚠️ Antrian Anda kemungkinan menjadi lebih lama dan bisa dilewati oleh antrian yg datang setelah Anda.";
+            $reply .= "\n\nBalas *batal pilih dokter* untuk kembali ke pemeriksa dgn antrian tercepat.";
+            $this->autoReply($reply);
+            return;
+        }
 
         // antrianPost() dan kodeUnik() membaca dua field ini dari $this,
         // set dulu supaya antrian baru mewarisi metode pembayaran & nomor
