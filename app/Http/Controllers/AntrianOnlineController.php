@@ -450,6 +450,18 @@ class AntrianOnlineController extends Controller
         $antrian->sumber_antrian_id     = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::MOBILE_JKN);
         $antrian->registrasi_pembayaran_id = 2;
         $antrian->verifikasi_bpjs       = 1;
+
+        // POOL MODE (behind features.pool_antrian_enabled): antrian
+        // Mobile JKN masuk sbg POOL. kodedokter dari payload BPJS
+        // artefak bridging → simpan di kolom terpisah, JANGAN dipakai
+        // sbg atribusi dokter aktual. staf_id + petugas_pemeriksa_id
+        // di-clear supaya query pool + display board tidak salah tampil.
+        // Petugas akan tanyakan Pilih Dokter / Lewati saat check-in.
+        if (config('features.pool_antrian_enabled')) {
+            $antrian->kodedokter_bpjs_asal = $kodedokter;
+            $antrian->staf_id              = null;
+            $antrian->petugas_pemeriksa_id = null;
+        }
         $antrian->save();
 
         /**
