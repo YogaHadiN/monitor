@@ -22,15 +22,13 @@ class Antrian extends Model
 
         static::creating(function (Antrian $antrian) {
             // Pastikan field ini sudah ada nilainya sebelum nomor di-generate
-            $tenantId  = (int) ($antrian->tenant_id ?? 1);
-            $ruanganId = (int) $antrian->ruangan_id;
+            $tenantId         = (int) ($antrian->tenant_id ?? 1);
+            $ruanganId        = (int) $antrian->ruangan_id;
+            $tipeKonsultasiId = (int) $antrian->tipe_konsultasi_id ?: null;
 
-            // Gunakan tanggal lokal operasional
-            $tanggal = Carbon::now('Asia/Jakarta')->toDateString();
-
-            // Ambil nomor baru yang dijamin unik per (tenant, ruangan, tanggal)
-            $antrian->nomor = app(AntrianNumberService::class)->next($tenantId, $ruanganId, $tanggal);
-
+            // Pool mode: nomor per tipe_konsultasi (A umum, B gigi, dst).
+            // Legacy: nomor per ruangan. Service handles branch by flag.
+            $antrian->nomor = app(AntrianNumberService::class)->next($tenantId, $ruanganId, $tipeKonsultasiId);
         });
 
        self::created(function($antrian){
@@ -135,6 +133,13 @@ class Antrian extends Model
                 ->first()->nomor;
 	}
 	public function getNomorAntrianAttribute(){
+		// Pool mode: prefix ikut tipe_konsultasi (A/B/C/D). Legacy: ruangan.
+		if (config('features.pool_antrian_enabled') && $this->tipe_konsultasi_id) {
+			$tipePrefix = optional($this->tipe_konsultasi)->prefix_antrian;
+			if ($tipePrefix) {
+				return $tipePrefix . $this->nomor;
+			}
+		}
 		return $this->ruangan->prefix_antrian . $this->nomor;
 	}
 	public function getJenisAntrianIdAttribute($value){
