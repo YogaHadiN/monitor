@@ -240,9 +240,21 @@ class WatzapService
 
     private function probeUrl(string $url): int
     {
+        // AWS S3 SigV4 signed URLs bind signature ke HTTP method — signed
+        // untuk GET, HEAD ditolak 403. Fallback GET dgn Range 0-0 kalau
+        // HEAD gagal supaya probe tetap ringan (1 byte) tanpa
+        // mem-download full asset.
         try {
             $resp = Http::timeout(5)->withOptions(['allow_redirects' => true])->head($url);
-            return $resp->status();
+            $s = $resp->status();
+            if ($s >= 200 && $s < 300) {
+                return $s;
+            }
+            $resp2 = Http::timeout(5)
+                ->withHeaders(['Range' => 'bytes=0-0'])
+                ->withOptions(['allow_redirects' => true])
+                ->get($url);
+            return $resp2->status();
         } catch (\Throwable $e) {
             Log::warning('WATZAP_URL_PROBE_FAILED', ['url' => $url, 'err' => $e->getMessage()]);
             return 0;
