@@ -233,7 +233,7 @@ class WatzapController extends Controller
                 'ps.nama as pasien_nama',
                 'ps.no_telp',
                 'tr.tujuan_rujuk as spesialisasi',
-                'rs.nama_rumah_sakit as rumah_sakit'
+                'rs.nama as rumah_sakit'
             )
             ->first();
 
