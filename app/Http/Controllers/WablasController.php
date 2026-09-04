@@ -4226,22 +4226,40 @@ class WablasController extends Controller
                     $reservasi_online->tipe_konsultasi_id = $tipeDbInt;
                     $reservasi_online->save();
 
-                    $petugas_pemeriksa = $this->petugas_pemeriksa_sekarang($reservasi_online);
-                    // jika hanya ada satu petugas pemeriksa disana
-                    if ($petugas_pemeriksa->count() === 1) {
-                        $this->chatBotLog(__LINE__);
-                        $reservasi_online->staf_id              = $petugas_pemeriksa->first()->staf_id;
-                        $reservasi_online->petugas_pemeriksa_id = $petugas_pemeriksa->first()->id;
-                        $reservasi_online->ruangan_id           = $petugas_pemeriksa->first()->ruangan_id;
+                    // POOL MODE (behind features.pool_antrian_enabled):
+                    // Kanal pendaftaran TIDAK memberikan pilihan dokter ke
+                    // client per spec dr. Yoga 2026-09-04. Set staf_id=NULL,
+                    // derive ruangan_id dari tipe default. Skip step "pilih
+                    // staf". Client bisa pilih dokter belakangan via WA
+                    // command "pilih dokter".
+                    if (config('features.pool_antrian_enabled')) {
+                        $reservasi_online->staf_id              = null;
+                        $reservasi_online->petugas_pemeriksa_id = null;
+                        $reservasi_online->ruangan_id           = optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
                         $reservasi_online->save();
+                    } else {
+                        $petugas_pemeriksa = $this->petugas_pemeriksa_sekarang($reservasi_online);
+                        // jika hanya ada satu petugas pemeriksa disana
+                        if ($petugas_pemeriksa->count() === 1) {
+                            $this->chatBotLog(__LINE__);
+                            $reservasi_online->staf_id              = $petugas_pemeriksa->first()->staf_id;
+                            $reservasi_online->petugas_pemeriksa_id = $petugas_pemeriksa->first()->id;
+                            $reservasi_online->ruangan_id           = $petugas_pemeriksa->first()->ruangan_id;
+                            $reservasi_online->save();
+                        }
                     }
                 }
             } else {
                 $input_tidak_tepat = true;
             }
         // ===== pilih staf =====
+        // POOL MODE guard: skip entire "pilih staf" branch — client tidak
+        // pilih dokter saat pendaftaran. staf_id sudah diset NULL di tipe
+        // step di atas (kalau pool_mode on). Next iteration lanjut ke
+        // registrasi_pembayaran.
         } elseif (
-            !is_null($reservasi_online->tipe_konsultasi_id)
+            !config('features.pool_antrian_enabled')
+            && !is_null($reservasi_online->tipe_konsultasi_id)
             && is_null($reservasi_online->staf_id))
         {
             $this->chatBotLog(__LINE__);
