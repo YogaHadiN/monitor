@@ -198,8 +198,12 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->nama ) &&
             !is_null( $web_registration->tanggal_lahir ) &&
             !is_null( $web_registration->alamat ) &&
-            is_null( $web_registration->staf_id )
+            is_null( $web_registration->staf_id ) &&
+            !config('features.pool_antrian_enabled')
         ) {
+            // Pool mode: skip step "Pilih Dokter" — client TIDAK memilih
+            // dokter saat pendaftaran (spec dr. Yoga 2026-09-04). Flow
+            // lanjut ke next step tanpa render staf.blade.php.
             $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();
@@ -315,7 +319,7 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->nama ) &&
             !is_null( $web_registration->tanggal_lahir ) &&
             !is_null( $web_registration->alamat ) &&
-            !is_null( $web_registration->staf_id ) &&
+            (!is_null( $web_registration->staf_id ) || config('features.pool_antrian_enabled')) &&
             $web_registration->data_terkonfirmasi == 0
         ) {
             return view('web_registrations.data_terkonfirmasi', compact('web_registration'));
