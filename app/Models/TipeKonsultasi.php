@@ -25,21 +25,49 @@ class TipeKonsultasi extends Model
     public function getSisaAntrianAttribute(){
 
         $tipe_konsultasi_id = $this->id;
-        $start_of_day       = Carbon::now()->startOfDay()->format("Y-m-d H:i:s");
-        $end_of_day         = Carbon::now()->endOfDay()->format("Y-m-d H:i:s");
+        $tenantId           = session()->get('tenant_id');
+        $today              = Carbon::now('Asia/Jakarta')->toDateString();
+        $antriableTypes     = [
+            'App\\Models\\Antrian',
+            'App\\Models\\AntrianPoli',
+            'App\\Models\\AntrianPeriksa',
+        ];
+
+        // Pool mode: count total antrian aktif tipe ini hari ini
+        // (belum di-panggil, belum deleted). Nomor antrian per tipe,
+        // pool antrian dishare antar ruangan sesuai
+        // ruangan_tipe_konsultasi pivot.
+        if (config('features.pool_antrian_enabled')) {
+            return (int) DB::table('antrians')
+                ->where('tenant_id', $tenantId)
+                ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+                ->whereDate('created_at', $today)
+                ->whereIn('antriable_type', $antriableTypes)
+                ->whereNull('deleted_at')
+                ->where(function ($q) {
+                    $q->where('dipanggil_pemeriksa', 0)
+                      ->orWhereNull('dipanggil_pemeriksa');
+                })
+                ->count();
+        }
+
+        // Legacy: shortest queue per ruangan (load-balancing UX).
+        $start_of_day = Carbon::now()->startOfDay()->format("Y-m-d H:i:s");
+        $end_of_day   = Carbon::now()->endOfDay()->format("Y-m-d H:i:s");
 
         $query  = "SELECT ";
         $query .= "count(ant.id) as jumlah ";
         $query .= "FROM antrians ant ";
-        $query .= "WHERE tenant_id=". session()->get('tenant_id') . " ";
+        $query .= "WHERE tenant_id=". $tenantId . " ";
         $query .= "AND ant.tipe_konsultasi_id = $tipe_konsultasi_id " ;
         $query .= "AND ant.created_at between '$start_of_day' and '$end_of_day' " ;
         $query .= "AND ant.tipe_konsultasi_id = $tipe_konsultasi_id " ;
-        $query .= "AND ("; 
+        $query .= "AND ant.deleted_at IS NULL " ;
+        $query .= "AND (";
         $query .= "antriable_type = 'App\\\Models\\\Antrian' or ";
-        $query .= "antriable_type = 'App\\\Models\\\AntrianPoli' or "; 
-        $query .= "antriable_type = 'App\\\Models\\\AntrianPeriksa' "; 
-        $query .= ") "; 
+        $query .= "antriable_type = 'App\\\Models\\\AntrianPoli' or ";
+        $query .= "antriable_type = 'App\\\Models\\\AntrianPeriksa' ";
+        $query .= ") ";
         $query .= "GROUP BY ant.ruangan_id " ;
         $query .= "ORDER BY count(ant.id) ASC;" ;
         $data = DB::select($query);
