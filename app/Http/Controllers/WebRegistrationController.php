@@ -931,20 +931,29 @@ class WebRegistrationController extends Controller
     }
     public function batalkan(){
         $no_telp = Input::get('no_telp');
+
+        // Hapus SEMUA antrian aktif hari ini untuk no_telp ini.
+        // Sebelumnya filter `sudah_hadir_di_klinik=0` + `antriable_type
+        // = 'App\Models\Antrian'` → kalau pasien sudah scan QR (hadir=1)
+        // atau sudah masuk poli (antriable jadi AntrianPeriksa),
+        // tombol "Batalkan Semua" tidak berfungsi. Fix per instruksi
+        // dr. Yoga 2026-09-04: hilangkan filter — semua yg belum
+        // finalized (belum jam_selesai_periksa) di-batal.
         Antrian::where('no_telp',  $no_telp )
                 ->whereDate('created_at', date('Y-m-d'))
-                ->where('sudah_hadir_di_klinik', 0)
-                ->whereRaw(
-                    "(
-                        antriable_type = 'App\\\Models\\\Antrian'
-                    )"
-                )
+                ->whereIn('antriable_type', [
+                    'App\\Models\\Antrian',
+                    'App\\Models\\AntrianPoli',
+                    'App\\Models\\AntrianPeriksa',
+                ])
                 ->delete();
 
         // Reservasi terjadwal hari ini juga ikut dihapus.
         SchedulledReservation::where('no_telp', $no_telp)
                 ->whereDate('created_at', date('Y-m-d'))
                 ->delete();
+
+        return response()->json(['ok' => true, 'message' => 'Semua antrian dihapus.']);
     }
 
     public function hapus_schedulled_reservation(){
