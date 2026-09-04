@@ -873,7 +873,16 @@ class WebRegistrationController extends Controller
 
         // ===== ANTRIAN WALK-IN (existing flow) =====
         $wablas->input_registrasi_pembayaran_id = $web_registration->registrasi_pembayaran_id;
-        $antrian                = $wablas->antrianPost( $web_registration->ruangan_id );
+
+        // Pool mode: derive ruangan_id dari tipe default kalau
+        // web_registration.ruangan_id belum di-set (client tidak pilih
+        // dokter). Ini memastikan antrianPost + nomor generator dapat
+        // ruangan valid.
+        $ruanganId = $web_registration->ruangan_id;
+        if (is_null($ruanganId) && $web_registration->tipe_konsultasi_id) {
+            $ruanganId = optional(\App\Models\TipeKonsultasi::find($web_registration->tipe_konsultasi_id))->ruangan_id;
+        }
+        $antrian                = $wablas->antrianPost( $ruanganId );
 
 
         $antrian->nama                     = $web_registration->nama;
@@ -882,7 +891,7 @@ class WebRegistrationController extends Controller
         $antrian->tanggal_lahir            = $web_registration->tanggal_lahir;
         $antrian->alamat                   = $web_registration->alamat;
         $antrian->pasien_id                = $web_registration->pasien_id;
-        $antrian->ruangan_id               = $web_registration->ruangan_id;
+        $antrian->ruangan_id               = $ruanganId;
         $antrian->tipe_konsultasi_id       = $web_registration->tipe_konsultasi_id;
         $antrian->staf_id                  = $web_registration->staf_id;
         $antrian->reservasi_online         = 1;

@@ -4989,6 +4989,7 @@ class WablasController extends Controller
 
         $antrian = new Antrian;
         $ruangan = Ruangan::find($id) ;
+        $tipe_konsultasi_id = null;
         if ( !is_null($ruangan) ) {
             $tipe_konsultasi_id = $ruangan->default_tipe_konsultasi_id;
         }
