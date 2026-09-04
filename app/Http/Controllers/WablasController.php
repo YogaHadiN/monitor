@@ -4738,7 +4738,10 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $message = $this->pertanyaanPoliYangDituju();
 
-        } elseif ( !is_null($reservasi_online->tipe_konsultasi_id) && is_null($reservasi_online->staf_id)) {
+        } elseif ( !is_null($reservasi_online->tipe_konsultasi_id) && is_null($reservasi_online->staf_id) && !config('features.pool_antrian_enabled')) {
+            // Skip prompt "Silahkan pilih Dokter pemeriksa" di pool mode —
+            // client TIDAK memilih dokter saat pendaftaran (spec dr. Yoga
+            // 2026-09-04). Flow lanjut ke pertanyaan_pembayaran.
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
         } elseif ( is_null($reservasi_online->registrasi_pembayaran_id)) {
