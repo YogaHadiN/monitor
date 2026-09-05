@@ -4154,6 +4154,19 @@ class WablasController extends Controller
                 // === GIGI ===
                 if ($tipeMsg === '2') {
                     $this->chatBotLog(__LINE__);
+
+                    // TEMP GATE (2026-09-05): pendaftaran online gigi disable
+                    // sementara utk semua nomor kecuali dr. Yoga (QA), sampai
+                    // seluruh bug pool-mode flow beres. Hapus block ini setelah
+                    // re-enable.
+                    $whitelistGigi = ['6281381912803'];
+                    if (!in_array((string) $this->no_telp, $whitelistGigi, true)) {
+                        $message  = $this->pesanAntrolDokterGigiNonAktif();
+                        $message .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
+                        $this->autoReply($message);
+                        return false;
+                    }
+
                     $err = $this->validasiDokterPengambilanAntrianDokterGigi();
                     if (!is_null($err)) {
                         $err .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
