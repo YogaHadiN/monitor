@@ -263,8 +263,37 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
+        // Blokir_was: block chat umum, TAPI sunat exempt.
+        // Per instruksi dr. Yoga 2026-09-05: nomor blokir masih boleh
+        // lewat kalau (a) pesan mengandung kata sunat/khitan, atau
+        // (b) sudah ada BotSession sunat aktif, atau (c) sudah di-tag
+        // chat_sunat manual. Alasannya: konsultasi sunat = flow
+        // bisnis penting, jangan ke-block karena nomor pernah spam
+        // chat umum.
         if ( BlokirWa::where('no_telp', $this->no_telp)->exists() ) {
-            return;
+            $msgLower = mb_strtolower(trim((string) $this->message));
+            $hasSunatKeyword = $msgLower !== ''
+                && (str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan'));
+
+            $hasActiveSunatSession = !empty($this->no_telp)
+                && \App\Models\BotSession::where('no_telp', (string) $this->no_telp)
+                    ->where('is_complete', false)
+                    ->exists();
+
+            $hasChatSunatFlag = !empty($this->no_telp)
+                && \DB::table('chat_sunat_manual_flags')
+                    ->where('no_telp', (string) $this->no_telp)
+                    ->exists();
+
+            if (!$hasSunatKeyword && !$hasActiveSunatSession && !$hasChatSunatFlag) {
+                return;
+            }
+            \Log::info('BLOKIR_WA_BYPASS_SUNAT', [
+                'phone'   => $this->no_telp,
+                'keyword' => $hasSunatKeyword,
+                'session' => $hasActiveSunatSession,
+                'flag'    => $hasChatSunatFlag,
+            ]);
         }
 
         // Phase D opt-out: deteksi paling dini supaya tidak ke-intercept
