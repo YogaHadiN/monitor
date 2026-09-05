@@ -191,78 +191,64 @@ function clear(panggilan) {
     $("#timbang_tensi").html("");
 }
 function pglPasien(sound) {
-    var x = document.getElementById("myAudio");
-    var m = [];
-    for (var i = 0, len = sound.length; i < len; i++) {
-        m[i] = document.getElementById("audio_" + sound[i]);
-    }
-    if (m[0]) {
-        x.onended = function () {
-            m[0].play();
-        };
+    // Bug fix 2026-09-05: sebelumnya pakai document.getElementById per
+    // item + chain onended. Untuk sound array yg mengulang element sama
+    // (mis. "A222" -> ["a",2,"ratus",2,"puluh",2,...]), DOM element
+    // audio_2 shared -> assignment onended terakhir overwrite yang
+    // sebelumnya -> chain putus (contoh: "A 2" saja, sisanya skip).
+    //
+    // Solusi: bangun map src per key, lalu play sequential dgn instance
+    // Audio baru per step (fresh onended per step, tidak share).
+    var bell = document.getElementById("myAudio");
+
+    // Build src map dari audio element yg sudah ada di blade.
+    var srcMap = {};
+    for (var i = 0; i < sound.length; i++) {
+        var key = sound[i];
+        if (srcMap[key] !== undefined) continue;
+        var el = document.getElementById("audio_" + key);
+        if (!el) {
+            srcMap[key] = null;
+            continue;
+        }
+        var srcEl = el.querySelector("source");
+        srcMap[key] = srcEl
+            ? srcEl.getAttribute("src")
+            : el.src || null;
     }
 
-    if (m[1] && m[0]) {
-        m[0].onended = function () {
-            m[1].play();
+    function playAt(idx) {
+        if (idx >= sound.length) return;
+        var key = sound[idx];
+        var src = srcMap[key];
+        if (!src) {
+            console.warn("pglPasien: audio_" + key + " tidak ada, skip");
+            playAt(idx + 1);
+            return;
+        }
+        var a = new Audio(src);
+        a.onended = function () {
+            playAt(idx + 1);
         };
+        var p = a.play();
+        if (p && typeof p.catch === "function") {
+            p.catch(function (err) {
+                console.error("pglPasien play fail:", key, err);
+                playAt(idx + 1);
+            });
+        }
     }
-    if (m[2] && m[1]) {
-        m[1].onended = function () {
-            m[2].play();
-        };
+
+    bell.onended = function () {
+        playAt(0);
+    };
+    var bp = bell.play();
+    if (bp && typeof bp.catch === "function") {
+        bp.catch(function () {
+            // Kalau bell fail (autoplay policy), tetap play sound chain
+            playAt(0);
+        });
     }
-    if (m[3] && m[2]) {
-        m[2].onended = function () {
-            m[3].play();
-        };
-    }
-    if (m[4] && m[3]) {
-        m[3].onended = function () {
-            m[4].play();
-        };
-    }
-    if (m[5] && m[4]) {
-        m[4].onended = function () {
-            m[5].play();
-        };
-    }
-    if (m[6] && m[5]) {
-        m[5].onended = function () {
-            m[6].play();
-        };
-    }
-    if (m[7] && m[6]) {
-        m[6].onended = function () {
-            m[7].play();
-        };
-    }
-    if (m[8] && m[7]) {
-        m[7].onended = function () {
-            m[8].play();
-        };
-    }
-    if (m[9] && m[8]) {
-        m[8].onended = function () {
-            m[9].play();
-        };
-    }
-    if (m[10] && m[9]) {
-        m[9].onended = function () {
-            m[10].play();
-        };
-    }
-    if (m[11] && m[10]) {
-        m[10].onended = function () {
-            m[11].play();
-        };
-    }
-    if (m[12] && m[11]) {
-        m[11].onended = function () {
-            m[12].play();
-        };
-    }
-    x.play();
 }
 function panggilPasien(antrian_id) {
     $.get(
@@ -282,6 +268,8 @@ function displayRuangan(ruangan) {
         return "Ruang Periksa 1";
     } else if (ruangan == "ruangperiksadua") {
         return "Ruang Periksa 2";
+    } else if (ruangan == "ruangperiksatiga") {
+        return "Ruang Periksa 3";
     } else if (ruangan == "loketsatu") {
         return "Loket Satu";
     } else if (ruangan == "loketdua") {
