@@ -934,7 +934,7 @@
 
 </script>
 
-<script src="{!! secure_url("js/antrian.js?ver=5") !!}"></script>
+<script src="{!! secure_url("js/antrian.js?ver=6") !!}"></script>
 {{-- <script src="{!!secure_url("js/inspinia.js") !!}"></script> --}}
 </body>
 </html>

@@ -190,15 +190,54 @@ function clear(panggilan) {
     $("#pendaftaran").html("");
     $("#timbang_tensi").html("");
 }
+// Global audio queue — prevent race kalau 2 dokter Panggil bersamaan
+// dari 2 ruangan berbeda. Panggilan berikut antre, play setelah yg
+// sebelumnya selesai. Per instruksi dr. Yoga 2026-09-05.
+window.__pglQueue = window.__pglQueue || [];
+window.__pglBusy  = window.__pglBusy  || false;
+
 function pglPasien(sound) {
-    // Bug fix 2026-09-05: sebelumnya pakai document.getElementById per
-    // item + chain onended. Untuk sound array yg mengulang element sama
-    // (mis. "A222" -> ["a",2,"ratus",2,"puluh",2,...]), DOM element
-    // audio_2 shared -> assignment onended terakhir overwrite yang
-    // sebelumnya -> chain putus (contoh: "A 2" saja, sisanya skip).
-    //
-    // Solusi: bangun map src per key, lalu play sequential dgn instance
-    // Audio baru per step (fresh onended per step, tidak share).
+    if (!sound || !sound.length) return;
+
+    // Dedupe: kalau panggilan identik sudah di queue / sedang play,
+    // skip. Deteksi via join key. Menghindari double-broadcast yg
+    // fire event 2x utk antrian sama.
+    var key = sound.join("|");
+    if (window.__pglLastKey === key && window.__pglBusy) {
+        console.log("pglPasien: skip duplicate sound", key);
+        return;
+    }
+    for (var q = 0; q < window.__pglQueue.length; q++) {
+        if (window.__pglQueue[q].join("|") === key) {
+            console.log("pglPasien: skip already queued", key);
+            return;
+        }
+    }
+
+    window.__pglQueue.push(sound);
+    if (!window.__pglBusy) {
+        __pglDrain();
+    } else {
+        console.log("pglPasien: queued (" + window.__pglQueue.length + " waiting)");
+    }
+}
+
+function __pglDrain() {
+    if (window.__pglQueue.length === 0) {
+        window.__pglBusy = false;
+        window.__pglLastKey = null;
+        return;
+    }
+    window.__pglBusy = true;
+    var sound = window.__pglQueue.shift();
+    window.__pglLastKey = sound.join("|");
+    __pglPlaySound(sound, function () {
+        // Selesai — proses queue berikutnya
+        __pglDrain();
+    });
+}
+
+function __pglPlaySound(sound, onDone) {
     var bell = document.getElementById("myAudio");
 
     // Build src map dari audio element yg sudah ada di blade.
@@ -218,7 +257,11 @@ function pglPasien(sound) {
     }
 
     function playAt(idx) {
-        if (idx >= sound.length) return;
+        if (idx >= sound.length) {
+            // Chain selesai
+            if (typeof onDone === "function") onDone();
+            return;
+        }
         var key = sound[idx];
         var src = srcMap[key];
         if (!src) {
@@ -228,6 +271,11 @@ function pglPasien(sound) {
         }
         var a = new Audio(src);
         a.onended = function () {
+            playAt(idx + 1);
+        };
+        // Error handler — kalau audio fail load, jangan stuck
+        a.onerror = function () {
+            console.warn("pglPasien: audio " + key + " error, skip");
             playAt(idx + 1);
         };
         var p = a.play();
@@ -242,10 +290,13 @@ function pglPasien(sound) {
     bell.onended = function () {
         playAt(0);
     };
+    // Reset bell posisi ke 0 supaya kalau bell sebelumnya belum finish
+    // (edge case) tetap start dari awal.
+    try { bell.currentTime = 0; } catch (e) {}
     var bp = bell.play();
     if (bp && typeof bp.catch === "function") {
         bp.catch(function () {
-            // Kalau bell fail (autoplay policy), tetap play sound chain
+            // Bell fail (autoplay policy) — tetap play sound chain
             playAt(0);
         });
     }
