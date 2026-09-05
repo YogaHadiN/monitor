@@ -5581,9 +5581,25 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     {
 
         $items = $this->getReservasiOnlineBelumHadirHariIni();
+
+        // Capture nama pasien dari reservasi_online yg BELUM jadi Antrian
+        // sebelum reset (resetWhatsappRegistration akan delete row-nya).
+        // Supaya message konfirmasi bisa sebut siapa yg dibatalkan.
+        $pendingNames = \App\Models\ReservasiOnline::where('no_telp', $this->no_telp)
+            ->whereNotNull('nama')
+            ->where('nama', '!=', '')
+            ->pluck('nama')
+            ->map(fn($n) => ucwords(mb_strtolower(trim((string) $n), 'UTF-8')))
+            ->unique()
+            ->values();
+
         resetWhatsappRegistration($this->no_telp);
 
         if ($items->isEmpty()) {
+            if ($pendingNames->isNotEmpty()) {
+                $namaStr = $pendingNames->implode(', ');
+                return "Reservasi antrian atas nama *{$namaStr}* dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.";
+            }
             return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
         }
 

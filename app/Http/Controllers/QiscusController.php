@@ -4424,6 +4424,11 @@ class QiscusController extends Controller
      */
     private function hapusAntrianWhatsappBotReservasiOnline($hapus_antrian = true)
     {
+        // Kumpulkan nama pasien yg dibatalkan (dari Antrian aktif + ReservasiOnline
+        // pending) sebelum destructive ops, supaya message konfirmasi bisa
+        // sebut siapa. Kalau tidak, user tidak tahu Halida/Andi/dsb yg dibatalkan.
+        $names = collect();
+
         if ( $hapus_antrian ) {
             $from = date('Y-m-d 00:00:00');
             $to = date('Y-m-d 23:59:59');
@@ -4439,13 +4444,30 @@ class QiscusController extends Controller
                 ->get();
 
             foreach ($antrians as $antrian) {
+                if (!empty($antrian->nama)) $names->push($antrian->nama);
                 $antrian->dibatalkan_pasien = 1;
                 $antrian->save();
                 $antrian->antriable->delete();
                 $antrian->delete();
             }
         }
+
+        $names = $names->concat(
+            \App\Models\ReservasiOnline::where('no_telp', $this->no_telp)
+                ->whereNotNull('nama')
+                ->where('nama', '!=', '')
+                ->pluck('nama')
+        )
+        ->map(fn($n) => ucwords(mb_strtolower(trim((string) $n), 'UTF-8')))
+        ->unique()
+        ->values();
+
         resetWhatsappRegistration( $this->no_telp );
+
+        if ($names->isNotEmpty()) {
+            $namaStr = $names->implode(', ');
+            return "Reservasi antrian atas nama *{$namaStr}* dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.";
+        }
         return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
     }
 
