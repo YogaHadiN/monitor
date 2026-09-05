@@ -49,7 +49,7 @@
           type="button"
           id="btn-cancel"
           class="btn btn-danger w-100"
-          data-cancel-url="{{ route('reservations.destroy', $schedulled_reservation->id) }}">
+          data-cancel-url="{{ route('schedulled_reservations.destroy', $schedulled_reservation->id) }}">
           Batalkan Reservasi
         </button>
         </div>

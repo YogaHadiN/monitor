@@ -85,6 +85,8 @@ Route::get('/reservasi/{id}/checkin', [\App\Http\Controllers\ReservasiOnlineCont
     ->name('reservations.checkin');
 Route::delete('/reservasi/{reservasi}', [\App\Http\Controllers\ReservasiOnlineController::class, 'destroy'])
     ->name('reservations.destroy');
+Route::delete('/schedulled_reservation/{id}', [\App\Http\Controllers\SchedulledReservationController::class, 'destroy'])
+    ->name('schedulled_reservations.destroy');
 
 Route::get('watzap/cek_api', [\App\Http\Controllers\WatzapController::class, 'cek_api']);
 Route::get('watzap/get_webhook', [\App\Http\Controllers\WatzapController::class, 'get_webhook']);
