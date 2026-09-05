@@ -29,13 +29,14 @@ channel.bind(event_name, function (data) {
             }
             var ruangan = data.ruangan;
             var antrian_id = data.antrian_id;
+            var seq = data.seq || "";
             $.get(
                 base +
                     "/antrianperiksa/monitor/getDataBaru/" +
                     antrian_id +
                     "/" +
                     panggil_pasien,
-                {},
+                { seq: seq },
                 function (data, textStatus, jqXHR) {
                     if (panggil_pasien == 1) {
                         if (data.antrian_dipanggil.nomor_antrian !== null) {

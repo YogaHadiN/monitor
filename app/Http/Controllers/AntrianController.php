@@ -275,9 +275,50 @@ class AntrianController extends Controller
 	}
 
 	public function updateJumlahAntrianBaru( $antrian_id, $panggil_pasien = true ){
+        // Correlation ID (seq) dari client — panggil.js forward dari
+        // FormSubmitted payload via query param ?seq=... supaya log
+        // monitor bisa di-join dgn log atika (PANGGIL_START, PANGGIL_SYNC_DONE,
+        // FORM_SUBMITTED_BROADCAST).
+        $seq = request()->query('seq');
+
         $antrian_dipanggil       = Antrian::with('antriable')
                                     ->where('id', $antrian_id)
                                     ->first();
+
+        // Race detector: kalau delta antara antrian->updated_at (di atika)
+        // vs now (di monitor) < 2 detik, itu wajar — broadcast baru fire.
+        // Kalau > 10 detik, mungkin state stale (broadcast delay atau retry).
+        if ($antrian_dipanggil) {
+            $updatedAgo = now()->diffInSeconds($antrian_dipanggil->updated_at, false);
+            \Log::info('MONITOR_GETDATABARU', [
+                'seq'            => $seq,
+                'antrian_id'     => (int) $antrian_id,
+                'panggil_pasien' => (int) $panggil_pasien,
+                'ruangan_id'     => (int) $antrian_dipanggil->ruangan_id,
+                'staf_id'        => (int) $antrian_dipanggil->staf_id,
+                'antriable_type' => $antrian_dipanggil->antriable_type,
+                'updated_at'     => (string) $antrian_dipanggil->updated_at,
+                'updated_ago_s'  => $updatedAgo,
+                'ts_us'          => microtime(true),
+            ]);
+
+            // Warning kalau antrian updated_at "ke depan" (drift) atau
+            // > 10s (kemungkinan retry broadcast baca state basi).
+            if ($updatedAgo > 10 || $updatedAgo < -1) {
+                \Log::warning('MONITOR_GETDATABARU_STALE_SUSPECT', [
+                    'seq'           => $seq,
+                    'antrian_id'    => (int) $antrian_id,
+                    'updated_ago_s' => $updatedAgo,
+                    'note'          => 'delta updated_at vs now di luar wajar — cek race',
+                ]);
+            }
+        } else {
+            \Log::warning('MONITOR_GETDATABARU_MISSING', [
+                'seq'        => $seq,
+                'antrian_id' => (int) $antrian_id,
+            ]);
+        }
+
         $ruangans = Ruangan::with('antrian')
                             ->where('ruang_periksa', 1)
                             ->get();
