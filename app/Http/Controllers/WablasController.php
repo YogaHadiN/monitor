@@ -4161,6 +4161,14 @@ class WablasController extends Controller
                         return false;
                     }
                     $reservasi_online->tipe_konsultasi_id = $tipeDbInt;
+                    // Pool mode: skip pilih dokter → ruangan_id perlu di-derive
+                    // dari TipeKonsultasi (kalau tidak, antrian.insert fail
+                    // krn ruangan_id NOT NULL). Case Yoga 2026-09-05 08:20.
+                    if (config('features.pool_antrian_enabled')) {
+                        $reservasi_online->staf_id              = null;
+                        $reservasi_online->petugas_pemeriksa_id = null;
+                        $reservasi_online->ruangan_id           = optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
+                    }
                     $reservasi_online->save();
 
                 // === USG ===
@@ -4205,6 +4213,13 @@ class WablasController extends Controller
                     } else {
                         // jadwal & petugas ada → lanjut
                         $reservasi_online->tipe_konsultasi_id = 6;
+                        // Pool mode: derive ruangan_id dari TipeKonsultasi
+                        // (sama seperti gigi — antrians.ruangan_id NOT NULL).
+                        if (config('features.pool_antrian_enabled')) {
+                            $reservasi_online->staf_id              = null;
+                            $reservasi_online->petugas_pemeriksa_id = null;
+                            $reservasi_online->ruangan_id           = optional(\App\Models\TipeKonsultasi::find(6))->ruangan_id;
+                        }
                         $reservasi_online->save();
                     }
 
@@ -5456,21 +5471,31 @@ class WablasController extends Controller
             $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
         } elseif ($tipe_id === 2) {
             // Dokter gigi
-            // Ambil jam mulai dari jadwal gigi bila tersedia (contoh `$this->jadwalGigi['jam_mulai'] = "17:00"`).
-            // Di pool mode, petugas_pemeriksa NULL sampai finalisasi antrian — pakai
-            // optional() supaya tidak null-deref. Fallback ke else branch di bawah.
+            // Prioritas sumber jam mulai:
+            //   1. petugas_pemeriksa->jam_mulai_default (kalau sudah ada — non-pool mode)
+            //   2. PetugasPemeriksa earliest tipe=gigi tanggal=hari ini (pool mode default)
+            //      Per instruksi dr. Yoga 2026-09-05: uraian WAJIB sebut jam praktek
+            //      eksplisit + minta scan QR 15 menit sebelumnya, jangan generic.
             $jamMulaiGigiStr = optional($reservasi_online->petugas_pemeriksa)->jam_mulai_default;
+            if (empty($jamMulaiGigiStr)) {
+                $ppGigi = \App\Models\PetugasPemeriksa::query()
+                    ->where('tipe_konsultasi_id', 2)
+                    ->whereDate('tanggal', $now->toDateString())
+                    ->orderBy('jam_mulai', 'asc')
+                    ->first();
+                $jamMulaiGigiStr = optional($ppGigi)->jam_mulai;
+            }
 
             if (!empty($jamMulaiGigiStr)) {
                 $jamMulaiGigi   = $this->parseTodayTime($jamMulaiGigiStr, $tz, $now);
                 $jamTerakhirQR  = $jamMulaiGigi->copy()->subMinutes(15)->format('H:i');
 
-                $lines[] = "- Melakukan *scan QR* di klinik *sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem";
-                $lines[] = "- Nomor Antrian diberikan setelah Scan QR Code dan urutan nomor antrian berdasarkan urutan Scan QR Code";
-                $lines[] = "- Pelayanan Dokter Gigi adalah pelayanan tindakan sehingga tidak bisa diperkiran durasi layanan";
-                $lines[] = "- Pendaftaran dokter gigi secara langsung dimulai jam {$jamMulaiGigi->format('H:i')} hanya bila slot pendaftaran masih tersedia";
+                $lines[] = "- *Dokter Gigi praktek jam {$jamMulaiGigi->format('H:i')}* hari ini.";
+                $lines[] = "- Wajib *scan QR* di klinik *sebelum pukul {$jamTerakhirQR}* (15 menit sebelum jam praktek) — reservasi otomatis dibatalkan sistem kalau lewat.";
+                $lines[] = "- Nomor antrian diberikan setelah scan QR; urutan antrian sesuai urutan scan.";
+                $lines[] = "- Pelayanan Dokter Gigi adalah tindakan sehingga durasi layanan tidak bisa dipastikan.";
             } else {
-                // Fallback bila jadwal gigi belum di-set
+                // Fallback bila jadwal gigi belum di-set utk hari ini
                 $lines[] = '- Melakukan *scan QR* di klinik *paling lambat 15 menit* sebelum jam mulai pemeriksaan gigi.';
                 $lines[] = '- Antrean akan *dibatalkan* apabila terlambat melakukan scan.';
             }
