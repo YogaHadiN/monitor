@@ -263,18 +263,18 @@ class WablasController extends Controller
     }
 
 	public function webhook(){
-        // Blokir_was: block chat umum, TAPI sunat exempt.
-        // Per instruksi dr. Yoga 2026-09-05: nomor blokir masih boleh
-        // lewat kalau (a) pesan mengandung kata sunat/khitan, atau
-        // (b) sudah ada BotSession sunat aktif, atau (c) sudah di-tag
-        // chat_sunat manual. Alasannya: konsultasi sunat = flow
-        // bisnis penting, jangan ke-block karena nomor pernah spam
-        // chat umum.
+        // Blokir_was: block chat umum. Sunat exempt HANYA untuk 2
+        // kondisi vetted:
+        //   (a) BotSession sunat aktif — customer sudah in-flow, jangan
+        //       dipotong di tengah jalan.
+        //   (b) chat_sunat_manual_flags — admin sudah manual tag nomor
+        //       ini sebagai chat sunat legitimate.
+        //
+        // Bypass KEYWORD ("sunat"/"khitan") DIHAPUS per instruksi
+        // dr. Yoga 2026-09-05 (revisi): spammer gampang bypass tinggal
+        // ketik "sunat" di chat. Kalau nomor BlokirWa kirim keyword
+        // sunat/khitan tanpa vetted flag → tetap return (block).
         if ( BlokirWa::where('no_telp', $this->no_telp)->exists() ) {
-            $msgLower = mb_strtolower(trim((string) $this->message));
-            $hasSunatKeyword = $msgLower !== ''
-                && (str_contains($msgLower, 'sunat') || str_contains($msgLower, 'khitan'));
-
             $hasActiveSunatSession = !empty($this->no_telp)
                 && \App\Models\BotSession::where('no_telp', (string) $this->no_telp)
                     ->where('is_complete', false)
@@ -285,12 +285,11 @@ class WablasController extends Controller
                     ->where('no_telp', (string) $this->no_telp)
                     ->exists();
 
-            if (!$hasSunatKeyword && !$hasActiveSunatSession && !$hasChatSunatFlag) {
+            if (!$hasActiveSunatSession && !$hasChatSunatFlag) {
                 return;
             }
-            \Log::info('BLOKIR_WA_BYPASS_SUNAT', [
+            \Log::info('BLOKIR_WA_BYPASS_SUNAT_VETTED', [
                 'phone'   => $this->no_telp,
-                'keyword' => $hasSunatKeyword,
                 'session' => $hasActiveSunatSession,
                 'flag'    => $hasChatSunatFlag,
             ]);
