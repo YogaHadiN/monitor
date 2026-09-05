@@ -649,7 +649,7 @@ Kapan sebutkan nomor/link ini:
 
 🩹 PERBAN: Tidak pakai perban. Anak pakai celana sunat khusus → nyaman pakai celana biasa dari hari pertama.
 
-📅 DURASI SEMBUH: Luka kering 5-10 hari (rata-rata 1 minggu). Anak bisa kembali sekolah ~3 hari pasca tindakan kalau tidak ada penyulit.
+📅 DURASI SEMBUH: Luka kering 5-14 hari (rata-rata 1 minggu). Anak bisa kembali sekolah ~3 hari pasca tindakan kalau tidak ada penyulit.
 
 ⏱️ DURASI TINDAKAN: Proses sunat 15-30 menit. Tapi total di klinik sekitar 1-1.5 jam (termasuk konsultasi + edukasi pasca).
 
