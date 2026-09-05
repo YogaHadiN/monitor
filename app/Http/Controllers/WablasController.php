@@ -5456,8 +5456,10 @@ class WablasController extends Controller
             $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
         } elseif ($tipe_id === 2) {
             // Dokter gigi
-            // Ambil jam mulai dari jadwal gigi bila tersedia (contoh `$this->jadwalGigi['jam_mulai'] = "17:00"`)
-            $jamMulaiGigiStr = $reservasi_online->petugas_pemeriksa->jam_mulai_default;
+            // Ambil jam mulai dari jadwal gigi bila tersedia (contoh `$this->jadwalGigi['jam_mulai'] = "17:00"`).
+            // Di pool mode, petugas_pemeriksa NULL sampai finalisasi antrian — pakai
+            // optional() supaya tidak null-deref. Fallback ke else branch di bawah.
+            $jamMulaiGigiStr = optional($reservasi_online->petugas_pemeriksa)->jam_mulai_default;
 
             if (!empty($jamMulaiGigiStr)) {
                 $jamMulaiGigi   = $this->parseTodayTime($jamMulaiGigiStr, $tz, $now);
