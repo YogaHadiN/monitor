@@ -623,10 +623,29 @@ class WebRegistrationController extends Controller
     }
 
     public function cek($tipe_konsultasi_id){
+        $this->message = null;
+
+        // Guard online_registration_enabled: kalau tidak ada satupun PP
+        // dgn tipe tsb hari ini yg online_registration_enabled=1, tolak
+        // pendaftaran online dari semua channel (web/mobile/kiosk yg pakai
+        // cek() ini). Per instruksi dr. Yoga 2026-09-05.
+        $adaOnline = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
+            ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+            ->where('online_registration_enabled', 1)
+            ->exists();
+        if (!$adaOnline) {
+            $this->message = 'Pendaftaran online untuk tipe konsultasi ini sedang ditutup hari ini. Silakan datang langsung ke klinik.';
+            return [
+                'count'              => 0,
+                'petugas'            => collect(),
+                'message'            => $this->message,
+                'tipe_konsultasi_id' => $tipe_konsultasi_id,
+            ];
+        }
+
         $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                                                 ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                                                 ->get();
-        $this->message = null;
 
         //
         // jika dokter gigi ada tapi belum masuk waktu pendaftaran
