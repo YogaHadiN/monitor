@@ -4174,13 +4174,37 @@ class WablasController extends Controller
                         return false;
                     }
                     $reservasi_online->tipe_konsultasi_id = $tipeDbInt;
-                    // Pool mode: skip pilih dokter → ruangan_id perlu di-derive
-                    // dari TipeKonsultasi (kalau tidak, antrian.insert fail
-                    // krn ruangan_id NOT NULL). Case Yoga 2026-09-05 08:20.
+                    // Pool mode gigi: pilih otomatis dokter yg
+                    // online_registration_enabled=1 (validasi guard di atas
+                    // sudah pastikan minimal 1). Prioritas:
+                    //   1. Dokter yg walk-in (registration_enabled=1) → alur
+                    //      Antrian langsung, schedulled_booking=0.
+                    //   2. Dokter yg hanya booking terjadwal
+                    //      (schedulled_booking_allowed=1) → alur
+                    //      SchedulledReservation, schedulled_booking=1.
+                    // Kalau ada beberapa: pilih jam_mulai paling awal.
                     if (config('features.pool_antrian_enabled')) {
-                        $reservasi_online->staf_id              = null;
-                        $reservasi_online->petugas_pemeriksa_id = null;
-                        $reservasi_online->ruangan_id           = optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
+                        $ppEligible = \App\Models\PetugasPemeriksa::query()
+                            ->where('tipe_konsultasi_id', 2)
+                            ->whereDate('tanggal', $nowJkt->toDateString())
+                            ->where('online_registration_enabled', 1)
+                            ->orderByDesc('registration_enabled')
+                            ->orderBy('jam_mulai', 'asc')
+                            ->first();
+
+                        if ($ppEligible) {
+                            $reservasi_online->staf_id              = $ppEligible->staf_id;
+                            $reservasi_online->petugas_pemeriksa_id = $ppEligible->id;
+                            $reservasi_online->ruangan_id           = $ppEligible->ruangan_id
+                                ?: optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
+                            $reservasi_online->schedulled_booking   = (int) $ppEligible->registration_enabled === 1
+                                ? 0
+                                : (int) $ppEligible->schedulled_booking_allowed;
+                        } else {
+                            $reservasi_online->staf_id              = null;
+                            $reservasi_online->petugas_pemeriksa_id = null;
+                            $reservasi_online->ruangan_id           = optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
+                        }
                     }
                     $reservasi_online->save();
 
@@ -7595,10 +7619,28 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             return $message;
         }
 
+        // 1b) Per instruksi dr. Yoga 2026-09-05: pendaftaran online gigi hanya
+        // boleh kalau ada minimal 1 PetugasPemeriksa gigi hari ini dgn
+        // online_registration_enabled=1. Case drg. Finggar hari ini
+        // online_registration_enabled=0 → sistem harus tolak pendaftaran
+        // online, jangan lempar pasien ke pool tanpa dokter yg mau terima.
+        $adaDokterGigiOnline = \App\Models\PetugasPemeriksa::query()
+            ->where('tipe_konsultasi_id', 2)
+            ->whereDate('tanggal', $nowJkt->toDateString())
+            ->where('online_registration_enabled', 1)
+            ->exists();
+        if (!$adaDokterGigiOnline) {
+            $message  = $this->pesanAntrolDokterGigiNonAktif();
+            $message .= PHP_EOL . PHP_EOL . 'Silakan datang langsung ke klinik atau ketik "Jadwal Dokter Gigi" untuk melihat jadwal hari lain.';
+            $message .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
+            return $message;
+        }
+
         $query = \App\Models\PetugasPemeriksa::query()
             ->with(['staf','tipe_konsultasi'])
             ->where('tipe_konsultasi_id', 2)
             ->whereDate('tanggal', $nowJkt->toDateString())
+            ->where('online_registration_enabled', 1)
             ->where('schedulled_booking_allowed', 1)
             ->orderBy('jam_mulai_default', 'asc');
 
