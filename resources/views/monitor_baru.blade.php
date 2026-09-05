@@ -75,7 +75,12 @@
         color: #fff;
     }
     .panel_antrian_terakhir{
-        height: 260px !important;
+        height: auto !important;
+        min-height: 0 !important;
+        padding-bottom: 8px !important;
+    }
+    .panel_antrian_terakhir table.below_antrian_pemeriksaan {
+        margin-bottom: 0 !important;
     }
     .panel_antrian_terakhir table.below_antrian_pemeriksaan > tbody > tr > td,
     .panel_antrian_terakhir table.below_antrian_pemeriksaan > thead > tr > th {
