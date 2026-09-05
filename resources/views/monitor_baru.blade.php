@@ -431,8 +431,8 @@
                     <div class="title_antrian_farmasi">
                         Antrian Pemeriksaan
                     </div>
-                      <span id="nomor_panggilan" class="biggest" >A32</span>
-                      <div class="text-red"><strong id="poli_panggilan">Ruang Periksa 1</strong></div>
+                      <span id="nomor_panggilan" class="biggest" >-</span>
+                      <div class="text-red"><strong id="poli_panggilan">-</strong></div>
                   </div>
                 </div>
             </div>
@@ -934,7 +934,7 @@
 
 </script>
 
-<script src="{!! secure_url("js/antrian.js?ver=2") !!}"></script>
+<script src="{!! secure_url("js/antrian.js?ver=3") !!}"></script>
 {{-- <script src="{!!secure_url("js/inspinia.js") !!}"></script> --}}
 </body>
 </html>
