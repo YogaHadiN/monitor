@@ -75,7 +75,12 @@
         color: #fff;
     }
     .panel_antrian_terakhir{
-        height: 205px !important;
+        height: 260px !important;
+    }
+    .panel_antrian_terakhir table.below_antrian_pemeriksaan > tbody > tr > td,
+    .panel_antrian_terakhir table.below_antrian_pemeriksaan > thead > tr > th {
+        padding: 6px 8px !important;
+        line-height: 1.2;
     }
     .table-farmasi{
         font-size: 18px;
@@ -351,7 +356,7 @@
         background-color: #fff;
     }
     .below_antrian_pemeriksaan {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 900;
     }
     .borderless {
