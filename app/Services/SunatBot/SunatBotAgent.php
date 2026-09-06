@@ -766,7 +766,7 @@ CONTOH 3 SKIP (customer langsung harga):
 CONTOH 4 SKIP (lead sudah pernah tercapture, customer lanjut nanya harga):
   Session data sebelumnya: {nama_orang_tua: "Rina", domisili: "Depok"}
   Customer: "Berapa biaya?"
-  Bot: "Untuk biaya sunat tergantung usia dan postur tubuh anaknya kak."
+  Bot: "Untuk sunat di SunatBoy kak: *Anak Rp 2.500.000* (usia <17 tahun, postur non-gemuk), *Dewasa atau kondisi postur gemuk Rp 3.500.000*. Kalau kakak mau saya kalkulasi pasti sesuai kondisi anak, boleh infokan usia + posturnya ya kak."
        "Boleh infokan usia anaknya kak?"    ← LANGSUNG lompat ke usia, tidak re-tanya nama/domisili yang sudah ada
 
 ═══ ⚠️ HARGA vs BOOKING — 2 FLOW BERBEDA, JANGAN CAMPUR ⚠️ ═══
@@ -819,8 +819,10 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
 🎯 CARA KERJA:
 
 1. **Customer minta harga / PL / berapa biaya / mahar:**
-   Reply text pengantar (satu bubble singkat): "Untuk biaya sunat tergantung usia dan postur tubuh anaknya kak."
-   Lalu langsung tanya field pertama yang belum terisi (mulai dari nama).
+   Reply text pengantar (satu bubble): sebutkan LANGSUNG dua harga supaya customer tidak menunggu:
+   > "Untuk sunat di SunatBoy kak: **Anak Rp 2.500.000** (usia <17 tahun, postur non-gemuk), **Dewasa atau kondisi postur gemuk Rp 3.500.000**. Kalau kakak mau saya kalkulasi pasti sesuai kondisi anak, boleh infokan usia + posturnya ya kak."
+   Setelah itu — kalau customer mau lanjut kalkulasi (jawab usia/postur) — masuk HARGA flow (call `save_harga_data` + tanya field berikutnya). Kalau customer belum reply detail, TIDAK usah force tanya field satu-satu di turn itu — cukup 1 bubble opener di atas + tanya nama sekali.
+   🚫 JANGAN pakai opener lama "Untuk biaya sunat tergantung usia dan postur tubuh anaknya kak" — itu bikin customer harus tunggu lagi. Sebut kedua angka duluan.
    Catatan: "mahar" = istilah lokal untuk biaya sunat, sama persis dgn "harga/biaya" → tetap masuk HARGA flow.
    ⚠️ Kalau customer tanya multi-topic dalam 1 pesan (mis. "sistem, lokasi, mahar berapa?"), setelah call get_intent_response utk topic media (metode/lokasi), TETAP wajib open HARGA flow di text penutup — jangan biarkan pertanyaan mahar tidak ter-address.
 
@@ -932,7 +934,7 @@ Field opsional: `sudah_tahu_metode` ("ya"/"tidak").
 
 CONTOH GOOD FLOW:
   Customer: "Berapa harganya kak?"
-  Bot: "Untuk biaya sunat tergantung usia dan postur tubuh anaknya kak."
+  Bot: "Untuk sunat di SunatBoy kak: *Anak Rp 2.500.000* (usia <17 tahun, postur non-gemuk), *Dewasa atau kondisi postur gemuk Rp 3.500.000*. Kalau kakak mau saya kalkulasi pasti sesuai kondisi anak, boleh infokan usia + posturnya ya kak."
        "Kalo boleh tau dengan kakak siapa?"
   Customer: "Saya Yeni dari Tangerang, anak 8 tahun"
   → save_harga_data(nama_orang_tua="Yeni", domisili="Tangerang", usia_anak="8 tahun")
@@ -2584,17 +2586,23 @@ PROMPT;
         //    menonton). Sekarang bundle cuma metode → quote, delay bikin
         //    bot silent tanpa konteks.
 
-        // 5. Quote harga paket — pilih slug berdasarkan usia:
+        // 5. Quote harga paket — pilih slug berdasarkan usia ATAU postur:
         //   - usia_anak >= 17 tahun (satuan=tahun) → quote_harga_paket_dewasa
         //     (Rp 3.500.000, konten manfaat medis dewasa). Per instruksi
         //     dr. Yoga 2026-08-16.
+        //   - postur_tubuh = 'gemuk' → juga Rp 3.500.000 (kompleksitas
+        //     tindakan naik = setara dewasa). Per instruksi dr. Yoga
+        //     2026-09-06 kasus 62811942294.
         //   - kalau promo aktif → quote_harga_paket_promo (override anak).
         //   - default → quote_harga_paket (Rp 2.500.000 + hadiah anak).
         $usiaVal   = (int) $session->getData('usia_anak');
         $usiaSat   = (string) $session->getData('usia_anak_satuan');
+        $posturVal = mb_strtolower(trim((string) $session->getData('postur_tubuh')));
         $isDewasa  = ($usiaSat === 'tahun' && $usiaVal >= 17);
-        $quoteSlug = $isDewasa ? 'quote_harga_paket_dewasa' : 'quote_harga_paket';
-        if (!$isDewasa) {
+        $isGemuk   = ($posturVal === 'gemuk');
+        $useDewasaPrice = $isDewasa || $isGemuk;
+        $quoteSlug = $useDewasaPrice ? 'quote_harga_paket_dewasa' : 'quote_harga_paket';
+        if (!$useDewasaPrice) {
             $promoIntent = BotIntent::where('intent', 'quote_harga_paket_promo')
                 ->where('active', true)->first();
             if ($promoIntent !== null) {
@@ -2610,7 +2618,7 @@ PROMPT;
         //       3 anak: diskon Rp 1jt   → total Rp 6.500.000
         //       ≥4 anak: hubungi admin utk custom quote.
         $jml = (int) $session->getData('jumlah_anak');
-        if ($jml >= 2 && !$isDewasa) {
+        if ($jml >= 2 && !$useDewasaPrice) {
             $diskonBubble = null;
             if ($jml === 2) {
                 $diskonBubble = "🎉 *Diskon Rombongan* untuk 2 anak:\n"
