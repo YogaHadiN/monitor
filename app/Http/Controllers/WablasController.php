@@ -7422,9 +7422,26 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         // punya antrian aktif hari ini (per instruksi dr. Yoga
         // 2026-08-31). Skip kalau text sudah punya sentinel footer
         // (dari pesanBalasanBilaTerdaftar dsb) supaya tidak dobel.
+        //
+        // Skip juga kalau pesan adalah konfirmasi pembatalan — antrian
+        // baru saja dihapus / reset jadi footer menu (batalkan / pilih
+        // dokter / cek antrian) tidak relevan lagi. Deteksi via
+        // beberapa frasa canonical dari cancel flow.
         $footerSentinel = 'Balas *cek antrian*';
+        $cancelPhrases  = [
+            'dibatalkan. Mohon dapat mengulangi kembali',
+            'Semua fitur WhatsApp telah di-reset',
+        ];
+        $isCancelConfirm = false;
+        foreach ($cancelPhrases as $phrase) {
+            if (strpos($text, $phrase) !== false) {
+                $isCancelConfirm = true;
+                break;
+            }
+        }
         if (
-            strpos($text, $footerSentinel) === false
+            !$isCancelConfirm
+            && strpos($text, $footerSentinel) === false
             && $this->phoneHasActiveAntrianToday()
         ) {
             $text .= $this->footerAntrian();
