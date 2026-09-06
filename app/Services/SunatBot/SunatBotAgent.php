@@ -803,10 +803,12 @@ Angka harga HANYA muncul dari tool `send_harga_quote` (template quote_harga_pake
 Optional (JANGAN tanya proaktif, save kalau customer volunteer):
 - `domisili`              — kota / kecamatan (Tangerang / Jakarta / dst). Tidak affect harga.
 
-🚫 **DILARANG tanya berat badan** — cukup postur_tubuh (gemuk/tidak). Kalau customer volunteer BB, boleh save (schema masih terima), tapi jangan pernah minta.
+🚫 **DILARANG tanya berat badan / tinggi badan** — cukup postur_tubuh (gemuk/tidak). Kalau customer volunteer BB, boleh save (schema masih terima), tapi jangan pernah minta.
+
+🆕 **KALAU CUSTOMER VOLUNTEER BB + TINGGI SEKALIGUS** (mis. "BB 26 tinggi 118", "26 kg 118 cm", "berat 20 tinggi 110"), WAJIB call `save_harga_data(berat_badan_anak=..., tinggi_badan_anak=...)` di turn itu. Backend auto-derive `postur_tubuh` via BMI — kamu TIDAK PERLU tanya postur lagi. Skip langsung ke field berikutnya yg belum ada (indikasi_khitan / riwayat_kesehatan). Kalau customer cuma sebut salah satu (BB saja atau tinggi saja), JANGAN infer BMI — pass field itu apa adanya + tetap tanya postur eksplisit.
 
 🚫🚫🚫 **DILARANG INFER FIELD DARI KONTEKS** — WAJIB tanya customer eksplisit untuk setiap field. Contoh bug yg sering terjadi (JANGAN DIULANG):
-- ❌ Customer sebut "BB 25kg usia 6th" → agent auto-set postur_tubuh="tidak gemuk" tanpa tanya. **SALAH.** BB angka tidak dijadikan basis postur — WAJIB tanya "Postur anaknya gemuk atau tidak gemuk kak?"
+- ❌ Customer sebut cuma "BB 25kg usia 6th" (tanpa tinggi) → agent auto-set postur_tubuh="tidak gemuk" tanpa tanya. **SALAH.** BB angka saja tidak dijadikan basis postur — WAJIB tanya "Postur anaknya gemuk atau tidak gemuk kak?" (kalau BB+tinggi dua-duanya ada, BMI auto-derive, itu lain kasus)
 - ❌ Customer jawab indikasi_khitan="tidak ada" → agent auto-set riwayat_kesehatan="tidak ada" tanpa tanya. **SALAH.** Indikasi khitan (keluhan penis) ≠ riwayat kesehatan (jantung/autisme/pembekuan darah). WAJIB tanya "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
 - ❌ Customer jawab satu field, agent langsung save 3 field sekaligus (usia + postur + riwayat). **SALAH.** Cuma save field yg customer SEBUT EKSPLISIT. Field lain tetap missing → tanya di turn berikutnya.
 
@@ -1338,8 +1340,9 @@ PROMPT;
                             'jumlah_anak'       => ['type' => 'integer', 'description' => 'JUMLAH anak yg mau sunat (1, 2, 3, dst). Kalau customer sebut singular ("anak saya"), default 1. Kalau customer sebut "2 anak" / "kembar" / "sepupu juga ikut sunat", pass jumlah aktual. Dipakai utk hitung diskon rombongan (2 anak: -500rb, 3 anak: -1jt).'],
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan". Kalau >1 anak, sebutkan usia setiap anak dgn koma (mis. "7 tahun, 5 tahun").'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'OPSIONAL — jangan pernah TANYA berat badan. Postur_tubuh (gemuk/tidak) sudah cukup utk risk assessment. Field ini masih ada untuk backward compat: kalau customer volunteering angka BB dalam pesan, boleh pass; kalau tidak, SKIP param ini (jangan pass 0).'],
+                            'tinggi_badan_anak' => ['type' => 'number', 'description' => 'OPSIONAL — jangan pernah TANYA tinggi badan. Kalau customer volunteering angka tinggi (cm), pass. Kalau BB + tinggi keduanya di-pass di turn yg sama (atau salah satu sudah tersimpan sebelumnya), backend AUTO-DERIVE postur_tubuh via BMI — kamu TIDAK PERLU tanya postur lagi.'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas isi jawaban customer soal keluhan/alasan medis. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
-                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU (agent) yang klasifikasi berdasarkan jawaban DIREK customer soal postur. "tidak gemuk"/"biasa"/"kurus" → "tidak gemuk". "proporsional"/"sedang" → "normal". "gemuk"/"obesitas"/"gendut"/"besar" → "gemuk". 🚫 DILARANG infer dari berat badan (mis. "40kg utk 11 thn = gemuk"). BB bukan indikator akurat — anak tinggi 40kg wajar. WAJIB tanya postur eksplisit ke customer dan pakai kata2 customer sendiri.'],
+                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU (agent) yang klasifikasi berdasarkan jawaban DIREK customer soal postur. "tidak gemuk"/"biasa"/"kurus" → "tidak gemuk". "proporsional"/"sedang" → "normal". "gemuk"/"obesitas"/"gendut"/"besar" → "gemuk". 🚫 DILARANG infer dari berat badan saja. TAPI kalau customer volunteer BB DAN tinggi (mis. "BB 26 tinggi 118"), JANGAN pass field ini — pass berat_badan_anak + tinggi_badan_anak saja, backend auto-derive via BMI.'],
                             'riwayat_kesehatan' => ['type' => 'string', 'description' => 'ringkas isi jawaban. Kalau customer bilang "tidak ada"/"sehat"/"gak ada"/"nihil", save "tidak ada".'],
                             'perlu_review_dokter' => ['type' => 'boolean', 'description' => 'HASIL KLASIFIKASI KAMU: true jika ada faktor risiko yg butuh assessment dokter (postur gemuk/obesitas, indikasi keluhan medis nyata BUKAN cuma "mau khitan", atau riwayat penyakit signifikan seperti jantung/autisme/kelainan pembekuan darah/asma berat). false jika semua safety-field benign (tidak gemuk, tidak ada keluhan, tidak ada riwayat). WAJIB pass ketika kamu save salah satu field: indikasi_khitan / postur_tubuh / riwayat_kesehatan.'],
                             'sudah_tahu_metode' => ['type' => 'string', 'description' => '"ya" atau "tidak"'],
@@ -1372,8 +1375,9 @@ PROMPT;
                             'nama_panggilan'    => ['type' => 'string', 'description' => 'nama PANGGILAN / nickname (mis. "Aiman", "Nio"). Biasanya 1 kata, sering = kata pertama dari nama lengkap.'],
                             'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan (mis. "7 tahun" / "8 bulan")'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'OPSIONAL — jangan pernah TANYA berat badan. Postur_tubuh (gemuk/tidak) sudah cukup. Kalau customer volunteering angka BB, boleh pass; kalau tidak, SKIP param ini.'],
+                            'tinggi_badan_anak' => ['type' => 'number', 'description' => 'OPSIONAL — jangan tanya. Kalau customer volunteer tinggi (cm) bersama BB, pass. Backend auto-derive postur_tubuh via BMI — kamu tidak perlu tanya postur.'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas jawaban customer. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
-                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU klasifikasi berdasarkan jawaban customer. "tidak gemuk"/"biasa"/"kurus" → "tidak gemuk". "proporsional"/"sedang" → "normal". "gemuk"/"obesitas"/"gendut"/"besar" → "gemuk".'],
+                            'postur_tubuh'      => ['type' => 'string', 'enum' => ['gemuk', 'tidak gemuk', 'normal'], 'description' => 'KAMU klasifikasi berdasarkan jawaban customer. "tidak gemuk"/"biasa"/"kurus" → "tidak gemuk". "proporsional"/"sedang" → "normal". "gemuk"/"obesitas"/"gendut"/"besar" → "gemuk". Kalau BB+tinggi keduanya sudah customer sebut, JANGAN pass ini — biar backend auto-derive.'],
                             'riwayat_kesehatan' => ['type' => 'string', 'description' => 'ringkas jawaban. Kalau customer bilang "tidak ada"/"sehat"/"gak ada"/"nihil", save "tidak ada".'],
                             'perlu_review_dokter' => ['type' => 'boolean', 'description' => 'HASIL KLASIFIKASI KAMU: true jika ada faktor risiko yg butuh assessment dokter (postur gemuk/obesitas, indikasi keluhan medis nyata BUKAN cuma "mau khitan", riwayat penyakit signifikan spt jantung/autisme/kelainan pembekuan/asma berat). false jika semua safety-field benign. WAJIB pass ketika save salah satu field: indikasi_khitan / postur_tubuh / riwayat_kesehatan.'],
                         ],
@@ -1702,6 +1706,10 @@ PROMPT;
             $session->setData('booking_berat_badan_anak', (float) $args['berat_badan_anak']);
             $saved[] = 'booking_berat_badan_anak';
         }
+        if (isset($args['tinggi_badan_anak']) && is_numeric($args['tinggi_badan_anak'])) {
+            $session->setData('booking_tinggi_badan_anak', (float) $args['tinggi_badan_anak']);
+            $saved[] = 'booking_tinggi_badan_anak';
+        }
 
         // Safety fields (shared dgn HARGA flow — unprefixed).
         foreach (self::BOOKING_SAFETY_FIELDS as $sf) {
@@ -1709,6 +1717,35 @@ PROMPT;
             if ($v !== '') {
                 $session->setData($sf, $v);
                 $saved[] = $sf;
+            }
+        }
+
+        // AUTO-DERIVE postur_tubuh dari BMI kalau BB+tinggi keduanya
+        // ada. Per instruksi dr. Yoga 2026-09-06.
+        $currentPostur = trim((string) ($session->getData('postur_tubuh') ?? ''));
+        $bbSaved       = $session->getData('booking_berat_badan_anak');
+        $tbSaved       = $session->getData('booking_tinggi_badan_anak');
+        if (
+            $currentPostur === ''
+            && is_numeric($bbSaved) && (float) $bbSaved > 0
+            && is_numeric($tbSaved) && (float) $tbSaved > 0
+        ) {
+            $tbNum   = (float) $tbSaved;
+            $tinggiM = $tbNum > 3 ? ($tbNum / 100.0) : $tbNum;
+            if ($tinggiM > 0) {
+                $bmi = ((float) $bbSaved) / ($tinggiM * $tinggiM);
+                $derivedPostur = $bmi >= 25 ? 'gemuk' : 'normal';
+                $session->setData('postur_tubuh', $derivedPostur);
+                $session->setData('postur_tubuh_source', 'bmi_derived');
+                $saved[] = 'postur_tubuh (auto BMI)';
+                Log::info('SUNAT_BOT_AGENT_POSTUR_AUTO_BMI', [
+                    'phone'    => (string) $session->no_telp,
+                    'flow'     => 'booking',
+                    'bb_kg'    => (float) $bbSaved,
+                    'tinggi_cm'=> $tbNum > 3 ? $tbNum : $tbNum * 100,
+                    'bmi'      => round($bmi, 1),
+                    'derived'  => $derivedPostur,
+                ]);
             }
         }
 
@@ -2083,11 +2120,53 @@ PROMPT;
                 $saved[] = 'berat_badan_anak';
             }
         }
+        if (isset($args['tinggi_badan_anak']) && is_numeric($args['tinggi_badan_anak'])) {
+            $tb = (float) $args['tinggi_badan_anak'];
+            if ($tb > 0) {
+                $session->setData('tinggi_badan_anak', $tb);
+                $saved[] = 'tinggi_badan_anak';
+            }
+        }
         if (isset($args['jumlah_anak']) && is_numeric($args['jumlah_anak'])) {
             $jml = max(1, (int) $args['jumlah_anak']);
             $session->setData('jumlah_anak', $jml);
             $saved[] = 'jumlah_anak';
         }
+
+        // AUTO-DERIVE postur_tubuh dari BMI kalau BB+tinggi keduanya
+        // ada tapi postur belum ter-set. Per instruksi dr. Yoga
+        // 2026-09-06 (kasus 62811942294): customer volunteer BB+tinggi
+        // → bot JANGAN tanya postur lagi. Rumus sederhana BMI dewasa:
+        // ≥25 = gemuk, else normal. Tidak pakai persentil CDC per usia
+        // — cukup untuk risk gate di sini.
+        $currentPostur = trim((string) ($session->getData('postur_tubuh') ?? ''));
+        $bbSaved       = $session->getData('berat_badan_anak');
+        $tbSaved       = $session->getData('tinggi_badan_anak');
+        if (
+            $currentPostur === ''
+            && is_numeric($bbSaved) && (float) $bbSaved > 0
+            && is_numeric($tbSaved) && (float) $tbSaved > 0
+        ) {
+            $tbNum = (float) $tbSaved;
+            // Tinggi > 3 dianggap cm, else meter (customer bisa saja
+            // tulis "1.18" atau "118").
+            $tinggiM = $tbNum > 3 ? ($tbNum / 100.0) : $tbNum;
+            if ($tinggiM > 0) {
+                $bmi = ((float) $bbSaved) / ($tinggiM * $tinggiM);
+                $derivedPostur = $bmi >= 25 ? 'gemuk' : 'normal';
+                $session->setData('postur_tubuh', $derivedPostur);
+                $session->setData('postur_tubuh_source', 'bmi_derived');
+                $saved[] = 'postur_tubuh (auto BMI)';
+                Log::info('SUNAT_BOT_AGENT_POSTUR_AUTO_BMI', [
+                    'phone'    => (string) $session->no_telp,
+                    'bb_kg'    => (float) $bbSaved,
+                    'tinggi_cm'=> $tbNum > 3 ? $tbNum : $tbNum * 100,
+                    'bmi'      => round($bmi, 1),
+                    'derived'  => $derivedPostur,
+                ]);
+            }
+        }
+
         $session->save();
 
         // Escalation gate — LLM (agent) yang klasifikasi lewat param
