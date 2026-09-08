@@ -838,6 +838,31 @@ class WablasController extends Controller
                 ) {
                     $this->chatBotLog(__LINE__);
                     $this->autoReply($this->hapusAntrianWhatsappBotReservasiOnline() );
+                } else if ( $this->noTelpDalamChatWithAdmin() ) {
+                    // Chat admin silent mode (dr. Yoga 2026-09-08):
+                    // Customer sudah dalam chat admin state — bot TIDAK
+                    // auto-reply lagi. Sebelum fix ini, message customer
+                    // ("cek antrian", "antrian a144 jam berapa?", dst.)
+                    // masih ditangkap updateNotifikasPanggilanUntukAntrian
+                    // / handler lain di chain 887+ dan dibalas noise
+                    // ("Balasan tidak dikenali", "Halo. Ada yang bisa kami
+                    // bantu?") padahal customer sedang menunggu admin
+                    // real.
+                    //
+                    // Pesan sudah diarsipkan chat_admin=1 di line 665
+                    // (Message::create), muncul di /messages panel utk
+                    // dibalas admin manual. 'akhiri' sudah di-handle di
+                    // line 758 di atas — kalau sampai sini artinya bukan
+                    // command exit.
+                    $this->chatBotLog(__LINE__);
+                    $this->chatBotLog('CHAT_ADMIN_SILENT — skip bot auto-reply');
+                    if (class_exists(\App\Events\RefreshDiscussion::class)) {
+                        event(new \App\Events\RefreshDiscussion($this->no_telp));
+                    }
+                    if (class_exists(\App\Events\RefreshChat::class)) {
+                        event(new \App\Events\RefreshChat());
+                    }
+                    return false;
                 } else {
                     if ($this->message_type == 'text') {
                         if ( !is_null(  $this->message  ) ) {
