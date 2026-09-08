@@ -4193,18 +4193,21 @@ class WablasController extends Controller
                     // Pool mode gigi: pilih otomatis dokter yg
                     // online_registration_enabled=1 (validasi guard di atas
                     // sudah pastikan minimal 1). Prioritas:
-                    //   1. Dokter yg walk-in (registration_enabled=1) → alur
-                    //      Antrian langsung, schedulled_booking=0.
-                    //   2. Dokter yg hanya booking terjadwal
-                    //      (schedulled_booking_allowed=1) → alur
-                    //      SchedulledReservation, schedulled_booking=1.
+                    //   - schedulled_booking_allowed=1 → alur
+                    //     SchedulledReservation (schedulled_booking=1) walau
+                    //     dokter juga aktif walk-in. Per spec dr. Yoga
+                    //     2026-09-08: kalau booking terjadwal on + pendaftaran
+                    //     online on, pasien harus dapat SchedulledReservation
+                    //     dulu, bukan nomor Antrian.
+                    //   - schedulled_booking_allowed=0 → alur Antrian langsung
+                    //     (schedulled_booking=0).
                     // Kalau ada beberapa: pilih jam_mulai paling awal.
                     if (config('features.pool_antrian_enabled')) {
                         $ppEligible = \App\Models\PetugasPemeriksa::query()
                             ->where('tipe_konsultasi_id', 2)
                             ->whereDate('tanggal', $nowJkt->toDateString())
                             ->where('online_registration_enabled', 1)
-                            ->orderByDesc('registration_enabled')
+                            ->orderByDesc('schedulled_booking_allowed')
                             ->orderBy('jam_mulai', 'asc')
                             ->first();
 
@@ -4213,9 +4216,9 @@ class WablasController extends Controller
                             $reservasi_online->petugas_pemeriksa_id = $ppEligible->id;
                             $reservasi_online->ruangan_id           = $ppEligible->ruangan_id
                                 ?: optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
-                            $reservasi_online->schedulled_booking   = (int) $ppEligible->registration_enabled === 1
-                                ? 0
-                                : (int) $ppEligible->schedulled_booking_allowed;
+                            $reservasi_online->schedulled_booking   = (int) $ppEligible->schedulled_booking_allowed === 1
+                                ? 1
+                                : 0;
                         } else {
                             $reservasi_online->staf_id              = null;
                             $reservasi_online->petugas_pemeriksa_id = null;
