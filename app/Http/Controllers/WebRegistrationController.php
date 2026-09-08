@@ -199,11 +199,16 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->tanggal_lahir ) &&
             !is_null( $web_registration->alamat ) &&
             is_null( $web_registration->staf_id ) &&
-            !config('features.pool_antrian_enabled')
+            (
+                !config('features.pool_antrian_enabled')
+                || (int) $web_registration->tipe_konsultasi_id === 2
+            )
         ) {
-            // Pool mode: skip step "Pilih Dokter" — client TIDAK memilih
-            // dokter saat pendaftaran (spec dr. Yoga 2026-09-04). Flow
-            // lanjut ke next step tanpa render staf.blade.php.
+            // Dokter gigi (tipe=2) SELALU harus lewat step "Pilih Dokter"
+            // walaupun pool_antrian_enabled=true — karena reservasi terjadwal
+            // gigi butuh assignment ke petugas_pemeriksa spesifik (per spec
+            // dr. Yoga 2026-09-08: booking gigi = schedulled_reservation,
+            // bukan pool). Untuk tipe umum (=1), pool mode tetap skip step ini.
             $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();
