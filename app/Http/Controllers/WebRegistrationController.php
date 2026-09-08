@@ -829,6 +829,24 @@ class WebRegistrationController extends Controller
             return compact('message');
         }
 
+        // Defense-in-depth (dr. Yoga 2026-09-08): kalau petugas_pemeriksa
+        // yg dipilih online_registration_enabled=0 saat finalisasi (mis.
+        // operator flip flag mid-session) → tolak. Guard di submit_tipe /
+        // staf hanya jalan saat entry step, tidak proteksi race condition.
+        if ($web_registration->petugas_pemeriksa_id) {
+            $pp = PetugasPemeriksa::find($web_registration->petugas_pemeriksa_id);
+            if ($pp && !(int) $pp->online_registration_enabled) {
+                $namaDokter = optional($pp->staf)->nama_dengan_gelar ?: 'dokter';
+                $this->message = "Mohon maaf, pendaftaran online ke {$namaDokter} sudah ditutup. Silakan datang langsung ke klinik.";
+                $web_registration->delete();
+                $message = view('web_registrations.message', [
+                    'message'    => $this->message,
+                    'alert_type' => 'alert-danger',
+                ])->render();
+                return compact('message');
+            }
+        }
+
         $web_registration->data_terkonfirmasi = 1;
         $web_registration->save();
 

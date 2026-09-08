@@ -4703,6 +4703,23 @@ class WablasController extends Controller
                 $ulang  = ($msg === 'ulangi'    || $firstChar === '2');
 
                 if ($lanjut) {
+                    // Defense-in-depth (dr. Yoga 2026-09-08): kalau
+                    // petugas_pemeriksa online_registration_enabled=0 saat
+                    // finalisasi → tolak. Guard di step "pilih staf" hanya
+                    // jalan sekali; kalau operator flip flag mid-session,
+                    // tanpa guard ini pasien tetap dapat Antrian/SR.
+                    if ($reservasi_online->petugas_pemeriksa_id) {
+                        $ppFinal = \App\Models\PetugasPemeriksa::find($reservasi_online->petugas_pemeriksa_id);
+                        if ($ppFinal && !(int) $ppFinal->online_registration_enabled) {
+                            $namaDokter = optional($ppFinal->staf)->nama_dengan_gelar ?: 'dokter';
+                            $msg  = "Mohon maaf, pendaftaran online ke *{$namaDokter}* sudah ditutup.";
+                            $msg .= PHP_EOL . 'Silakan datang langsung ke klinik pada jam praktik.';
+                            $msg .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
+                            $this->autoReply($msg);
+                            return;
+                        }
+                    }
+
                     $reservasi_online->reservasi_selesai = 1;
                     $this->chatBotLog(__LINE__);
                     \DB::transaction(function () use ($reservasi_online, $tz) {
