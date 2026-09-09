@@ -36,19 +36,29 @@ class GowaSunatNotifier
         }
 
         try {
-            // FLAG: kalau gowa sunat device sedang di-block, fallback ke
-            // gowa atika. Re-enable: set env GOWA_SUNAT_NOTIFIER_DEVICE=sunat.
-            $device = (string) env('GOWA_SUNAT_NOTIFIER_DEVICE', 'sunat');
+            // Sunat redirect (dr. Yoga 2026-09-09): kalau env GOWA_SUNAT_NOTIFIER_DEVICE
+            // != 'sunat', route ke device override + stamp original_device_id='sunat'
+            // supaya revert mudah nanti (UPDATE ... WHERE original_device_id='sunat').
+            // Atika side handle via Eloquent observer, monitor pakai raw insert
+            // jadi harus manual redirect di sini.
+            $override           = (string) env('GOWA_SUNAT_NOTIFIER_DEVICE', 'sunat');
+            $device             = 'sunat';
+            $originalDeviceId   = null;
+            if ($override !== '' && $override !== 'sunat') {
+                $device           = $override;
+                $originalDeviceId = 'sunat';
+            }
             DB::table('gowa_outbound_messages')->insert([
-                'kind'         => $label,
-                'to_phone'     => $normalized,
-                'to_label'     => 'staff',
-                'device_id'    => $device,
-                'body'         => $message,
-                'status'       => 'pending',
-                'scheduled_at' => now(),
-                'created_at'   => now(),
-                'updated_at'   => now(),
+                'kind'               => $label,
+                'to_phone'           => $normalized,
+                'to_label'           => 'staff',
+                'device_id'          => $device,
+                'original_device_id' => $originalDeviceId,
+                'body'               => $message,
+                'status'             => 'pending',
+                'scheduled_at'       => now(),
+                'created_at'         => now(),
+                'updated_at'         => now(),
             ]);
             return true;
         } catch (\Throwable $e) {
