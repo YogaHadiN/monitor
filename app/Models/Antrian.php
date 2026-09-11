@@ -218,11 +218,20 @@ class Antrian extends Model
                 $antrian_periksa = AntrianPeriksa::find( $antriable_id );
                 $ruangan_id = $antrian_periksa->ruangan_id;
             }
+            // Date filter (dr. Yoga 2026-09-11): tanpa filter tanggal,
+            // query ambil AntrianPeriksa TERTUA (id ASC) tanpa peduli
+            // dari hari mana. Kalau ada leftover AntrianPeriksa dari
+            // kemarin yg nurse lupa selesai (mis. id 442150 nomor 214),
+            // akan muncul sebagai "terpanggil hari ini" padahal ghost.
+            // Kasus 2026-09-11: bot bilang "terpanggil = A214" padahal
+            // max nomor hari ini 145.
+            $today = date('Y-m-d');
             $query  = "SELECT ant.id as antrian_id ";
             $query .= "FROM antrian_periksas as apx ";
             $query .= "JOIN antrians as ant on ant.antriable_id = apx.id and ant.antriable_type = 'App\\\Models\\\AntrianPeriksa' ";
             $query .= "WHERE apx.tenant_id=". session()->get('tenant_id') . " ";
             $query .= "AND apx.ruangan_id = $ruangan_id ";
+            $query .= "AND DATE(apx.created_at) = '{$today}' ";
             $query .= "ORDER BY ant.id asc ";
             $query .= "limit 1";
             $data = DB::select($query);
