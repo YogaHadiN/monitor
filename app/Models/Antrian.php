@@ -211,6 +211,42 @@ class Antrian extends Model
             $this->antriable_type == 'App\Models\AntrianPoli' ||
             $this->antriable_type == 'App\Models\AntrianPeriksa'
         ) {
+            $today = date('Y-m-d');
+            $poolMode = (bool) config('features.pool_antrian_enabled');
+            $tenantId = (int) (session()->get('tenant_id') ?? 1);
+
+            // Pool mode (dr. Yoga 2026-09-12): "terakhir dipanggil"
+            // harus scope per TIPE_KONSULTASI (bukan per ruangan).
+            // Pool antrian tipe umum bisa dipanggil dari R3 atau R4 —
+            // kalau scope per ruangan, WA notif ke pasien tipe umum
+            // hanya tampil last-called dari 1 ruangan saja → pasien
+            // pikir "masih 116" padahal ruangan lain sudah 120.
+            //
+            // Metric: nomor tertinggi antrian TIPE ini yg sudah
+            // dipanggil hari ini (terakhir_dipanggil=1 OR dipanggil>0).
+            //
+            // Legacy: filter per ruangan seperti sebelumnya.
+            $tipeId = (int) ($this->tipe_konsultasi_id ?? 0);
+
+            if ($poolMode && $tipeId > 0) {
+                $data = DB::select(
+                    "SELECT id, nomor FROM antrians
+                     WHERE tenant_id = ?
+                       AND tipe_konsultasi_id = ?
+                       AND DATE(created_at) = ?
+                       AND deleted_at IS NULL
+                       AND (dipanggil_pemeriksa = 1 OR terakhir_dipanggil = 1)
+                     ORDER BY nomor DESC
+                     LIMIT 1",
+                    [$tenantId, $tipeId, $today]
+                );
+                if (count($data)) {
+                    return Antrian::find($data[0]->id);
+                }
+                return null;
+            }
+
+            // Legacy path: per ruangan (existing behavior)
             $ruangan_id = $this->ruangan_id;
             $antriable_type = $this->antriable_type;
             $antriable_id = $this->antriable_id;
@@ -218,18 +254,10 @@ class Antrian extends Model
                 $antrian_periksa = AntrianPeriksa::find( $antriable_id );
                 $ruangan_id = $antrian_periksa->ruangan_id;
             }
-            // Date filter (dr. Yoga 2026-09-11): tanpa filter tanggal,
-            // query ambil AntrianPeriksa TERTUA (id ASC) tanpa peduli
-            // dari hari mana. Kalau ada leftover AntrianPeriksa dari
-            // kemarin yg nurse lupa selesai (mis. id 442150 nomor 214),
-            // akan muncul sebagai "terpanggil hari ini" padahal ghost.
-            // Kasus 2026-09-11: bot bilang "terpanggil = A214" padahal
-            // max nomor hari ini 145.
-            $today = date('Y-m-d');
             $query  = "SELECT ant.id as antrian_id ";
             $query .= "FROM antrian_periksas as apx ";
             $query .= "JOIN antrians as ant on ant.antriable_id = apx.id and ant.antriable_type = 'App\\\Models\\\AntrianPeriksa' ";
-            $query .= "WHERE apx.tenant_id=". session()->get('tenant_id') . " ";
+            $query .= "WHERE apx.tenant_id={$tenantId} ";
             $query .= "AND apx.ruangan_id = $ruangan_id ";
             $query .= "AND DATE(apx.created_at) = '{$today}' ";
             $query .= "ORDER BY ant.id asc ";
