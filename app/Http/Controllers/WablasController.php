@@ -5566,7 +5566,7 @@ class WablasController extends Controller
         }
         if ($tipe_id === 1) {
             // Poli umum
-            $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil.';
+            $lines[] = '- Pastikan hadir dan melakukan *scan QR* di klinik *30 menit* sebelum antrean Anda dipanggil, atau saat sisa *10 antrian* di depan Anda.';
         } elseif ($tipe_id === 2) {
             // Dokter gigi
             // Prioritas sumber jam mulai:
