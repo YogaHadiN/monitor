@@ -424,6 +424,17 @@ class WebRegistrationController extends Controller
     public function nomor_asuransi_bpjs(){
         $nomor_asuransi_bpjs = Input::get('value');
         $no_telp = Input::get('no_telp');
+
+        // Guard blokir BPJS (dr. Yoga 2026-09-13): kalau nomor BPJS
+        // terdaftar di blokir_no_bpjs (mis. calo/booker), tolak sebelum
+        // lanjut ke BPJS API + save. Sync dgn guard WA + Mobile JKN.
+        $alasan = \App\Models\BlokirNoBpjs::alasanBlokir($nomor_asuransi_bpjs);
+        if ($alasan !== null) {
+            $this->message = "❌ Nomor BPJS *{$nomor_asuransi_bpjs}* di-blokir oleh admin klinik.\n\nAlasan: {$alasan}\n\nSilakan hubungi admin klinik untuk info lanjutan.";
+            $message = view('web_registrations.message', ['message' => $this->message, 'alert_type' => 'alert-danger'])->render();
+            return compact('message');
+        }
+
         $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();

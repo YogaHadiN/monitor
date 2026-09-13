@@ -4486,6 +4486,19 @@ class WablasController extends Controller
                 $pasien = \App\Models\Pasien::find($pasien->pasien_id);
 
                 if ((int)$reservasi_online->registrasi_pembayaran_id === 2) { // BPJS
+                    // Guard blokir BPJS (dr. Yoga 2026-09-13): kalau pasien
+                    // tersimpan punya BPJS di blokir_no_bpjs, tolak — jangan
+                    // sampai lolos via pilih pasien lama (calo re-book pakai
+                    // history pasien lama).
+                    if (!empty(trim($pasien->nomor_asuransi_bpjs))) {
+                        $alasanBlokirBpjs = \App\Models\BlokirNoBpjs::alasanBlokir($pasien->nomor_asuransi_bpjs);
+                        if ($alasanBlokirBpjs !== null) {
+                            $this->pesan_error = "❌ Nomor BPJS *{$pasien->nomor_asuransi_bpjs}* (a.n. {$pasien->nama}) di-blokir oleh admin klinik.\n\nAlasan: {$alasanBlokirBpjs}\n\nSilakan hubungi admin klinik untuk info lanjutan.";
+                            $this->autoReply($this->pesan_error);
+                            return;
+                        }
+                    }
+
                     if (!empty(trim($pasien->nomor_asuransi_bpjs)) && empty(pesanErrorValidateNomorAsuransiBpjs($pasien->nomor_asuransi_bpjs))) {
                         try {
                             $bpjs     = new \App\Http\Controllers\BpjsApiController;
@@ -4584,6 +4597,16 @@ class WablasController extends Controller
             && is_null($reservasi_online->nomor_asuransi_bpjs))
         {
             $this->chatBotLog(__LINE__);
+
+            // Guard blokir BPJS (dr. Yoga 2026-09-13): kalau nomor BPJS
+            // yang di-input customer terdaftar di blokir_no_bpjs, tolak
+            // sebelum call BPJS API. Sync dgn guard web + Mobile JKN.
+            $alasanBlokirBpjs = \App\Models\BlokirNoBpjs::alasanBlokir($rawMsg);
+            if ($alasanBlokirBpjs !== null) {
+                $this->pesan_error = "❌ Nomor BPJS *{$rawMsg}* di-blokir oleh admin klinik.\n\nAlasan: {$alasanBlokirBpjs}\n\nSilakan hubungi admin klinik untuk info lanjutan.";
+                $this->autoReply($this->pesan_error);
+                return;
+            }
 
             $this->pesan_error = pesanErrorValidateNomorAsuransiBpjs($rawMsg);
             if (empty($this->pesan_error)) {
