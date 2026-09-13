@@ -4486,14 +4486,20 @@ class WablasController extends Controller
                 $pasien = \App\Models\Pasien::find($pasien->pasien_id);
 
                 if ((int)$reservasi_online->registrasi_pembayaran_id === 2) { // BPJS
-                    // Guard blokir BPJS (dr. Yoga 2026-09-13): kalau pasien
-                    // tersimpan punya BPJS di blokir_no_bpjs, tolak — jangan
-                    // sampai lolos via pilih pasien lama (calo re-book pakai
-                    // history pasien lama).
+                    // Guard blokir BPJS (dr. Yoga 2026-09-13): pesan
+                    // generic "kesalahan teknis" — customer tidak tahu
+                    // nomor-nya diblokir. Log alasan untuk audit.
                     if (!empty(trim($pasien->nomor_asuransi_bpjs))) {
                         $alasanBlokirBpjs = \App\Models\BlokirNoBpjs::alasanBlokir($pasien->nomor_asuransi_bpjs);
                         if ($alasanBlokirBpjs !== null) {
-                            $this->pesan_error = "❌ Nomor BPJS *{$pasien->nomor_asuransi_bpjs}* (a.n. {$pasien->nama}) di-blokir oleh admin klinik.\n\nAlasan: {$alasanBlokirBpjs}\n\nSilakan hubungi admin klinik untuk info lanjutan.";
+                            \Log::info('BLOKIR_BPJS_HIT_WA_PASIEN', [
+                                'nomor_bpjs' => $pasien->nomor_asuransi_bpjs,
+                                'pasien_id'  => $pasien->id,
+                                'nama'       => $pasien->nama,
+                                'no_telp'    => $this->no_telp,
+                                'alasan'     => $alasanBlokirBpjs,
+                            ]);
+                            $this->pesan_error = "Terjadi kesalahan teknis. Silakan coba lagi beberapa saat, atau hubungi admin klinik.";
                             $this->autoReply($this->pesan_error);
                             return;
                         }
@@ -4598,12 +4604,17 @@ class WablasController extends Controller
         {
             $this->chatBotLog(__LINE__);
 
-            // Guard blokir BPJS (dr. Yoga 2026-09-13): kalau nomor BPJS
-            // yang di-input customer terdaftar di blokir_no_bpjs, tolak
-            // sebelum call BPJS API. Sync dgn guard web + Mobile JKN.
+            // Guard blokir BPJS (dr. Yoga 2026-09-13): pesan generic
+            // "kesalahan teknis" — customer tidak tahu nomor-nya
+            // diblokir. Log alasan untuk audit internal.
             $alasanBlokirBpjs = \App\Models\BlokirNoBpjs::alasanBlokir($rawMsg);
             if ($alasanBlokirBpjs !== null) {
-                $this->pesan_error = "❌ Nomor BPJS *{$rawMsg}* di-blokir oleh admin klinik.\n\nAlasan: {$alasanBlokirBpjs}\n\nSilakan hubungi admin klinik untuk info lanjutan.";
+                \Log::info('BLOKIR_BPJS_HIT_WA_INPUT', [
+                    'nomor_bpjs' => $rawMsg,
+                    'no_telp'    => $this->no_telp,
+                    'alasan'     => $alasanBlokirBpjs,
+                ]);
+                $this->pesan_error = "Terjadi kesalahan teknis. Silakan coba lagi beberapa saat, atau hubungi admin klinik.";
                 $this->autoReply($this->pesan_error);
                 return;
             }
