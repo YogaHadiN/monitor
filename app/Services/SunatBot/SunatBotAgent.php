@@ -322,7 +322,25 @@ class SunatBotAgent
                     $reason = mb_strtolower((string) ($args['reason'] ?? ''));
                     $userMsg = mb_strtolower((string) $this->currentUserMessage);
                     $hargaKw = ['harga', 'biaya', 'berapa', 'brp', 'pl', 'price'];
-                    $nonSunatKw = ['usg', 'kandungan', 'hamil', 'lab', 'dokter umum', 'gigi', 'kulit', 'vaksin', 'imunisasi', 'kontrol obat', 'bpjs'];
+                    // Expanded list (dr. Yoga 2026-09-13): tambah rujukan,
+                    // obgyn, onkologi, surat medis, spesialis non-sunat.
+                    // Kasus trigger: customer kirim surat rujukan + tulis
+                    // "obygn onkologi seperti rujukan sebelumnya" — bukan
+                    // sunat, harusnya auto-redirect.
+                    //
+                    // SKIP ambiguous keywords yg overlap sunat context:
+                    // "anak" (sunat anak), "bedah" (sunat = bedah minor),
+                    // "spesialis"/"sp." (sunat = Sp.B/Sp.BA), "konsul
+                    // dokter" (bot IS konsul), "pengobatan" (generic).
+                    $nonSunatKw = [
+                        'usg', 'kandungan', 'hamil', 'lab', 'dokter umum',
+                        'gigi', 'kulit', 'vaksin', 'imunisasi', 'kontrol obat',
+                        'bpjs', 'rujukan', 'surat rujukan', 'obgyn', 'obygn',
+                        'obygin', 'obstetri', 'ginekologi', 'onkologi',
+                        'surat sakit', 'surat sehat', 'surat keterangan',
+                        'penyakit dalam', 'jantung', 'saraf', 'mata',
+                        'tht', 'jiwa', 'gizi',
+                    ];
                     $reasonMentionsHarga = false;
                     foreach ($hargaKw as $kw) { if (str_contains($reason, $kw)) { $reasonMentionsHarga = true; break; } }
                     $userMsgHasHarga = false;
