@@ -20,17 +20,49 @@ if (!function_exists('flex_url')) {
 
 if (!function_exists('resetWhatsappRegistration')) {
      function resetWhatsappRegistration($no_telp) {
-        \App\Models\WhatsappComplaint::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappRecoveryIndex::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappRegistration::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappMainMenu::where('no_telp', $no_telp)->delete();
-        \App\Models\ReservasiOnline::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappBot::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappSatisfactionSurvey::where('no_telp', $no_telp)->delete();
-        \App\Models\FailedTherapy::where('no_telp', $no_telp)->delete();
-        \App\Models\KuesionerMenungguObat::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappBpjsDentistRegistration::where('no_telp', $no_telp)->delete();
-        \App\Models\WhatsappJadwalKonsultasiInquiry::where('no_telp', $no_telp)->delete();
+        // Retry per-delete on deadlock. Webhook concurrency dari phone
+        // sama sering trigger 2 request paralel yg sama-sama delete row
+        // di reservasi_onlines / whatsapp_registrations → SQLSTATE 40001.
+        // Retry cepat 3x (10ms→30ms→90ms) sebelum bubble exception.
+        $models = [
+            \App\Models\WhatsappComplaint::class,
+            \App\Models\WhatsappRecoveryIndex::class,
+            \App\Models\WhatsappRegistration::class,
+            \App\Models\WhatsappMainMenu::class,
+            \App\Models\ReservasiOnline::class,
+            \App\Models\WhatsappBot::class,
+            \App\Models\WhatsappSatisfactionSurvey::class,
+            \App\Models\FailedTherapy::class,
+            \App\Models\KuesionerMenungguObat::class,
+            \App\Models\WhatsappBpjsDentistRegistration::class,
+            \App\Models\WhatsappJadwalKonsultasiInquiry::class,
+        ];
+        foreach ($models as $model) {
+            $attempt = 0;
+            $delay   = 10000; // 10ms
+            while (true) {
+                try {
+                    $model::where('no_telp', $no_telp)->delete();
+                    break;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // 1213 = deadlock, 1205 = lock wait timeout.
+                    $code = (int) ($e->errorInfo[1] ?? 0);
+                    if (($code === 1213 || $code === 1205) && $attempt < 2) {
+                        usleep($delay);
+                        $delay *= 3;
+                        $attempt++;
+                        continue;
+                    }
+                    \Log::warning('resetWA_delete_failed', [
+                        'model'    => $model,
+                        'no_telp'  => $no_telp,
+                        'sqlstate' => $e->errorInfo[0] ?? null,
+                        'code'     => $code,
+                    ]);
+                    break;
+                }
+            }
+        }
     }
 }
 
