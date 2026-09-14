@@ -1352,7 +1352,29 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name'        => 'request_konsul_dokter',
-                    'description' => '⚠️ Panggil ketika KAMU (agent) menilai customer sebut kelainan/kondisi khusus di area penis anaknya — baik pakai istilah medis (fimosis, buried penis, hipospadia, chordee, dll) MAUPUN deskripsi awam ("burung nya kecil", "belum turun", "menempel", "kayak nempel di badan", "ujungnya lengket", "lecet", "bengkak", "ada benjolan", "kayaknya ada yg aneh", dsb). Kamu HARUS pakai judgment natural language — TIDAK ada keyword list. Kalau customer cuma bilang "kecil" tapi konteks-nya usia/postur (bukan anatomis) → JANGAN panggil. Kalau customer cuma expressing malu / gambar utk apa → jelaskan dulu, baru minta foto kalau customer setuju. Tool ini set flag `konsul_dokter_pending` di session + emit 1 bubble minta foto ke customer. Setelah customer kirim foto → webhook OTOMATIS forward foto ke dr. Yoga (081381912803) untuk asesmen. Bot mute customer selama menunggu instruksi dokter (dokter reply → bot auto-relay ke customer). ⚠️ Cuma panggil 1x per session — kalau sudah pernah request, jangan panggil lagi (session state akan tunjukkan `konsul_dokter_pending=true` di snapshot). Kalau customer nolak kirim foto ("saya malu" / "gak bisa foto") → jangan retry, escalate ke handoff_to_admin supaya dokter bisa konsul via chat text saja.',
+                    'description' => '⚠️ Panggil ketika KAMU (agent) menilai customer sebut kelainan/kondisi khusus / komplikasi di area penis anaknya. Dua kategori valid:
+
+**1. PRE-SUNAT KELAINAN** (assess feasibility sunat):
+- Istilah medis: fimosis, buried penis, hipospadia, chordee, dll.
+- Deskripsi awam: "burung nya kecil", "belum turun", "menempel", "kayak nempel di badan", "ujungnya lengket", "lecet", "bengkak", "ada benjolan", "kayaknya ada yg aneh", dsb.
+
+**2. POST-SUNAT KOMPLIKASI** (assess luka pasca-tindakan):
+- Perdarahan: "berdarah", "keluar darah", "bercak darah", "darah masih keluar".
+- Infeksi: "bernanah", "keluar nanah", "kekuningan", "berbau", "infeksi".
+- Bengkak abnormal: "bengkak makin besar", "bengkak sampai hari ke-X".
+- Nyeri persisten: "sakit banget", "anak nangis kesakitan", "kesakitan waktu pipis" (kalau H+3 masih parah).
+- Luka tidak menutup: "kulit mengelupas", "luka buka lagi", "kering lalu berdarah lagi".
+- Kombinasi: "berdarah + sakit", "bengkak + demam".
+
+Kamu HARUS pakai judgment natural language — TIDAK ada keyword list ketat. Kalau customer cuma bilang "kecil" tapi konteks-nya usia/postur (bukan anatomis) → JANGAN panggil. Kalau customer cuma expressing malu / gambar utk apa → jelaskan dulu, baru minta foto kalau customer setuju.
+
+Tool ini set flag `konsul_dokter_pending` di session + emit 1 bubble minta foto ke customer (kalau belum ada foto). Kalau customer SUDAH kirim foto sebelumnya → webhook auto-forward foto ke dr. Yoga (081381912803) untuk asesmen. Bot mute customer selama menunggu instruksi dokter (dokter reply → bot auto-relay ke customer).
+
+⚠️ Cuma panggil 1x per session — kalau sudah pernah request, jangan panggil lagi (session state akan tunjukkan `konsul_dokter_pending=true` di snapshot). Kalau customer nolak kirim foto ("saya malu" / "gak bisa foto") → jangan retry, escalate ke handoff_to_admin supaya dokter bisa konsul via chat text saja.
+
+Contoh POST-SUNAT trigger (dr. Yoga 2026-09-14):
+Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas diliat ada yang berdarah, anaknya juga ngeluh sakit"
+→ HARUS panggil request_konsul_dokter_foto (reason: "post-sunat: luka berdarah + kesakitan"). Bubble minta foto kalau belum ada. Setelah ada foto → auto-forward.',
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
