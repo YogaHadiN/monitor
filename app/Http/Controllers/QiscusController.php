@@ -1151,7 +1151,7 @@ class QiscusController extends Controller
         $message .= "mohon memberikan nilai layanan kami dengan memberikan ulasan *Bintang 5* di google review Klinik Jati Elok hanya dengan klik link dibawah ini : ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= "https://bit.ly/3DInVOr";
+        $message .= "https://www.klinikjatielok.com/r/g";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Simpan nomor ini di hape anda agar link di atas bisa aktif dan memudahkan anda mengklik";
