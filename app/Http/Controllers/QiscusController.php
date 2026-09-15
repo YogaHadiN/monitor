@@ -2634,6 +2634,7 @@ class QiscusController extends Controller
                 if ($adaWalkinOnly) {
                     $message .= '🏥 *Walk-in Saja*' . PHP_EOL;
                     $message .= 'Dokter dgn tag ini *tidak menerima daftar online* — pasien wajib datang langsung ke klinik + ambil antrian di tempat.' . PHP_EOL;
+                    $message .= 'Antrian dapat diambil *mulai dari jam dokter praktek*.' . PHP_EOL;
                     $message .= PHP_EOL;
                 }
                 if ($adaOnlineOnly) {
