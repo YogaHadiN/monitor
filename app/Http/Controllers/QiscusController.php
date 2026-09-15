@@ -2564,7 +2564,8 @@ class QiscusController extends Controller
         $query .= "TIME_FORMAT(jad.jam_mulai, '%H:%i') as jam_mulai, ";
         $query .= "TIME_FORMAT(jad.jam_akhir, '%H:%i') as jam_akhir, ";
         $query .= "tip.tipe_konsultasi, ";
-        $query .= "sta.nama ";
+        $query .= "sta.nama, ";
+        $query .= "jad.schedulled_booking_allowed as online_only ";
         $query .= "FROM jadwal_konsultasis as jad ";
         $query .= "JOIN stafs as sta on sta.id = jad.staf_id ";
         $query .= "JOIN titels as ttl on ttl.id = sta.titel_id ";
@@ -2581,12 +2582,14 @@ class QiscusController extends Controller
 
             foreach ($query as $q) {
                 $result[$q->hari][] = [
-                    'nama' => $q->nama,
-                    'titel' => $q->titel,
-                    'jam_mulai' => $q->jam_mulai,
-                    'jam_akhir' => $q->jam_akhir,
+                    'nama'        => $q->nama,
+                    'titel'       => $q->titel,
+                    'jam_mulai'   => $q->jam_mulai,
+                    'jam_akhir'   => $q->jam_akhir,
+                    'online_only' => (int) ($q->online_only ?? 0) === 1,
                 ];
             }
+            $adaOnlineOnly = false;
             $message = '*Jadwal ' . ucwords(strtolower($query[0]->tipe_konsultasi)) . '*';
             $message .= PHP_EOL;
             $message .= "Klinik Jati Elok";
@@ -2605,8 +2608,23 @@ class QiscusController extends Controller
                     $message .=  $this->tambahkanGelar($d['titel'],ucwords($d['nama']));
                     $message .= PHP_EOL;
                     $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'].  ' )' ;
+                    if (!empty($d['online_only'])) {
+                        $message .= ' 📱 *Daftar Online Saja*';
+                        $adaOnlineOnly = true;
+                    }
                     $message .= PHP_EOL;
                 }
+            }
+            // Footer keterangan online-only + window daftar online.
+            // Per instruksi dr. Yoga 2026-09-15.
+            if ($adaOnlineOnly) {
+                $message .= PHP_EOL;
+                $message .= '📱 *Keterangan Daftar Online Saja*' . PHP_EOL;
+                $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL . PHP_EOL;
+                $message .= '⏰ *Window daftar online*: mulai jam *07:00* pagi sampai *30 menit sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
+                $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:30 hari itu.' . PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= 'Balas *daftar online* untuk mulai reservasi.' . PHP_EOL;
             }
             if ( $param == 1 ) {
                 $staf = $this->lastStaf();

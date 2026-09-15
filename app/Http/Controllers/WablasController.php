@@ -3509,7 +3509,8 @@ class WablasController extends Controller
         $query .= "TIME_FORMAT(jad.jam_akhir, '%H:%i') as jam_akhir, ";
         $query .= "tip.tipe_konsultasi, ";
         $query .= "sta.id as staf_id, "; // <— tambahkan id staf untuk cek izin
-        $query .= "sta.nama ";
+        $query .= "sta.nama, ";
+        $query .= "jad.schedulled_booking_allowed as online_only ";
         $query .= "FROM jadwal_konsultasis as jad ";
         $query .= "JOIN stafs as sta on sta.id = jad.staf_id ";
         $query .= "JOIN titels as ttl on ttl.id = sta.titel_id ";
@@ -3546,13 +3547,15 @@ class WablasController extends Controller
         $result = [];
         foreach ($rows as $q) {
             $result[$q->hari][] = [
-                'staf_id'   => $q->staf_id,
-                'nama'      => $q->nama,
-                'titel'     => $q->titel,
-                'jam_mulai' => $q->jam_mulai,
-                'jam_akhir' => $q->jam_akhir,
+                'staf_id'     => $q->staf_id,
+                'nama'        => $q->nama,
+                'titel'       => $q->titel,
+                'jam_mulai'   => $q->jam_mulai,
+                'jam_akhir'   => $q->jam_akhir,
+                'online_only' => (int) ($q->online_only ?? 0) === 1,
             ];
         }
+        $adaOnlineOnly = false;
 
         $message  = '*Jadwal ' . ucwords(strtolower($rows[0]->tipe_konsultasi)) . '*';
         $message .= PHP_EOL;
@@ -3575,6 +3578,14 @@ class WablasController extends Controller
                 // Jam praktik
                 $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' )';
 
+                // Tag online-only (dokter yg schedulled_booking_allowed=1
+                // — hanya melayani daftar online, tidak walk-in). Per
+                // instruksi dr. Yoga 2026-09-15. Contoh: drg. Michel.
+                if (!empty($d['online_only'])) {
+                    $message .= ' 📱 *Daftar Online Saja*';
+                    $adaOnlineOnly = true;
+                }
+
                 // ===== Tambahkan (izin hari ini) bila:
                 // - ini adalah baris untuk HARI INI, dan
                 // - staf pada baris ini TIDAK ada di roster petugas_pemeriksas hari ini
@@ -3586,6 +3597,20 @@ class WablasController extends Controller
 
                 $message .= PHP_EOL;
             }
+        }
+
+        // Footer keterangan: jelaskan makna tag "Daftar Online Saja" +
+        // aturan window daftar online (07:00 s/d 30 menit sebelum jam
+        // mulai praktek hari yg sama). Hanya tampil kalau ada minimal
+        // 1 slot online-only. Per instruksi dr. Yoga 2026-09-15.
+        if ($adaOnlineOnly) {
+            $message .= PHP_EOL;
+            $message .= '📱 *Keterangan Daftar Online Saja*' . PHP_EOL;
+            $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL . PHP_EOL;
+            $message .= '⏰ *Window daftar online*: mulai jam *07:00* pagi sampai *30 menit sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
+            $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:30 hari itu.' . PHP_EOL;
+            $message .= PHP_EOL;
+            $message .= 'Balas *daftar online* untuk mulai reservasi.' . PHP_EOL;
         }
 
         // Tambahan keterangan dokter umum yang sedang praktik (kode asli)
