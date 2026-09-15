@@ -4750,6 +4750,50 @@ class WablasController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
+        // ===== pilih akses dokter (pool mode + tipe umum) =====
+        // Setelah kartu asuransi image ter-set, kalau pool mode + tipe=1,
+        // tanya pasien mau Antrian Tercepat (1) atau Pilih Dokter (2).
+        // Per instruksi dr. Yoga 2026-09-15.
+        } elseif (
+            config('features.pool_antrian_enabled')
+            && (int) $reservasi_online->tipe_konsultasi_id === 1
+            && !is_null($reservasi_online->kartu_asuransi_image)
+            && is_null($reservasi_online->akses_dokter_choice)
+        ) {
+            $this->chatBotLog(__LINE__);
+            if (in_array($msg, ['1', 'tercepat', 'antrian tercepat'], true)) {
+                $reservasi_online->akses_dokter_choice = 'tercepat';
+                $reservasi_online->save();
+            } elseif (in_array($msg, ['2', 'pilih dokter', 'pilih_dokter', 'dokter'], true)) {
+                $reservasi_online->akses_dokter_choice = 'pilih_dokter';
+                $reservasi_online->save();
+            } else {
+                $input_tidak_tepat = true;
+            }
+        // ===== pilih dokter tertentu (WA numeric reply) =====
+        } elseif (
+            config('features.pool_antrian_enabled')
+            && (int) $reservasi_online->tipe_konsultasi_id === 1
+            && $reservasi_online->akses_dokter_choice === 'pilih_dokter'
+            && is_null($reservasi_online->dokter_dipilih_id)
+        ) {
+            $this->chatBotLog(__LINE__);
+            if (ctype_digit($msg) && (int) $msg > 0) {
+                $dokterList = $this->dokterOnDutyPoolList((int) $reservasi_online->tipe_konsultasi_id);
+                $idx = (int) $msg - 1;
+                if ($idx >= 0 && $idx < $dokterList->count()) {
+                    $reservasi_online->dokter_dipilih_id = (int) $dokterList[$idx]->staf_id;
+                    $reservasi_online->save();
+                } else {
+                    $input_tidak_tepat = true;
+                }
+            } elseif (in_array($msg, ['batal', 'batalkan', 'tercepat'], true)) {
+                // pasien berubah pikiran → downgrade ke tercepat
+                $reservasi_online->akses_dokter_choice = 'tercepat';
+                $reservasi_online->save();
+            } else {
+                $input_tidak_tepat = true;
+            }
         // ===== konfirmasi akhir: lanjutkan/ulangi =====
         // (Guard waitlist offer pending tidak perlu lagi di sini —
         // top-level guard di awal prosesAntrianOnline sudah return
@@ -4854,10 +4898,59 @@ class WablasController extends Controller
                             $antrian->reservasi_online      = 1;
                             $antrian->sumber_antrian_id     = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::WHATSAPP_BOT);
                             $antrian->sudah_hadir_di_klinik = 0;
+
+                            // Pool mode + pasien pilih dokter tertentu via WA:
+                            // pindahkan staf_id → dokter_dipilih_id + pilih_
+                            // dokter_by='pasien'. staf_id null (tetap pool
+                            // + flag preferensi). Per instruksi dr. Yoga
+                            // 2026-09-15.
+                            $waPickedDokter = false;
+                            if (
+                                config('features.pool_antrian_enabled') &&
+                                (int) $reservasi_online->tipe_konsultasi_id === 1 &&
+                                $reservasi_online->akses_dokter_choice === 'pilih_dokter' &&
+                                !empty($reservasi_online->dokter_dipilih_id)
+                            ) {
+                                $antrian->dokter_dipilih_id = (int) $reservasi_online->dokter_dipilih_id;
+                                $antrian->pilih_dokter_by   = 'pasien';
+                                $antrian->staf_id           = null;
+                                $waPickedDokter             = true;
+                            }
+
                             $antrian->qr_code_path_s3       = $this->generateQrCodeForOnlineReservation('A', $antrian);
                             $antrian->save();
                             $antrian->antriable_id          = $antrian->id;
                             $antrian->save();
+
+                            // Audit trail: kalau pasien pilih dokter via WA
+                            // reg → tulis pindah_dokter_logs (pilih_dokter_by=
+                            // 'pasien', source='wa_pasien') via raw DB.
+                            if ($waPickedDokter) {
+                                try {
+                                    \DB::table('pindah_dokter_logs')->insert([
+                                        'antrian_id'      => $antrian->id,
+                                        'antrian_id_baru' => $antrian->id,
+                                        'action_type'     => 'pilih',
+                                        'mode'            => 'pool_flag',
+                                        'pilih_dokter_by' => 'pasien',
+                                        'source'          => 'wa_pasien',
+                                        'from_staf_id'    => null,
+                                        'to_staf_id'      => $antrian->dokter_dipilih_id,
+                                        'from_ruangan_id' => null,
+                                        'to_ruangan_id'   => $antrian->ruangan_id,
+                                        'actor_user_id'   => null,
+                                        'actor_staf_id'   => null,
+                                        'actor_ip'        => request()->ip(),
+                                        'note'            => 'via WA registration',
+                                        'created_at'      => now(),
+                                    ]);
+                                } catch (\Throwable $e) {
+                                    \Log::warning('pindah-dokter-log wa reg fail', [
+                                        'antrian_id' => $antrian->id,
+                                        'err'        => $e->getMessage(),
+                                    ]);
+                                }
+                            }
 
                             $reservasi_online->reservasi_selesai = 1;
                             $reservasi_online->save();
@@ -4919,6 +5012,24 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaKartuAsuransiImage($reservasi_online);
 
+        } elseif (
+            config('features.pool_antrian_enabled')
+            && (int) $reservasi_online->tipe_konsultasi_id === 1
+            && !is_null($reservasi_online->kartu_asuransi_image)
+            && is_null($reservasi_online->akses_dokter_choice)
+        ) {
+            $this->chatBotLog(__LINE__);
+            $message = $this->tanyaAksesDokter();
+        } elseif (
+            config('features.pool_antrian_enabled')
+            && (int) $reservasi_online->tipe_konsultasi_id === 1
+            && $reservasi_online->akses_dokter_choice === 'pilih_dokter'
+            && is_null($reservasi_online->dokter_dipilih_id)
+        ) {
+            $this->chatBotLog(__LINE__);
+            $message = $this->tanyaPilihDokterUntukRegistrasi(
+                (int) $reservasi_online->tipe_konsultasi_id
+            );
         } elseif ( !$reservasi_online->reservasi_selesai) {
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaLanjutkanAtauUlangi($reservasi_online);
@@ -5092,6 +5203,58 @@ class WablasController extends Controller
 
     public function tanyaAlamatLengkapPasien(){
          return 'Bisa dibantu *Alamat Lengkap* pasien?';
+    }
+
+    /**
+     * Pertanyaan pool mode utk WA registration: pasien mau Antrian
+     * Tercepat atau Pilih Dokter Tertentu. Per instruksi dr. Yoga
+     * 2026-09-15.
+     */
+    public function tanyaAksesDokter(){
+        $m  = "Bagaimana cara akses dokter?" . PHP_EOL . PHP_EOL;
+        $m .= "*1. Antrian Tercepat* (Rekomendasi)" . PHP_EOL;
+        $m .= "   Dokter yg antriannya paling pendek yg akan periksa Anda." . PHP_EOL . PHP_EOL;
+        $m .= "*2. Pilih Dokter Tertentu*" . PHP_EOL;
+        $m .= "   Anda pilih dokter, dgn *resiko antrian bisa lebih lama dan bisa dilewati* oleh antrian lain yg ambil belakangan tapi tidak pilih dokter." . PHP_EOL . PHP_EOL;
+        $m .= "Balas dgn angka *1* atau *2*.";
+        return $m;
+    }
+
+    /**
+     * Kirim daftar dokter on-duty utk tipe konsultasi tsb, numbered,
+     * user balas nomornya utk pilih. Per instruksi dr. Yoga 2026-09-15.
+     */
+    public function tanyaPilihDokterUntukRegistrasi($tipe_konsultasi_id){
+        $list = $this->dokterOnDutyPoolList((int) $tipe_konsultasi_id);
+        if ($list->isEmpty()) {
+            return "Mohon maaf, tidak ada dokter yg sedang bertugas saat ini utk tipe konsultasi ini. Balas *tercepat* utk lanjut dgn antrian pool.";
+        }
+        $m  = "⚠️ Perhatian: dgn memilih dokter tertentu, antrian Anda bisa *lebih lama* dan bisa *dilewati* oleh antrian lain yg tidak pilih dokter." . PHP_EOL . PHP_EOL;
+        $m .= "Balas dgn *angka* dokter pilihan Anda:" . PHP_EOL . PHP_EOL;
+        foreach ($list as $i => $pp) {
+            $nama = optional($pp->staf)->nama_dengan_gelar ?? optional($pp->staf)->nama ?? '-';
+            $m   .= "*" . ($i + 1) . "*. {$nama}" . PHP_EOL;
+        }
+        $m .= PHP_EOL . "Atau balas *tercepat* utk kembali ke antrian pool tanpa pilih dokter.";
+        return $m;
+    }
+
+    /**
+     * List PetugasPemeriksa on-duty utk tipe tsb, unique per staf.
+     * Dipakai flow WA "pilih dokter" saat registrasi.
+     */
+    public function dokterOnDutyPoolList($tipe_konsultasi_id){
+        $today   = date('Y-m-d');
+        $nowTime = date('H:i:s');
+        return \App\Models\PetugasPemeriksa::with('staf.titel')
+            ->whereDate('tanggal', $today)
+            ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
+            ->where('jam_mulai', '<=', $nowTime)
+            ->where('jam_akhir', '>=', $nowTime)
+            ->orderBy('jam_mulai', 'asc')
+            ->get()
+            ->unique('staf_id')
+            ->values();
     }
 
     public function pertanyaanPoliYangDituju(){
