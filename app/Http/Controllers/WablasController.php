@@ -7517,18 +7517,30 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
-        $message = 'Nomor antrian Anda :';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
+        // Jangan expose nomor antrian yg lagi dipanggil (per instruksi
+        // dr. Yoga 2026-09-15) — kalau ada skip, pasien komplain.
+        // Ganti: tampil "sisa X antrian di depan" + peringatan hadir
+        // 30 menit sebelum atau 10 antrian di depan. Kalau sisa <= 10,
+        // peringatan lebih mendesak (segera datang).
+        $sisa = (int) ($antrian->sisa_antrian ?? 0);
+
+        $message  = 'Nomor antrian Anda :';
+        $message .= PHP_EOL . PHP_EOL;
         $message .= '_' . $antrian->nomor_antrian . '_';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Saat ini nomor antrian terpanggil = " . $antrian->nomor_antrian_dipanggil;
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
+        $message .= PHP_EOL . PHP_EOL;
+        $message .= "Masih ada *{$sisa} antrian* di depan Anda";
+        $message .= PHP_EOL . PHP_EOL;
+
+        if ($sisa <= 10) {
+            $message .= '⚠️ *SEGERA DATANG KE KLINIK*';
+            $message .= PHP_EOL;
+            $message .= "Sisa hanya *{$sisa} antrian* di depan Anda. Antrian akan dipanggil sebentar lagi. Antrian yang terlewat panggilan akan dihapus.";
+        } else {
+            $message .= 'Harap datang *30 menit* sebelum antrian Anda dipanggil, atau saat sisa *10 antrian* di depan Anda.';
+        }
+        $message .= PHP_EOL . PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
+        $message .= PHP_EOL . PHP_EOL;
         $message .= $this->aktifkan_notifikasi_otomatis_text();
         $message .= $this->footerAntrian();
         return $message;

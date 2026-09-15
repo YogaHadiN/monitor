@@ -5629,18 +5629,28 @@ class QiscusController extends Controller
         return $petugas_pemeriksas;
     }
     public function getQrCodeMessage($antrian){
-        $message = 'Nomor antrian Anda :';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
+        // Sync dgn WablasController::getQrCodeMessage — jangan expose
+        // nomor lagi dipanggil, tampil sisa antrian + peringatan.
+        // Per instruksi dr. Yoga 2026-09-15.
+        $sisa = (int) ($antrian->sisa_antrian ?? 0);
+
+        $message  = 'Nomor antrian Anda :';
+        $message .= PHP_EOL . PHP_EOL;
         $message .= '_' . $antrian->nomor_antrian . '_';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= "Saat ini nomor antrian terpanggil = " . $antrian->nomor_antrian_dipanggil;
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
+        $message .= PHP_EOL . PHP_EOL;
+        $message .= "Masih ada *{$sisa} antrian* di depan Anda";
+        $message .= PHP_EOL . PHP_EOL;
+
+        if ($sisa <= 10) {
+            $message .= '⚠️ *SEGERA DATANG KE KLINIK*';
+            $message .= PHP_EOL;
+            $message .= "Sisa hanya *{$sisa} antrian* di depan Anda. Antrian akan dipanggil sebentar lagi. Antrian yang terlewat panggilan akan dihapus.";
+        } else {
+            $message .= 'Harap datang *30 menit* sebelum antrian Anda dipanggil, atau saat sisa *10 antrian* di depan Anda.';
+        }
+        $message .= PHP_EOL . PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
+        $message .= PHP_EOL . PHP_EOL;
         $message .= $this->aktifkan_notifikasi_otomatis_text();
         $message .= $this->footerAntrian();
         return $message;
