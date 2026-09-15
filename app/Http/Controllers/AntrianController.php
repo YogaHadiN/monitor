@@ -312,7 +312,11 @@ class AntrianController extends Controller
                     'note'          => 'delta updated_at vs now di luar wajar — cek race',
                 ]);
             }
-        } else {
+        } else if ((int) $antrian_id > 0) {
+            // Skip warning kalau antrian_id=0 — itu idle state (tidak ada
+            // antrian dipanggil, TV polling regular). Warning cuma kalau
+            // antrian_id > 0 tapi Antrian::find NULL → benar-benar missing
+            // (antrian di-delete di antara broadcast + fetch).
             \Log::warning('MONITOR_GETDATABARU_MISSING', [
                 'seq'        => $seq,
                 'antrian_id' => (int) $antrian_id,
