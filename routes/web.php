@@ -26,12 +26,20 @@ Route::get('/redis-test', function () {
     return \Illuminate\Support\Facades\Redis::get('cek');
 });
 
-// Short redirect ke Google Review Klinik Jati Elok — menggantikan
-// bit.ly supaya tidak lewat halaman penengah, langsung ke write-review.
-// Per instruksi dr. Yoga 2026-09-15. URL: https://www.klinikjatielok.com/r/g
-Route::get('/r/g', function () {
+// Short redirect ke Google Review — menggantikan bit.ly supaya tidak
+// lewat halaman penengah, langsung 302 ke write-review Google.
+// Per instruksi dr. Yoga 2026-09-15.
+//   /review/klinikjatielok → Klinik Jati Elok
+//   /review/sunatboy       → SunatBoy
+Route::get('/review/klinikjatielok', function () {
     return redirect()->away(
         'https://search.google.com/local/writereview?placeid=ChIJsRyOtNP4aS4R4hIwu5yMnk0',
+        302
+    );
+});
+Route::get('/review/sunatboy', function () {
+    return redirect()->away(
+        'https://search.google.com/local/writereview?placeid=ChIJsd_YRQDjaS4R9aVhjW76t3Y',
         302
     );
 });
