@@ -57,6 +57,7 @@ Route::middleware('webRegistrationWithinOpeningHours')->group(function () {
     Route::post('daftar_online_by_phone/submit/tanggal_lahir', [WebRegistrationController::class, 'tanggal_lahir']);
     Route::post('daftar_online_by_phone/submit/alamat', [WebRegistrationController::class, 'alamat']);
     Route::post('daftar_online_by_phone/submit/staf', [WebRegistrationController::class, 'staf']);
+    Route::post('daftar_online_by_phone/submit/pilih_akses_dokter', [WebRegistrationController::class, 'pilih_akses_dokter']);
     Route::post('/daftar_online_by_phone/submit/pasien', [WebRegistrationController::class, 'pasien']);
     Route::post('/daftar_online_by_phone/submit/lanjutkan', [WebRegistrationController::class, 'lanjutkan']);
     Route::post('/daftar_online_by_phone/submit/waitlist', [WebRegistrationController::class, 'waitlist']);

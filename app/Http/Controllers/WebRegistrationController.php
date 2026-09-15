@@ -190,6 +190,23 @@ class WebRegistrationController extends Controller
         ) {
             return view('web_registrations.alamat');
         } else if (
+            // Pool mode + tipe umum: tampilkan pilihan Antrian Tercepat
+            // vs Pilih Dokter (kalau akses_dokter_choice belum di-set).
+            // Per instruksi dr. Yoga 2026-09-15.
+            !is_null( $web_registration ) &&
+            config('features.pool_antrian_enabled') &&
+            (int) $web_registration->tipe_konsultasi_id === 1 &&
+            !is_null( $web_registration->registrasi_pembayaran_id ) &&
+            !is_null( $web_registration->register_previously_saved_patient ) &&
+            !is_null( $web_registration->nomor_asuransi_bpjs ) &&
+            !is_null( $web_registration->nama ) &&
+            !is_null( $web_registration->tanggal_lahir ) &&
+            !is_null( $web_registration->alamat ) &&
+            is_null( $web_registration->staf_id ) &&
+            is_null( $web_registration->akses_dokter_choice )
+        ) {
+            return view('web_registrations.pilih_akses_dokter');
+        } else if (
             !is_null( $web_registration ) &&
             !is_null( $web_registration->tipe_konsultasi_id ) &&
             !is_null( $web_registration->registrasi_pembayaran_id ) &&
@@ -202,6 +219,7 @@ class WebRegistrationController extends Controller
             (
                 !config('features.pool_antrian_enabled')
                 || (int) $web_registration->tipe_konsultasi_id === 2
+                || $web_registration->akses_dokter_choice === 'pilih_dokter'
             )
         ) {
             // Dokter gigi (tipe=2) SELALU harus lewat step "Pilih Dokter"
@@ -324,7 +342,19 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration->nama ) &&
             !is_null( $web_registration->tanggal_lahir ) &&
             !is_null( $web_registration->alamat ) &&
-            (!is_null( $web_registration->staf_id ) || config('features.pool_antrian_enabled')) &&
+            (
+                !is_null( $web_registration->staf_id )
+                || (
+                    config('features.pool_antrian_enabled')
+                    && (int) $web_registration->tipe_konsultasi_id !== 1
+                )
+                || (
+                    // Pool mode + tipe umum: harus sudah jawab akses_dokter
+                    config('features.pool_antrian_enabled')
+                    && (int) $web_registration->tipe_konsultasi_id === 1
+                    && $web_registration->akses_dokter_choice === 'tercepat'
+                )
+            ) &&
             $web_registration->data_terkonfirmasi == 0
         ) {
             return view('web_registrations.data_terkonfirmasi', compact('web_registration'));
@@ -527,6 +557,37 @@ class WebRegistrationController extends Controller
             'message',
         );
     }
+    /**
+     * Pool mode + tipe umum: pasien pilih 'tercepat' (dokter_dipilih_id
+     * null → antrian pool) atau 'pilih_dokter' (lanjut ke step pilih
+     * staf). Per instruksi dr. Yoga 2026-09-15.
+     */
+    public function pilih_akses_dokter()
+    {
+        $value   = Input::get('value'); // 'tercepat' | 'pilih_dokter'
+        $no_telp = Input::get('no_telp');
+
+        if (!in_array($value, ['tercepat', 'pilih_dokter'], true)) {
+            $this->message = 'pilihan tidak valid';
+        } else {
+            $web_registration = WebRegistration::where('no_telp', $no_telp)
+                ->whereDate('created_at', date('Y-m-d'))
+                ->first();
+            if (!$web_registration) {
+                $this->message = 'registrasi tidak ditemukan';
+            } else {
+                $web_registration->akses_dokter_choice = $value;
+                $web_registration->save();
+                $this->message = null;
+            }
+        }
+
+        $message = view('web_registrations.message', [
+            'message' => $this->message,
+        ])->render();
+        return compact('message');
+    }
+
     public function staf()
     {
         $petugas_pemeriksa_id = Input::get('value');
@@ -957,10 +1018,59 @@ class WebRegistrationController extends Controller
         $antrian->reservasi_online         = 1;
         $antrian->sumber_antrian_id        = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::WEB_KLINIK);
         $antrian->sudah_hadir_di_klinik    = 0;
+
+        // Pool mode + pasien pilih dokter tertentu (via step
+        // pilih_akses_dokter di web reg): pindahkan staf_id → flag
+        // dokter_dipilih_id + pilih_dokter_by='pasien'. staf_id kembali
+        // null supaya antrian tetap pool-eligible (dokter apapun on-duty
+        // bisa panggil, dgn preferensi ke staf yg dipilih).
+        $webPickedDokter = false;
+        if (
+            config('features.pool_antrian_enabled') &&
+            (int) $web_registration->tipe_konsultasi_id === 1 &&
+            $web_registration->akses_dokter_choice === 'pilih_dokter' &&
+            !empty($web_registration->staf_id)
+        ) {
+            $antrian->dokter_dipilih_id = (int) $web_registration->staf_id;
+            $antrian->pilih_dokter_by   = 'pasien';
+            $antrian->staf_id           = null;
+            $webPickedDokter            = true;
+        }
+
         $antrian->qr_code_path_s3          = $wablas->generateQrCodeForOnlineReservation('A', $antrian);
         $antrian->save();
         $antrian->antriable_id             = $antrian->id;
         $antrian->save();
+
+        // Audit trail: kalau pasien pilih dokter via web reg → tulis
+        // pindah_dokter_logs (pilih_dokter_by='pasien', source='web_pasien').
+        // Pakai raw DB insert supaya tidak butuh model duplicate di monitor.
+        if ($webPickedDokter) {
+            try {
+                \DB::table('pindah_dokter_logs')->insert([
+                    'antrian_id'      => $antrian->id,
+                    'antrian_id_baru' => $antrian->id,
+                    'action_type'     => 'pilih',
+                    'mode'            => 'pool_flag',
+                    'pilih_dokter_by' => 'pasien',
+                    'source'          => 'web_pasien',
+                    'from_staf_id'    => null,
+                    'to_staf_id'      => $antrian->dokter_dipilih_id,
+                    'from_ruangan_id' => null,
+                    'to_ruangan_id'   => $antrian->ruangan_id,
+                    'actor_user_id'   => null,
+                    'actor_staf_id'   => null,
+                    'actor_ip'        => request()->ip(),
+                    'note'            => 'via web registration /daftar_online',
+                    'created_at'      => now(),
+                ]);
+            } catch (\Throwable $e) {
+                \Log::warning('pindah-dokter-log web reg fail', [
+                    'antrian_id' => $antrian->id,
+                    'err'        => $e->getMessage(),
+                ]);
+            }
+        }
 
         WebRegistration::where('no_telp', $no_telp)->delete();
 
