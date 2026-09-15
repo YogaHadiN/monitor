@@ -3556,6 +3556,7 @@ class WablasController extends Controller
             ];
         }
         $adaOnlineOnly = false;
+        $adaWalkinOnly = false;
 
         $message  = '*Jadwal ' . ucwords(strtolower($rows[0]->tipe_konsultasi)) . '*';
         $message .= PHP_EOL;
@@ -3575,15 +3576,19 @@ class WablasController extends Controller
                 // Nama + gelar
                 $message .= $this->tambahkanGelar($d['titel'], ucwords($d['nama'])) . PHP_EOL;
 
-                // Jam praktik
-                $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' )';
-
-                // Tag online-only (dokter yg schedulled_booking_allowed=1
-                // — hanya melayani daftar online, tidak walk-in). Per
-                // instruksi dr. Yoga 2026-09-15. Contoh: drg. Michel.
+                // Jam praktik + tag mode registrasi (dalam kurung yg
+                // sama). Per instruksi dr. Yoga 2026-09-15:
+                //   schedulled_booking_allowed=1 → Daftar Online Saja
+                //   schedulled_booking_allowed=0 → Walk-in Saja
+                //     (khusus gigi: selain Michel hanya walk-in)
+                $modeTag = !empty($d['online_only'])
+                    ? '📱 *Daftar Online Saja*'
+                    : '🏥 *Walk-in Saja*';
+                $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' — ' . $modeTag . ' )';
                 if (!empty($d['online_only'])) {
-                    $message .= ' 📱 *Daftar Online Saja*';
                     $adaOnlineOnly = true;
+                } else {
+                    $adaWalkinOnly = true;
                 }
 
                 // ===== Tambahkan (izin hari ini) bila:
@@ -3599,18 +3604,29 @@ class WablasController extends Controller
             }
         }
 
-        // Footer keterangan: jelaskan makna tag "Daftar Online Saja" +
-        // aturan window daftar online (07:00 s/d 30 menit sebelum jam
-        // mulai praktek hari yg sama). Hanya tampil kalau ada minimal
-        // 1 slot online-only. Per instruksi dr. Yoga 2026-09-15.
-        if ($adaOnlineOnly) {
+        // Footer keterangan: jelaskan makna tag mode registrasi +
+        // aturan window daftar online. Per instruksi dr. Yoga 2026-09-15.
+        if ($adaOnlineOnly || $adaWalkinOnly) {
             $message .= PHP_EOL;
-            $message .= '📱 *Keterangan Daftar Online Saja*' . PHP_EOL;
-            $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL . PHP_EOL;
-            $message .= '⏰ *Window daftar online*: mulai jam *07:00* pagi sampai *30 menit sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
-            $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:30 hari itu.' . PHP_EOL;
+            $message .= '⚠️ *PENTING — HARAP DIBACA*' . PHP_EOL;
             $message .= PHP_EOL;
-            $message .= 'Balas *daftar online* untuk mulai reservasi.' . PHP_EOL;
+            if ($adaOnlineOnly) {
+                $message .= '📱 *Daftar Online Saja*' . PHP_EOL;
+                $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL;
+                $message .= PHP_EOL;
+            }
+            if ($adaWalkinOnly) {
+                $message .= '🏥 *Walk-in Saja*' . PHP_EOL;
+                $message .= 'Dokter dgn tag ini *tidak menerima daftar online* — pasien wajib datang langsung ke klinik + ambil antrian di tempat.' . PHP_EOL;
+                $message .= PHP_EOL;
+            }
+            if ($adaOnlineOnly) {
+                $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
+                $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *30 menit sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
+                $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:30 hari itu.' . PHP_EOL;
+                $message .= PHP_EOL;
+                $message .= '👉 Balas *daftar online* untuk mulai reservasi.' . PHP_EOL;
+            }
         }
 
         // Tambahan keterangan dokter umum yang sedang praktik (kode asli)
