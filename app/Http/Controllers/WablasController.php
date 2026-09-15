@@ -7532,9 +7532,11 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= PHP_EOL . PHP_EOL;
 
         if ($sisa <= 10) {
-            $message .= '⚠️ *SEGERA DATANG KE KLINIK*';
+            $message .= '⚠️ *ANTRIAN ANDA BERESIKO TERHAPUS*';
             $message .= PHP_EOL;
-            $message .= "Sisa hanya *{$sisa} antrian* di depan Anda. Antrian akan dipanggil sebentar lagi. Antrian yang terlewat panggilan akan dihapus.";
+            $message .= 'Kakak sudah *melewati batas waktu 30 menit* harus datang sebelum panggilan *dan 10 antrian di depan*. Antrian ini bisa terhapus kapan saja. Silakan buat antrian baru apabila antrian terlewat.';
+            $message .= PHP_EOL;
+            $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
         } else {
             $message .= 'Harap datang *30 menit* sebelum antrian Anda dipanggil, atau saat sisa *10 antrian* di depan Anda.';
         }
