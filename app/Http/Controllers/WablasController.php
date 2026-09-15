@@ -1665,6 +1665,17 @@ class WablasController extends Controller
      * ke "Balas" saja + tambah opsi "chat admin").
      */
     public function footerAntrian(){
+        // Cek apakah antrian aktif hari ini utk phone ini sudah pilih
+        // dokter tertentu → tampilkan "batal pilih dokter" alih-alih
+        // "pilih dokter". Per instruksi dr. Yoga 2026-09-15.
+        $sudahPilihDokter = false;
+        if (!empty($this->no_telp)) {
+            $sudahPilihDokter = \App\Models\Antrian::where('no_telp', $this->no_telp)
+                ->whereDate('created_at', date('Y-m-d'))
+                ->whereNotNull('dokter_dipilih_id')
+                ->exists();
+        }
+
         $response  = PHP_EOL;
         $response .= $this->samaDengan();
         $response .= PHP_EOL;
@@ -1674,7 +1685,11 @@ class WablasController extends Controller
         $response .= PHP_EOL;
         $response .= 'Balas *batalkan* untuk membatalkan reservasi / antrian ini';
         $response .= PHP_EOL;
-        $response .= 'Balas *pilih dokter* untuk memilih dokter tertentu';
+        if ($sudahPilihDokter) {
+            $response .= 'Balas *batal pilih dokter* untuk kembali ke antrian pool (dokter tercepat)';
+        } else {
+            $response .= 'Balas *pilih dokter* untuk memilih dokter tertentu';
+        }
         $response .= PHP_EOL;
         $response .= 'Balas *chat admin* untuk mendapatkan bantuan dari admin';
 
