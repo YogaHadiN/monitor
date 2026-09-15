@@ -2640,8 +2640,6 @@ class QiscusController extends Controller
                     $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
                     $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *30 menit sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
                     $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:30 hari itu.' . PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= '👉 Balas *daftar online* untuk mulai reservasi.' . PHP_EOL;
                 }
             }
             if ( $param == 1 ) {
