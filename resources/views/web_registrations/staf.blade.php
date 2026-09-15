@@ -11,21 +11,17 @@
         @if ($isScheduled)
             <span class="label label-default">Reservasi Terjadwal</span>
             <div><small>Jam {{ $petugas->jam_mulai }} - {{ $petugas->jam_akhir }}</small></div>
-        @else
-            ( Sisa {{ $petugas->sisa_antrian }} Antrian )
         @endif
+        {{-- Sisa antrian + "Antrian Terpendek" hint sengaja
+             dihilangkan utk path walk-in per instruksi dr. Yoga
+             2026-09-15. Kalau pasien pilih dokter tertentu, mereka
+             harus pilih based on preferensi dokter, bukan optimize
+             antrian. Reservasi Terjadwal tetap tampil jam praktek
+             karena informasi slot booking. --}}
         @if ( $petugas->belum_waktunya_praktek )
             <div>
                 Dokter Mulai Praktek Jam {{ $petugas->jam_mulai_default }}
             </div>
-        @endif
-        @if (
-                !$isScheduled &&
-                $petugas_pemeriksas->count() > 1 &&
-                $petugas->antrian_terpendek
-            )
-            <br>
-            (Antrian Terpendek)
         @endif
     </button>
 @endforeach
