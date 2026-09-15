@@ -1359,8 +1359,9 @@ class WebRegistrationController extends Controller
      *
      * Aturan:
      *  - Bila tenant punya jam_buka & sekarang < jam_buka → "baru dimulai pukul X"
-     *  - Deadline = jam_mulai_default jadwal terakhir - 30 menit. Bila sekarang
-     *    >= deadline → "berakhir pukul X" + listing jadwal hari ini.
+     *  - Deadline = jam_mulai_default jadwal terakhir - 60 menit (1 jam).
+     *    Bila sekarang >= deadline → "berakhir pukul X" + listing jadwal
+     *    hari ini. Per instruksi dr. Yoga 2026-09-15 (sebelumnya 30 menit).
      */
     private function validasiWindowReservasiTerjadwalGigi($petugas_pemeriksa_terjadwal): ?string
     {
@@ -1386,7 +1387,7 @@ class WebRegistrationController extends Controller
             return null;
         }
 
-        $deadline        = Carbon::parse($petugas_terakhir->jam_mulai_default, $tz)->subMinutes(30);
+        $deadline        = Carbon::parse($petugas_terakhir->jam_mulai_default, $tz)->subMinutes(60);
         $tipe_konsultasi = ucwords(optional($petugas_terakhir->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi');
 
         if ($nowJkt->lt($deadline)) {

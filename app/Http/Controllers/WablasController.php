@@ -3622,8 +3622,8 @@ class WablasController extends Controller
             }
             if ($adaOnlineOnly) {
                 $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
-                $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *30 menit sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
-                $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:30 hari itu.' . PHP_EOL;
+                $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
+                $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
             }
         }
 
@@ -8008,7 +8008,9 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $petugas_pemeriksa_terjadwal_akhir = $petugas_pemeriksa_terjadwal->last();
 
             if (!empty($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default)) {
-                $deadline = \Carbon\Carbon::parse($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default, 'Asia/Jakarta')->subMinutes(30);
+                // Deadline daftar online = jam_mulai - 60 menit (1 jam)
+                // per instruksi dr. Yoga 2026-09-15 (sebelumnya 30 menit).
+                $deadline = \Carbon\Carbon::parse($petugas_pemeriksa_terjadwal_akhir->jam_mulai_default, 'Asia/Jakarta')->subMinutes(60);
                 $tipe_konsultasi = ucwords(optional($petugas_pemeriksa_terjadwal_akhir->tipe_konsultasi)->tipe_konsultasi ?? 'Dokter Gigi');
 
                 if ($nowJkt->gte($deadline)) {
