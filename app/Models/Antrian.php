@@ -181,11 +181,36 @@ class Antrian extends Model
         return DB::select($query);
     }
     public function getSisaAntrianAttribute(){
-        $petugas_pemeriksa = PetugasPemeriksa::whereDate('tanggal', $this->created_at)
-                                            ->where('ruangan_id', $this->ruangan_id)
-                                            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
-                                            ->first();
-        return is_null( $petugas_pemeriksa )? 0 : $petugas_pemeriksa->sisa_antrian;
+        // Pool-aware: hitung antrian di depan (id < mine) yg belum
+        // dipanggil, filter tipe_konsultasi_id + tanggal sama. Konsisten
+        // dgn PolisController::ingatKanYangNgantriDiAntrianPeriksa
+        // (WA panggilan penunggu). Per instruksi dr. Yoga 2026-09-16
+        // (pasien A109 dpt "0 antrian di depan" padahal actually 22).
+        //
+        // Sebelumnya lookup ke PetugasPemeriksa.sisa_antrian — tidak
+        // reflect pool (PP.sisa_antrian per-PP, kalau pool antrian
+        // belum di-assign staf/petugas → count 0).
+        if (empty($this->tipe_konsultasi_id)) {
+            // Fallback legacy: kalau tipe_konsultasi kosong (data lama),
+            // pakai PP lookup lama supaya tidak breaking.
+            $petugas_pemeriksa = PetugasPemeriksa::whereDate('tanggal', $this->created_at)
+                ->where('ruangan_id', $this->ruangan_id)
+                ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+                ->first();
+            return is_null($petugas_pemeriksa) ? 0 : $petugas_pemeriksa->sisa_antrian;
+        }
+
+        return (int) self::whereDate('created_at', $this->created_at)
+            ->where('id', '<', $this->id)
+            ->where('dipanggil_pemeriksa', 0)
+            ->whereRaw("(
+                antriable_type = 'App\\\\Models\\\\Antrian' or
+                antriable_type = 'App\\\\Models\\\\AntrianPoli' or
+                antriable_type = 'App\\\\Models\\\\AntrianPeriksa'
+            )")
+            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+            ->whereNull('deleted_at')
+            ->count();
     }
 
     public function ruangan(){
