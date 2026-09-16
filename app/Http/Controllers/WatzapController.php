@@ -111,7 +111,10 @@ class WatzapController extends Controller
         // rujukan BPJS. Jam ≥ 8 WIB → send now. Jam < 8 WIB → schedule
         // ke jam 8 pagi. WA bot reply biasa tetap jalan setelahnya
         // (proceeded ke WablasController::webhook di bawah).
-        $this->maybeAutoSendRujukanPdf((string) $normalized['phone']);
+        $this->maybeAutoSendRujukanPdf(
+            (string) $normalized['phone'],
+            (string) ($normalized['message'] ?? '')
+        );
 
         // Inject ke request aktif agar Input::get() di WablasController bisa membaca
         $request->merge($normalized);
@@ -151,7 +154,7 @@ class WatzapController extends Controller
      * Runs BEFORE Wablas webhook processing → bot reply biasa tetap
      * jalan (menu daftar/jadwal/dll).
      */
-    protected function maybeAutoSendRujukanPdf(string $phone): void
+    protected function maybeAutoSendRujukanPdf(string $phone, string $messageBody = ''): void
     {
         try {
             $phone = preg_replace('/\D+/', '', $phone);
@@ -162,11 +165,13 @@ class WatzapController extends Controller
             $now       = \Carbon\Carbon::now('Asia/Jakarta');
             $todayWIB  = $now->copy()->startOfDay();
 
-            // Cari rujukan pending untuk phone ini
-            $rujukan = \DB::table('rujukans as r')
+            // Base query: rujukan pending PDF, created sebelum hari ini,
+            // belum terkirim. Tidak ada batasan usia maksimum — rujukan
+            // 2/5/N hari lalu pun tetap match. Per instruksi dr. Yoga
+            // 2026-09-16.
+            $base = \DB::table('rujukans as r')
                 ->join('periksas as p', 'p.id', '=', 'r.periksa_id')
                 ->join('pasiens as ps', 'ps.id', '=', 'p.pasien_id')
-                ->where('ps.no_telp', $phone)
                 ->whereNotNull('r.pdf_rujukan_bpjs_path')
                 ->whereNull('r.pdf_sent_at')
                 ->where('r.created_at', '<', $todayWIB->toDateTimeString())
@@ -179,12 +184,50 @@ class WatzapController extends Controller
                     'ps.nama as pasien_nama',
                     'ps.no_telp'
                 )
-                ->orderBy('r.created_at', 'asc')
+                ->orderBy('r.created_at', 'asc');
+
+            // MATCH 1: phone match ke pasiens.no_telp / no_telp_ibu /
+            // no_telp_ayah (pasien anak sering pakai nomor ortu). Per
+            // instruksi dr. Yoga 2026-09-16.
+            $rujukan = (clone $base)
+                ->where(function ($q) use ($phone) {
+                    $q->where('ps.no_telp', $phone)
+                      ->orWhere('ps.no_telp_ibu', $phone)
+                      ->orWhere('ps.no_telp_ayah', $phone);
+                })
                 ->first();
+
+            // MATCH 2 (fallback): kalau phone tidak match, extract nama
+            // dari message body ("Atas nama X" / "buat X" / "untuk X" /
+            // "an X"). Cari pasien by nama. Kasus Angger Prasetyo hari
+            // ini: sender phone 6285786070449 (PIC/keluarga), pasien
+            // no_telp beda → phone match gagal, tapi message body
+            // "Atas nama Angger Prasetyo" → fuzzy match ke pasien.
+            if (!$rujukan && !empty($messageBody)) {
+                $extractedName = $this->extractPasienNameFromMessage($messageBody);
+                if ($extractedName !== null && mb_strlen($extractedName) >= 3) {
+                    $rujukan = (clone $base)
+                        ->where('ps.nama', 'like', '%' . $extractedName . '%')
+                        ->first();
+                    if ($rujukan) {
+                        \Log::info('RUJUKAN_AUTO_SEND_NAME_FALLBACK', [
+                            'sender_phone'    => $phone,
+                            'extracted_name'  => $extractedName,
+                            'pasien_matched'  => $rujukan->pasien_nama,
+                            'rujukan_id'      => $rujukan->rujukan_id,
+                        ]);
+                    }
+                }
+            }
 
             if (!$rujukan) {
                 return;
             }
+
+            // Karena sender phone bisa beda dari pasien.no_telp, override
+            // rujukan.no_telp ke sender phone supaya PDF kirim ke pengirim
+            // pesan (bukan ke nomor pasien yg mungkin tidak aktif).
+            $rujukan->no_telp = $phone;
 
             $jam8WIB = $todayWIB->copy()->setTime(8, 0, 0);
 
@@ -204,8 +247,10 @@ class WatzapController extends Controller
                 return;
             }
 
-            // Jam ≥ 8 → send now
-            $this->sendRujukanPdfNow((int) $rujukan->rujukan_id);
+            // Jam ≥ 8 → send now. Pass sender phone sebagai override
+            // supaya PDF terkirim ke pengirim (bukan pasien.no_telp
+            // yg mungkin beda).
+            $this->sendRujukanPdfNow((int) $rujukan->rujukan_id, $phone);
         } catch (\Throwable $e) {
             \Log::error('RUJUKAN_PDF_AUTO_SEND_EXCEPTION', [
                 'phone' => $phone,
@@ -215,10 +260,42 @@ class WatzapController extends Controller
     }
 
     /**
+     * Extract nama pasien dari message body inbound WA. Pattern umum:
+     *   "atas nama X"
+     *   "an X" / "a.n X"
+     *   "untuk X"
+     *   "buat X"
+     * Return name string (lowercase, whitespace-trimmed) atau null
+     * kalau tidak ada match.
+     */
+    private function extractPasienNameFromMessage(string $body): ?string
+    {
+        $body = strtolower(trim($body));
+        if ($body === '') return null;
+
+        $patterns = [
+            '/\batas\s+nama\s+([a-z][a-z\s\.\']{2,40})/u',
+            '/\ba\.?\s?n\.?\s+([a-z][a-z\s\.\']{2,40})/u',
+            '/\buntuk\s+([a-z][a-z\s\.\']{2,40})/u',
+            '/\bbuat\s+([a-z][a-z\s\.\']{2,40})/u',
+        ];
+        foreach ($patterns as $p) {
+            if (preg_match($p, $body, $m)) {
+                $name = trim($m[1]);
+                // Cut off common trailing filler words.
+                $name = preg_split('/\b(dong|ya|dok|kak|sih|nya|itu|bpjs)\b/u', $name)[0] ?? $name;
+                $name = trim(preg_replace('/[^a-z\s\.\']/u', '', $name));
+                if (mb_strlen($name) >= 3) return $name;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Kirim PDF rujukan sekarang. Public karena juga dipanggil oleh
      * scheduled command Phase 3 (rujukan:send-pending-pdfs).
      */
-    public function sendRujukanPdfNow(int $rujukanId): array
+    public function sendRujukanPdfNow(int $rujukanId, ?string $overridePhone = null): array
     {
         $rujukan = \DB::table('rujukans as r')
             ->join('periksas as p', 'p.id', '=', 'r.periksa_id')
@@ -274,8 +351,18 @@ class WatzapController extends Controller
 
         $filename = 'Rujukan_BPJS_' . $rujukan->id . '.pdf';
 
+        // Phone tujuan: override kalau caller pass (mis. sender WA
+        // beda dari pasien.no_telp), else pakai pasien.no_telp default.
+        $targetPhone = !empty($overridePhone)
+            ? preg_replace('/\D+/', '', (string) $overridePhone)
+            : (string) $rujukan->no_telp;
+        if (empty($targetPhone)) {
+            \Log::warning('RUJUKAN_PDF_SEND_NO_PHONE', ['rujukan_id' => $rujukanId]);
+            return ['ok' => false, 'reason' => 'no_phone'];
+        }
+
         $watzap = app(\App\Services\WatzapService::class);
-        $result = $watzap->sendDocument((string) $rujukan->no_telp, $signedUrl, $caption, $filename);
+        $result = $watzap->sendDocument($targetPhone, $signedUrl, $caption, $filename);
 
         if ($result['ok'] ?? false) {
             \DB::table('rujukans')->where('id', $rujukanId)->update([
@@ -284,8 +371,10 @@ class WatzapController extends Controller
                 'updated_at'            => \Carbon\Carbon::now(),
             ]);
             \Log::info('RUJUKAN_PDF_SENT', [
-                'rujukan_id' => $rujukanId,
-                'phone'      => $rujukan->no_telp,
+                'rujukan_id'  => $rujukanId,
+                'phone'       => $targetPhone,
+                'pasien_telp' => (string) $rujukan->no_telp,
+                'override'    => $targetPhone !== (string) $rujukan->no_telp,
             ]);
 
             // Log outbound ke messages table supaya muncul di /messages
@@ -295,7 +384,7 @@ class WatzapController extends Controller
             // "chat_admin=1 AND (chat_sunat=0 OR NULL)").
             try {
                 \App\Models\Message::create([
-                    'no_telp'        => (string) $rujukan->no_telp,
+                    'no_telp'        => $targetPhone,
                     'message'        => $caption,
                     'tanggal'        => date('Y-m-d H:i:s'),
                     'sending'        => 1,
