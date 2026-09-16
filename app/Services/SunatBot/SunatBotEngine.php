@@ -2132,6 +2132,15 @@ class SunatBotEngine
         $needle = ltrim(trim($msgLower), '/');
         if ($needle === '') return false;
 
+        // Guard exclusion: kalau customer sebut decline phrases spt
+        // "makasih ga usah" / "makasi ga jadi", itu decline (bukan
+        // exit gratitude). Skip supaya HARGA flow lanjut. Per instruksi
+        // dr. Yoga.
+        $declineTokens = ['ga usah', 'gausah', 'ga jadi', 'gajadi', 'batal', 'cancel', 'nanti aja', 'ga perlu', 'belum butuh'];
+        foreach ($declineTokens as $tok) {
+            if (str_contains($needle, $tok)) return false;
+        }
+
         $defaults = [
             'terima kasih', 'terimakasih',
             'makasih', 'makasi', 'mksh', 'trims',
@@ -2143,7 +2152,14 @@ class SunatBotEngine
             : $defaults;
 
         foreach ($list as $kw) {
-            if ($needle === mb_strtolower($kw)) return true;
+            $kwLower = mb_strtolower($kw);
+            // Exact match (backward compat) atau substring match
+            // ("ok kak terimakasih y infonya 🙏" tetap trigger exit).
+            // Per instruksi dr. Yoga 2026-09-16: bot balas irrelevant
+            // ke "Ok kak terimakasih y infonya🙏🙏" karena exact match
+            // gagal (extra words).
+            if ($needle === $kwLower) return true;
+            if (str_contains($needle, $kwLower)) return true;
         }
         return false;
     }
