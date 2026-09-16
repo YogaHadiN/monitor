@@ -831,6 +831,19 @@ class WablasController extends Controller
                        }
                        // Pesan pemicu chat admin TIDAK memicu push
                        // (push scope sekarang khusus chat sunat).
+                       //
+                       // Khusus trigger "?" — silent register, jangan
+                       // auto-kirim greeting "Kakak dalam antrian
+                       // customer service". Pesan customer sudah
+                       // ke-arsip chat_admin=1 → admin lihat di panel
+                       // dan balas manual. Per instruksi dr. Yoga
+                       // 2026-09-16.
+                       if (endsWith($this->message, '?')
+                           && $this->message !== 'chat admin'
+                           && !str_contains($this->message, 'mau nanya')
+                           && !str_contains($this->message, 'mau tanya')) {
+                           return false;
+                       }
                        return $this->createWhatsappChat(); // buat pesan message
                     }
                 } else if (
