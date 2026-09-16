@@ -284,27 +284,6 @@ class SunatBotEngine
             // tidak sedang handoff → lanjut ke logic biasa
         }
 
-        // Gratitude exit keyword (terima kasih, makasih, dst.) —
-        // fire FIRST, sebelum agent path. Per instruksi dr. Yoga
-        // 2026-09-16: LLM sering ga nyambung utk "terima kasih",
-        // jadi hardcode short reply "Sama-sama kak 🙏". Fire regardless
-        // of session state (null / active / complete) — customer just
-        // wanted to close politely.
-        if ($this->isExitKeyword($msgLower)) {
-            if ($session && !$session->is_complete) {
-                $session->is_complete      = true;
-                $session->last_activity_at = Carbon::now();
-                $session->save();
-            }
-            return [
-                'handled' => true,
-                'replies' => [[
-                    'text'  => (string) config('sunatbot.exit_message'),
-                    'media' => null,
-                ]],
-            ];
-        }
-
         if ($session === null && !$hasTrigger) {
             // Agent path (PR3 default ON): biarkan agent yang putuskan
             // mau jawab apa (greeting question, redirect, lookup, dst).
@@ -312,6 +291,25 @@ class SunatBotEngine
             if (!$this->shouldUseAgent($noTelp)) {
                 return ['handled' => false, 'replies' => []];
             }
+        }
+
+        // Gratitude exit keyword — DEPRECATED path, dipertahankan hanya
+        // utk mode agent-disabled (legacy). Per instruksi dr. Yoga
+        // 2026-09-16: agent path routing WAJIB via LLM, tidak boleh
+        // regex/keyword. Rule "terima kasih" ada di prompt SunatBotAgent.
+        if (!$this->shouldUseAgent($noTelp)
+            && $session && !$session->is_complete
+            && $this->isExitKeyword($msgLower)) {
+            $session->is_complete      = true;
+            $session->last_activity_at = Carbon::now();
+            $session->save();
+            return [
+                'handled' => true,
+                'replies' => [[
+                    'text'  => (string) config('sunatbot.exit_message'),
+                    'media' => null,
+                ]],
+            ];
         }
 
         // Explicit admin / CS request — escalate immediately regardless
