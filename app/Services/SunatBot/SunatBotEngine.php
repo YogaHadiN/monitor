@@ -284,22 +284,18 @@ class SunatBotEngine
             // tidak sedang handoff → lanjut ke logic biasa
         }
 
-        if ($session === null && !$hasTrigger) {
-            // Agent path (PR3 default ON): biarkan agent yang putuskan
-            // mau jawab apa (greeting question, redirect, lookup, dst).
-            // Kalau agent disabled, fallback ke perilaku lama (bail).
-            if (!$this->shouldUseAgent($noTelp)) {
-                return ['handled' => false, 'replies' => []];
+        // Gratitude exit keyword (terima kasih, makasih, dst.) —
+        // fire FIRST, sebelum agent path. Per instruksi dr. Yoga
+        // 2026-09-16: LLM sering ga nyambung utk "terima kasih",
+        // jadi hardcode short reply "Sama-sama kak 🙏". Fire regardless
+        // of session state (null / active / complete) — customer just
+        // wanted to close politely.
+        if ($this->isExitKeyword($msgLower)) {
+            if ($session && !$session->is_complete) {
+                $session->is_complete      = true;
+                $session->last_activity_at = Carbon::now();
+                $session->save();
             }
-        }
-
-        // Gratitude exit keyword (terima kasih, makasih, etc.) — close
-        // session politely and let the legacy Wablas paths handle the
-        // next bubble.
-        if ($session && !$session->is_complete && $this->isExitKeyword($msgLower)) {
-            $session->is_complete      = true;
-            $session->last_activity_at = Carbon::now();
-            $session->save();
             return [
                 'handled' => true,
                 'replies' => [[
@@ -307,6 +303,15 @@ class SunatBotEngine
                     'media' => null,
                 ]],
             ];
+        }
+
+        if ($session === null && !$hasTrigger) {
+            // Agent path (PR3 default ON): biarkan agent yang putuskan
+            // mau jawab apa (greeting question, redirect, lookup, dst).
+            // Kalau agent disabled, fallback ke perilaku lama (bail).
+            if (!$this->shouldUseAgent($noTelp)) {
+                return ['handled' => false, 'replies' => []];
+            }
         }
 
         // Explicit admin / CS request — escalate immediately regardless

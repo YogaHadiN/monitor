@@ -55,7 +55,7 @@ return [
     // keywords. Override via SUNATBOT_EXIT_MESSAGE in .env.
     'exit_message' => (string) env(
         'SUNATBOT_EXIT_MESSAGE',
-        'Sesi konsultasi sunat ditutup. Untuk pertanyaan lain (daftar, jadwal, chat admin), silakan kirim pesan kembali ya kak. Terima kasih 🙏'
+        'Sama-sama kak 🙏 Kalau ada pertanyaan lain silakan.'
     ),
     // Bubble shown when the bot escalates to a human admin (medical
     // condition flagged in step 2.5, customer asked for admin/CS, or
