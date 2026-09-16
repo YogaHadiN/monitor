@@ -28,16 +28,32 @@ Route::get('/redis-test', function () {
 
 // Short redirect ke Google Review — menggantikan bit.ly supaya tidak
 // lewat halaman penengah, langsung 302 ke write-review Google.
-// Per instruksi dr. Yoga 2026-09-15.
+// Per instruksi dr. Yoga 2026-09-15/16. Track click di
+// review_link_clicks utk laporan harian.
 //   /review/klinikjatielok → Klinik Jati Elok
 //   /review/sunatboy       → SunatBoy
-Route::get('/review/klinikjatielok', function () {
+$logReviewClick = function (string $slug) {
+    try {
+        \DB::table('review_link_clicks')->insert([
+            'slug'       => $slug,
+            'ip'         => request()->ip(),
+            'user_agent' => substr((string) request()->userAgent(), 0, 500),
+            'referer'    => substr((string) request()->headers->get('referer'), 0, 500),
+            'clicked_at' => now(),
+        ]);
+    } catch (\Throwable $e) {
+        \Log::warning('review_link_click log fail', ['slug' => $slug, 'err' => $e->getMessage()]);
+    }
+};
+Route::get('/review/klinikjatielok', function () use ($logReviewClick) {
+    $logReviewClick('klinikjatielok');
     return redirect()->away(
         'https://search.google.com/local/writereview?placeid=ChIJsRyOtNP4aS4R4hIwu5yMnk0',
         302
     );
 });
-Route::get('/review/sunatboy', function () {
+Route::get('/review/sunatboy', function () use ($logReviewClick) {
+    $logReviewClick('sunatboy');
     return redirect()->away(
         'https://search.google.com/local/writereview?placeid=ChIJsd_YRQDjaS4R9aVhjW76t3Y',
         302
