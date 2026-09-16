@@ -5677,19 +5677,21 @@ class QiscusController extends Controller
         // Per instruksi dr. Yoga 2026-09-15.
         $sisa = (int) ($antrian->sisa_antrian ?? 0);
 
+        $waktuTunggu = $this->waktuTunggu($sisa);
+
         $message  = 'Nomor antrian Anda :';
         $message .= PHP_EOL . PHP_EOL;
         $message .= '_' . $antrian->nomor_antrian . '_';
         $message .= PHP_EOL . PHP_EOL;
         $message .= "Masih ada *{$sisa} antrian* di depan Anda";
+        $message .= PHP_EOL;
+        $message .= "Perkiraan waktu tunggu *{$waktuTunggu} menit*";
         $message .= PHP_EOL . PHP_EOL;
 
         if ($sisa <= 10) {
             $message .= '⚠️ *ANTRIAN ANDA BERESIKO TERHAPUS*';
             $message .= PHP_EOL;
             $message .= 'Kakak sudah *melewati batas waktu 30 menit* harus datang sebelum panggilan *dan 10 antrian di depan*. Antrian ini bisa terhapus kapan saja. Silakan buat antrian baru apabila antrian terlewat.';
-            $message .= PHP_EOL;
-            $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
         } else {
             $message .= 'Harap datang *30 menit* sebelum antrian Anda dipanggil, atau saat sisa *10 antrian* di depan Anda.';
         }
