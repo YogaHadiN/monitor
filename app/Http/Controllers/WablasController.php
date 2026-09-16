@@ -3576,19 +3576,24 @@ class WablasController extends Controller
                 // Nama + gelar
                 $message .= $this->tambahkanGelar($d['titel'], ucwords($d['nama'])) . PHP_EOL;
 
-                // Jam praktik + tag mode registrasi (dalam kurung yg
-                // sama). Per instruksi dr. Yoga 2026-09-15:
-                //   schedulled_booking_allowed=1 → Daftar Online Saja
-                //   schedulled_booking_allowed=0 → Walk-in Saja
-                //     (khusus gigi: selain Michel hanya walk-in)
-                $modeTag = !empty($d['online_only'])
-                    ? '📱 *Daftar Online Saja*'
-                    : '🏥 *Walk-in Saja*';
-                $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' — ' . $modeTag . ' )';
-                if (!empty($d['online_only'])) {
-                    $adaOnlineOnly = true;
+                // Jam praktik + tag mode registrasi. Tag hanya untuk
+                // DOKTER GIGI (tipe=2) karena semantics scheduled_booking
+                // per instruksi dr. Yoga: gigi Michel online-only, gigi
+                // lain walk-in only. Untuk DOKTER UMUM (tipe=1), semua
+                // terima walk-in + online → no tag di kurung, tapi info
+                // footer tetap tampil.
+                if ((int) $param === 2) {
+                    $modeTag = !empty($d['online_only'])
+                        ? '📱 *Daftar Online Saja*'
+                        : '🏥 *Walk-in Saja*';
+                    $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' — ' . $modeTag . ' )';
+                    if (!empty($d['online_only'])) {
+                        $adaOnlineOnly = true;
+                    } else {
+                        $adaWalkinOnly = true;
+                    }
                 } else {
-                    $adaWalkinOnly = true;
+                    $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' )';
                 }
 
                 // ===== Tambahkan (izin hari ini) bila:
@@ -3604,29 +3609,40 @@ class WablasController extends Controller
             }
         }
 
-        // Footer keterangan: jelaskan makna tag mode registrasi +
-        // aturan window daftar online. Per instruksi dr. Yoga 2026-09-15.
-        if ($adaOnlineOnly || $adaWalkinOnly) {
+        // Footer keterangan: aturan walk-in + daftar online tampil di
+        // semua tipe (Umum + Gigi) supaya pasien tahu 2 jalur akses
+        // klinik. Per instruksi dr. Yoga 2026-09-15/16.
+        $message .= PHP_EOL;
+        $message .= '⚠️ *PENTING — HARAP DIBACA*' . PHP_EOL;
+        $message .= PHP_EOL;
+
+        // Section Daftar Online — tampil kalau ada slot online-only
+        // (spesifik tag), atau tipe=1 (umum semua boleh online).
+        if ($adaOnlineOnly) {
+            $message .= '📱 *Daftar Online Saja*' . PHP_EOL;
+            $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL;
             $message .= PHP_EOL;
-            $message .= '⚠️ *PENTING — HARAP DIBACA*' . PHP_EOL;
-            $message .= PHP_EOL;
-            if ($adaOnlineOnly) {
-                $message .= '📱 *Daftar Online Saja*' . PHP_EOL;
-                $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL;
-                $message .= PHP_EOL;
-            }
-            if ($adaWalkinOnly) {
-                $message .= '🏥 *Walk-in Saja*' . PHP_EOL;
-                $message .= 'Dokter dgn tag ini *tidak menerima daftar online* — pasien wajib datang langsung ke klinik + ambil antrian di tempat.' . PHP_EOL;
-                $message .= 'Antrian dapat diambil *mulai dari jam dokter praktek*.' . PHP_EOL;
-                $message .= PHP_EOL;
-            }
-            if ($adaOnlineOnly) {
-                $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
-                $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
-                $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
-            }
         }
+
+        // Section Walk-in.
+        if ($adaWalkinOnly) {
+            $message .= '🏥 *Walk-in Saja*' . PHP_EOL;
+            $message .= 'Dokter dgn tag ini *tidak menerima daftar online* — pasien wajib datang langsung ke klinik + ambil antrian di tempat.' . PHP_EOL;
+            $message .= 'Antrian dapat diambil *mulai dari jam dokter praktek*.' . PHP_EOL;
+            $message .= PHP_EOL;
+        }
+
+        // Umum (tipe=1): tampil info walk-in + online sekaligus (semua
+        // dokter umum terima keduanya).
+        if ((int) $param === 1) {
+            $message .= '🏥 *Walk-in*' . PHP_EOL;
+            $message .= 'Datang langsung ke klinik + ambil antrian di tempat, mulai dari jam dokter praktek.' . PHP_EOL;
+            $message .= PHP_EOL;
+        }
+
+        $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
+        $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
+        $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
 
         // Tambahan keterangan dokter umum yang sedang praktik (kode asli)
         if ($param == 1) {

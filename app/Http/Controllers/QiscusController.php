@@ -2608,41 +2608,49 @@ class QiscusController extends Controller
                     }
                     $message .=  $this->tambahkanGelar($d['titel'],ucwords($d['nama']));
                     $message .= PHP_EOL;
-                    $modeTag = !empty($d['online_only'])
-                        ? '📱 *Daftar Online Saja*'
-                        : '🏥 *Walk-in Saja*';
-                    $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' — ' . $modeTag . ' )';
-                    if (!empty($d['online_only'])) {
-                        $adaOnlineOnly = true;
+                    // Tag hanya utk dokter gigi (tipe=2). Umum (tipe=1)
+                    // no tag karena terima keduanya.
+                    if ((int) $param === 2) {
+                        $modeTag = !empty($d['online_only'])
+                            ? '📱 *Daftar Online Saja*'
+                            : '🏥 *Walk-in Saja*';
+                        $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' — ' . $modeTag . ' )';
+                        if (!empty($d['online_only'])) {
+                            $adaOnlineOnly = true;
+                        } else {
+                            $adaWalkinOnly = true;
+                        }
                     } else {
-                        $adaWalkinOnly = true;
+                        $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' )';
                     }
                     $message .= PHP_EOL;
                 }
             }
             // Footer keterangan mode registrasi + window daftar online.
-            // Per instruksi dr. Yoga 2026-09-15.
-            if ($adaOnlineOnly || $adaWalkinOnly) {
+            // Per instruksi dr. Yoga 2026-09-15/16: tampil di semua
+            // tipe (Umum + Gigi).
+            $message .= PHP_EOL;
+            $message .= '⚠️ *PENTING — HARAP DIBACA*' . PHP_EOL;
+            $message .= PHP_EOL;
+            if ($adaOnlineOnly) {
+                $message .= '📱 *Daftar Online Saja*' . PHP_EOL;
+                $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL;
                 $message .= PHP_EOL;
-                $message .= '⚠️ *PENTING — HARAP DIBACA*' . PHP_EOL;
-                $message .= PHP_EOL;
-                if ($adaOnlineOnly) {
-                    $message .= '📱 *Daftar Online Saja*' . PHP_EOL;
-                    $message .= 'Dokter dgn tag ini *tidak menerima walk-in* — pasien wajib daftar online terlebih dahulu.' . PHP_EOL;
-                    $message .= PHP_EOL;
-                }
-                if ($adaWalkinOnly) {
-                    $message .= '🏥 *Walk-in Saja*' . PHP_EOL;
-                    $message .= 'Dokter dgn tag ini *tidak menerima daftar online* — pasien wajib datang langsung ke klinik + ambil antrian di tempat.' . PHP_EOL;
-                    $message .= 'Antrian dapat diambil *mulai dari jam dokter praktek*.' . PHP_EOL;
-                    $message .= PHP_EOL;
-                }
-                if ($adaOnlineOnly) {
-                    $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
-                    $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
-                    $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
-                }
             }
+            if ($adaWalkinOnly) {
+                $message .= '🏥 *Walk-in Saja*' . PHP_EOL;
+                $message .= 'Dokter dgn tag ini *tidak menerima daftar online* — pasien wajib datang langsung ke klinik + ambil antrian di tempat.' . PHP_EOL;
+                $message .= 'Antrian dapat diambil *mulai dari jam dokter praktek*.' . PHP_EOL;
+                $message .= PHP_EOL;
+            }
+            if ((int) $param === 1) {
+                $message .= '🏥 *Walk-in*' . PHP_EOL;
+                $message .= 'Datang langsung ke klinik + ambil antrian di tempat, mulai dari jam dokter praktek.' . PHP_EOL;
+                $message .= PHP_EOL;
+            }
+            $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
+            $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
+            $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
             if ( $param == 1 ) {
                 $staf = $this->lastStaf();
                 if (!is_null( $staf )) {
