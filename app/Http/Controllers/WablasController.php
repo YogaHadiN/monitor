@@ -7654,8 +7654,11 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         // Per instruksi dr. Yoga 2026-09-17.
         $sisa_antrian = (int) $ant->sisa_antrian;
 
-        $message  = '*Nomor antrian terbaru baru saja dipanggil*' . PHP_EOL . PHP_EOL;
-        $message .= 'Nomor antrian Anda adalah' . PHP_EOL . PHP_EOL;
+        // Reply "cek antrian" — header "Nomor antrian terbaru baru saja
+        // dipanggil" DIHAPUS (per instruksi dr. Yoga 2026-09-17):
+        // customer sedang cek antrian sendiri, tidak ada panggilan baru
+        // yg konteksnya relevan. Langsung ke nomor antrian.
+        $message  = 'Nomor antrian Anda adalah' . PHP_EOL . PHP_EOL;
         $message .= '*' . $ant->nomor_antrian . '*' . PHP_EOL . PHP_EOL;
 
         if ($sisa_antrian === 0) {
