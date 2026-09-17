@@ -192,12 +192,11 @@
                         <dd>{{ $antrian->ruangan->nama }}</dd>
                     @endif
                     <dt>Tanggal</dt>
-                    <dd>{{ \Carbon\Carbon::parse($antrian->created_at)->translatedFormat('l, d F Y') }}</dd>
+                    <dd>{{ \Carbon\Carbon::parse($antrian->created_at)->translatedFormat('d F Y') }}</dd>
                 </dl>
 
                 <div class="qr-section">
                     <img src="{{ $qr_url }}" alt="QR Code Antrian">
-                    <div class="hint">Tunjukkan QR di atas ke petugas saat tiba di klinik</div>
                 </div>
             </div>
 
