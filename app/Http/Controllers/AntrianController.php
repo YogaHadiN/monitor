@@ -304,7 +304,9 @@ class AntrianController extends Controller
 
             // Warning kalau antrian updated_at "ke depan" (drift) atau
             // > 10s (kemungkinan retry broadcast baca state basi).
-            if ($updatedAgo > 10 || $updatedAgo < -1) {
+            // Toleransi clock skew -5s antara MySQL server vs app server
+            // (dulu -1s → false positive tiap ~jam).
+            if ($updatedAgo > 10 || $updatedAgo < -5) {
                 \Log::warning('MONITOR_GETDATABARU_STALE_SUSPECT', [
                     'seq'           => $seq,
                     'antrian_id'    => (int) $antrian_id,
