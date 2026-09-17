@@ -201,23 +201,6 @@
                 </div>
             </div>
 
-            <div class="instructions">
-                <span class="title">📋 CARA SCAN QR CODE</span>
-                <ol>
-                    <li>Datang ke <b>Klinik Jati Elok</b> paling lambat <b>30 menit sebelum</b> perkiraan panggilan</li>
-                    <li>Buka halaman ini di HP Anda</li>
-                    <li>Tunjukkan QR code di atas ke <b>petugas pendaftaran</b></li>
-                    <li>Petugas akan scan → nomor antrian otomatis terkonfirmasi</li>
-                </ol>
-            </div>
-
-            <div class="warning">
-                <b>⚠️ PENTING:</b> Antrian akan <b>otomatis terhapus</b> oleh sistem apabila:
-                <ol style="margin-left: 18px; margin-top: 4px;">
-                    <li>Tidak scan QR sebelum tiba giliran</li>
-                    <li>Dipanggil 3x tapi tidak hadir di ruang periksa</li>
-                </ol>
-            </div>
         @endif
 
         <div class="footer">
