@@ -434,7 +434,7 @@ class AntrianController extends Controller
         return $result;
     }
     public function getQr($id){
-        $antrian = Antrian::find( $id );
+        $antrian = Antrian::with('ruangan', 'tipe_konsultasi', 'staf')->find( $id );
         // jika qr tidak ada di dalam row, maka throw error tidak ditemukan
         // jika qr tidak hari ini, maka throw error tidak ditemukan
         // jika qr sudah diproses maka throw error tidak ditemukan
@@ -449,10 +449,17 @@ class AntrianController extends Controller
                 )
             )
         ) {
-            return 'Data tidak ditemukan silahkan hubungi petugas';
+            return view('antrians.qrcode', [
+                'antrian' => null,
+                'error'   => 'Data QR code tidak ditemukan. Kemungkinan sudah kadaluarsa atau sudah scan. Silakan hubungi petugas.',
+            ]);
         }
-        $urlFile =  \Storage::disk('s3')->url($antrian->qr_code_path_s3) ;
-        return "<img src='$urlFile' alt=''/>";
+        $urlFile = \Storage::disk('s3')->url($antrian->qr_code_path_s3);
+        return view('antrians.qrcode', [
+            'antrian' => $antrian,
+            'qr_url'  => $urlFile,
+            'error'   => null,
+        ]);
     }
 
     public function convertSoundToArrayMobile(){
