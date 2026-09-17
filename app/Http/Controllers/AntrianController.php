@@ -161,13 +161,21 @@ class AntrianController extends Controller
     }
 
 	public function convertSoundToArray($antrian_id){
-        $antrian = Antrian::with('antriable.ruangan')->find( $antrian_id );
+        // Eager load `antriable.ruangan` hanya utk Antrian polymorphic.
+        // AntrianKasir tidak punya relasi ruangan → RelationNotFoundException
+        // kalau di-load pakai `antriable.ruangan` polos. Pakai morphWith
+        // supaya eager load per-type.
+        $antrian = Antrian::with(['antriable' => function ($morph) {
+            $morph->morphWith([\App\Models\Antrian::class => ['ruangan']]);
+        }])->find( $antrian_id );
         if (is_null($antrian)) {
             Log::warning('convertSoundToArray: antrian tidak ditemukan', ['antrian_id' => $antrian_id]);
             return [];
         }
 		$nomor_antrian = $antrian->nomor_antrian;
-		$ruangan       = optional($antrian->antriable)->ruangan;
+		$ruangan       = $antrian->antriable instanceof \App\Models\Antrian
+		    ? optional($antrian->antriable)->ruangan
+		    : null;
 		$huruf         = strtolower(str_split($nomor_antrian)[0]);
 		$angka         = substr($nomor_antrian, 1);
 
