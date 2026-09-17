@@ -408,39 +408,28 @@ class WablasController extends Controller
             $hasDaftarWord = str_contains($msgLower, 'daftar') || str_contains($msgLower, 'booking');
 
             if (!$sunatBotShouldRun && $hasSunatWord) {
-                if ($hasDaftarWord) {
-                    $sunatJid = preg_replace('/\D+/', '', (string) config('services.gowa.sunat_device_jid', '')) ?: '6282278065959';
-                    $autoText = rawurlencode('saya mau daftar sunat');
-                    $calendar = 'https://www.kezia.id/sunat-calendar';
+                // Klinik utama redirect (sementara ini per instruksi
+                // dr. Yoga 2026-09-17): SEMUA sunat/khitan trigger
+                // (dgn/tanpa "daftar"/"booking") → arahkan ke HP Rona
+                // pribadi (62895369269190). Dulu ada branching daftar
+                // → chat admin sunat + calendar, sekarang single path.
+                $rona      = (string) config('sunatbot.klinik_utama_sunat_redirect_number', '62895369269190');
+                $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
+                if (str_starts_with($ronaDigits, '0'))  $ronaE164 = '62' . substr($ronaDigits, 1);
+                elseif (str_starts_with($ronaDigits, '62')) $ronaE164 = $ronaDigits;
+                elseif (str_starts_with($ronaDigits, '8'))  $ronaE164 = '62' . $ronaDigits;
+                else $ronaE164 = $ronaDigits;
 
-                    $msg = "Halo kak 🙏\n\n"
-                         . "Untuk mendaftar sunat, silakan pilih salah satu cara berikut:\n\n"
-                         . "1️⃣ Chat admin sunat langsung:\n"
-                         . "https://wa.me/{$sunatJid}?text={$autoText}\n\n"
-                         . "2️⃣ Atau pilih jadwal sendiri di kalender:\n"
-                         . "{$calendar}\n"
-                         . "Setelah memilih tanggal, kakak akan diarahkan ke WhatsApp SunatBoy.\n\n"
-                         . "Tap link di atas untuk mulai ya kak.";
-                    $this->autoReply($msg);
-                    \Log::info('SUNAT_DAFTAR_AUTO_REPLY', ['phone' => $this->no_telp]);
-                } else {
-                    $rona      = (string) config('sunatbot.nomor_rona', '6282278065959');
-                    $ronaDigits = preg_replace('/\D+/', '', $rona) ?: $rona;
-                    if (str_starts_with($ronaDigits, '0'))  $ronaE164 = '62' . substr($ronaDigits, 1);
-                    elseif (str_starts_with($ronaDigits, '62')) $ronaE164 = $ronaDigits;
-                    elseif (str_starts_with($ronaDigits, '8'))  $ronaE164 = '62' . $ronaDigits;
-                    else $ronaE164 = $ronaDigits;
-
-                    $msg = "Halo kak 🙏\n\n"
-                         . "Untuk informasi tentang *sunat* bisa langsung chat admin kami:\n"
-                         . "*Rona* — https://wa.me/{$ronaE164}\n\n"
-                         . "Tap link di atas untuk langsung membuka chat ya kak. Terima kasih.";
-                    $this->autoReply($msg);
-                    \Log::info('SUNAT_FALLBACK_AUTO_REPLY', [
-                        'phone'    => $this->no_telp,
-                        'rona_wa'  => $ronaE164,
-                    ]);
-                }
+                $msg = "Halo kak 🙏\n\n"
+                     . "Untuk informasi tentang *sunat* bisa langsung chat admin kami:\n"
+                     . "*Rona* — https://wa.me/{$ronaE164}\n\n"
+                     . "Tap link di atas untuk langsung membuka chat ya kak. Terima kasih.";
+                $this->autoReply($msg);
+                \Log::info('SUNAT_KLINIK_UTAMA_REDIRECT', [
+                    'phone'         => $this->no_telp,
+                    'has_daftar'    => $hasDaftarWord,
+                    'rona_wa'       => $ronaE164,
+                ]);
                 // SENGAJA tidak return — biarkan flow lanjut ke universal
                 // save block supaya inbound message tetap ter-arsip dan
                 // maybeCreateSunatFollowupSession ke-panggil → followup

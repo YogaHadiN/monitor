@@ -8,6 +8,13 @@ return [
     // via bot dulu, bukan langsung ke HP Rona pribadi. Override lewat
     // env kalau perlu direct-ke-Rona untuk env non-produksi.
     'nomor_rona'    => env('SUNATBOT_NOMOR_RONA', '6282278065959'),
+    // Nomor tujuan redirect KLINIK UTAMA (Wablas) saat customer ketik
+    // "sunat"/"khitan" — pointing ke HP Rona pribadi (62895369269190)
+    // per instruksi dr. Yoga 2026-09-17 (sementara ini, sampai bot AI
+    // klinik utama siap). Bedakan dari sunatbot.nomor_rona di atas —
+    // itu masih ke gowa sunat device. Override lewat env
+    // SUNATBOT_KLINIK_UTAMA_REDIRECT_NUMBER.
+    'klinik_utama_sunat_redirect_number' => env('SUNATBOT_KLINIK_UTAMA_REDIRECT_NUMBER', '62895369269190'),
     // Nomor operator/admin yang dapat notifikasi WA tiap booking baru
     // via sunat bot (mirror atika JadwalSunatController hardcode).
     'nomor_operator' => env('SUNATBOT_NOMOR_OPERATOR', '6281381912803'),
