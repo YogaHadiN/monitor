@@ -7613,7 +7613,7 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $message .= PHP_EOL;
             $message .= 'Kakak sudah *melewati batas waktu 30 menit* harus datang sebelum panggilan *dan 10 antrian di depan*. Antrian ini bisa terhapus kapan saja. Silakan buat antrian baru apabila antrian terlewat.';
         } else {
-            $message .= 'Harap datang *30 menit* sebelum antrian Anda dipanggil, atau saat sisa *10 antrian* di depan Anda.';
+            $message .= 'Harap datang paling lambat *30 menit sebelum* antrian Anda dipanggil, atau saat sisa *10 antrian di depan*.';
         }
         $message .= PHP_EOL . PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
