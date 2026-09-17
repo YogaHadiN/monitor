@@ -197,7 +197,24 @@ window.__pglQueue = window.__pglQueue || [];
 window.__pglBusy  = window.__pglBusy  || false;
 
 function pglPasien(sound) {
-    if (!sound || !sound.length) return;
+    if (!sound) return;
+
+    // Empty array = play bell saja (logo click / unlock audio browser
+    // autoplay policy). Skip queue + number chain. Per instruksi
+    // dr. Yoga 2026-09-17.
+    if (!sound.length) {
+        var bellOnly = document.getElementById("myAudio");
+        if (bellOnly) {
+            try { bellOnly.currentTime = 0; } catch (e) {}
+            var bpOnly = bellOnly.play();
+            if (bpOnly && typeof bpOnly.catch === "function") {
+                bpOnly.catch(function (err) {
+                    console.warn("pglPasien bell-only play fail:", err);
+                });
+            }
+        }
+        return;
+    }
 
     // Dedupe: kalau panggilan identik sudah di queue / sedang play,
     // skip. Deteksi via join key. Menghindari double-broadcast yg
