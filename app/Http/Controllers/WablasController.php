@@ -7781,8 +7781,13 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                 break;
             }
         }
+        // Skip footer utk pesan "chat admin queue" — customer sudah
+        // di antrian CS, opsi daftar/cek antrian/pilih dokter/batalkan
+        // ga relevan. Per instruksi dr. Yoga 2026-09-17.
+        $isChatAdminQueue = strpos($text, 'Kakak dalam antrian customer service') !== false;
         if (
             !$isCancelConfirm
+            && !$isChatAdminQueue
             && strpos($text, $footerSentinel) === false
             && $this->phoneHasActiveAntrianToday()
         ) {
