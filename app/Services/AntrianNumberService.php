@@ -22,8 +22,32 @@ class AntrianNumberService
 {
     public function next(int $tenantId, int $ruanganId, ?int $tipeKonsultasiId = null): int
     {
-        if (config('features.pool_antrian_enabled') && $tipeKonsultasiId) {
-            return $this->nextPool($tenantId, $tipeKonsultasiId);
+        if (config('features.pool_antrian_enabled')) {
+            // Defensive (dr. Yoga 2026-09-08): kalau tipeKonsultasiId null
+            // tapi ruangan_id ada, derive tipe dari PetugasPemeriksa hari
+            // ini utk ruangan tsb. Case A441346: scan SR Michel bikin
+            // Antrian dgn tipe null saat creating listener fires → fall
+            // ke nextLegacy → nomor RESET ke B1 padahal pool counter
+            // tipe 2 sudah di 52. Derive dari ruangan menghindari counter
+            // divergence.
+            if (!$tipeKonsultasiId && $ruanganId) {
+                $derived = (int) DB::table('petugas_pemeriksas')
+                    ->whereDate('tanggal', now('Asia/Jakarta')->toDateString())
+                    ->where('ruangan_id', $ruanganId)
+                    ->value('tipe_konsultasi_id');
+
+                if ($derived > 0) {
+                    \Illuminate\Support\Facades\Log::warning('AntrianNumberService.derived_tipe', [
+                        'tenant_id'    => $tenantId,
+                        'ruangan_id'   => $ruanganId,
+                        'derived_tipe' => $derived,
+                    ]);
+                    $tipeKonsultasiId = $derived;
+                }
+            }
+            if ($tipeKonsultasiId) {
+                return $this->nextPool($tenantId, (int) $tipeKonsultasiId);
+            }
         }
         return $this->nextLegacy($tenantId, $ruanganId);
     }
@@ -51,6 +75,8 @@ class AntrianNumberService
     {
         $today = now('Asia/Jakarta')->toDateString();
 
+        // Pool row: ruangan_id = NULL (tidak scope ke ruangan). Unique
+        // index (tenant, tipe_konsultasi, tanggal) memastikan atomic.
         $affected = DB::affectingStatement("
             INSERT INTO antrian_counters (tenant_id, ruangan_id, tipe_konsultasi_id, tanggal, last_number, created_at, updated_at)
             VALUES (?, NULL, ?, ?, 1, NOW(), NOW())
