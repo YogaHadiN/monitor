@@ -200,14 +200,17 @@ class Antrian extends Model
             return is_null($petugas_pemeriksa) ? 0 : $petugas_pemeriksa->sisa_antrian;
         }
 
+        // Filter dipanggil_pemeriksa=0 DIHAPUS (dr. Yoga 2026-09-17):
+        // antrian yg sudah dipanggil tapi belum di-periksa (menunggu
+        // pasien datang) tetap "di depan". Cocok dgn atika
+        // PolisController::ingatKanYangNgantriDiAntrianPeriksa.
         return (int) self::whereDate('created_at', $this->created_at)
             ->where('id', '<', $this->id)
-            ->where('dipanggil_pemeriksa', 0)
-            ->whereRaw("(
-                antriable_type = 'App\\\\Models\\\\Antrian' or
-                antriable_type = 'App\\\\Models\\\\AntrianPoli' or
-                antriable_type = 'App\\\\Models\\\\AntrianPeriksa'
-            )")
+            ->whereIn('antriable_type', [
+                'App\\Models\\Antrian',
+                'App\\Models\\AntrianPoli',
+                'App\\Models\\AntrianPeriksa',
+            ])
             ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
             ->whereNull('deleted_at')
             ->count();

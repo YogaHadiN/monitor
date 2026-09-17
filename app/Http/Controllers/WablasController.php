@@ -7633,58 +7633,106 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                     ])
             ->latest()->first();
 
-        $message  = 'Nomor Antrian ';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        $message .= '*' . $ant->nomor_antrian_dipanggil . '*';
-        $message .= PHP_EOL;
-        $message .= PHP_EOL;
-        if ( !is_null( $ant ) && !is_null( $ant->antrian_dipanggil ) && $ant->id == $ant->antrian_dipanggil->id ) {
-            $message .= 'Dipanggil. Silahkan menuju ruang periksa';
-        } else {
-            $message .= 'Dipanggil ke ruang periksa.';
-            $message .= PHP_EOL;
-            $message .= 'Nomor antrian Anda adalah';
-            $message .= PHP_EOL;
-            $message .= PHP_EOL;
-            $message .= '*'.$ant->nomor_antrian.'*';
-            $message .= PHP_EOL;
-            if ( $ant->tipe_konsultasi_id == 1 ) {
-                $message .= PHP_EOL;
-                $sisa_antrian =$ant->sisa_antrian;
-                /* $message .= "masih ada *{$sisa_antrian} antrian* lagi"; */
-                /* $message .= PHP_EOL; */
-                /* $waktu_tunggu = $this->waktuTunggu( $ant->sisa_antrian ); */
-                /* $message .= "perkiraan waktu tunggu *{$waktu_tunggu} menit*"; */
-                /* $message .= PHP_EOL; */
-                /* $message .= PHP_EOL; */
-                $message .= $this->aktifkan_notifikasi_otomatis_text();
-                if (
-                    $ant->reservasi_online &&
-                    $sisa_antrian < 11 &&
-                    $ant->sudah_hadir_di_klinik == 0
-                ) {
-                    $message .= PHP_EOL;
-                    $message .= 'Mohon kehadirannya di klinik 30 menit sebelum perkiraan panggilan';
-                    $message .= PHP_EOL;
-                    $message .= PHP_EOL;
-                    $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik';
-                    $message .= PHP_EOL;
-                    $message .= 'Apabila antrian Anda terlewat secara otomatis antrian akan terapus oleh sistem';
-                    $message .= PHP_EOL;
-
-                } else if (
-                    $ant->reservasi_online &&
-                    $ant->sudah_hadir_di_klinik == 0
-                ) {
-                    $message .= PHP_EOL;
-                    $message .= 'Balas *stop* untuk berhenti menerima notifikasi ini';
-                }
-            }
-            $message .= PHP_EOL;
-            $message .= $this->footerAntrian();
+        if (is_null($ant)) {
+            return 'Belum ada antrian tercatat untuk nomor ini hari ini.';
         }
+
+        // Kalau antrian ini yang sedang dipanggil ke ruang periksa,
+        // pesan sederhana: "Dipanggil. Silahkan menuju ruang periksa".
+        if (!is_null($ant->antrian_dipanggil) && $ant->id == $ant->antrian_dipanggil->id) {
+            $message  = '*Nomor antrian Anda dipanggil*' . PHP_EOL . PHP_EOL;
+            $message .= '*' . $ant->nomor_antrian . '*' . PHP_EOL . PHP_EOL;
+            $message .= 'Silahkan menuju ruang periksa';
+            return $message;
+        }
+
+        // Format seragam dgn broadcast "Nomor antrian terbaru baru saja
+        // dipanggil" (atika PolisController::ingatKanYangNgantriDiAntrianPeriksa).
+        // Per instruksi dr. Yoga 2026-09-17.
+        $sisa_antrian = (int) $ant->sisa_antrian;
+
+        $message  = '*Nomor antrian terbaru baru saja dipanggil*' . PHP_EOL . PHP_EOL;
+        $message .= 'Nomor antrian Anda adalah' . PHP_EOL . PHP_EOL;
+        $message .= '*' . $ant->nomor_antrian . '*' . PHP_EOL . PHP_EOL;
+
+        if ($sisa_antrian === 0) {
+            $message .= '*Antrian Anda berikutnya* — mohon bersiap.';
+        } else {
+            $message .= "Masih ada *{$sisa_antrian} antrian* di depan Anda" . PHP_EOL;
+            $numPetugasAktif = $this->numPetugasAktifSaatIni((int) $ant->tipe_konsultasi_id);
+            $waktu_tunggu = $this->waktuTunggu($sisa_antrian, $numPetugasAktif);
+            $message .= "Perkiraan waktu tunggu *{$waktu_tunggu} menit*";
+        }
+
+        $waktuTungguMin = $sisa_antrian === 0
+            ? 0
+            : (int) ceil($sisa_antrian * 6 / max(1, $this->numPetugasAktifSaatIni((int) $ant->tipe_konsultasi_id)));
+
+        // Warning + Scan QR reminder kalau sisa ≤ 10 ATAU min waktu tunggu
+        // < 30 menit — mirror atika PolisController.
+        if ($sisa_antrian > 0 && ($sisa_antrian <= 10 || $waktuTungguMin < 30)) {
+            $belumScan = (int) $ant->sudah_hadir_di_klinik === 0;
+            $message .= PHP_EOL . PHP_EOL;
+            $message .= '⚠️ *ANTRIAN ANDA BERESIKO TERHAPUS*' . PHP_EOL;
+            if ($belumScan) {
+                $message .= 'Kakak sudah *melewati batas waktu 30 menit* harus datang sebelum panggilan *dan 10 antrian di depan*. Antrian ini bisa terhapus kapan saja. Silakan buat antrian baru apabila antrian terlewat.';
+            } else {
+                $message .= 'Sebentar lagi antrian Anda dipanggil. Kalau tidak hadir + scan QR di klinik, antrian akan otomatis terhapus dan Anda harus daftar ulang.';
+            }
+        }
+
+        // Reminder Scan QR + link — kalau reservasi_online + belum hadir +
+        // (sisa ≤ 10 ATAU min waktu tunggu < 30).
+        if (
+            $ant->reservasi_online &&
+            $ant->sudah_hadir_di_klinik == 0 &&
+            ($sisa_antrian < 11 || $waktuTungguMin < 30)
+        ) {
+            $message .= PHP_EOL . PHP_EOL;
+            $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik' . PHP_EOL . PHP_EOL;
+            $message .= 'Untuk melihat qr code klik di link dibawah ini :' . PHP_EOL;
+            $message .= 'https://www.klinikjatielok.com/antrians/get/qrcode/' . $ant->id . PHP_EOL . PHP_EOL;
+            $message .= 'Simpan nomor ini untuk mengaktifkan link tersebut';
+        } elseif ($ant->reservasi_online && $ant->sudah_hadir_di_klinik == 0) {
+            $message .= PHP_EOL . PHP_EOL;
+            $message .= 'Harap datang paling lambat *30 menit sebelum* antrian Anda dipanggil, atau saat sisa *10 antrian di depan*.' . PHP_EOL . PHP_EOL;
+            $message .= 'Balas *stop* untuk berhenti menerima notifikasi ini';
+        }
+
+        $message .= PHP_EOL;
+        $message .= $this->footerAntrian();
         return $message;
+    }
+
+    /**
+     * Count petugas pemeriksa aktif utk tipe_konsultasi tertentu saat ini
+     * (jam_mulai ≤ now ≤ jam_akhir hari ini). Dipakai utk hitung waktu
+     * tunggu paralel di WA reply.
+     */
+    private function numPetugasAktifSaatIni(int $tipeKonsultasiId): int
+    {
+        if ($tipeKonsultasiId <= 0) return 1;
+        $today  = Carbon::now('Asia/Jakarta')->toDateString();
+        $nowStr = Carbon::now('Asia/Jakarta')->format('H:i:s');
+        $count = (int) \App\Models\PetugasPemeriksa::whereDate('tanggal', $today)
+            ->where('tipe_konsultasi_id', $tipeKonsultasiId)
+            ->where('jam_mulai', '<=', $nowStr)
+            ->where('jam_akhir', '>=', $nowStr)
+            ->count();
+        return max(1, $count);
+    }
+
+    /**
+     * Format string "X - Y" utk perkiraan waktu tunggu.
+     * Rate min 6 menit/antrian, max 10 menit/antrian, total dibagi jumlah
+     * petugas aktif. Per instruksi dr. Yoga 2026-09-17.
+     */
+    private function waktuTunggu($sisa_antrian, $num_petugas = 1)
+    {
+        $num  = max(1, (int) $num_petugas);
+        $from = (int) ceil($sisa_antrian * 6 / $num);
+        $to   = (int) ceil($sisa_antrian * 10 / $num);
+        return $from . ' - ' . $to;
     }
     public function aktifkan_notifikasi_otomatis_text(){
         $message = PHP_EOL;
