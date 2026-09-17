@@ -1143,6 +1143,19 @@ class QiscusController extends Controller
      */
     private function kirimkanLinkGoogleReview()
     {
+        // Mirror WablasController: append ?periksa_id kalau tersedia.
+        // Per instruksi dr. Yoga 2026-09-18.
+        $periksaId = null;
+        if (
+            isset($this->antrian) &&
+            !is_null($this->antrian) &&
+            $this->antrian->antriable_type === 'App\\Models\\Periksa'
+        ) {
+            $periksaId = (int) $this->antrian->antriable_id;
+        }
+        $reviewUrl = 'https://www.klinikjatielok.com/review/klinikjatielok'
+            . ($periksaId ? '?periksa_id=' . $periksaId : '');
+
         $message = "Terima kasih atas kesediaan anda memberikan masukan terhadap pelayanan Kami, ";
         $message .= PHP_EOL;
         $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
@@ -1151,7 +1164,7 @@ class QiscusController extends Controller
         $message .= "mohon memberikan nilai layanan kami dengan memberikan ulasan *Bintang 5* di google review Klinik Jati Elok hanya dengan klik link dibawah ini : ";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= "https://www.klinikjatielok.com/review/klinikjatielok";
+        $message .= $reviewUrl;
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= "Simpan nomor ini di hape anda agar link di atas bisa aktif dan memudahkan anda mengklik";

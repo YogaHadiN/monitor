@@ -34,8 +34,13 @@ Route::get('/redis-test', function () {
 //   /review/sunatboy       → SunatBoy
 $logReviewClick = function (string $slug) {
     try {
+        // periksa_id dari query param — bot kirim link berformat
+        // /review/{slug}?periksa_id=X supaya kita bisa trace siapa
+        // yang klik. Per instruksi dr. Yoga 2026-09-18.
+        $periksaId = (int) request()->query('periksa_id', 0);
         \DB::table('review_link_clicks')->insert([
             'slug'       => $slug,
+            'periksa_id' => $periksaId > 0 ? $periksaId : null,
             'ip'         => request()->ip(),
             'user_agent' => substr((string) request()->userAgent(), 0, 500),
             'referer'    => substr((string) request()->headers->get('referer'), 0, 500),
