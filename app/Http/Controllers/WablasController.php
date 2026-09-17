@@ -1753,7 +1753,7 @@ class WablasController extends Controller
             $periksaId = (int) $this->antrian->antriable_id;
         }
         $reviewUrl = 'https://www.klinikjatielok.com/review/klinikjatielok'
-            . ($periksaId ? '?periksa_id=' . $periksaId : '');
+            . ($periksaId ? '/' . $periksaId : '');
 
         $message = "Terima kasih atas kesediaan anda memberikan masukan terhadap pelayanan Kami, ";
         $message .= PHP_EOL;

@@ -32,15 +32,15 @@ Route::get('/redis-test', function () {
 // review_link_clicks utk laporan harian.
 //   /review/klinikjatielok → Klinik Jati Elok
 //   /review/sunatboy       → SunatBoy
-$logReviewClick = function (string $slug) {
+$logReviewClick = function (string $slug, ?int $periksaId = null) {
     try {
-        // periksa_id dari query param — bot kirim link berformat
-        // /review/{slug}?periksa_id=X supaya kita bisa trace siapa
-        // yang klik. Per instruksi dr. Yoga 2026-09-18.
-        $periksaId = (int) request()->query('periksa_id', 0);
+        // periksa_id dari path segment (trailing) — bot kirim link
+        // berformat /review/{slug}/{periksa_id} supaya URL tetap
+        // clean tanpa "?periksa_id=" text. Per instruksi dr. Yoga
+        // 2026-09-18.
         \DB::table('review_link_clicks')->insert([
             'slug'       => $slug,
-            'periksa_id' => $periksaId > 0 ? $periksaId : null,
+            'periksa_id' => ($periksaId !== null && $periksaId > 0) ? $periksaId : null,
             'ip'         => request()->ip(),
             'user_agent' => substr((string) request()->userAgent(), 0, 500),
             'referer'    => substr((string) request()->headers->get('referer'), 0, 500),
@@ -50,20 +50,20 @@ $logReviewClick = function (string $slug) {
         \Log::warning('review_link_click log fail', ['slug' => $slug, 'err' => $e->getMessage()]);
     }
 };
-Route::get('/review/klinikjatielok', function () use ($logReviewClick) {
-    $logReviewClick('klinikjatielok');
+Route::get('/review/klinikjatielok/{periksa_id?}', function ($periksaId = null) use ($logReviewClick) {
+    $logReviewClick('klinikjatielok', $periksaId !== null ? (int) $periksaId : null);
     return redirect()->away(
         'https://search.google.com/local/writereview?placeid=ChIJsRyOtNP4aS4R4hIwu5yMnk0',
         302
     );
-});
-Route::get('/review/sunatboy', function () use ($logReviewClick) {
-    $logReviewClick('sunatboy');
+})->where('periksa_id', '[0-9]+');
+Route::get('/review/sunatboy/{periksa_id?}', function ($periksaId = null) use ($logReviewClick) {
+    $logReviewClick('sunatboy', $periksaId !== null ? (int) $periksaId : null);
     return redirect()->away(
         'https://search.google.com/local/writereview?placeid=ChIJsd_YRQDjaS4R9aVhjW76t3Y',
         302
     );
-});
+})->where('periksa_id', '[0-9]+');
 
 Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
