@@ -5794,10 +5794,13 @@ class WablasController extends Controller
         $message .= 'Balas *chat admin* untuk mendapatkan bantuan dari admin';
         return $message;
     }
-    private function waktuTunggu($sisa_antrian)
+    private function waktuTunggu($sisa_antrian, $num_petugas = 1)
     {
-        $from = $sisa_antrian * 3;
-        $to = $sisa_antrian * 10;
+        // Rate min 6 menit/antrian, max 10 menit/antrian, total dibagi
+        // jumlah petugas aktif. Per instruksi dr. Yoga 2026-09-17.
+        $num  = max(1, (int) $num_petugas);
+        $from = (int) ceil($sisa_antrian * 6 / $num);
+        $to   = (int) ceil($sisa_antrian * 10 / $num);
         return $from . ' - ' . $to;
     }
     /**
@@ -7717,18 +7720,6 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         return max(1, $count);
     }
 
-    /**
-     * Format string "X - Y" utk perkiraan waktu tunggu.
-     * Rate min 6 menit/antrian, max 10 menit/antrian, total dibagi jumlah
-     * petugas aktif. Per instruksi dr. Yoga 2026-09-17.
-     */
-    private function waktuTunggu($sisa_antrian, $num_petugas = 1)
-    {
-        $num  = max(1, (int) $num_petugas);
-        $from = (int) ceil($sisa_antrian * 6 / $num);
-        $to   = (int) ceil($sisa_antrian * 10 / $num);
-        return $from . ' - ' . $to;
-    }
     public function aktifkan_notifikasi_otomatis_text(){
         $message = PHP_EOL;
         $message .= '_Untuk mengakses QR CODE_';
