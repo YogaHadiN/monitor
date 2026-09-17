@@ -5751,19 +5751,15 @@ class QiscusController extends Controller
             }
         }
 
-        if (
-            $ant->reservasi_online &&
-            $ant->sudah_hadir_di_klinik == 0 &&
-            ($sisa_antrian < 11 || $waktuTungguMin < 30)
-        ) {
+        // Per instruksi dr. Yoga 2026-09-17: SELALU cantumkan Scan QR
+        // reminder + link untuk pasien reservasi_online yg belum hadir.
+        if ($ant->reservasi_online && $ant->sudah_hadir_di_klinik == 0) {
             $message .= PHP_EOL . PHP_EOL;
+            $message .= 'Harap datang paling lambat *30 menit sebelum* antrian Anda dipanggil, atau saat sisa *10 antrian di depan*.' . PHP_EOL . PHP_EOL;
             $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik' . PHP_EOL . PHP_EOL;
             $message .= 'Untuk melihat qr code klik di link dibawah ini :' . PHP_EOL;
             $message .= 'https://www.klinikjatielok.com/antrians/get/qrcode/' . $ant->id . PHP_EOL . PHP_EOL;
-            $message .= 'Simpan nomor ini untuk mengaktifkan link tersebut';
-        } elseif ($ant->reservasi_online && $ant->sudah_hadir_di_klinik == 0) {
-            $message .= PHP_EOL . PHP_EOL;
-            $message .= 'Harap datang paling lambat *30 menit sebelum* antrian Anda dipanggil, atau saat sisa *10 antrian di depan*.' . PHP_EOL . PHP_EOL;
+            $message .= 'Simpan nomor ini untuk mengaktifkan link tersebut' . PHP_EOL . PHP_EOL;
             $message .= 'Balas *stop* untuk berhenti menerima notifikasi ini';
         }
 
