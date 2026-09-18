@@ -1143,15 +1143,24 @@ class QiscusController extends Controller
      */
     private function kirimkanLinkGoogleReview()
     {
-        // Mirror WablasController: append ?periksa_id kalau tersedia.
-        // Per instruksi dr. Yoga 2026-09-18.
+        // Mirror WablasController — cek 2 sumber periksa_id. Per
+        // instruksi dr. Yoga 2026-09-18.
         $periksaId = null;
-        if (
-            isset($this->antrian) &&
-            !is_null($this->antrian) &&
-            $this->antrian->antriable_type === 'App\\Models\\Periksa'
-        ) {
-            $periksaId = (int) $this->antrian->antriable_id;
+        if (isset($this->antrian) && !is_null($this->antrian)) {
+            if ($this->antrian->antriable_type === 'App\\Models\\Periksa') {
+                $periksaId = (int) $this->antrian->antriable_id;
+            } elseif (!empty($this->antrian->pasien_id)) {
+                $tglAntrian = $this->antrian->created_at
+                    ? \Carbon\Carbon::parse($this->antrian->created_at)->toDateString()
+                    : now('Asia/Jakarta')->toDateString();
+                $periksaId = (int) \DB::table('periksas')
+                    ->where('pasien_id', $this->antrian->pasien_id)
+                    ->whereDate('tanggal', $tglAntrian)
+                    ->whereNull('deleted_at')
+                    ->orderBy('id', 'desc')
+                    ->value('id');
+                if (!$periksaId) $periksaId = null;
+            }
         }
         $reviewUrl = 'https://www.klinikjatielok.com/review/klinikjatielok'
             . ($periksaId ? '/' . $periksaId : '');

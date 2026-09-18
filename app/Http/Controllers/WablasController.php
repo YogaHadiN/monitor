@@ -1741,16 +1741,31 @@ class WablasController extends Controller
      */
     private function kirimkanLinkGoogleReview()
     {
-        // Ambil periksa_id dari antrian yang lagi konteks — kalau antriable
-        // sudah Periksa, antriable_id = periksa_id. Kalau ga ada, kirim
-        // link tanpa param (fallback). Per instruksi dr. Yoga 2026-09-18.
+        // Cari periksa_id dari antrian konteks. Cek 2 sumber:
+        //   1. Antrian.antriable_id kalau antriable_type = Periksa
+        //      (early stage, dokter baru selesai)
+        //   2. Kalau antrian sudah pindah ke AntrianKasir/Apotek,
+        //      lookup Periksa via pasien_id + tanggal antrian (survey
+        //      dikirim setelah kasir/apotek, jadi antriable_type
+        //      sering bukan Periksa lagi).
+        // Per instruksi dr. Yoga 2026-09-18: periksa_id harus terisi
+        // supaya audit review click bisa link ke pasien.
         $periksaId = null;
-        if (
-            isset($this->antrian) &&
-            !is_null($this->antrian) &&
-            $this->antrian->antriable_type === 'App\\Models\\Periksa'
-        ) {
-            $periksaId = (int) $this->antrian->antriable_id;
+        if (isset($this->antrian) && !is_null($this->antrian)) {
+            if ($this->antrian->antriable_type === 'App\\Models\\Periksa') {
+                $periksaId = (int) $this->antrian->antriable_id;
+            } elseif (!empty($this->antrian->pasien_id)) {
+                $tglAntrian = $this->antrian->created_at
+                    ? \Carbon\Carbon::parse($this->antrian->created_at)->toDateString()
+                    : now('Asia/Jakarta')->toDateString();
+                $periksaId = (int) \DB::table('periksas')
+                    ->where('pasien_id', $this->antrian->pasien_id)
+                    ->whereDate('tanggal', $tglAntrian)
+                    ->whereNull('deleted_at')
+                    ->orderBy('id', 'desc')
+                    ->value('id');
+                if (!$periksaId) $periksaId = null;
+            }
         }
         $reviewUrl = 'https://www.klinikjatielok.com/review/klinikjatielok'
             . ($periksaId ? '/' . $periksaId : '');
