@@ -202,8 +202,12 @@ class Antrian extends Model
 
         // Filter dipanggil_pemeriksa=0 DIHAPUS (dr. Yoga 2026-09-17):
         // antrian yg sudah dipanggil tapi belum di-periksa (menunggu
-        // pasien datang) tetap "di depan". Cocok dgn atika
-        // PolisController::ingatKanYangNgantriDiAntrianPeriksa.
+        // pasien datang) tetap "di depan".
+        //
+        // TAPI (dr. Yoga 2026-09-18): exclude combo dipanggil=1 +
+        // sudah_hadir=1 — pasien lagi masuk ruang periksa, tidak lagi
+        // "di depan" user. Kasus A12 vs A11 dipanggil. Antrian
+        // dipanggil TAPI belum hadir tetap counted.
         return (int) self::whereDate('created_at', $this->created_at)
             ->where('id', '<', $this->id)
             ->whereIn('antriable_type', [
@@ -211,6 +215,10 @@ class Antrian extends Model
                 'App\\Models\\AntrianPoli',
                 'App\\Models\\AntrianPeriksa',
             ])
+            ->where(function ($q) {
+                $q->where('dipanggil_pemeriksa', 0)
+                  ->orWhere('sudah_hadir_di_klinik', 0);
+            })
             ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
             ->whereNull('deleted_at')
             ->count();
