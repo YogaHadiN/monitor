@@ -208,28 +208,29 @@ class Antrian extends Model
         // sudah_hadir=1 — pasien lagi masuk ruang periksa, tidak lagi
         // "di depan" user. Kasus A12 vs A11 dipanggil. Antrian
         // dipanggil TAPI belum hadir tetap counted.
-        return (int) self::whereDate('created_at', $this->created_at)
+        // Sisa dihitung dari jarak antrian latest dipanggil ke user.
+        // Per instruksi dr. Yoga 2026-09-18. Auto-exclude antrian yg
+        // stuck di dokter lain (tidak di jalur user).
+        $latestCalledId = (int) self::whereDate('created_at', $this->created_at)
+            ->where('id', '<', $this->id)
+            ->where('dipanggil_pemeriksa', 1)
+            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
+            ->whereNull('deleted_at')
+            ->max('id');
+
+        $q = self::whereDate('created_at', $this->created_at)
             ->where('id', '<', $this->id)
             ->whereIn('antriable_type', [
                 'App\\Models\\Antrian',
                 'App\\Models\\AntrianPoli',
                 'App\\Models\\AntrianPeriksa',
             ])
-            ->where(function ($q) {
-                $q->where('dipanggil_pemeriksa', 0)
-                  ->orWhere('sudah_hadir_di_klinik', 0);
-            })
-            // Exclude AntrianPeriksa dgn staf_id set (dokter sudah
-            // ditentukan = praktis sudah dipanggil). Per instruksi
-            // dr. Yoga 2026-09-18.
-            ->where(function ($q) {
-                $q->where('antriable_type', '!=', 'App\\Models\\AntrianPeriksa')
-                  ->orWhereNull('staf_id')
-                  ->orWhere('staf_id', 0);
-            })
             ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
-            ->whereNull('deleted_at')
-            ->count();
+            ->whereNull('deleted_at');
+        if ($latestCalledId > 0) {
+            $q->where('id', '>=', $latestCalledId);
+        }
+        return (int) $q->count();
     }
 
     public function ruangan(){
