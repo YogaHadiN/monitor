@@ -219,6 +219,14 @@ class Antrian extends Model
                 $q->where('dipanggil_pemeriksa', 0)
                   ->orWhere('sudah_hadir_di_klinik', 0);
             })
+            // Exclude AntrianPeriksa dgn staf_id set (dokter sudah
+            // ditentukan = praktis sudah dipanggil). Per instruksi
+            // dr. Yoga 2026-09-18.
+            ->where(function ($q) {
+                $q->where('antriable_type', '!=', 'App\\Models\\AntrianPeriksa')
+                  ->orWhereNull('staf_id')
+                  ->orWhere('staf_id', 0);
+            })
             ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
             ->whereNull('deleted_at')
             ->count();
