@@ -100,8 +100,8 @@ td {
         <br>
         <div class="alert alert-danger">
             <ul>
-                <li>Mohon kedatangannya 30 menit sebelum perkiraan panggilan antrian</li>
-                <li>Jangan Lupa SCAN QR CODE saat sudah tiba di klinik</li>
+                <li>Mohon kedatangannya <b>30 menit sebelum</b> perkiraan panggilan antrian, <b>atau saat sisa 10 antrian di depan</b></li>
+                <li>Jangan Lupa <b>SCAN QR CODE</b> saat sudah tiba di klinik</li>
                 <li>Apabila antrian terlewat mohon ambil antrian baru</li>
             </ul>
 
