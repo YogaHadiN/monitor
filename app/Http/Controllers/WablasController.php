@@ -3671,9 +3671,16 @@ class WablasController extends Controller
             $message .= PHP_EOL;
         }
 
-        $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
-        $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
-        $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
+        // USG (tipe=4): tidak ada daftar online, semua walk-in.
+        // Per instruksi dr. Yoga 2026-09-20.
+        if ((int) $param === 4) {
+            $message .= '🏥 *Walk-in Saja*' . PHP_EOL;
+            $message .= 'Layanan USG *tidak menerima daftar online* — pasien wajib datang langsung ke klinik.' . PHP_EOL;
+        } else {
+            $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
+            $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
+            $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
+        }
 
         // Tambahan keterangan dokter umum yang sedang praktik (kode asli)
         if ($param == 1) {
