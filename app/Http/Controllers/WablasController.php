@@ -5025,11 +5025,11 @@ class WablasController extends Controller
                             $antrian->save();
 
                             // Audit trail: kalau pasien pilih dokter via WA
-                            // reg → tulis pindah_dokter_logs (pilih_dokter_by=
+                            // reg → tulis pilih_dokter_logs (pilih_dokter_by=
                             // 'pasien', source='wa_pasien') via raw DB.
                             if ($waPickedDokter) {
                                 try {
-                                    \DB::table('pindah_dokter_logs')->insert([
+                                    \DB::table('pilih_dokter_logs')->insert([
                                         'antrian_id'      => $antrian->id,
                                         'antrian_id_baru' => $antrian->id,
                                         'action_type'     => 'pilih',

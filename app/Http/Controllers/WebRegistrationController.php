@@ -1043,11 +1043,11 @@ class WebRegistrationController extends Controller
         $antrian->save();
 
         // Audit trail: kalau pasien pilih dokter via web reg → tulis
-        // pindah_dokter_logs (pilih_dokter_by='pasien', source='web_pasien').
+        // pilih_dokter_logs (pilih_dokter_by='pasien', source='web_pasien').
         // Pakai raw DB insert supaya tidak butuh model duplicate di monitor.
         if ($webPickedDokter) {
             try {
-                \DB::table('pindah_dokter_logs')->insert([
+                \DB::table('pilih_dokter_logs')->insert([
                     'antrian_id'      => $antrian->id,
                     'antrian_id_baru' => $antrian->id,
                     'action_type'     => 'pilih',
