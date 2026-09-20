@@ -5315,7 +5315,7 @@ class WablasController extends Controller
     public function tanyaAksesDokter(){
         $m  = "Bagaimana cara akses dokter?" . PHP_EOL . PHP_EOL;
         $m .= "*1. Antrian Tercepat* (Rekomendasi)" . PHP_EOL;
-        $m .= "   Dokter yg antriannya paling pendek yg akan periksa Anda." . PHP_EOL . PHP_EOL;
+        $m .= "   Dokter yang tersedia tercepat yang akan melayani Anda." . PHP_EOL . PHP_EOL;
         $m .= "*2. Pilih Dokter Tertentu*" . PHP_EOL;
         $m .= "   Anda pilih dokter, dgn *resiko antrian bisa lebih lama dan bisa dilewati* oleh antrian lain yg ambil belakangan tapi tidak pilih dokter." . PHP_EOL . PHP_EOL;
         $m .= "Balas dgn angka *1* atau *2*.";
