@@ -165,13 +165,12 @@ class WatzapController extends Controller
             $now       = \Carbon\Carbon::now('Asia/Jakarta');
             $todayWIB  = $now->copy()->startOfDay();
 
-            // MATCH: rujukan pending yg no_telp = sender phone + PDF
-            // sudah generated + pdf_sent_at NULL (belum pernah kirim) +
-            // created sebelum hari ini. Kolom rujukans.no_telp = snapshot
-            // pasien.no_telp saat rujukan dibuat, di-backfill utk rujukan
-            // lama via migration 2026_09_16_170000. Per instruksi dr.
-            // Yoga 2026-09-16.
-            $rujukan = \DB::table('rujukans as r')
+            // MATCH: SEMUA rujukan pending yg no_telp = sender phone + PDF
+            // sudah generated + pdf_sent_at NULL + created sebelum hari
+            // ini. Kalau pasien punya multiple rujukan (mis. Sp.KGA +
+            // Sp.THT sekaligus), semua dikirim, jangan cuma 1. Per
+            // instruksi dr. Yoga 2026-09-20.
+            $rujukans = \DB::table('rujukans as r')
                 ->join('periksas as p', 'p.id', '=', 'r.periksa_id')
                 ->join('pasiens as ps', 'ps.id', '=', 'p.pasien_id')
                 ->where('r.no_telp', $phone)
@@ -188,32 +187,35 @@ class WatzapController extends Controller
                     'ps.nama as pasien_nama'
                 )
                 ->orderBy('r.created_at', 'asc')
-                ->first();
+                ->get();
 
-            if (!$rujukan) {
+            if ($rujukans->isEmpty()) {
                 return;
             }
 
             $jam8WIB = $todayWIB->copy()->setTime(8, 0, 0);
+            $isBeforeJam8 = $now->lt($jam8WIB);
 
-            // Kalau jam < 8 → schedule saja, skip send now
-            if ($now->lt($jam8WIB)) {
-                if (empty($rujukan->pdf_scheduled_send_at)) {
-                    \DB::table('rujukans')->where('id', $rujukan->rujukan_id)->update([
-                        'pdf_scheduled_send_at' => $jam8WIB->toDateTimeString(),
-                        'updated_at'            => $now,
-                    ]);
-                    \Log::info('RUJUKAN_PDF_SCHEDULED', [
-                        'rujukan_id'  => $rujukan->rujukan_id,
-                        'phone'       => $phone,
-                        'scheduled'   => (string) $jam8WIB,
-                    ]);
+            foreach ($rujukans as $rujukan) {
+                // Kalau jam < 8 → schedule per rujukan, skip send now
+                if ($isBeforeJam8) {
+                    if (empty($rujukan->pdf_scheduled_send_at)) {
+                        \DB::table('rujukans')->where('id', $rujukan->rujukan_id)->update([
+                            'pdf_scheduled_send_at' => $jam8WIB->toDateTimeString(),
+                            'updated_at'            => $now,
+                        ]);
+                        \Log::info('RUJUKAN_PDF_SCHEDULED', [
+                            'rujukan_id'  => $rujukan->rujukan_id,
+                            'phone'       => $phone,
+                            'scheduled'   => (string) $jam8WIB,
+                        ]);
+                    }
+                    continue;
                 }
-                return;
-            }
 
-            // Jam ≥ 8 → send now.
-            $this->sendRujukanPdfNow((int) $rujukan->rujukan_id);
+                // Jam ≥ 8 → send now (per rujukan).
+                $this->sendRujukanPdfNow((int) $rujukan->rujukan_id);
+            }
         } catch (\Throwable $e) {
             \Log::error('RUJUKAN_PDF_AUTO_SEND_EXCEPTION', [
                 'phone' => $phone,
