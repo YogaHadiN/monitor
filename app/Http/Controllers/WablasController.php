@@ -4990,7 +4990,10 @@ class WablasController extends Controller
                             $this->input_nomor_bpjs              = $reservasi_online->nomor_asuransi_bpjs;
                             $this->input_registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
 
-                            $antrian                        = $this->antrianPost($reservasi_online->ruangan_id);
+                            $antrian                        = $this->antrianPost(
+                                $reservasi_online->ruangan_id,
+                                $reservasi_online->tipe_konsultasi_id
+                            );
                             $antrian->nama                  = $reservasi_online->nama;
                             $antrian->nomor_bpjs            = $reservasi_online->nomor_asuransi_bpjs;
                             $antrian->no_telp               = $reservasi_online->no_telp;
@@ -5401,7 +5404,7 @@ class WablasController extends Controller
     }
 
 
-	public function antrianPost($id){
+	public function antrianPost($id, $fallback_tipe_konsultasi_id = null){
         $carbon     = Carbon::now();
         $startOfDay = $carbon->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay   = $carbon->endOfDay()->format('Y-m-d H:i:s');
@@ -5411,6 +5414,20 @@ class WablasController extends Controller
         $tipe_konsultasi_id = null;
         if ( !is_null($ruangan) ) {
             $tipe_konsultasi_id = $ruangan->default_tipe_konsultasi_id;
+        }
+        // Fallback: kalau ruangan tidak ketemu / default_tipe null,
+        // pakai tipe_konsultasi_id dari caller (reservasi_online). Kolom
+        // tipe_konsultasi_id di antrians NOT NULL — insert crash tanpa
+        // guard ini. Per fix 2026-09-21.
+        if (is_null($tipe_konsultasi_id)) {
+            $tipe_konsultasi_id = $fallback_tipe_konsultasi_id;
+        }
+        if (is_null($tipe_konsultasi_id)) {
+            \Log::warning('WablasController::antrianPost tipe_konsultasi_id null', [
+                'ruangan_id' => $id,
+                'ruangan_ada' => !is_null($ruangan),
+            ]);
+            throw new \RuntimeException('tipe_konsultasi_id tidak dapat ditentukan dari ruangan #' . $id);
         }
 
         $antrian = Antrian::create([
