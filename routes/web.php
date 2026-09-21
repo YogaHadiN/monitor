@@ -132,6 +132,14 @@ Route::get('watzap/cek_api', [\App\Http\Controllers\WatzapController::class, 'ce
 Route::get('watzap/get_webhook', [\App\Http\Controllers\WatzapController::class, 'get_webhook']);
 Route::get('watzap/set_webhook', [\App\Http\Controllers\WatzapController::class, 'set_webhook']);
 
+// Telegram Bot webhook. Endpoint publik, tidak pakai auth middleware
+// tapi verifikasi header X-Telegram-Bot-Api-Secret-Token di controller
+// kalau TELEGRAM_WEBHOOK_SECRET di-set. Perlu WAF exception di
+// kezia.id / klinikjatielok.com (mirip Wablas) supaya request dari
+// Telegram (bukan dari ID) tidak di-block geo-block.
+Route::post('telegram/webhook', [\App\Http\Controllers\TelegramController::class, 'webhook'])
+    ->name('telegram.webhook');
+
 
 // routes/web.php
 

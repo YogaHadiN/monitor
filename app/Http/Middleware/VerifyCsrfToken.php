@@ -15,6 +15,7 @@ class VerifyCsrfToken extends Middleware
 		"wablas",
 		"wablas/*",
 		"moota",
-		"moota/*"
+		"moota/*",
+		"telegram/webhook",
     ];
 }
