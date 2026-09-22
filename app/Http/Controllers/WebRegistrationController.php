@@ -332,7 +332,29 @@ class WebRegistrationController extends Controller
             $petugas_pemeriksa = $web_registration->petugas_pemeriksa_id
                 ? PetugasPemeriksa::find($web_registration->petugas_pemeriksa_id)
                 : null;
-            return view('web_registrations.waitlist', compact('web_registration', 'petugas_pemeriksa'));
+
+            // Untuk gigi (tipe=2), sertakan dokter gigi lain hari ini
+            // di jam berbeda supaya pasien tahu ada opsi sebelum
+            // keputusan waitlist. Per instruksi dr. Yoga 2026-09-22.
+            $other_dokters_gigi = collect();
+            if (
+                $petugas_pemeriksa &&
+                (int) $petugas_pemeriksa->tipe_konsultasi_id === 2
+            ) {
+                $other_dokters_gigi = PetugasPemeriksa::with('staf.titel')
+                    ->whereDate('tanggal', date('Y-m-d'))
+                    ->where('tipe_konsultasi_id', 2)
+                    ->where('id', '!=', $petugas_pemeriksa->id)
+                    ->orderBy('jam_mulai_default', 'asc')
+                    ->get()
+                    ->unique('staf_id')
+                    ->values();
+            }
+            return view('web_registrations.waitlist', compact(
+                'web_registration',
+                'petugas_pemeriksa',
+                'other_dokters_gigi'
+            ));
         } else if (
             !is_null( $web_registration ) &&
             !is_null( $web_registration->tipe_konsultasi_id ) &&

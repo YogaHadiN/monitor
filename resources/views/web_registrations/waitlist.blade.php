@@ -22,6 +22,37 @@
     </ul>
 </div>
 
+@if (!empty($other_dokters_gigi) && $other_dokters_gigi->isNotEmpty())
+    <div class="alert alert-info">
+        <h4 style="margin-top:0;">Dokter Gigi Lain Praktek Hari Ini</h4>
+        <p style="margin-bottom:8px;">Kakak juga bisa pertimbangkan dokter berikut di jam berbeda:</p>
+        <ul style="padding-left: 18px; margin-bottom: 0;">
+            @foreach ($other_dokters_gigi as $other)
+                @php
+                    $namaOther = optional($other->staf)->nama_dengan_gelar
+                        ?? optional($other->staf)->nama
+                        ?? 'Dokter';
+                    $jm = !empty($other->jam_mulai_default)
+                        ? substr((string) $other->jam_mulai_default, 0, 5)
+                        : (!empty($other->jam_mulai) ? substr((string) $other->jam_mulai, 0, 5) : '-');
+                    $ja = !empty($other->jam_akhir_default)
+                        ? substr((string) $other->jam_akhir_default, 0, 5)
+                        : (!empty($other->jam_akhir) ? substr((string) $other->jam_akhir, 0, 5) : '-');
+                    $onlineOk = (int) ($other->online_registration_enabled ?? 0) === 1;
+                @endphp
+                <li>
+                    <strong>{{ $namaOther }}</strong> — {{ $jm }}–{{ $ja }}
+                    @if ($onlineOk)
+                        <span class="label label-success">bisa daftar online</span>
+                    @else
+                        <span class="label label-danger">hanya datang langsung</span>
+                    @endif
+                </li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <button class="btn btn-success btn-lg btn-block" value="1" onclick="submit(this, 'waitlist');return false;">
     Ya, Gabung Waitlist
 </button>
