@@ -8378,15 +8378,47 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
     {
         $mulai = substr((string)$pp->jam_mulai, 0, 5);
         $akhir = substr((string)$pp->jam_akhir, 0, 5);
-        $kuota = (int)($pp->max_booking ?? 0);
 
-        return
-            "Maaf, kuota *booking terjadwal* untuk jadwal ini sudah *penuh*.\n".
-            "• Jam pelayanan: *{$mulai}–{$akhir}*\n".
-            /* "• Kuota terjadwal: *".($kuota > 0 ? $kuota : 'tanpa batas')."*\n\n". */
-            "Apakah Kakak mau masuk *waitlist* (daftar tunggu)?\n".
-            "Balas *ya* untuk masuk\n";
-            "Balas *batalkan* untuk membatalkan reservasi";
+        $msg  = "Maaf, kuota *booking terjadwal* untuk jadwal ini sudah *penuh*.\n";
+        $msg .= "• Jam pelayanan: *{$mulai}–{$akhir}*\n";
+
+        // Kalau ini dokter gigi (tipe=2), sertakan info dokter gigi lain
+        // hari ini di jam lain — supaya pasien tahu ada opsi lain
+        // sebelum keputusan masuk waitlist. Per instruksi dr. Yoga
+        // 2026-09-22.
+        if ((int) ($pp->tipe_konsultasi_id ?? 0) === 2) {
+            $others = $this->dokterGigiHariIniListForRegistration()
+                ->filter(fn($x) => (int) $x->id !== (int) $pp->id)
+                ->values();
+
+            if ($others->isNotEmpty()) {
+                $msg .= "\n*Dokter gigi lain yang praktek hari ini:*\n";
+                foreach ($others as $other) {
+                    $nama = optional($other->staf)->nama_dengan_gelar
+                        ?? optional($other->staf)->nama
+                        ?? 'Dokter';
+                    $jamMulaiOther = !empty($other->jam_mulai_default)
+                        ? \Carbon\Carbon::parse($other->jam_mulai_default)->format('H:i')
+                        : (!empty($other->jam_mulai) ? \Carbon\Carbon::parse($other->jam_mulai)->format('H:i') : '-');
+                    $jamAkhirOther = !empty($other->jam_akhir_default)
+                        ? \Carbon\Carbon::parse($other->jam_akhir_default)->format('H:i')
+                        : (!empty($other->jam_akhir) ? \Carbon\Carbon::parse($other->jam_akhir)->format('H:i') : '-');
+                    $tag = (int) $other->online_registration_enabled === 1
+                        ? '_(bisa daftar online)_'
+                        : '_(hanya datang langsung)_';
+                    $msg .= "• {$nama} — {$jamMulaiOther}-{$jamAkhirOther} {$tag}\n";
+                }
+                $msg .= "\nKakak bisa pilih:\n";
+                $msg .= "• *ya* → masuk waitlist dokter ini\n";
+                $msg .= "• *batalkan* → batalkan lalu ketik *daftar* utk pilih dokter lain\n";
+                return $msg;
+            }
+        }
+
+        $msg .= "Apakah Kakak mau masuk *waitlist* (daftar tunggu)?\n";
+        $msg .= "Balas *ya* untuk masuk\n";
+        $msg .= "Balas *batalkan* untuk membatalkan reservasi";
+        return $msg;
     }
 
     protected function pesanWaitlistTercatat($reservasi_online): string
