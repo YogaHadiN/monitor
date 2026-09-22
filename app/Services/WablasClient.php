@@ -31,6 +31,12 @@ class WablasClient
      */
     public function sendMessage(string $phone, string $message): array
     {
+        // Prioritas Telegram: user yg sudah share nomor via bot TG
+        // (no_telps.telegram_chat_id ada) di-kirim via TG, skip WA.
+        // Fallback WA otomatis kalau TG gagal.
+        if (app(ChannelDispatcher::class)->trySendTelegram($phone, $message)) {
+            return ['ok' => true, 'sent_via' => 'telegram'];
+        }
         return $this->post('/send-message', [
             'phone'   => $this->normalizePhone($phone),
             'message' => $message,

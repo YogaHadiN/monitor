@@ -16,6 +16,13 @@ class WatzapService
             return ['ok' => false, 'reason' => 'invalid_phone_or_message'];
         }
 
+        // Prioritas Telegram: kalau user sudah share nomor via bot
+        // Telegram (no_telps.telegram_chat_id ada), kirim via TG dan
+        // skip WA. Fallback ke WA otomatis kalau TG gagal.
+        if (app(ChannelDispatcher::class)->trySendTelegram($phone, $message)) {
+            return ['ok' => true, 'sent_via' => 'telegram'];
+        }
+
         $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_message', [
             'api_key'     => env('WATZAP_TOKEN'),
             'phone_no'    => $phone,
