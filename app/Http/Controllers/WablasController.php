@@ -4324,39 +4324,47 @@ class WablasController extends Controller
                         return false;
                     }
                     $reservasi_online->tipe_konsultasi_id = $tipeDbInt;
-                    // Pool mode gigi: pilih otomatis dokter yg
-                    // online_registration_enabled=1 (validasi guard di atas
-                    // sudah pastikan minimal 1). Prioritas:
+                    // Pool mode gigi: kalau ada >1 dokter gigi praktek hari
+                    // ini, tampilkan LIST ke pasien untuk pilih (per
+                    // instruksi dr. Yoga 2026-09-22). Kalau cuma 1 →
+                    // auto-pick (existing behavior). Validasi
+                    // validasiDokterPengambilanAntrianDokterGigi sudah
+                    // pastikan minimal 1 dokter dgn online_registration=1
+                    // tersedia.
+                    //
+                    // Auto-pick single-dokter prioritas:
                     //   - schedulled_booking_allowed=1 → alur
                     //     SchedulledReservation (schedulled_booking=1) walau
-                    //     dokter juga aktif walk-in. Per spec dr. Yoga
-                    //     2026-09-08: kalau booking terjadwal on + pendaftaran
-                    //     online on, pasien harus dapat SchedulledReservation
-                    //     dulu, bukan nomor Antrian.
-                    //   - schedulled_booking_allowed=0 → alur Antrian langsung
-                    //     (schedulled_booking=0).
-                    // Kalau ada beberapa: pilih jam_mulai paling awal.
+                    //     dokter juga aktif walk-in.
+                    //   - schedulled_booking_allowed=0 → alur Antrian
+                    //     langsung (schedulled_booking=0).
                     if (config('features.pool_antrian_enabled')) {
-                        $ppEligible = \App\Models\PetugasPemeriksa::query()
-                            ->where('tipe_konsultasi_id', 2)
-                            ->whereDate('tanggal', $nowJkt->toDateString())
-                            ->where('online_registration_enabled', 1)
-                            ->orderByDesc('schedulled_booking_allowed')
-                            ->orderBy('jam_mulai', 'asc')
-                            ->first();
+                        $allDokterGigi = $this->dokterGigiHariIniListForRegistration();
 
-                        if ($ppEligible) {
-                            $reservasi_online->staf_id              = $ppEligible->staf_id;
-                            $reservasi_online->petugas_pemeriksa_id = $ppEligible->id;
-                            $reservasi_online->ruangan_id           = $ppEligible->ruangan_id
-                                ?: optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
-                            $reservasi_online->schedulled_booking   = (int) $ppEligible->schedulled_booking_allowed === 1
-                                ? 1
-                                : 0;
-                        } else {
+                        if ($allDokterGigi->count() > 1) {
+                            // >1 dokter → skip auto-pick, biarkan
+                            // staf/petugas null. State ini di-detect di
+                            // prompt dispatcher & branch input berikut.
                             $reservasi_online->staf_id              = null;
                             $reservasi_online->petugas_pemeriksa_id = null;
                             $reservasi_online->ruangan_id           = optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
+                        } else {
+                            // 1 dokter → auto-pick. Harus =1 karena guard
+                            // validasi sudah pass.
+                            $ppEligible = $allDokterGigi->first();
+                            if ($ppEligible && (int) $ppEligible->online_registration_enabled === 1) {
+                                $reservasi_online->staf_id              = $ppEligible->staf_id;
+                                $reservasi_online->petugas_pemeriksa_id = $ppEligible->id;
+                                $reservasi_online->ruangan_id           = $ppEligible->ruangan_id
+                                    ?: optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
+                                $reservasi_online->schedulled_booking   = (int) $ppEligible->schedulled_booking_allowed === 1
+                                    ? 1
+                                    : 0;
+                            } else {
+                                $reservasi_online->staf_id              = null;
+                                $reservasi_online->petugas_pemeriksa_id = null;
+                                $reservasi_online->ruangan_id           = optional(\App\Models\TipeKonsultasi::find($tipeDbInt))->ruangan_id;
+                            }
                         }
                     }
                     $reservasi_online->save();
@@ -4859,6 +4867,57 @@ class WablasController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
+        // ===== pilih dokter gigi (pool mode, >1 dokter hari ini) =====
+        // Per instruksi dr. Yoga 2026-09-22: kalau lebih dari 1 dokter
+        // gigi praktek hari ini, tampilkan list dokter + jadwal ke pasien.
+        // Kalau pasien pilih dokter dgn online_registration_enabled=0
+        // → kasih tau bahwa dokter tsb hanya walk-in, cleanup reservasi.
+        // Kalau =1 → set staf/ruangan/petugas, lanjut ke pembayaran.
+        } elseif (
+            config('features.pool_antrian_enabled')
+            && (int) $reservasi_online->tipe_konsultasi_id === 2
+            && is_null($reservasi_online->staf_id)
+            && is_null($reservasi_online->petugas_pemeriksa_id)
+        ) {
+            $this->chatBotLog(__LINE__);
+            if (ctype_digit($msg) && (int) $msg > 0) {
+                $list = $this->dokterGigiHariIniListForRegistration();
+                $idx  = (int) $msg - 1;
+                if ($idx >= 0 && $idx < $list->count()) {
+                    $pp = $list->get($idx);
+
+                    // online_registration_enabled=0 → walk-in only
+                    if ((int) $pp->online_registration_enabled !== 1) {
+                        $nama     = optional($pp->staf)->nama_dengan_gelar ?? 'Dokter';
+                        $jamMulai = !empty($pp->jam_mulai_default)
+                            ? \Carbon\Carbon::parse($pp->jam_mulai_default)->format('H:i')
+                            : (!empty($pp->jam_mulai) ? \Carbon\Carbon::parse($pp->jam_mulai)->format('H:i') : '-');
+                        $jamAkhir = !empty($pp->jam_akhir_default)
+                            ? \Carbon\Carbon::parse($pp->jam_akhir_default)->format('H:i')
+                            : (!empty($pp->jam_akhir) ? \Carbon\Carbon::parse($pp->jam_akhir)->format('H:i') : '-');
+
+                        $message  = "Mohon maaf kak, *{$nama}* pada jadwal *{$jamMulai}-{$jamAkhir}* ";
+                        $message .= 'hanya menerima *pendaftaran langsung di klinik* — tidak bisa daftar online.' . PHP_EOL . PHP_EOL;
+                        $message .= 'Silakan datang langsung ke klinik pada jam praktek, atau ketik *daftar* untuk pilih dokter lain.';
+                        $message .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
+                        $this->autoReply($message);
+                        return;
+                    }
+
+                    // online_registration_enabled=1 → lanjut
+                    $reservasi_online->staf_id              = $pp->staf_id;
+                    $reservasi_online->petugas_pemeriksa_id = $pp->id;
+                    $reservasi_online->ruangan_id           = $pp->ruangan_id
+                        ?: optional(\App\Models\TipeKonsultasi::find(2))->ruangan_id;
+                    $reservasi_online->schedulled_booking   = (int) $pp->schedulled_booking_allowed === 1 ? 1 : 0;
+                    $reservasi_online->save();
+                } else {
+                    $input_tidak_tepat = true;
+                }
+            } else {
+                $input_tidak_tepat = true;
+            }
+
         // ===== pilih akses dokter (pool mode + tipe umum) =====
         // Setelah kartu asuransi image ter-set, kalau pool mode + tipe=1,
         // tanya pasien mau Antrian Tercepat (1) atau Pilih Dokter (2).
@@ -5096,6 +5155,17 @@ class WablasController extends Controller
             // 2026-09-04). Flow lanjut ke pertanyaan_pembayaran.
             $this->chatBotLog(__LINE__);
             $message = $this->tanyaSiapaPetugasPemeriksa($reservasi_online);
+        } elseif (
+            config('features.pool_antrian_enabled')
+            && (int) $reservasi_online->tipe_konsultasi_id === 2
+            && is_null($reservasi_online->staf_id)
+            && is_null($reservasi_online->petugas_pemeriksa_id)
+        ) {
+            // Pool mode gigi multi-dokter: tunggu pasien pilih dokter.
+            // Kalau cuma 1 dokter, auto-pick sudah jalan di step tipe
+            // konsultasi (staf_id ter-set) → cabang ini di-skip.
+            $this->chatBotLog(__LINE__);
+            $message = $this->tanyaPilihDokterGigiUntukRegistrasi();
         } elseif ( is_null($reservasi_online->registrasi_pembayaran_id)) {
             $this->chatBotLog(__LINE__);
             $message = $this->pertanyaanPembayaranPasien($reservasi_online);
@@ -5367,6 +5437,61 @@ class WablasController extends Controller
             ->get()
             ->unique('staf_id')
             ->values();
+    }
+
+    /**
+     * List SEMUA PetugasPemeriksa dokter gigi hari ini (baik yg
+     * online_registration_enabled=0 maupun =1), diurutkan by
+     * jam_mulai_default. Dipakai flow "pilih dokter gigi" saat
+     * registrasi — pasien lihat semua dokter beserta jadwalnya,
+     * lalu sistem yg tolak kalau dipilih dokter =0.
+     * Per instruksi dr. Yoga 2026-09-22.
+     */
+    public function dokterGigiHariIniListForRegistration(){
+        return \App\Models\PetugasPemeriksa::with('staf.titel')
+            ->whereDate('tanggal', date('Y-m-d'))
+            ->where('tipe_konsultasi_id', 2)
+            ->orderBy('jam_mulai_default', 'asc')
+            ->get()
+            ->unique('staf_id')
+            ->values();
+    }
+
+    /**
+     * Build pesan "pilih dokter gigi mana" — list numbered dgn nama +
+     * jam praktek. Dokter dgn online_registration_enabled=0 tetap
+     * ditampilkan tapi diberi tanda "(hanya walk-in)".
+     */
+    public function tanyaPilihDokterGigiUntukRegistrasi(){
+        $list = $this->dokterGigiHariIniListForRegistration();
+        if ($list->isEmpty()) {
+            return null;
+        }
+
+        $m  = 'Hari ini ada beberapa dokter gigi yang praktek.' . PHP_EOL;
+        $m .= 'Silakan pilih dokter yang Anda inginkan:' . PHP_EOL . PHP_EOL;
+
+        foreach ($list as $i => $pp) {
+            $nama = optional($pp->staf)->nama_dengan_gelar
+                ?? optional($pp->staf)->nama
+                ?? 'Dokter';
+            $jamMulai = !empty($pp->jam_mulai_default)
+                ? \Carbon\Carbon::parse($pp->jam_mulai_default)->format('H:i')
+                : (!empty($pp->jam_mulai) ? \Carbon\Carbon::parse($pp->jam_mulai)->format('H:i') : '-');
+            $jamAkhir = !empty($pp->jam_akhir_default)
+                ? \Carbon\Carbon::parse($pp->jam_akhir_default)->format('H:i')
+                : (!empty($pp->jam_akhir) ? \Carbon\Carbon::parse($pp->jam_akhir)->format('H:i') : '-');
+
+            $tag = (int) $pp->online_registration_enabled === 0
+                ? ' _(hanya datang langsung)_'
+                : '';
+
+            $m .= '*' . ($i + 1) . '*. ' . $nama . PHP_EOL;
+            $m .= '   Jam praktek: ' . $jamMulai . ' - ' . $jamAkhir . $tag . PHP_EOL;
+        }
+
+        $m .= PHP_EOL . 'Balas dengan *angka* pilihan Anda.';
+        return $m;
     }
 
     public function pertanyaanPoliYangDituju(){

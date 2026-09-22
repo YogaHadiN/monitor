@@ -232,19 +232,19 @@ class WebRegistrationController extends Controller
                                             ->first();
             $tipe_konsultasi_id = $web_registration->tipe_konsultasi_id;
 
-            // Dokter gigi via web = mode reservasi terjadwal: tampilkan SEMUA
-            // petugas dgn schedulled_booking_allowed=1 hari ini, tanpa filter jam.
+            // Dokter gigi via web: tampilkan SEMUA dokter gigi praktek
+            // hari ini — baik yg online_registration_enabled=1 maupun =0.
+            // Per instruksi dr. Yoga 2026-09-22: pasien bisa lihat semua
+            // dokter beserta jadwalnya. Kalau pasien pilih dokter dgn
+            // online_registration=0, handler staf() akan tolak dgn
+            // pesanHanyaPendaftaranLangsung. Sebelumnya query di-filter
+            // ke online=1 saja → dokter walk-in tidak muncul.
             if ($tipe_konsultasi_id == 2) {
-                // Mirror WablasController petugas_pemeriksa_sekarang (line 6030-6037):
-                // selain schedulled_booking_allowed, juga butuh online_registration_enabled
-                // & registration_enabled. Jadwal yg dimatikan tidak boleh muncul.
                 $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
                     ->where('tipe_konsultasi_id', 2)
-                    ->where('schedulled_booking_allowed', 1)
-                    ->where('online_registration_enabled', 1)
                     ->where('registration_enabled', 1)
                     ->where('ruangan_id', '>', 0)
-                    ->orderBy('jam_mulai', 'asc')
+                    ->orderBy('jam_mulai_default', 'asc')
                     ->get();
 
                 return view('web_registrations.staf', compact('petugas_pemeriksas'));
@@ -640,8 +640,15 @@ class WebRegistrationController extends Controller
                         $alert_type    = 'alert-info';
                     }
                 } else {
-                    // Path antrian walk-in (non-scheduled) — perilaku existing tidak diubah.
-                    if (!$petugas_pemeriksa->registration_enabled) {
+                    // Path antrian walk-in (non-scheduled).
+                    if (!$petugas_pemeriksa->online_registration_enabled) {
+                        // Dokter walk-in-only (mis. gigi dgn online=0
+                        // tapi schedulled_booking=0). Per instruksi dr.
+                        // Yoga 2026-09-22: kalau pasien pilih dokter =0
+                        // → kasih tau walk-in only, jangan sampai lolos.
+                        $web_registration->delete();
+                        $this->message = $this->pesanHanyaPendaftaranLangsung($petugas_pemeriksa);
+                    } else if (!$petugas_pemeriksa->registration_enabled) {
                         $web_registration->delete();
                         $this->message = "Pendaftaran ke {$nama_dokter} sudah ditutup";
                     } else if (!$petugas_pemeriksa->slot_pendaftaran_available) {
