@@ -102,14 +102,43 @@ class TelegramController extends Controller
             return;
         }
 
-        // Trigger "daftar" mirror WA. Sementara echo — flow beneran
-        // (registrasiAntrianOnline) di-port terpisah phase 2.
+        // Delegate ke WablasController state machine via bridge.
+        // Sama flow persis dgn WA — reuse registrasiAntrianOnline() +
+        // prosesAntrianOnline() dari WablasController.
+        $bridge = new TelegramWablasBridge(
+            $this->tg,
+            $chatId,
+            $tgUser->no_telp,
+            $text
+        );
+
         $lower = mb_strtolower($text);
-        $daftarTriggers = ['daftar', 'daptar', 'mau daftar', 'mau berobat', 'berobat'];
-        if (in_array($lower, $daftarTriggers, true)) {
+        $daftarTriggers = ['daftar', 'daptar', 'mau daftar', 'mau berobat', 'berobat', 'brobat', 'mau brobat'];
+
+        try {
+            if (in_array($lower, $daftarTriggers, true)) {
+                // Start registrasi baru (create ReservasiOnline + WhatsappBot state)
+                $reply = $bridge->registrasiAntrianOnline();
+                $bridge->autoReply($reply);
+                return;
+            }
+
+            // Kalau user sudah punya state registrasi aktif → lanjutkan flow
+            if ($bridge->whatsappAntrianOnlineExists()) {
+                $bridge->prosesAntrianOnline();
+                return;
+            }
+        } catch (\Throwable $e) {
+            \Log::error('TELEGRAM_BRIDGE_EXCEPTION', [
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+                'chat_id' => $chatId,
+                'text'    => $text,
+            ]);
             $this->tg->sendMessage($chatId,
-                "Halo kak! Fitur pendaftaran online via Telegram masih dalam pengembangan.\n\n" .
-                "Untuk sementara, silakan daftar via WhatsApp di 0895369269190 atau datang langsung ke klinik."
+                "❌ Ada gangguan sistem, silakan coba lagi atau ketik *batalkan* untuk reset.",
+                ['parse_mode' => 'Markdown']
             );
             return;
         }
@@ -118,9 +147,11 @@ class TelegramController extends Controller
         $this->tg->sendMessage($chatId,
             "Halo kak 👋\n\n" .
             "Bot Klinik Jati Elok. Coba ketik salah satu:\n" .
-            "• /start — mulai\n" .
-            "• daftar — daftar antrian online (coming soon)\n\n" .
-            "Butuh bantuan operator? Ketik 'operator'."
+            "• *daftar* — daftar antrian online\n" .
+            "• *jadwal dokter gigi* — cek jadwal\n" .
+            "• *cek antrian* — cek antrian aktif\n\n" .
+            "Butuh bantuan admin? Ketik *chat admin*.",
+            ['parse_mode' => 'Markdown']
         );
     }
 
