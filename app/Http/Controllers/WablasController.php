@@ -2016,6 +2016,12 @@ class WablasController extends Controller
                     ]);
 
             if ( $satisfaction_index_ini === 3 ) {
+                // Set $this->antrian dari relasi survey supaya
+                // kirimkanLinkGoogleReview bisa resolve periksa_id
+                // (default \$this->antrian null di context ini →
+                // link ke-generate tanpa /periksa_id → audit review
+                // click tidak bisa link ke pasien).
+                $this->antrian = $this->whatsapp_satisfaction_survey->antrian;
                 $this->autoReply($this->kirimkanLinkGoogleReview() );
             } else if ( $satisfaction_index_ini === 1 ) {
                 $pesan = $this->autoReplyComplainMessage(

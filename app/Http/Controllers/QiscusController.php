@@ -1443,6 +1443,9 @@ class QiscusController extends Controller
                  $this->angkaPertama("1")  ||
                  $this->message == 'puas'
             ){
+                // Set $this->antrian dari relasi survey supaya
+                // kirimkanLinkGoogleReview bisa resolve periksa_id.
+                $this->antrian = $this->whatsapp_satisfaction_survey->antrian;
                 $this->sendBotCake($this->kirimkanLinkGoogleReview() );
             } else if(
                  $this->angkaPertama("3")  ||
