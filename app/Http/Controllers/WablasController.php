@@ -4568,6 +4568,59 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
 
 
+        // ===== pilih dokter gigi (pool mode, >1 dokter hari ini) =====
+        // Per instruksi dr. Yoga 2026-09-22: kalau lebih dari 1 dokter
+        // gigi praktek hari ini, tampilkan list dokter + jadwal ke pasien.
+        // Kalau pasien pilih dokter dgn online_registration_enabled=0
+        // → kasih tau bahwa dokter tsb hanya walk-in, cleanup reservasi.
+        // Kalau =1 → set staf/ruangan/petugas, lanjut ke pembayaran.
+        // WAJIB SEBELUM branch pembayaran & branch input pasien lain,
+        // supaya reply "1" tidak salah tangkap sbg pembayaran.
+        } elseif (
+            config('features.pool_antrian_enabled')
+            && (int) $reservasi_online->tipe_konsultasi_id === 2
+            && is_null($reservasi_online->staf_id)
+            && is_null($reservasi_online->petugas_pemeriksa_id)
+        ) {
+            $this->chatBotLog(__LINE__);
+            if (ctype_digit($msg) && (int) $msg > 0) {
+                $list = $this->dokterGigiHariIniListForRegistration();
+                $idx  = (int) $msg - 1;
+                if ($idx >= 0 && $idx < $list->count()) {
+                    $pp = $list->get($idx);
+
+                    // online_registration_enabled=0 → walk-in only
+                    if ((int) $pp->online_registration_enabled !== 1) {
+                        $nama     = optional($pp->staf)->nama_dengan_gelar ?? 'Dokter';
+                        $jamMulai = !empty($pp->jam_mulai_default)
+                            ? \Carbon\Carbon::parse($pp->jam_mulai_default)->format('H:i')
+                            : (!empty($pp->jam_mulai) ? \Carbon\Carbon::parse($pp->jam_mulai)->format('H:i') : '-');
+                        $jamAkhir = !empty($pp->jam_akhir_default)
+                            ? \Carbon\Carbon::parse($pp->jam_akhir_default)->format('H:i')
+                            : (!empty($pp->jam_akhir) ? \Carbon\Carbon::parse($pp->jam_akhir)->format('H:i') : '-');
+
+                        $message  = "Mohon maaf kak, *{$nama}* pada jadwal *{$jamMulai}-{$jamAkhir}* ";
+                        $message .= 'hanya menerima *pendaftaran langsung di klinik* — tidak bisa daftar online.' . PHP_EOL . PHP_EOL;
+                        $message .= 'Silakan datang langsung ke klinik pada jam praktek, atau ketik *daftar* untuk pilih dokter lain.';
+                        $message .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
+                        $this->autoReply($message);
+                        return;
+                    }
+
+                    // online_registration_enabled=1 → lanjut
+                    $reservasi_online->staf_id              = $pp->staf_id;
+                    $reservasi_online->petugas_pemeriksa_id = $pp->id;
+                    $reservasi_online->ruangan_id           = $pp->ruangan_id
+                        ?: optional(\App\Models\TipeKonsultasi::find(2))->ruangan_id;
+                    $reservasi_online->schedulled_booking   = (int) $pp->schedulled_booking_allowed === 1 ? 1 : 0;
+                    $reservasi_online->save();
+                } else {
+                    $input_tidak_tepat = true;
+                }
+            } else {
+                $input_tidak_tepat = true;
+            }
+
         // ===== pilih metode pembayaran =====
         } elseif (
             !is_null($reservasi_online->tipe_konsultasi_id)
@@ -4867,57 +4920,6 @@ class WablasController extends Controller
             } else {
                 $input_tidak_tepat = true;
             }
-        // ===== pilih dokter gigi (pool mode, >1 dokter hari ini) =====
-        // Per instruksi dr. Yoga 2026-09-22: kalau lebih dari 1 dokter
-        // gigi praktek hari ini, tampilkan list dokter + jadwal ke pasien.
-        // Kalau pasien pilih dokter dgn online_registration_enabled=0
-        // → kasih tau bahwa dokter tsb hanya walk-in, cleanup reservasi.
-        // Kalau =1 → set staf/ruangan/petugas, lanjut ke pembayaran.
-        } elseif (
-            config('features.pool_antrian_enabled')
-            && (int) $reservasi_online->tipe_konsultasi_id === 2
-            && is_null($reservasi_online->staf_id)
-            && is_null($reservasi_online->petugas_pemeriksa_id)
-        ) {
-            $this->chatBotLog(__LINE__);
-            if (ctype_digit($msg) && (int) $msg > 0) {
-                $list = $this->dokterGigiHariIniListForRegistration();
-                $idx  = (int) $msg - 1;
-                if ($idx >= 0 && $idx < $list->count()) {
-                    $pp = $list->get($idx);
-
-                    // online_registration_enabled=0 → walk-in only
-                    if ((int) $pp->online_registration_enabled !== 1) {
-                        $nama     = optional($pp->staf)->nama_dengan_gelar ?? 'Dokter';
-                        $jamMulai = !empty($pp->jam_mulai_default)
-                            ? \Carbon\Carbon::parse($pp->jam_mulai_default)->format('H:i')
-                            : (!empty($pp->jam_mulai) ? \Carbon\Carbon::parse($pp->jam_mulai)->format('H:i') : '-');
-                        $jamAkhir = !empty($pp->jam_akhir_default)
-                            ? \Carbon\Carbon::parse($pp->jam_akhir_default)->format('H:i')
-                            : (!empty($pp->jam_akhir) ? \Carbon\Carbon::parse($pp->jam_akhir)->format('H:i') : '-');
-
-                        $message  = "Mohon maaf kak, *{$nama}* pada jadwal *{$jamMulai}-{$jamAkhir}* ";
-                        $message .= 'hanya menerima *pendaftaran langsung di klinik* — tidak bisa daftar online.' . PHP_EOL . PHP_EOL;
-                        $message .= 'Silakan datang langsung ke klinik pada jam praktek, atau ketik *daftar* untuk pilih dokter lain.';
-                        $message .= PHP_EOL . PHP_EOL . $this->hapusAntrianWhatsappBotReservasiOnline();
-                        $this->autoReply($message);
-                        return;
-                    }
-
-                    // online_registration_enabled=1 → lanjut
-                    $reservasi_online->staf_id              = $pp->staf_id;
-                    $reservasi_online->petugas_pemeriksa_id = $pp->id;
-                    $reservasi_online->ruangan_id           = $pp->ruangan_id
-                        ?: optional(\App\Models\TipeKonsultasi::find(2))->ruangan_id;
-                    $reservasi_online->schedulled_booking   = (int) $pp->schedulled_booking_allowed === 1 ? 1 : 0;
-                    $reservasi_online->save();
-                } else {
-                    $input_tidak_tepat = true;
-                }
-            } else {
-                $input_tidak_tepat = true;
-            }
-
         // ===== pilih akses dokter (pool mode + tipe umum) =====
         // Setelah kartu asuransi image ter-set, kalau pool mode + tipe=1,
         // tanya pasien mau Antrian Tercepat (1) atau Pilih Dokter (2).
