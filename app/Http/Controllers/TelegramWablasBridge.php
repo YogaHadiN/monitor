@@ -52,6 +52,13 @@ class TelegramWablasBridge extends WablasController
 
         $this->tg     = $tg;
         $this->chatId = $chatId;
+
+        // Load state marker WhatsappBot (dipakai
+        // whatsappAntrianOnlineExists() + method lain untuk detect
+        // state flow aktif). Sama query dgn WablasController::webhook.
+        $this->whatsapp_bot = \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
+            ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+            ->first();
     }
 
     /**
