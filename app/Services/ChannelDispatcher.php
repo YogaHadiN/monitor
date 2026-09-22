@@ -48,6 +48,15 @@ class ChannelDispatcher
 
         if (empty($chatId)) return false;
 
+        // Convert WA markdown (*bold* _italic_ ~strike~ `code`) → HTML
+        // Telegram supaya karakter tidak muncul literal. Kecuali caller
+        // sudah set parse_mode.
+        if (!isset($telegramExtra['parse_mode'])) {
+            $message = $this->waMarkdownToTelegramHtml($message);
+            $telegramExtra['parse_mode'] = 'HTML';
+            $telegramExtra['disable_web_page_preview'] = $telegramExtra['disable_web_page_preview'] ?? true;
+        }
+
         $result = $this->tg->sendMessage((int) $chatId, $message, $telegramExtra);
         $ok = (bool) ($result['ok'] ?? false);
 
@@ -69,5 +78,23 @@ class ChannelDispatcher
             return '62' . substr($digits, 1);
         }
         return $digits;
+    }
+
+    /**
+     * WA markdown → Telegram HTML (mirror TelegramWablasBridge).
+     */
+    private function waMarkdownToTelegramHtml(string $text): string
+    {
+        $text = htmlspecialchars($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace('/```([\s\S]+?)```/', '<pre>$1</pre>', $text);
+        $text = preg_replace('/`([^`\n]+)`/', '<code>$1</code>', $text);
+        $text = preg_replace('/\*([^*\n]+)\*/', '<b>$1</b>', $text);
+        $text = preg_replace('/~([^~\n]+)~/', '<s>$1</s>', $text);
+        $text = preg_replace(
+            '/(^|[\s.,!?;:(\[])_([^_\n]+)_(?=[\s.,!?;:)\]]|$)/u',
+            '$1<i>$2</i>',
+            $text
+        );
+        return $text;
     }
 }
