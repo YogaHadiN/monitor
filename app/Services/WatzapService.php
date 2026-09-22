@@ -23,6 +23,18 @@ class WatzapService
             return ['ok' => true, 'sent_via' => 'telegram'];
         }
 
+        // WA cutoff: setelah tanggal cutoff (default 2026-09-30 22:00
+        // WIB), semua kirim via Watzap ditolak — nomor tanpa TG tidak
+        // di-notif via WA. Log utk observability. Per instruksi
+        // dr. Yoga 2026-09-22.
+        if (waCutoffActive()) {
+            Log::info('WA_SEND_SUPPRESSED_CUTOFF', [
+                'sender' => 'WatzapService',
+                'phone'  => $phone,
+            ]);
+            return ['ok' => false, 'reason' => 'wa_cutoff_active'];
+        }
+
         $response = Http::acceptJson()->post('https://api.watzap.id/v1/waba_send_message', [
             'api_key'     => env('WATZAP_TOKEN'),
             'phone_no'    => $phone,

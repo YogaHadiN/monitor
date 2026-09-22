@@ -37,6 +37,17 @@ class WablasClient
         if (app(ChannelDispatcher::class)->trySendTelegram($phone, $message)) {
             return ['ok' => true, 'sent_via' => 'telegram'];
         }
+
+        // WA cutoff (per dr. Yoga 2026-09-22): setelah default cutoff
+        // 2026-09-30 22:00 WIB, Wablas juga tolak kirim.
+        if (waCutoffActive()) {
+            \Illuminate\Support\Facades\Log::info('WA_SEND_SUPPRESSED_CUTOFF', [
+                'sender' => 'WablasClient',
+                'phone'  => $phone,
+            ]);
+            return ['ok' => false, 'reason' => 'wa_cutoff_active'];
+        }
+
         return $this->post('/send-message', [
             'phone'   => $this->normalizePhone($phone),
             'message' => $message,

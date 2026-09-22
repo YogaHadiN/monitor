@@ -1,5 +1,28 @@
 <?php
 
+if (!function_exists('waCutoffActive')) {
+    /**
+     * Returns true kalau sekarang sudah lewat cutoff WA. Setelah cutoff
+     * ini, SEMUA sender WA (Watzap, Wablas, Fonnte, Gowa) tolak kirim.
+     * Nomor yg punya telegram_chat_id tetap terima via Telegram bot
+     * (ChannelDispatcher handle di layer atas).
+     *
+     * Default cutoff: 2026-09-30 22:00:00 WIB (per instruksi dr. Yoga
+     * 2026-09-22). Override via env WHATSAPP_CUTOFF_AT.
+     */
+    function waCutoffActive(): bool {
+        $cutoff = env('WHATSAPP_CUTOFF_AT', '2026-09-30 22:00:00');
+        if (empty($cutoff)) return false;
+        try {
+            return \Carbon\Carbon::now('Asia/Jakarta')->gte(
+                \Carbon\Carbon::parse($cutoff, 'Asia/Jakarta')
+            );
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+}
+
 if (!function_exists('flex_url')) {
     /**
      * description
