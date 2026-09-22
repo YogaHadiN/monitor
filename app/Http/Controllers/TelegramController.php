@@ -284,20 +284,50 @@ class TelegramController extends Controller
             }
         }
 
-        // 4) Konfirmasi + hide keyboard
+        // 4) Konfirmasi + main menu (langsung kasih opsi supaya user
+        //    baru tidak harus datang ke klinik dulu — nomor + chat_id
+        //    sudah tersimpan di no_telps, bisa langsung daftar). Per
+        //    instruksi dr. Yoga 2026-09-22.
         $namaPasien = optional($tgUser->fresh('pasien')->pasien)->nama;
-        $msg = "✅ Nomor HP tersimpan: *{$noTelp}*\n\n";
+        $header = "✅ Nomor HP tersimpan: <b>{$noTelp}</b>\n";
         if ($namaPasien) {
-            $msg .= "Kami temukan data pasien atas nama *" . e($namaPasien) . "*. ";
-            $msg .= "Akun Telegram Kakak sudah terhubung.\n\n";
-        } else {
-            $msg .= "Nomor Kakak belum terdaftar sebagai pasien di sistem kami. ";
-            $msg .= "Kalau baru pertama daftar, silakan datang ke klinik dulu untuk registrasi.\n\n";
+            $header .= "Halo <b>" . e($namaPasien) . "</b>! Akun Telegram Kakak sudah terhubung.\n";
         }
-        $msg .= "Ketik *daftar* untuk buat antrian online, atau *operator* untuk hubungi admin.";
 
-        $this->tg->sendMessage($chatId, $msg, [
-            'parse_mode'   => 'Markdown',
+        // Nomor urut disamakan persis dgn WA main menu
+        // (prosesMainMenuInquiry di WablasController route by angka).
+        // 1=Jadwal, 2=Daftar antrian online, 3=Kode Faskes,
+        // 4=Komplain, 5=Chat Admin.
+        $body  = "\n<b>Klinik Jati Elok</b>\n";
+        $body .= "==================\n";
+        $body .= "Selamat Datang di Klinik Jati Elok\n";
+        $body .= "Beritahu kami apa yang dapat kami bantu\n\n";
+        $body .= "1. Jadwal Pelayanan\n";
+        $body .= "2. Daftar Antrian Online\n";
+        $body .= "3. Kode Faskes Klinik Jati Elok\n";
+        $body .= "4. Keluhan atas pelayanan\n";
+        $body .= "5. Chat dengan Admin\n\n";
+        $body .= "Balas dengan <b>1, 2, 3, 4, atau 5</b> sesuai dengan informasi di atas";
+
+        // Register WhatsappMainMenu state supaya angka 1-5 selanjutnya
+        // ke-route ke prosesMainMenuInquiry via bridge webhook().
+        // Pakai firstOrCreate + touch supaya tenant scope + timestamp
+        // sesuai dgn WablasController::createWhatsappMainMenu.
+        try {
+            session()->put('tenant_id', 1);
+            \App\Models\WhatsappMainMenu::updateOrCreate(
+                ['no_telp' => $noTelp],
+                ['updated_at' => now()]
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('TELEGRAM_MAIN_MENU_REGISTER_FAIL', [
+                'no_telp' => $noTelp,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+
+        $this->tg->sendMessage($chatId, $header . $body, [
+            'parse_mode'   => 'HTML',
             'reply_markup' => ['remove_keyboard' => true],
         ]);
     }
