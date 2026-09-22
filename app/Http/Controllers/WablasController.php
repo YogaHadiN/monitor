@@ -7503,9 +7503,22 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ) ||
             $this->no_telp == '6281381912803'
         ) {
-            $message = 'Halo.';
+            $message  = 'Halo.';
             $message .= PHP_EOL;
             $message .= 'Ada yang bisa kami bantu?';
+            $message .= PHP_EOL . PHP_EOL;
+            // Info antrian CS + estimasi respon, disamakan dgn
+            // createWhatsappChat() supaya semua entry point chat admin
+            // (menu "5", keyword "chat admin", "mau tanya", dst)
+            // konsisten kasih ekspektasi waktu ke customer. Per
+            // instruksi dr. Yoga 2026-09-22.
+            $message .= 'Kakak dalam antrian customer service.';
+            $message .= PHP_EOL;
+            $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
+            $message .= PHP_EOL;
+            $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
+            $message .= PHP_EOL;
+            $message .= 'Balas *akhiri* untuk mengakhiri percakapan';
 
             $this->registerChatAdmin();
             return $message;
