@@ -102,9 +102,10 @@ class TelegramController extends Controller
             return;
         }
 
-        // Delegate ke WablasController state machine via bridge.
-        // Sama flow persis dgn WA — reuse registrasiAntrianOnline() +
-        // prosesAntrianOnline() dari WablasController.
+        // Delegate ke WablasController::webhook() lewat bridge —
+        // full routing (daftar, cek antrian, batalkan, jadwal dokter,
+        // chat admin, konfirmasi pembatalan, prosesAntrianOnline,
+        // dst) langsung reusable. Sama persis dgn flow WA.
         $bridge = new TelegramWablasBridge(
             $this->tg,
             $chatId,
@@ -112,27 +113,13 @@ class TelegramController extends Controller
             $text
         );
 
-        $lower = mb_strtolower($text);
-        $daftarTriggers = ['daftar', 'daptar', 'mau daftar', 'mau berobat', 'berobat', 'brobat', 'mau brobat'];
-
         try {
-            if (in_array($lower, $daftarTriggers, true)) {
-                // Start registrasi baru (create ReservasiOnline + WhatsappBot state)
-                $reply = $bridge->registrasiAntrianOnline();
-                $bridge->autoReply($reply);
-                return;
-            }
-
-            // Kalau user sudah punya state registrasi aktif → lanjutkan flow
-            if ($bridge->whatsappAntrianOnlineExists()) {
-                $bridge->prosesAntrianOnline();
-                return;
-            }
+            $bridge->webhook();
         } catch (\Throwable $e) {
             \Log::error('TELEGRAM_BRIDGE_EXCEPTION', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
+                'error'   => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
                 'chat_id' => $chatId,
                 'text'    => $text,
             ]);
@@ -140,19 +127,7 @@ class TelegramController extends Controller
                 "❌ Ada gangguan sistem, silakan coba lagi atau ketik *batalkan* untuk reset.",
                 ['parse_mode' => 'Markdown']
             );
-            return;
         }
-
-        // Default fallback
-        $this->tg->sendMessage($chatId,
-            "Halo kak 👋\n\n" .
-            "Bot Klinik Jati Elok. Coba ketik salah satu:\n" .
-            "• *daftar* — daftar antrian online\n" .
-            "• *jadwal dokter gigi* — cek jadwal\n" .
-            "• *cek antrian* — cek antrian aktif\n\n" .
-            "Butuh bantuan admin? Ketik *chat admin*.",
-            ['parse_mode' => 'Markdown']
-        );
     }
 
     private function handleCallbackQuery(array $cbq): void
