@@ -1921,7 +1921,7 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $complain = \App\Models\Complain::create([
                 'tanggal'   => $now,
-                'media'     => 'Whatsapp Bot',
+                'media'     => (($this->provider ?? 'wablas') === 'telegram') ? 'Telegram Bot' : 'Whatsapp Bot',
                 'no_telp'   => $this->no_telp,
                 'tenant_id' => 1,
                 'complain'  => $this->message,
