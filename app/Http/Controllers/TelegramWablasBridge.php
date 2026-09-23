@@ -19,6 +19,7 @@ class TelegramWablasBridge extends WablasController
 {
     protected TelegramClient $tg;
     protected int $chatId;
+    protected ?string $preUploadedImagePath = null;
 
     /**
      * Inject data dari Telegram webhook — bypass WablasController::__construct
@@ -59,6 +60,54 @@ class TelegramWablasBridge extends WablasController
         $this->whatsapp_bot = \App\Models\WhatsappBot::where('no_telp', $this->no_telp)
             ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
             ->first();
+    }
+
+    /**
+     * Inject pre-uploaded S3 path untuk media Telegram (foto/video/dsb).
+     * TelegramController sudah download dari Bot API + upload ke S3 di
+     * "image/telegram/…". Bridge harus report media type + skip
+     * uploadImage() double work.
+     */
+    public function setPreUploadedMedia(string $kind, string $s3Path): void
+    {
+        $this->preUploadedImagePath = $s3Path;
+        switch ($kind) {
+            case 'photo':
+            case 'sticker':
+            case 'animation':
+            case 'document':
+                $this->message_type = 'image';
+                $this->image_url    = $s3Path;
+                break;
+            case 'video':
+            case 'video_note':
+                $this->message_type = 'video';
+                $this->video_url    = $s3Path;
+                $this->image_url    = $s3Path;
+                break;
+            case 'voice':
+            case 'audio':
+                $this->message_type = 'audio';
+                $this->audio_url    = $s3Path;
+                break;
+        }
+    }
+
+    /**
+     * Override — foto sudah di-upload di TelegramController::persistMediaMessage.
+     * Kalau parent uploadImage() jalan, dia bakal coba download dari
+     * $this->image_url (yg sudah kadung s3 path, bukan URL) → gagal.
+     * Return path yg sudah kita simpan.
+     */
+    public function uploadImage()
+    {
+        if (!empty($this->preUploadedImagePath)) {
+            return $this->preUploadedImagePath;
+        }
+        // Fallback: kalau bukan flow media Telegram (jarang di
+        // context bridge), return string kosong biar behavior
+        // konsisten dgn parent path "image_bot_enabled=false".
+        return '';
     }
 
     /**

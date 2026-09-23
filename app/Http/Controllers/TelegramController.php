@@ -83,18 +83,19 @@ class TelegramController extends Controller
         }
 
         // Detect + upload media (photo/video/voice/audio/document/sticker)
-        // ke S3, populate url ke Message + set channel='telegram'. Text
-        // caption (kalau ada) diteruskan sbg text message.
+        // ke S3, populate url ke Message + set channel='telegram'.
+        // Bridge di-inject dgn s3 path + message_type='image' supaya
+        // WablasController::webhook branch photo (mis. kartu asuransi
+        // upload di prosesAntrianOnline) jalan.
         $media = $this->extractMedia($msg);
+        $mediaS3Path = null;
         if ($media !== null) {
-            $this->persistMediaMessage($chatId, $tgUser, $media, $msg);
-            $caption = trim((string) ($msg['caption'] ?? ''));
-            if ($caption === '') {
-                // Cukup log + acknowledge — tidak fire bridge webhook.
-                return;
-            }
-            // Kalau ada caption, lanjutkan ke bridge sbg text.
-            $text = $caption;
+            $mediaS3Path = $this->persistMediaMessage($chatId, $tgUser, $media, $msg);
+            // Kalau ada caption, teruskan sbg text. Kalau tidak,
+            // text jadi kosong tapi bridge tetap di-fire dgn context
+            // image supaya flow state (mis. reservasi_online kartu
+            // asuransi step) bisa lanjut.
+            $text = trim((string) ($msg['caption'] ?? ''));
         } else {
             $text = trim((string) ($msg['text'] ?? ''));
         }
@@ -127,6 +128,13 @@ class TelegramController extends Controller
             $tgUser->no_telp,
             $text
         );
+
+        // Kalau ini update dgn foto (mis. kartu asuransi), inject
+        // s3 path yg sudah kita upload → bridge->uploadImage()
+        // return path itu langsung tanpa double download-upload.
+        if (!empty($mediaS3Path) && $media !== null) {
+            $bridge->setPreUploadedMedia($media['kind'], $mediaS3Path);
+        }
 
         try {
             $bridge->webhook();
@@ -424,10 +432,12 @@ class TelegramController extends Controller
     /**
      * Download file dari Telegram, upload ke S3, log ke Message dgn
      * channel='telegram' + url yg tepat (image_url/video_url/audio_url).
+     * Return s3 path yg baru di-upload (buat inject ke bridge), atau
+     * null kalau gagal.
      */
-    private function persistMediaMessage(int $chatId, TelegramUser $tgUser, array $media, array $msg): void
+    private function persistMediaMessage(int $chatId, TelegramUser $tgUser, array $media, array $msg): ?string
     {
-        if (empty($media['file_id'])) return;
+        if (empty($media['file_id'])) return null;
 
         $downloadUrl = $this->tg->fileDownloadUrl($media['file_id']);
         if (empty($downloadUrl)) {
@@ -436,7 +446,7 @@ class TelegramController extends Controller
                 'kind'    => $media['kind'],
                 'file_id' => $media['file_id'],
             ]);
-            return;
+            return null;
         }
 
         try {
@@ -446,7 +456,7 @@ class TelegramController extends Controller
                     'chat_id' => $chatId,
                     'url'     => $downloadUrl,
                 ]);
-                return;
+                return null;
             }
 
             $ext = pathinfo(parse_url($downloadUrl, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'bin';
@@ -459,7 +469,7 @@ class TelegramController extends Controller
                 'kind'    => $media['kind'],
                 'error'   => $e->getMessage(),
             ]);
-            return;
+            return null;
         }
 
         // Route ke kolom yg pas berdasarkan kind
@@ -516,6 +526,8 @@ class TelegramController extends Controller
                 'error'   => $e->getMessage(),
             ]);
         }
+
+        return $s3Path;
     }
 
     private function touchUser(int $chatId, array $from): TelegramUser
