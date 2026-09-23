@@ -71,6 +71,11 @@ class TelegramWablasBridge extends WablasController
     public function setPreUploadedMedia(string $kind, string $s3Path): void
     {
         $this->preUploadedImagePath = $s3Path;
+        // Message::create untuk media inbound sudah dilakukan di
+        // TelegramController::persistMediaMessage (dgn full URL S3 +
+        // channel='telegram'). Skip archival duplikat di
+        // WablasController::webhook line 642 supaya tidak dobel row.
+        $this->skipMessageLog = true;
         switch ($kind) {
             case 'photo':
             case 'sticker':
