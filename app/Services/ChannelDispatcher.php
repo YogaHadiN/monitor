@@ -70,6 +70,63 @@ class ChannelDispatcher
         return $ok;
     }
 
+    public function trySendPhoto(string $noTelp, string $photoUrl, string $caption = ''): bool
+    {
+        return $this->trySendMedia($noTelp, 'photo', $photoUrl, $caption);
+    }
+
+    public function trySendVideo(string $noTelp, string $videoUrl, string $caption = ''): bool
+    {
+        return $this->trySendMedia($noTelp, 'video', $videoUrl, $caption);
+    }
+
+    public function trySendAudio(string $noTelp, string $audioUrl, string $caption = ''): bool
+    {
+        return $this->trySendMedia($noTelp, 'audio', $audioUrl, $caption);
+    }
+
+    public function trySendDocument(string $noTelp, string $docUrl, string $caption = ''): bool
+    {
+        return $this->trySendMedia($noTelp, 'document', $docUrl, $caption);
+    }
+
+    private function trySendMedia(string $noTelp, string $kind, string $url, string $caption): bool
+    {
+        if (!$this->tg->isEnabled()) return false;
+        if ($noTelp === '' || $url === '') return false;
+
+        $noTelp = $this->normalizePhone($noTelp);
+        $chatId = NoTelp::withoutGlobalScopes()
+            ->where('no_telp', $noTelp)
+            ->value('telegram_chat_id');
+
+        if (empty($chatId)) return false;
+
+        $extra = [];
+        if ($caption !== '') {
+            $extra['caption']    = $this->waMarkdownToTelegramHtml($caption);
+            $extra['parse_mode'] = 'HTML';
+        }
+
+        $result = match ($kind) {
+            'photo'    => $this->tg->sendPhoto((int) $chatId, $url, $extra),
+            'video'    => $this->tg->sendVideo((int) $chatId, $url, $extra),
+            'audio'    => $this->tg->sendAudio((int) $chatId, $url, $extra),
+            'document' => $this->tg->sendDocument((int) $chatId, $url, $extra),
+            default    => ['ok' => false, 'reason' => 'unknown_media_kind'],
+        };
+
+        $ok = (bool) ($result['ok'] ?? false);
+        if (!$ok) {
+            Log::warning('CHANNEL_DISPATCHER_TG_MEDIA_FAILED_FALLBACK_WA', [
+                'no_telp' => $noTelp,
+                'kind'    => $kind,
+                'reason'  => $result['description'] ?? $result['reason'] ?? 'unknown',
+            ]);
+        }
+        return $ok;
+    }
+
     private function normalizePhone(string $raw): string
     {
         $digits = preg_replace('/\D+/', '', $raw);

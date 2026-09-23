@@ -641,21 +641,26 @@ class WablasController extends Controller
 
             if (!$this->skipMessageLog) {
                 $this->inbound_message = Message::create([
-                    'no_telp'       => $this->no_telp,
-                    'message'       => $this->message,
-                    'tanggal'       => date('Y-m-d H:i:s'),
-                    'image_url'     => $this->image_url,
-                    'video_url'     => $this->video_url,
-                    'audio_url'     => $this->audio_url,
-                    'sending'       => 0,
-                    'sudah_dibalas' => $sudahDibalas,
-                    'tenant_id'     => 1,
-                    'touched'       => 0,
-                    'chat_admin'    => $dalamChatAdmin ? 1 : 0,
+                    'no_telp'          => $this->no_telp,
+                    'message'          => $this->message,
+                    'tanggal'          => date('Y-m-d H:i:s'),
+                    'image_url'        => $this->image_url,
+                    'video_url'        => $this->video_url,
+                    'audio_url'        => $this->audio_url,
+                    'sending'          => 0,
+                    'sudah_dibalas'    => $sudahDibalas,
+                    'tenant_id'        => 1,
+                    'touched'          => 0,
+                    'chat_admin'       => $dalamChatAdmin ? 1 : 0,
                     // chat_sunat selalu 0 untuk chat umum (Wablas/Watzap).
                     // Flag chat_sunat khusus traffic gowa sunat device,
                     // di-set di atika GowaWebhookController::handleSunatBotText.
-                    'chat_sunat'    => 0,
+                    'chat_sunat'       => 0,
+                    // Channel routing untuk CRM inbox — bridge Telegram
+                    // set provider='telegram' + chat_id supaya pesan
+                    // muncul di inbox dgn channel yang benar.
+                    'channel'          => ($this->provider ?? 'wablas') === 'telegram' ? 'telegram' : 'whatsapp',
+                    'telegram_chat_id' => property_exists($this, 'chatId') ? ($this->chatId ?? null) : null,
                 ]);
             }
 

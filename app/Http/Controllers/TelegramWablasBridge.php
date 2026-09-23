@@ -17,8 +17,8 @@ use App\Services\TelegramClient;
  */
 class TelegramWablasBridge extends WablasController
 {
-    private TelegramClient $tg;
-    private int $chatId;
+    protected TelegramClient $tg;
+    protected int $chatId;
 
     /**
      * Inject data dari Telegram webhook — bypass WablasController::__construct

@@ -82,7 +82,22 @@ class TelegramController extends Controller
             return;
         }
 
-        $text = trim((string) ($msg['text'] ?? ''));
+        // Detect + upload media (photo/video/voice/audio/document/sticker)
+        // ke S3, populate url ke Message + set channel='telegram'. Text
+        // caption (kalau ada) diteruskan sbg text message.
+        $media = $this->extractMedia($msg);
+        if ($media !== null) {
+            $this->persistMediaMessage($chatId, $tgUser, $media, $msg);
+            $caption = trim((string) ($msg['caption'] ?? ''));
+            if ($caption === '') {
+                // Cukup log + acknowledge — tidak fire bridge webhook.
+                return;
+            }
+            // Kalau ada caption, lanjutkan ke bridge sbg text.
+            $text = $caption;
+        } else {
+            $text = trim((string) ($msg['text'] ?? ''));
+        }
 
         // /start [payload]
         if (str_starts_with($text, '/start')) {
@@ -373,6 +388,134 @@ class TelegramController extends Controller
         }
         // Kalau sudah 62xxx atau international lain, keep.
         return $digits;
+    }
+
+    /**
+     * Detect media dari Telegram update. Return array
+     * ['kind' => photo|video|voice|audio|document|sticker,
+     *  'file_id' => ..., 'mime' => ?, 'file_name' => ?]
+     * atau null kalau text-only / contact.
+     */
+    private function extractMedia(array $msg): ?array
+    {
+        if (isset($msg['photo'])) {
+            // photo[] = array of sizes; largest = last.
+            $largest = end($msg['photo']);
+            return [
+                'kind'      => 'photo',
+                'file_id'   => (string) ($largest['file_id'] ?? ''),
+                'mime'      => 'image/jpeg',
+                'file_name' => null,
+            ];
+        }
+        foreach (['video','voice','audio','document','sticker','video_note','animation'] as $kind) {
+            if (isset($msg[$kind])) {
+                return [
+                    'kind'      => $kind,
+                    'file_id'   => (string) ($msg[$kind]['file_id'] ?? ''),
+                    'mime'      => $msg[$kind]['mime_type'] ?? null,
+                    'file_name' => $msg[$kind]['file_name'] ?? null,
+                ];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Download file dari Telegram, upload ke S3, log ke Message dgn
+     * channel='telegram' + url yg tepat (image_url/video_url/audio_url).
+     */
+    private function persistMediaMessage(int $chatId, TelegramUser $tgUser, array $media, array $msg): void
+    {
+        if (empty($media['file_id'])) return;
+
+        $downloadUrl = $this->tg->fileDownloadUrl($media['file_id']);
+        if (empty($downloadUrl)) {
+            Log::warning('TELEGRAM_MEDIA_DOWNLOAD_URL_FAILED', [
+                'chat_id' => $chatId,
+                'kind'    => $media['kind'],
+                'file_id' => $media['file_id'],
+            ]);
+            return;
+        }
+
+        try {
+            $contents = @file_get_contents($downloadUrl);
+            if ($contents === false) {
+                Log::warning('TELEGRAM_MEDIA_FETCH_FAILED', [
+                    'chat_id' => $chatId,
+                    'url'     => $downloadUrl,
+                ]);
+                return;
+            }
+
+            $ext = pathinfo(parse_url($downloadUrl, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'bin';
+            $baseName = 'tg_' . $chatId . '_' . time() . '_' . substr(md5($media['file_id']), 0, 8) . '.' . $ext;
+            $s3Path = 'image/telegram/' . $baseName;
+            \Storage::disk('s3')->put($s3Path, $contents);
+        } catch (\Throwable $e) {
+            Log::error('TELEGRAM_MEDIA_S3_UPLOAD_FAILED', [
+                'chat_id' => $chatId,
+                'kind'    => $media['kind'],
+                'error'   => $e->getMessage(),
+            ]);
+            return;
+        }
+
+        // Route ke kolom yg pas berdasarkan kind
+        $imageUrl = null;
+        $videoUrl = null;
+        $audioUrl = null;
+        switch ($media['kind']) {
+            case 'photo':
+            case 'sticker':
+            case 'animation':
+                $imageUrl = $s3Path;
+                break;
+            case 'video':
+            case 'video_note':
+                $videoUrl = $s3Path;
+                break;
+            case 'voice':
+            case 'audio':
+                $audioUrl = $s3Path;
+                break;
+            case 'document':
+                // Tampilkan preview sbg image kalau mime image, else image_url tetap
+                if (str_starts_with((string) ($media['mime'] ?? ''), 'image/')) {
+                    $imageUrl = $s3Path;
+                } else {
+                    $imageUrl = $s3Path;
+                }
+                break;
+        }
+
+        $caption = trim((string) ($msg['caption'] ?? ''));
+
+        try {
+            session()->put('tenant_id', 1);
+            \App\Models\Message::create([
+                'no_telp'          => $tgUser->no_telp ?: (string) $chatId,
+                'message'          => $caption !== '' ? $caption : '[' . $media['kind'] . ']',
+                'tanggal'          => date('Y-m-d H:i:s'),
+                'image_url'        => $imageUrl,
+                'video_url'        => $videoUrl,
+                'audio_url'        => $audioUrl,
+                'sending'          => 0,
+                'sudah_dibalas'    => 0,
+                'tenant_id'        => 1,
+                'touched'          => 0,
+                'chat_admin'       => 0,
+                'chat_sunat'       => 0,
+                'channel'          => 'telegram',
+                'telegram_chat_id' => $chatId,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('TELEGRAM_MEDIA_MESSAGE_LOG_FAILED', [
+                'chat_id' => $chatId,
+                'error'   => $e->getMessage(),
+            ]);
+        }
     }
 
     private function touchUser(int $chatId, array $from): TelegramUser

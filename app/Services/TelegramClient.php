@@ -57,6 +57,70 @@ class TelegramClient
         ], $extra));
     }
 
+    public function sendVideo(int|string $chatId, string $video, array $extra = []): array
+    {
+        return $this->call('sendVideo', array_merge([
+            'chat_id' => $chatId,
+            'video'   => $video,
+        ], $extra));
+    }
+
+    public function sendAudio(int|string $chatId, string $audio, array $extra = []): array
+    {
+        return $this->call('sendAudio', array_merge([
+            'chat_id' => $chatId,
+            'audio'   => $audio,
+        ], $extra));
+    }
+
+    public function sendVoice(int|string $chatId, string $voice, array $extra = []): array
+    {
+        return $this->call('sendVoice', array_merge([
+            'chat_id' => $chatId,
+            'voice'   => $voice,
+        ], $extra));
+    }
+
+    public function sendDocument(int|string $chatId, string $document, array $extra = []): array
+    {
+        return $this->call('sendDocument', array_merge([
+            'chat_id'  => $chatId,
+            'document' => $document,
+        ], $extra));
+    }
+
+    public function sendLocation(int|string $chatId, float $lat, float $lng, array $extra = []): array
+    {
+        return $this->call('sendLocation', array_merge([
+            'chat_id'   => $chatId,
+            'latitude'  => $lat,
+            'longitude' => $lng,
+        ], $extra));
+    }
+
+    /**
+     * Ambil metadata file dari Bot API. Response berisi `file_path` yg
+     * dipakai buat construct download URL:
+     *   https://api.telegram.org/file/bot<TOKEN>/<file_path>
+     */
+    public function getFile(string $fileId): array
+    {
+        return $this->call('getFile', ['file_id' => $fileId]);
+    }
+
+    /**
+     * Full download URL utk file_id yg tersedia. Return empty string
+     * kalau bot disabled / getFile gagal.
+     */
+    public function fileDownloadUrl(string $fileId): string
+    {
+        if (!$this->enabled) return '';
+        $res = $this->getFile($fileId);
+        $filePath = data_get($res, 'result.file_path');
+        if (empty($filePath)) return '';
+        return 'https://api.telegram.org/file/bot' . $this->token . '/' . $filePath;
+    }
+
     /**
      * Edit message reply markup (inline keyboard) — dipakai untuk
      * ubah tombol setelah user tap salah satu (mis. gray-out).
