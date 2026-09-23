@@ -846,29 +846,23 @@ class WablasController extends Controller
                     $this->chatBotLog(__LINE__);
                     $this->autoReply($this->hapusAntrianWhatsappBotReservasiOnline() );
                 } else if ( $this->noTelpDalamChatWithAdmin() ) {
-                    // Chat admin silent mode (dr. Yoga 2026-09-08):
-                    // Customer sudah dalam chat admin state — bot TIDAK
-                    // auto-reply lagi. Sebelum fix ini, message customer
-                    // ("cek antrian", "antrian a144 jam berapa?", dst.)
-                    // masih ditangkap updateNotifikasPanggilanUntukAntrian
-                    // / handler lain di chain 887+ dan dibalas noise
-                    // ("Balasan tidak dikenali", "Halo. Ada yang bisa kami
-                    // bantu?") padahal customer sedang menunggu admin
-                    // real.
-                    //
-                    // Pesan sudah diarsipkan chat_admin=1 di line 665
-                    // (Message::create), muncul di /messages panel utk
-                    // dibalas admin manual. 'akhiri' sudah di-handle di
-                    // line 758 di atas — kalau sampai sini artinya bukan
-                    // command exit.
+                    // Chat admin state: delegate ke createWhatsappChat.
+                    // Function itu sudah punya guard "first-message-only"
+                    // — kirim "Kakak dalam antrian customer service..."
+                    // hanya kalau ini message PERTAMA setelah svc=12
+                    // created. Message ke-2 dst SILENT (guard internal
+                    // message_hari_ini) — admin balas manual di panel.
+                    // Per instruksi dr. Yoga 2026-09-23: buka dgn
+                    // "Halo. Ada yang bisa kami bantu?", tunggu client
+                    // balas, baru info CS + estimasi respon.
                     $this->chatBotLog(__LINE__);
-                    $this->chatBotLog('CHAT_ADMIN_SILENT — skip bot auto-reply');
                     if (class_exists(\App\Events\RefreshDiscussion::class)) {
                         event(new \App\Events\RefreshDiscussion($this->no_telp));
                     }
                     if (class_exists(\App\Events\RefreshChat::class)) {
                         event(new \App\Events\RefreshChat());
                     }
+                    $this->createWhatsappChat();
                     return false;
                 } else {
                     if ($this->message_type == 'text') {
@@ -7514,22 +7508,14 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             ) ||
             $this->no_telp == '6281381912803'
         ) {
+            // Per instruksi dr. Yoga 2026-09-23: cukup buka dgn
+            // "Halo. Ada yang bisa kami bantu?" — tunggu client kirim
+            // pesan dulu, baru bot balas "Kakak dalam antrian
+            // customer service..." (di createWhatsappChat, fires
+            // hanya di message pertama setelah state chat admin).
             $message  = 'Halo.';
             $message .= PHP_EOL;
             $message .= 'Ada yang bisa kami bantu?';
-            $message .= PHP_EOL . PHP_EOL;
-            // Info antrian CS + estimasi respon, disamakan dgn
-            // createWhatsappChat() supaya semua entry point chat admin
-            // (menu "5", keyword "chat admin", "mau tanya", dst)
-            // konsisten kasih ekspektasi waktu ke customer. Per
-            // instruksi dr. Yoga 2026-09-22.
-            $message .= 'Kakak dalam antrian customer service.';
-            $message .= PHP_EOL;
-            $message .= 'Perkiraan balasan sekitar 15 - 30 menit';
-            $message .= PHP_EOL;
-            $message .= 'Untuk respon cepat mohon dapat menghubungi 021-5977529';
-            $message .= PHP_EOL;
-            $message .= 'Balas *akhiri* untuk mengakhiri percakapan';
 
             $this->registerChatAdmin();
             return $message;
