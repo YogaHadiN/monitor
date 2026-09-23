@@ -472,7 +472,11 @@ class TelegramController extends Controller
             return null;
         }
 
-        // Route ke kolom yg pas berdasarkan kind
+        // messages.image_url disimpan sbg FULL URL (bukan relative
+        // path S3) supaya <img src="{{ image_url }}"> di CRM inbox
+        // bisa langsung load. Bedakan dgn reservasi_online.kartu_asuransi_image
+        // yg pakai relative path (di-generate ulang via Storage::disk).
+        $publicUrl = \Storage::disk('s3')->url($s3Path);
         $imageUrl = null;
         $videoUrl = null;
         $audioUrl = null;
@@ -480,23 +484,18 @@ class TelegramController extends Controller
             case 'photo':
             case 'sticker':
             case 'animation':
-                $imageUrl = $s3Path;
+                $imageUrl = $publicUrl;
                 break;
             case 'video':
             case 'video_note':
-                $videoUrl = $s3Path;
+                $videoUrl = $publicUrl;
                 break;
             case 'voice':
             case 'audio':
-                $audioUrl = $s3Path;
+                $audioUrl = $publicUrl;
                 break;
             case 'document':
-                // Tampilkan preview sbg image kalau mime image, else image_url tetap
-                if (str_starts_with((string) ($media['mime'] ?? ''), 'image/')) {
-                    $imageUrl = $s3Path;
-                } else {
-                    $imageUrl = $s3Path;
-                }
+                $imageUrl = $publicUrl;
                 break;
         }
 
