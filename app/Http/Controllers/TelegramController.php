@@ -503,18 +503,29 @@ class TelegramController extends Controller
 
         try {
             session()->put('tenant_id', 1);
+
+            // Deteksi state chat admin: kalau user sudah dalam WhatsappBot
+            // svc=12 (chat dgn admin), flag chat_admin=1 supaya media
+            // muncul di panel /messages/{no_telp} yg filter chat_admin=1.
+            // Kalau flag=0, media tersembunyi dari inbox admin.
+            $noTelp = $tgUser->no_telp ?: (string) $chatId;
+            $dalamChatAdmin = !empty($noTelp) && \App\Models\WhatsappBot::where('no_telp', $noTelp)
+                ->where('whatsapp_bot_service_id', 12)
+                ->whereRaw("DATE_ADD(updated_at, interval 1 hour) > '" . date('Y-m-d H:i:s') . "'")
+                ->exists();
+
             \App\Models\Message::create([
-                'no_telp'          => $tgUser->no_telp ?: (string) $chatId,
+                'no_telp'          => $noTelp,
                 'message'          => $caption !== '' ? $caption : '[' . $media['kind'] . ']',
                 'tanggal'          => date('Y-m-d H:i:s'),
                 'image_url'        => $imageUrl,
                 'video_url'        => $videoUrl,
                 'audio_url'        => $audioUrl,
                 'sending'          => 0,
-                'sudah_dibalas'    => 0,
+                'sudah_dibalas'    => $dalamChatAdmin ? 0 : 1,
                 'tenant_id'        => 1,
                 'touched'          => 0,
-                'chat_admin'       => 0,
+                'chat_admin'       => $dalamChatAdmin ? 1 : 0,
                 'chat_sunat'       => 0,
                 'channel'          => 'telegram',
                 'telegram_chat_id' => $chatId,
