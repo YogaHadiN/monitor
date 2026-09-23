@@ -1877,7 +1877,7 @@ class WablasController extends Controller
     }
 
 
-    private function uploadImage()
+    protected function uploadImage()
     {
         if (
             $this->tenant->image_bot_enabled
