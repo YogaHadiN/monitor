@@ -5704,7 +5704,14 @@ class QiscusController extends Controller
         // Per instruksi dr. Yoga 2026-09-15.
         $sisa = (int) ($antrian->sisa_antrian ?? 0);
 
-        $waktuTunggu = $this->waktuTunggu($sisa);
+        // Seragamkan formula dgn atika PolisController — waktu tunggu
+        // dibagi jumlah petugas aktif paralel. Per keluhan dr. Yoga
+        // 2026-09-24 (estimasi 186-310 menit utk 31 antrian ternyata
+        // karena hardcode /1 padahal ada beberapa dokter jalan).
+        $tipeKonsultasiId = (int) ($antrian->tipe_konsultasi_id ?? 0);
+        $numPetugasAktif  = $this->numPetugasAktifSaatIni($tipeKonsultasiId);
+        $waktuTunggu      = $this->waktuTunggu($sisa, $numPetugasAktif);
+        $waktuTungguMin   = $sisa === 0 ? 0 : (int) ceil($sisa * 6 / max(1, $numPetugasAktif));
 
         $message  = 'Nomor antrian Anda :';
         $message .= PHP_EOL . PHP_EOL;
@@ -5715,7 +5722,7 @@ class QiscusController extends Controller
         $message .= "Perkiraan waktu tunggu *{$waktuTunggu} menit*";
         $message .= PHP_EOL . PHP_EOL;
 
-        if ($sisa <= 10) {
+        if ($sisa <= 10 || $waktuTungguMin < 30) {
             $message .= '⚠️ *ANTRIAN ANDA BERESIKO TERHAPUS*';
             $message .= PHP_EOL;
             $message .= 'Kakak sudah *melewati batas waktu 30 menit* harus datang sebelum panggilan *dan 10 antrian di depan*. Antrian ini bisa terhapus kapan saja. Silakan buat antrian baru apabila antrian terlewat.';
