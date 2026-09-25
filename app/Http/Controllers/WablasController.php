@@ -5967,12 +5967,12 @@ class WablasController extends Controller
     }
     private function waktuTunggu($sisa_antrian, $num_petugas = 1)
     {
-        // Rate min 6 menit/antrian, max 10 menit/antrian, total dibagi
-        // jumlah petugas aktif. Per instruksi dr. Yoga 2026-09-17.
-        $num  = max(1, (int) $num_petugas);
-        $from = (int) ceil($sisa_antrian * 6 / $num);
-        $to   = (int) ceil($sisa_antrian * 10 / $num);
-        return $from . ' - ' . $to;
+        // Rate 6 menit/antrian, dibagi jumlah petugas aktif. Sebelumnya
+        // return "min - max" (6-10 menit), per instruksi dr. Yoga
+        // 2026-09-25 diringkas jadi 1 angka (min 6/dokter) — pasien
+        // tidak bingung dgn 2 angka.
+        $num = max(1, (int) $num_petugas);
+        return (string) (int) ceil($sisa_antrian * 6 / $num);
     }
     /**
      * undocumented function
