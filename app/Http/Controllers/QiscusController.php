@@ -1059,6 +1059,20 @@ class QiscusController extends Controller
             return null;
         }
     }
+
+    /**
+     * Lowercase + strip semua tanda baca/simbol (keep huruf Unicode +
+     * spasi) + collapse whitespace. Dipakai utk deteksi "puas" saat
+     * pasien reply masukan post-survey. Per instruksi dr. Yoga
+     * 2026-09-25.
+     */
+    private function normalizeToBareWord(string $text): string
+    {
+        $lower     = mb_strtolower($text, 'UTF-8');
+        $stripped  = preg_replace('/[^\p{L}\s]+/u', ' ', $lower);
+        $collapsed = preg_replace('/\s+/u', ' ', (string) $stripped);
+        return trim((string) $collapsed);
+    }
     /**
      * undocumented function
      *
@@ -1297,6 +1311,37 @@ class QiscusController extends Controller
      */
     private function registerWhatsappComplaint()
     {
+        // Late upgrade "kecewa/biasa" → "puas": pasien mengetik "puas"
+        // (any punctuation stripped) di prompt masukan → redirect
+        // Google Review 5★. Per instruksi dr. Yoga 2026-09-25. Cek
+        // SEBELUM $this->whatsapp_complaint->delete() supaya antrian
+        // relation masih accessible.
+        if (!is_null($this->message)) {
+            $normalized = $this->normalizeToBareWord((string) $this->message);
+            if (in_array($normalized, ['puas', 'memuaskan'], true)) {
+                $antrianRelated = optional($this->whatsapp_complaint)->antrian;
+                if (!is_null($antrianRelated)) {
+                    $this->antrian = $antrianRelated;
+                    try {
+                        $tgl = \Carbon\Carbon::parse($antrianRelated->created_at)->toDateString();
+                        Antrian::where('no_telp', $this->no_telp)
+                            ->whereDate('created_at', $tgl)
+                            ->update(['satisfaction_index' => 3]);
+                    } catch (\Throwable $e) {
+                        \Log::warning('SATISFACTION_LATE_UPGRADE_FAIL', [
+                            'no_telp' => $this->no_telp,
+                            'err'     => $e->getMessage(),
+                        ]);
+                    }
+                }
+                if (!is_null($this->whatsapp_complaint)) {
+                    $this->whatsapp_complaint->delete();
+                }
+                $this->sendBotCake($this->kirimkanLinkGoogleReview());
+                return;
+            }
+        }
+
         $tanggal_berobat = !is_null( $this->whatsapp_complaint->antrian )? $this->whatsapp_complaint->antrian->created_at->format('Y-m-d') : date('Y-m-d');
         $this->whatsapp_complaint->delete();
         if (!is_null( $this->message )) {

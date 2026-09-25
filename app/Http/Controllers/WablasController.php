@@ -1609,6 +1609,20 @@ class WablasController extends Controller
         if ($raw === 'kecewa' || $raw === 'tidak puas') return 1;
         return null;
     }
+
+    /**
+     * Lowercase + strip semua tanda baca/simbol (keep huruf Unicode +
+     * spasi) + collapse whitespace. Dipakai utk deteksi "puas" saat
+     * pasien reply masukan post-survey — mis. "Puas!", "puas.",
+     * "PUAS ," semua jadi "puas". Per instruksi dr. Yoga 2026-09-25.
+     */
+    private function normalizeToBareWord(string $text): string
+    {
+        $lower     = mb_strtolower($text, 'UTF-8');
+        $stripped  = preg_replace('/[^\p{L}\s]+/u', ' ', $lower);
+        $collapsed = preg_replace('/\s+/u', ' ', (string) $stripped);
+        return trim((string) $collapsed);
+    }
     /**
      * undocumented function
      *
@@ -1905,6 +1919,46 @@ class WablasController extends Controller
         if (is_null($this->message)) {
             return;
             $this->chatBotLog(__LINE__);
+        }
+
+        // Late upgrade "kecewa/biasa" → "puas": kalau pasien sudah kasih
+        // penilaian awal kecewa/biasa lalu di prompt masukan mengetik
+        // "puas" (dgn/atau tanpa tanda baca — mis. "puas!", "puas.",
+        // "PUAS ,"), treat sbg upgrade → redirect ke Google Review 5★
+        // sama spt jalur "puas" langsung. Per instruksi dr. Yoga
+        // 2026-09-25.
+        $normalized = $this->normalizeToBareWord((string) $this->message);
+        if (in_array($normalized, ['puas', 'memuaskan'], true)) {
+            $antrianRelated = optional($this->whatsapp_complaint)->antrian;
+            if (!is_null($antrianRelated)) {
+                // Set $this->antrian supaya kirimkanLinkGoogleReview()
+                // bisa resolve periksa_id.
+                $this->antrian = $antrianRelated;
+
+                // Upgrade satisfaction_index utk seluruh antrian hari
+                // yg sama utk phone ini (mirror registerWhatsappSatisfactionSurvey
+                // yg pakai window startOfDay-endOfDay antrian).
+                try {
+                    $tgl = \Carbon\Carbon::parse($antrianRelated->created_at)->toDateString();
+                    Antrian::where('no_telp', $this->no_telp)
+                        ->whereDate('created_at', $tgl)
+                        ->update(['satisfaction_index' => 3]);
+                } catch (\Throwable $e) {
+                    \Log::warning('SATISFACTION_LATE_UPGRADE_FAIL', [
+                        'no_telp' => $this->no_telp,
+                        'err'     => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // Hapus state marker complaint supaya turn berikutnya
+            // tidak masuk registerWhatsappComplaint lagi.
+            if (!is_null($this->whatsapp_complaint)) {
+                $this->whatsapp_complaint->delete();
+            }
+
+            $this->autoReply($this->kirimkanLinkGoogleReview());
+            return;
         }
 
         $tz  = 'Asia/Jakarta';
