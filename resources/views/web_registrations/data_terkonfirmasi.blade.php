@@ -4,6 +4,14 @@
     $petugas     = $web_registration->petugas_pemeriksa ?? null;
     $jam_mulai   = $petugas ? substr((string) $petugas->jam_mulai, 0, 5) : null;
     $jam_akhir   = $petugas ? substr((string) $petugas->jam_akhir, 0, 5) : null;
+    // Scan QR deadline = jam mulai praktik − 15 menit. Ambil dari
+    // petugas_pemeriksas.jam_mulai (jadwal AKTUAL dokter hari itu),
+    // bukan jadwal_konsultasis (template mingguan). Per instruksi
+    // dr. Yoga 2026-09-26: 16:45/17:00 hardcode salah utk dokter yg
+    // mulai jam lain (mis. drg. Michel 14:00 → deadline 13:45).
+    $scan_deadline = $jam_mulai
+        ? \Carbon\Carbon::parse($jam_mulai)->subMinutes(15)->format('H:i')
+        : null;
 @endphp
 <h2>Konfirmasi Data</h2>
 @if ($isScheduled)
@@ -27,10 +35,10 @@
         </p>
         <ul style="padding-left: 18px; margin-bottom: 0;">
             <li>Jika antrean terlewat, silakan mengambil antrean kembali.</li>
-            <li>Melakukan scan QR di klinik sebelum pukul 16:45 (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem.</li>
+            <li>Melakukan scan QR di klinik sebelum pukul <strong>{{ $scan_deadline ?? '—' }}</strong> (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem.</li>
             <li>Nomor Antrian diberikan setelah Scan QR Code dan urutan nomor antrian berdasarkan urutan Scan QR Code.</li>
             <li>Pelayanan Dokter Gigi adalah pelayanan tindakan sehingga tidak bisa diperkirakan durasi layanan.</li>
-            <li>Pendaftaran dokter gigi secara langsung dimulai jam 17:00 hanya bila slot pendaftaran masih tersedia.</li>
+            <li>Pendaftaran dokter gigi secara langsung dimulai jam <strong>{{ $jam_mulai ?? '—' }}</strong> hanya bila slot pendaftaran masih tersedia.</li>
         </ul>
     </div>
 @endif
