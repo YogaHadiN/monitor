@@ -29,6 +29,21 @@ Berbagi ~79 model dengan `atika` (mis. `Antrian`, `Pasien`, `Poli`, `Ruangan`). 
 - `.gitignore` meng-ignore `.claude/` — jadi folder memory tidak ter-commit, tapi `CLAUDE.md` di root **ikut** ter-commit.
 - Alur lintas mesin: commit → push → `git pull` di mesin lain.
 
-## Catatan kerja berjalan
-<!-- Tulis di sini apa yang sedang dikerjakan agar bisa dilanjutkan di mesin lain. -->
-- (belum ada)
+## Catatan kerja berjalan (handoff lintas mesin)
+<!--
+Isi sebelum berhenti kerja, lalu commit & push. Di mesin lain: git pull, baca bagian ini.
+Simpan hanya entri AKTIF; pindahkan yang selesai ke "Riwayat" atau hapus.
+-->
+
+### Sedang dikerjakan
+- **Tanggal**: (YYYY-MM-DD)
+- **Mesin terakhir**: (laptop / server)
+- **Tugas**: (ringkas apa yang sedang dikerjakan)
+- **File/area tersentuh**: (mis. app/Services/SunatBot/...)
+- **Status**: (mis. WIP, menunggu review, blocked oleh X)
+- **Langkah berikutnya**: (apa yang harus dilakukan setelah pull)
+- **Cara menjalankan/menguji**: (mis. php artisan test --filter=..., langkah manual)
+- **Catatan/keputusan**: (asumsi, hal yang sengaja ditunda)
+
+### Riwayat singkat
+- 2026-09-26 — Tambah CLAUDE.md untuk konteks lintas mesin.
