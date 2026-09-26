@@ -54,9 +54,34 @@ class WebRegistrationController extends Controller
         $menangani_gawat_darurat = Tenant::find(1)->menangani_gawat_darurat;
         $no_telp                 = decrypt_string( $no_telp );
 
+        // Detect active reservasi terjadwal dokter gigi hari ini utk phone
+        // ini → alert bawah pakai copy scheduled-context (scan sebelum
+        // jam praktik − 15 menit, pendaftaran langsung dimulai jam praktik)
+        // bukan copy walk-in ("30 menit sebelum panggilan"). Per instruksi
+        // dr. Yoga 2026-09-26.
+        $scheduled_sr = SchedulledReservation::with('petugas_pemeriksa')
+            ->where('no_telp', $no_telp)
+            ->whereDate('created_at', date('Y-m-d'))
+            ->orderByDesc('id')
+            ->first();
+
+        $scheduled_jam_mulai   = null;
+        $scheduled_scan_deadline = null;
+        if ($scheduled_sr && $scheduled_sr->petugas_pemeriksa) {
+            $scheduled_jam_mulai = substr((string) $scheduled_sr->petugas_pemeriksa->jam_mulai, 0, 5);
+            if ($scheduled_jam_mulai) {
+                $scheduled_scan_deadline = \Carbon\Carbon::parse($scheduled_jam_mulai)
+                    ->subMinutes(15)->format('H:i');
+            }
+        }
+        $has_scheduled_dokter_gigi = (bool) $scheduled_sr;
+
         return view('web_registrations.daftar_online_by_phone', compact(
             'no_telp',
-            'menangani_gawat_darurat'
+            'menangani_gawat_darurat',
+            'has_scheduled_dokter_gigi',
+            'scheduled_jam_mulai',
+            'scheduled_scan_deadline'
         ));
     }
     public function submit_pembayaran(){
