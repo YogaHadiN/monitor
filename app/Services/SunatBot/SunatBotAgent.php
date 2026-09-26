@@ -572,6 +572,20 @@ class SunatBotAgent
         $todayStr   = $today->format('Y-m-d');
         $todayLabel = $today->locale('id')->translatedFormat('l, d F Y');
 
+        // Cutoff 2026-10-01 Asia/Jakarta: link redirect ke klinik utama
+        // switch dari WA → Telegram bot (WA di-cutoff 2026-09-30 22:00
+        // WIB). Per instruksi dr. Yoga 2026-09-26. Prompt di-render
+        // ulang tiap turn jadi tanggal cutoff dievaluasi live.
+        $klinikUtamaCutoff = Carbon::create(2026, 10, 1, 0, 0, 0, 'Asia/Jakarta');
+        $klinikUtamaAfterCutoff = Carbon::now('Asia/Jakarta')->greaterThanOrEqualTo($klinikUtamaCutoff);
+        $klinikUtamaLink   = $klinikUtamaAfterCutoff
+            ? 'https://t.me/KlinikJatiElokBot'
+            : 'https://wa.me/6282113781271';
+        $klinikUtamaLabel  = $klinikUtamaAfterCutoff
+            ? 'Link Telegram bot: ' . $klinikUtamaLink
+            : 'Link WA: ' . $klinikUtamaLink;
+        $klinikUtamaChannel = $klinikUtamaAfterCutoff ? 'Telegram bot' : 'WA';
+
         return <<<PROMPT
 Kamu adalah CS WhatsApp klinik sunat anak SunatBoy (Klinik Jati Elok, Tangerang).
 Bicaranya santai, ramah, natural — seperti staf admin manusia. Jawab langsung dari FAKTA di bawah, paraphrase bebas, JANGAN ubah angka/nama/detail teknis.
@@ -656,12 +670,12 @@ JANGAN tolak sendiri, JANGAN bilang "tidak bisa dilayani" untuk usia ≥17. Laya
 
 💊 BPJS / Asuransi: TIDAK bisa pakai BPJS atau asuransi lain. Pembayaran mandiri saja.
 
-📞 NOMOR ADMIN KLINIK UTAMA (untuk USG/BPJS/dokter umum/gigi/dll): +62 821-1378-1271. Link WA: https://wa.me/6282113781271
+📞 ADMIN KLINIK UTAMA (untuk USG/BPJS/dokter umum/gigi/dll) — {$klinikUtamaLabel}
 
-Kapan sebutkan nomor/link ini:
-- Customer minta layanan NON-sunat (USG, BPJS, dokter umum, dll) → SELALU kirim link WA dalam reply text kamu, JANGAN cuma bilang "silakan chat admin". Format: "Silakan tap link berikut untuk chat admin klinik utama:\n\nhttps://wa.me/6282113781271". URL polos, tanpa markdown.
-- Customer EKSPLISIT tanya nomor/kontak → langsung sebutkan link.
-- Kalau tool `redirect_ke_klinik_utama` sudah pernah dipanggil hari ini (throttled), kamu WAJIB kirim reply text sendiri berisi link WA — jangan silent.
+Kapan sebutkan link ini:
+- Customer minta layanan NON-sunat (USG, BPJS, dokter umum, dll) → SELALU kirim link {$klinikUtamaChannel} dalam reply text kamu, JANGAN cuma bilang "silakan chat admin". Format: "Silakan tap link berikut untuk chat admin klinik utama:\n\n{$klinikUtamaLink}". URL polos, tanpa markdown.
+- Customer EKSPLISIT tanya nomor/kontak → langsung sebutkan link {$klinikUtamaLink}.
+- Kalau tool `redirect_ke_klinik_utama` sudah pernah dipanggil hari ini (throttled), kamu WAJIB kirim reply text sendiri berisi link {$klinikUtamaChannel} — jangan silent.
 
 🪡 JAHITAN: Metode teknoklamp kami umumnya TIDAK perlu jahitan.
 
@@ -2055,12 +2069,19 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         // tidak pernah dapat reply tanpa link (bingung ke mana redirect).
         $phone = $session->no_telp ?? '';
 
-        $klinikUtama = '6282113781271';
-        $waLink      = "https://wa.me/{$klinikUtama}";
+        // Cutoff 2026-10-01 Asia/Jakarta — sebelum: WA link admin klinik
+        // utama. Setelah: Telegram bot @KlinikJatiElokBot (WA di-cutoff
+        // 2026-09-30 22:00 WIB, TG jadi channel utama). Per instruksi
+        // dr. Yoga 2026-09-26.
+        $cutoff = Carbon::create(2026, 10, 1, 0, 0, 0, 'Asia/Jakarta');
+        $now    = Carbon::now('Asia/Jakarta');
+        $link   = $now->greaterThanOrEqualTo($cutoff)
+            ? 'https://t.me/KlinikJatiElokBot'
+            : 'https://wa.me/6282113781271';
 
         $text = "Halo kak 🙏\n\n"
               . "Nomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum, jadwal dokter, BPJS, atau informasi klinik lainnya, silakan tap link berikut untuk langsung chat admin klinik utama kami:\n\n"
-              . $waLink . "\n\n"
+              . $link . "\n\n"
               . "Terima kasih 🙏";
 
         Log::info('SUNAT_BOT_AGENT_REDIRECT', ['phone' => $phone, 'reason' => $reason, 'target' => 'klinik-utama']);

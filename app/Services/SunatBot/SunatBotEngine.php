@@ -116,6 +116,42 @@ class SunatBotEngine
     }
 
     /**
+     * First-touch pesan bare-word "daftar" / "mendaftar" (any punctuation
+     * stripped, whole message only). Bukan sunat intent — "daftar" bisa
+     * dokter umum, gigi, BPJS, dll. Kalau customer serius sunat mereka
+     * akan bilang "daftar sunat" / "mau booking sunat" (di-handle
+     * isBookingKeyword duluan). Per instruksi dr. Yoga 2026-09-26.
+     */
+    private function firstTouchIsExactDaftar(string $message): bool
+    {
+        $lower     = mb_strtolower(trim($message), 'UTF-8');
+        $stripped  = preg_replace('/[^\p{L}\s]+/u', ' ', $lower);
+        $collapsed = trim((string) preg_replace('/\s+/u', ' ', (string) $stripped));
+        return in_array($collapsed, ['daftar', 'mendaftar', 'mau daftar', 'daftar dong', 'daftar kak'], true);
+    }
+
+    /**
+     * Pesan redirect ke klinik utama. Cutoff 2026-10-01 Asia/Jakarta:
+     *  - sebelum: WA link 6282113781271 (nomor admin klinik utama)
+     *  - setelah: Telegram bot @KlinikJatiElokBot (WA di-cutoff mulai
+     *    2026-09-30 22:00 WIB, TG bot jadi channel utama pendaftaran).
+     * Per instruksi dr. Yoga 2026-09-26.
+     */
+    private function buildKlinikUtamaRedirectMessage(): string
+    {
+        $cutoff = Carbon::create(2026, 10, 1, 0, 0, 0, 'Asia/Jakarta');
+        $now    = Carbon::now('Asia/Jakarta');
+        $link   = $now->greaterThanOrEqualTo($cutoff)
+            ? 'https://t.me/KlinikJatiElokBot'
+            : 'https://wa.me/6282113781271';
+
+        return "Halo kak 🙏\n\n"
+             . "Nomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum (dokter gigi, dokter umum, USG, BPJS, dll), silakan tap link berikut untuk langsung chat admin klinik utama kami:\n\n"
+             . $link . "\n\n"
+             . "Terima kasih 🙏";
+    }
+
+    /**
      * Cek apakah nomor ini di-route ke SunatBotAgent (tool-calling LLM)
      * atau ke IntentClassifier lama. PR2 = allowlist nomor tertentu;
      * PR3 = default ON untuk semua (allowed_phones boleh dikosongkan).
@@ -377,11 +413,11 @@ class SunatBotEngine
             // di-guard, greeting bubble tenggelamkan intent asli customer
             // (contoh: "saya mau daftar dokter gigi" dibalas Rona greeting
             // biasa, pesan aslinya hilang). Per keluhan dr. Yoga 2026-08-17.
-            if ($this->firstTouchIsNonSunat($msg)) {
+            if ($this->firstTouchIsExactDaftar($msg) || $this->firstTouchIsNonSunat($msg)) {
                 return [
                     'handled' => true,
                     'replies' => [[
-                        'text'  => "Halo kak 🙏\n\nNomor ini khusus konsultasi *sunat*. Untuk pendaftaran umum (dokter gigi, dokter umum, USG, BPJS, dll), silakan tap link berikut untuk langsung chat admin klinik utama kami:\n\nhttps://wa.me/6282113781271\n\nTerima kasih 🙏",
+                        'text'  => $this->buildKlinikUtamaRedirectMessage(),
                         'media' => null,
                     ]],
                 ];
