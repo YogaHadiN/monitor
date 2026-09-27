@@ -273,34 +273,69 @@
 		padding-left: 6px;
 		padding-right: 6px;
 	}
-	/* Height fleksibel utk semua panel antrian */
+	/* Flex fill layout — cegah empty space di bawah (dr. Yoga 2026-09-27).
+	   Header pas isi, row antrian STRETCH isi space kosong, footer
+	   carousel pas isi. */
+	.container > .row.header {
+		flex: 0 0 auto;
+	}
+	.container > .row.row-no-padding {
+		flex: 1 1 auto;
+		display: flex;
+		align-items: stretch;
+		min-height: 0;
+	}
+	.container > .row.row-no-padding > [class*="col-"] {
+		display: flex;
+		flex-direction: column;
+	}
+	.container > .row.container_wa {
+		flex: 0 0 auto;
+	}
+	/* Panel farmasi fleksibel — flex fill dari parent col */
 	.container_antrian_farmasi {
 		height: auto !important;
 		min-height: 0;
-		max-height: 62vh;
+		flex: 1 1 auto;
 		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+	.container_antrian_farmasi table {
+		flex: 1 1 auto;
 	}
 	.container_antrian {
 		padding: 6px !important;
 	}
-	/* Nomor panggilan biggest dikecilkan lagi */
+	/* Nomor panggilan biggest */
 	.biggest {
-		font-size: 72px !important;
+		font-size: 90px !important;
 		padding: 0 !important;
 		line-height: 1;
 	}
-	/* Kotak Antrian Pemeriksaan (kolom kiri atas) — compact height +
-	   center content. Sebelumnya box tinggi tapi content hanya '-'. */
+	/* Kolom kiri: split jadi 2 panel (dipanggil ~40%, ruangan_terakhir ~60%) */
+	.col-md-4:first-child .row:first-child {
+		flex: 0 0 auto;
+	}
+	.col-md-4:first-child .row:last-child {
+		flex: 1 1 auto;
+		display: flex;
+	}
+	.col-md-4:first-child .row:last-child > div {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+	}
 	#dipanggil.container_antrian_pemeriksaan {
-		padding: 12px !important;
-		min-height: 130px;
-		max-height: 24vh;
+		padding: 16px !important;
+		min-height: 180px;
 	}
 	.container_antrian_pemeriksaan.panel_antrian_terakhir {
-		max-height: 32vh;
+		height: 100%;
+		flex: 1 1 auto;
 	}
 	.container_antrian_pemeriksaan {
-		padding: 6px !important;
+		padding: 8px !important;
 	}
 	.title_antrian_farmasi {
 		font-size: 20px !important;
