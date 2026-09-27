@@ -99,8 +99,10 @@ class AntrianController extends Controller
 	}
 
     public function monitor_baru(){
-		$url = 'https://api.whatsapp.com/send?phone=6282113781271&text=komplain';
-		$url_daftar_online = 'https://api.whatsapp.com/send?phone=6282113781271&text=daftar';
+		// Telegram bot @KlinikJatiElokBot jadi channel utama sekarang
+		// (per instruksi dr. Yoga 2026-09-27, cutover dari WA).
+		$url = 'https://t.me/KlinikJatiElokBot?start=komplain';
+		$url_daftar_online = 'https://t.me/KlinikJatiElokBot?start=daftar';
         $qr = new QrCodeController;
         $base64 = $qr->inPdf($url);
         $base64_daftar_online = $qr->inPdf($url_daftar_online);

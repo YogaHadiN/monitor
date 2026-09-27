@@ -781,13 +781,13 @@
                     <div class="carousel-inner">
                       <div class="item active">
                             <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
-                                Keluhan Atas Pelayanan Ketik "Komplain" Whatsapp Ke
+                                Keluhan Atas Pelayanan<br>
+                                Chat via Telegram Bot
                             </div>
                             <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 text-right">
-                                <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                                 <span class="wa_no">
-                                    @include('no_wa_klinik')
-                                    <img id="qr" height="90px" class="text-right" src="{{ $base64 }}" />
+                                    <span style="font-size:20px; vertical-align: middle;">@KlinikJatiElokBot</span>
+                                    <img class="text-right" src="{{ $base64 }}" style="height:60px; margin-left:8px; vertical-align:middle;" />
                                 </span>
                             </div>
                       </div>
@@ -808,13 +808,13 @@
                     </div>
                       <div class="item">
                         <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 keterangan_wa text-left">
-                            Daftar Melalui Whatsapp Ketik "Daftar" Kirim ke
+                            Daftar Online<br>
+                            Chat via Telegram Bot
                         </div>
                         <div class="col-xs-12 col-sm-8 col-md-8 col-lg-8 keterangan_waktu_tunggu text-right">
-                            <img src="{{ secure_url('images/wa.png') }}" width="10%" class="bw wa_position"/>
                             <span class="wa_no">
-                                @include('no_wa_klinik')
-                                <img id="qr" height="100px" class="text-right" src="{{ $base64_daftar_online }}" />
+                                <span style="font-size:20px; vertical-align: middle;">@KlinikJatiElokBot</span>
+                                <img class="text-right" src="{{ $base64_daftar_online }}" style="height:60px; margin-left:8px; vertical-align:middle;" />
                             </span>
                         </div>
                     </div>
