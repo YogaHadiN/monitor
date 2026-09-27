@@ -273,41 +273,89 @@
 		padding-left: 6px;
 		padding-right: 6px;
 	}
-	/* Override height fixed pada container antrian farmasi supaya
-	   fleksibel sesuai tinggi viewport. */
+	/* Height fleksibel utk semua panel antrian */
 	.container_antrian_farmasi {
 		height: auto !important;
 		min-height: 0;
-		max-height: 55vh;
+		max-height: 60vh;
 		overflow: hidden;
 	}
-	/* Nomor panggilan biggest (100px) kekecilkan biar row 2 muat. */
+	.container_antrian {
+		padding: 6px !important;
+	}
+	/* Nomor panggilan biggest dikecilkan lagi */
 	.biggest {
-		font-size: 70px !important;
+		font-size: 60px !important;
+		padding: 0 !important;
 	}
 	.container_antrian_pemeriksaan {
-		padding: 8px !important;
+		padding: 6px !important;
 	}
 	.title_antrian_farmasi {
-		font-size: 22px !important;
-		padding: 4px 0 !important;
+		font-size: 20px !important;
+		padding: 3px 0 !important;
 	}
 	.header .waktu {
-		font-size: 20px !important;
+		font-size: 18px !important;
 	}
 	.header .waktu #jam {
-		font-size: 28px !important;
+		font-size: 24px !important;
 	}
 	.panel_antrian_terakhir {
-		max-height: 25vh;
+		max-height: none;
 		overflow: hidden;
 	}
-	/* Baris bawah (danger/tindakan/carousel) — pastikan tidak overflow
-	   dan tetap terlihat di safe zone. */
-	#activate_if_danger, #activate_if_tindakan_ruangan, #activate_if_not_danger {
-		max-height: 20vh;
+	.below_antrian_pemeriksaan td,
+	.below_antrian_pemeriksaan th {
+		padding: 3px 6px !important;
+		font-size: 16px !important;
+		line-height: 1.1;
+	}
+	.table-farmasi td, .table-farmasi th {
+		font-size: 15px !important;
+		padding: 3px 5px !important;
+		line-height: 1.15;
+	}
+	/* Row bawah (carousel container_wa) — tidak fix 120px, biar auto
+	   sesuai konten. Padding vertical kecil. */
+	.container_wa {
+		height: auto !important;
+		min-height: 60px;
+		max-height: 22vh;
+		padding: 6px 12px !important;
+		margin-top: 4px !important;
+		overflow: hidden;
+	}
+	.container_wa .item {
+		padding: 4px 0;
+	}
+	.keterangan_wa {
+		font-size: 16px !important;
+		padding: 2px 0 !important;
+	}
+	.wa_no {
+		font-size: 32px !important;
+		word-break: break-all;
+	}
+	.keterangan_waktu_tunggu {
+		font-size: 18px !important;
+	}
+	.waktu_tunggu {
+		font-size: 22px !important;
+	}
+	.wa_position {
+		top: 0 !important;
+	}
+	#qr {
+		height: 60px !important;
+		top: 0 !important;
+	}
+	/* Danger/tindakan text ukuran seimbang */
+	#activate_if_danger, #activate_if_tindakan_ruangan {
+		max-height: 22vh;
 		overflow: hidden;
 		margin-top: 4px;
+		font-size: 22px !important;
 	}
 	/* TV overflow fix (dr. Yoga 2026-09-27): kolom 3 (Racikan) +
 	   footer text + jam kadang terpotong di kanan. Force wrap kata
