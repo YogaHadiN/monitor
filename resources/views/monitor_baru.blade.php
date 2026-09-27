@@ -3,7 +3,10 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="description" content="">
   <meta name="author" content="">
   <title>Antrian Pasien</title>
@@ -239,16 +242,35 @@
 		font-weight: 200;
 		margin: 0;
 		overflow-x: hidden;
+		overflow-y: hidden;
+		/* TV overscan safe zone (dr. Yoga 2026-09-27): sebagian TV
+		   Coocaa/smart TV render 5-8% pixel di luar area visible.
+		   Padding ini pastikan konten tetap masuk safe zone. */
+		padding: 2vh 3vw;
+		box-sizing: border-box;
+		width: 100vw;
+		height: 100vh;
 	}
 	@media (min-width: 1px){
 		.container {
-			width: 100%;
-			max-width: 100vw;
-			height: 100vh;
-			padding-left: 10px;
-			padding-right: 10px;
+			width: 100% !important;
+			max-width: 100% !important;
+			height: 96vh;
+			padding-left: 0;
+			padding-right: 0;
+			margin: 0;
 			box-sizing: border-box;
 		}
+	}
+	/* Bootstrap 3 row negative margin bisa dorong konten keluar
+	   container. Netralize supaya kolom benar-benar contained. */
+	.container > .row {
+		margin-left: 0;
+		margin-right: 0;
+	}
+	.container > .row > [class*="col-"] {
+		padding-left: 6px;
+		padding-right: 6px;
 	}
 	/* TV overflow fix (dr. Yoga 2026-09-27): kolom 3 (Racikan) +
 	   footer text + jam kadang terpotong di kanan. Force wrap kata
