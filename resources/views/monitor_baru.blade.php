@@ -277,7 +277,7 @@
 	.container_antrian_farmasi {
 		height: auto !important;
 		min-height: 0;
-		max-height: 60vh;
+		max-height: 62vh;
 		overflow: hidden;
 	}
 	.container_antrian {
@@ -285,8 +285,19 @@
 	}
 	/* Nomor panggilan biggest dikecilkan lagi */
 	.biggest {
-		font-size: 60px !important;
+		font-size: 72px !important;
 		padding: 0 !important;
+		line-height: 1;
+	}
+	/* Kotak Antrian Pemeriksaan (kolom kiri atas) — compact height +
+	   center content. Sebelumnya box tinggi tapi content hanya '-'. */
+	#dipanggil.container_antrian_pemeriksaan {
+		padding: 12px !important;
+		min-height: 130px;
+		max-height: 24vh;
+	}
+	.container_antrian_pemeriksaan.panel_antrian_terakhir {
+		max-height: 32vh;
 	}
 	.container_antrian_pemeriksaan {
 		padding: 6px !important;
@@ -320,22 +331,29 @@
 	   sesuai konten. Padding vertical kecil. */
 	.container_wa {
 		height: auto !important;
-		min-height: 60px;
-		max-height: 22vh;
-		padding: 6px 12px !important;
-		margin-top: 4px !important;
+		min-height: 100px;
+		max-height: 20vh;
+		padding: 12px 20px !important;
+		margin-top: 6px !important;
 		overflow: hidden;
 	}
 	.container_wa .item {
 		padding: 4px 0;
 	}
 	.keterangan_wa {
-		font-size: 16px !important;
-		padding: 2px 0 !important;
+		font-size: 22px !important;
+		padding: 4px 0 !important;
+		font-weight: 900;
 	}
 	.wa_no {
-		font-size: 32px !important;
+		font-size: 26px !important;
 		word-break: break-all;
+	}
+	/* QR code Telegram bot lebih besar & prominent */
+	.container_wa img[src^="data:image"] {
+		height: 100px !important;
+		width: auto !important;
+		margin-left: 12px !important;
 	}
 	.keterangan_waktu_tunggu {
 		font-size: 18px !important;
