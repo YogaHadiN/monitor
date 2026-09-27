@@ -334,9 +334,32 @@
 		flex-direction: column;
 		width: 100%;
 	}
+	/* Kotak "Antrian Pemeriksaan" (kiri atas):
+	   - Title pill stretch full width sesuai container
+	   - Content center vertikal supaya empty state (- / -) tidak
+	     jomplang di tengah kotak besar
+	   - Height auto tapi min-height cukup utk nomor besar */
 	#dipanggil.container_antrian_pemeriksaan {
-		padding: 16px !important;
-		min-height: 180px;
+		padding: 12px !important;
+		min-height: 200px;
+		display: flex !important;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+	#dipanggil .title_antrian_farmasi {
+		margin: 0 0 12px 0 !important;
+		width: 100%;
+		text-align: center;
+		box-sizing: border-box;
+	}
+	#dipanggil #nomor_panggilan {
+		display: block;
+		margin: 8px 0;
+	}
+	#dipanggil .text-red {
+		font-size: 22px;
+		margin-top: 4px;
 	}
 	.container_antrian_pemeriksaan.panel_antrian_terakhir {
 		height: 100%;
