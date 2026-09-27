@@ -576,7 +576,8 @@ class SunatBotAgent
         // switch dari WA → Telegram bot (WA di-cutoff 2026-09-30 22:00
         // WIB). Per instruksi dr. Yoga 2026-09-26. Prompt di-render
         // ulang tiap turn jadi tanggal cutoff dievaluasi live.
-        $klinikUtamaCutoff = Carbon::create(2026, 10, 1, 0, 0, 0, 'Asia/Jakarta');
+        // Cutoff maju dari 2026-10-01 → 2026-09-27 per instruksi dr. Yoga.
+        $klinikUtamaCutoff = Carbon::create(2026, 9, 27, 0, 0, 0, 'Asia/Jakarta');
         $klinikUtamaAfterCutoff = Carbon::now('Asia/Jakarta')->greaterThanOrEqualTo($klinikUtamaCutoff);
         $klinikUtamaLink   = $klinikUtamaAfterCutoff
             ? 'https://t.me/KlinikJatiElokBot'
@@ -2069,11 +2070,9 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         // tidak pernah dapat reply tanpa link (bingung ke mana redirect).
         $phone = $session->no_telp ?? '';
 
-        // Cutoff 2026-10-01 Asia/Jakarta — sebelum: WA link admin klinik
-        // utama. Setelah: Telegram bot @KlinikJatiElokBot (WA di-cutoff
-        // 2026-09-30 22:00 WIB, TG jadi channel utama). Per instruksi
-        // dr. Yoga 2026-09-26.
-        $cutoff = Carbon::create(2026, 10, 1, 0, 0, 0, 'Asia/Jakarta');
+        // Cutoff maju dari 2026-10-01 → 2026-09-27 per instruksi dr. Yoga
+        // 2026-09-27: TG bot @KlinikJatiElokBot jadi channel utama sekarang.
+        $cutoff = Carbon::create(2026, 9, 27, 0, 0, 0, 'Asia/Jakarta');
         $now    = Carbon::now('Asia/Jakarta');
         $link   = $now->greaterThanOrEqualTo($cutoff)
             ? 'https://t.me/KlinikJatiElokBot'

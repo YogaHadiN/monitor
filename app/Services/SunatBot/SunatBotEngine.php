@@ -139,7 +139,9 @@ class SunatBotEngine
      */
     private function buildKlinikUtamaRedirectMessage(): string
     {
-        $cutoff = Carbon::create(2026, 10, 1, 0, 0, 0, 'Asia/Jakarta');
+        // Cutoff maju dari 2026-10-01 → 2026-09-27 per instruksi dr. Yoga
+        // 2026-09-27: TG bot jadi channel utama sekarang, tidak nunggu 1 Okt.
+        $cutoff = Carbon::create(2026, 9, 27, 0, 0, 0, 'Asia/Jakarta');
         $now    = Carbon::now('Asia/Jakarta');
         $link   = $now->greaterThanOrEqualTo($cutoff)
             ? 'https://t.me/KlinikJatiElokBot'
