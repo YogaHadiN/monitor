@@ -1091,6 +1091,27 @@ class WebRegistrationController extends Controller
             $webPickedDokter            = true;
         }
 
+        // POOL DISTRIBUSI FIX (dr. Yoga 2026-09-27): kalau pool mode +
+        // tipe umum + akses=tercepat (ATAU tidak pilih dokter sama
+        // sekali), set ruangan_id=0 (pool marker) supaya antrian
+        // visible di SEMUA ruang periksa (tidak stuck di Ruang 1
+        // saja). Report Deliana 2026-09-27 08:43: "ga dipilih dokter,
+        // masuk nya ke ruang periksa 1 semua". TipeKonsultasi(1).
+        // ruangan_id default=3 → fallback line 1058 selalu set Ruang 1.
+        //
+        // Kolom NOT NULL → pakai 0 bukan null. Visibility rule di
+        // RuangPeriksaController line 78-82 accept NULL|0|match.
+        // Auto-sync di PolisController::poli (line 1077+) akan
+        // set ruangan_id ke ruang yang klik Panggil.
+        if (
+            config('features.pool_antrian_enabled') &&
+            (int) $web_registration->tipe_konsultasi_id === 1 &&
+            empty($antrian->dokter_dipilih_id)
+        ) {
+            $antrian->ruangan_id = 0;
+            $antrian->staf_id    = null;
+        }
+
         $antrian->qr_code_path_s3          = $wablas->generateQrCodeForOnlineReservation('A', $antrian);
         $antrian->save();
         $antrian->antriable_id             = $antrian->id;

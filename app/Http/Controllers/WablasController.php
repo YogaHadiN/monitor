@@ -5135,6 +5135,20 @@ class WablasController extends Controller
                                 $waPickedDokter             = true;
                             }
 
+                            // POOL DISTRIBUSI FIX (dr. Yoga 2026-09-27):
+                            // Kalau pool mode + tipe umum + tidak pilih dokter
+                            // (tercepat), set ruangan_id=0 (pool marker)
+                            // supaya antrian visible di SEMUA ruang periksa.
+                            // Report Deliana WA bot flow → semua masuk Ruang 1.
+                            if (
+                                config('features.pool_antrian_enabled') &&
+                                (int) $reservasi_online->tipe_konsultasi_id === 1 &&
+                                empty($antrian->dokter_dipilih_id)
+                            ) {
+                                $antrian->ruangan_id = 0;
+                                $antrian->staf_id    = null;
+                            }
+
                             $antrian->qr_code_path_s3       = $this->generateQrCodeForOnlineReservation('A', $antrian);
                             $antrian->save();
                             $antrian->antriable_id          = $antrian->id;
