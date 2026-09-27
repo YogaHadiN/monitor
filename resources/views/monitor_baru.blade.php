@@ -242,10 +242,10 @@
 		font-weight: 200;
 		margin: 0;
 		overflow: hidden;
-		/* TV overscan safe zone (dr. Yoga 2026-09-27): TV Coocaa render
-		   ~3-5% overscan area. Padding vertikal kecil supaya kontent
-		   tetap muat vertikal. */
-		padding: 1vh 2vw;
+		/* Padding uniform (dr. Yoga 2026-09-27): sebelumnya 2vw side
+		   → asimetris karena browser reserve scrollbar space di kanan.
+		   Fixed px + calc supaya konsisten L/R. */
+		padding: 12px 20px;
 		box-sizing: border-box;
 		width: 100vw;
 		height: 100vh;
@@ -263,15 +263,22 @@
 			flex-direction: column;
 		}
 	}
-	/* Bootstrap 3 row negative margin bisa dorong konten keluar
-	   container. Netralize supaya kolom benar-benar contained. */
-	.container > .row {
-		margin-left: 0;
-		margin-right: 0;
+	/* Bootstrap 3 row negative margin — netralkan SEMUA .row (bukan
+	   hanya direct child) supaya nested row di dalam col-md-4 kiri
+	   tidak dorong konten keluar. */
+	.row {
+		margin-left: 0 !important;
+		margin-right: 0 !important;
 	}
-	.container > .row > [class*="col-"] {
-		padding-left: 6px;
-		padding-right: 6px;
+	[class*="col-"] {
+		padding-left: 8px !important;
+		padding-right: 8px !important;
+	}
+	/* container_wa (footer) span full width — align padding sama dengan
+	   3-col row di atas supaya visual edge-alignment konsisten. */
+	.container_wa {
+		margin-left: 8px !important;
+		margin-right: 8px !important;
 	}
 	/* Flex fill layout — cegah empty space di bawah (dr. Yoga 2026-09-27).
 	   Header pas isi, row antrian STRETCH isi space kosong, footer
