@@ -241,12 +241,11 @@
 		font-family: 'Nunito', sans-serif;
 		font-weight: 200;
 		margin: 0;
-		overflow-x: hidden;
-		overflow-y: hidden;
-		/* TV overscan safe zone (dr. Yoga 2026-09-27): sebagian TV
-		   Coocaa/smart TV render 5-8% pixel di luar area visible.
-		   Padding ini pastikan konten tetap masuk safe zone. */
-		padding: 2vh 3vw;
+		overflow: hidden;
+		/* TV overscan safe zone (dr. Yoga 2026-09-27): TV Coocaa render
+		   ~3-5% overscan area. Padding vertikal kecil supaya kontent
+		   tetap muat vertikal. */
+		padding: 1vh 2vw;
 		box-sizing: border-box;
 		width: 100vw;
 		height: 100vh;
@@ -255,11 +254,13 @@
 		.container {
 			width: 100% !important;
 			max-width: 100% !important;
-			height: 96vh;
+			height: 98vh;
 			padding-left: 0;
 			padding-right: 0;
 			margin: 0;
 			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
 		}
 	}
 	/* Bootstrap 3 row negative margin bisa dorong konten keluar
@@ -271,6 +272,42 @@
 	.container > .row > [class*="col-"] {
 		padding-left: 6px;
 		padding-right: 6px;
+	}
+	/* Override height fixed pada container antrian farmasi supaya
+	   fleksibel sesuai tinggi viewport. */
+	.container_antrian_farmasi {
+		height: auto !important;
+		min-height: 0;
+		max-height: 55vh;
+		overflow: hidden;
+	}
+	/* Nomor panggilan biggest (100px) kekecilkan biar row 2 muat. */
+	.biggest {
+		font-size: 70px !important;
+	}
+	.container_antrian_pemeriksaan {
+		padding: 8px !important;
+	}
+	.title_antrian_farmasi {
+		font-size: 22px !important;
+		padding: 4px 0 !important;
+	}
+	.header .waktu {
+		font-size: 20px !important;
+	}
+	.header .waktu #jam {
+		font-size: 28px !important;
+	}
+	.panel_antrian_terakhir {
+		max-height: 25vh;
+		overflow: hidden;
+	}
+	/* Baris bawah (danger/tindakan/carousel) — pastikan tidak overflow
+	   dan tetap terlihat di safe zone. */
+	#activate_if_danger, #activate_if_tindakan_ruangan, #activate_if_not_danger {
+		max-height: 20vh;
+		overflow: hidden;
+		margin-top: 4px;
 	}
 	/* TV overflow fix (dr. Yoga 2026-09-27): kolom 3 (Racikan) +
 	   footer text + jam kadang terpotong di kanan. Force wrap kata
