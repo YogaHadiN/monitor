@@ -94,8 +94,8 @@
         font-size: 18px;
     }
     .container_antrian_pemeriksaan{
-        padding-right: 3px !important;
-        width: 96%;
+        padding-right: 6px !important;
+        width: 100%;
     }
     .container_antrian_farmasi{
         height: 459px;
@@ -205,7 +205,7 @@
         margin: 0 !important;
     }
     .mr-10 {
-        margin-right: 15px !important;
+        margin-right: 0 !important;
     }
     .pr-10 {
         padding-right: 10px;
@@ -242,10 +242,11 @@
 		font-weight: 200;
 		margin: 0;
 		overflow: hidden;
-		/* Padding uniform (dr. Yoga 2026-09-27): sebelumnya 2vw side
-		   → asimetris karena browser reserve scrollbar space di kanan.
-		   Fixed px + calc supaya konsisten L/R. */
-		padding: 12px 20px;
+		/* Padding uniform (dr. Yoga 2026-09-27 rev-3): L=R=20px,
+		   Top=12px, Bottom=24px lebih besar supaya footer QR
+		   tidak nempel bottom edge TV (dan safe zone overscan
+		   bawah). */
+		padding: 12px 20px 24px 20px;
 		box-sizing: border-box;
 		width: 100vw;
 		height: 100vh;
@@ -254,7 +255,7 @@
 		.container {
 			width: 100% !important;
 			max-width: 100% !important;
-			height: 98vh;
+			height: 100%;
 			padding-left: 0;
 			padding-right: 0;
 			margin: 0;
