@@ -238,12 +238,61 @@
 		font-family: 'Nunito', sans-serif;
 		font-weight: 200;
 		margin: 0;
+		overflow-x: hidden;
 	}
 	@media (min-width: 1px){
 		.container {
-			width: 1280px;
-            height: 100vh;
+			width: 100%;
+			max-width: 100vw;
+			height: 100vh;
+			padding-left: 10px;
+			padding-right: 10px;
+			box-sizing: border-box;
 		}
+	}
+	/* TV overflow fix (dr. Yoga 2026-09-27): kolom 3 (Racikan) +
+	   footer text + jam kadang terpotong di kanan. Force wrap kata
+	   panjang di sel tabel + shrink cell padding + hide horizontal
+	   overflow di container. */
+	.table-farmasi td, .table-farmasi th {
+		word-break: break-word;
+		overflow-wrap: anywhere;
+		padding: 4px 6px !important;
+	}
+	.table-farmasi td.text-left {
+		font-size: 16px;
+		line-height: 1.15;
+	}
+	.container_antrian_farmasi {
+		overflow: hidden;
+	}
+	.container_antrian.mr-10 {
+		margin-right: 0 !important;
+	}
+	.waktu {
+		text-align: right;
+		overflow: hidden;
+	}
+	.waktu #jam, .waktu #hari {
+		white-space: nowrap;
+	}
+	#activate_if_danger, #activate_if_tindakan_ruangan {
+		width: 100%;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+		padding: 0 12px;
+		box-sizing: border-box;
+	}
+	#text_notifikasi, #text_notifikasi_tindakan_ruangan {
+		max-width: 100%;
+		font-size: 32px;
+	}
+	.wa_no {
+		font-size: 48px !important;
+		word-break: break-all;
+	}
+	.keterangan_wa {
+		font-size: 22px !important;
 	}
 	.wa_no{
 		font-weight: 900;
