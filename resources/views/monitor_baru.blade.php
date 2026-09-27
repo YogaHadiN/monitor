@@ -330,11 +330,57 @@
 	.container_antrian {
 		padding: 6px !important;
 	}
-	/* Nomor panggilan biggest */
+	/* Nomor panggilan biggest — clamp scale dgn viewport TV */
 	.biggest {
-		font-size: 90px !important;
+		font-size: clamp(60px, 8vw, 140px) !important;
 		padding: 0 !important;
 		line-height: 1;
+	}
+	/* Responsive font (dr. Yoga 2026-09-27): pakai clamp(min, vw, max)
+	   supaya font auto-scale di berbagai ukuran TV — kecil di layar
+	   1366×768, besar di 1920×1080 / 4K. */
+	body {
+		font-size: clamp(14px, 1.1vw, 22px);
+	}
+	.title_antrian_farmasi {
+		font-size: clamp(18px, 1.8vw, 32px) !important;
+		padding: 6px 14px !important;
+	}
+	.header .waktu {
+		font-size: clamp(16px, 1.5vw, 28px) !important;
+	}
+	.header .waktu #jam {
+		font-size: clamp(22px, 2.2vw, 40px) !important;
+	}
+	.below_antrian_pemeriksaan td,
+	.below_antrian_pemeriksaan th {
+		font-size: clamp(14px, 1.3vw, 22px) !important;
+		padding: 6px 10px !important;
+		line-height: 1.15;
+	}
+	.table-farmasi td, .table-farmasi th {
+		font-size: clamp(13px, 1.15vw, 20px) !important;
+		padding: 5px 8px !important;
+		line-height: 1.2;
+	}
+	.keterangan_wa {
+		font-size: clamp(16px, 1.6vw, 30px) !important;
+		font-weight: 900;
+	}
+	.wa_no {
+		font-size: clamp(20px, 2vw, 36px) !important;
+	}
+	.container_wa img[src^="data:image"] {
+		height: clamp(70px, 8vh, 130px) !important;
+	}
+	.keterangan_waktu_tunggu {
+		font-size: clamp(15px, 1.4vw, 24px) !important;
+	}
+	.waktu_tunggu {
+		font-size: clamp(18px, 1.8vw, 30px) !important;
+	}
+	#dipanggil .text-red {
+		font-size: clamp(16px, 1.6vw, 28px) !important;
 	}
 	/* Kolom kiri: split jadi 2 panel (dipanggil ~40%, ruangan_terakhir ~60%) */
 	.col-md-4:first-child .row:first-child {
