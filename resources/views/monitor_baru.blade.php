@@ -290,16 +290,17 @@
 		display: flex;
 		align-items: center;
 	}
-	/* Logo klinik: pastikan visible (sempat hilang karena parent flex
-	   collapse ke 0 kalau img blm load). Fixed max-height + display
-	   block. */
+	/* Logo klinik: pastikan visible + tetap punya background pill hijau
+	   (per instruksi dr. Yoga 2026-09-27 revisi). Fixed max-height +
+	   display block. */
 	.container > .row.header .logo {
 		max-height: 60px;
 		width: auto !important;
 		max-width: 100%;
 		display: block;
-		background-color: transparent;
-		padding: 4px;
+		background-color: #C1ECE4;
+		border-radius: 20px;
+		padding: 6px 15px;
 	}
 	.container > .row.row-no-padding {
 		flex: 1 1 auto;
