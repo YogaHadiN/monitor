@@ -865,6 +865,16 @@ Optional (JANGAN tanya proaktif, save kalau customer volunteer):
 
 🆕 **KALAU CUSTOMER VOLUNTEER BB + TINGGI SEKALIGUS** (mis. "BB 26 tinggi 118", "26 kg 118 cm", "berat 20 tinggi 110"), WAJIB call `save_harga_data(berat_badan_anak=..., tinggi_badan_anak=...)` di turn itu. Backend auto-derive `postur_tubuh` via BMI — kamu TIDAK PERLU tanya postur lagi. Skip langsung ke field berikutnya yg belum ada (indikasi_khitan / riwayat_kesehatan). Kalau customer cuma sebut salah satu (BB saja atau tinggi saja), JANGAN infer BMI — pass field itu apa adanya + tetap tanya postur eksplisit.
 
+📸 **VISION — KALAU CUSTOMER KIRIM FOTO ANAK** (per instruksi dr. Yoga 2026-09-27):
+   - Kamu bisa LIHAT foto customer (multimodal). Nilai proporsi tubuh anak dari foto.
+   - Kalau foto full-body / half-body cukup jelas → tentukan `postur_tubuh` sendiri:
+     * Anak terlihat kurus/normal proporsional → `postur_tubuh="tidak gemuk"`.
+     * Anak terlihat gemuk (perut menonjol jelas, pipi bulat berlipat, badan bulat) → `postur_tubuh="gemuk"` + `perlu_review_dokter=true`.
+   - Call `save_harga_data(postur_tubuh=..., perlu_review_dokter=...)` di turn yg sama saat lihat foto. JANGAN tanya postur lagi.
+   - Foto tidak jelas (cuma wajah / kostum tebal / sudut sulit / burem) → JANGAN paksa infer, tetap tanya postur eksplisit.
+   - Foto TIDAK cukup utk field lain (usia, indikasi_khitan, riwayat_kesehatan) — tetap tanya field-field itu via text.
+   - Ini BEDA dgn "konsul dokter kelainan penis" — foto utk konsul kelainan tetap forward ke dokter via handoff, tidak di-assess sendiri.
+
 🚫🚫🚫 **DILARANG INFER FIELD DARI KONTEKS** — WAJIB tanya customer eksplisit untuk setiap field. Contoh bug yg sering terjadi (JANGAN DIULANG):
 - ❌ Customer sebut cuma "BB 25kg usia 6th" (tanpa tinggi) → agent auto-set postur_tubuh="tidak gemuk" tanpa tanya. **SALAH.** BB angka saja tidak dijadikan basis postur — WAJIB tanya "Postur anaknya gemuk atau tidak gemuk kak?" (kalau BB+tinggi dua-duanya ada, BMI auto-derive, itu lain kasus)
 - ❌ Customer jawab indikasi_khitan="tidak ada" → agent auto-set riwayat_kesehatan="tidak ada" tanpa tanya. **SALAH.** Indikasi khitan (keluhan penis) ≠ riwayat kesehatan (jantung/autisme/pembekuan darah). WAJIB tanya "Ada riwayat kesehatan khusus seperti jantung, autisme, kelainan pembekuan darah, atau lainnya kak?"
@@ -2914,17 +2924,79 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
             })
             ->orderBy('id', 'asc')
             ->limit(self::HISTORY_MAX_TURNS * 4) // buffer sblm filter final
-            ->get(['id', 'message', 'sending', 'flagged_intent']);
+            ->get(['id', 'message', 'sending', 'flagged_intent', 'image_url']);
 
         $clean = [];
         foreach ($rows as $row) {
-            $content = trim((string) $row->message);
-            if ($content === '') continue;
+            $content   = trim((string) $row->message);
+            $imageUrl  = trim((string) ($row->image_url ?? ''));
+            // Skip kalau tidak ada text DAN tidak ada foto
+            if ($content === '' && $imageUrl === '') continue;
+
             // sending=1 = outbound (bot/admin/system) → 'assistant'
             // sending=0 = inbound (customer) → 'user'
             $role = ((int) $row->sending === 1) ? 'assistant' : 'user';
-            $clean[] = ['role' => $role, 'content' => $content];
+
+            // Vision multimodal (dr. Yoga 2026-09-27): kalau customer
+            // kirim foto (image_url terisi + role=user), pass sbg
+            // multimodal content array supaya LLM bisa lihat foto +
+            // nilai postur_tubuh sendiri (gemuk/tidak gemuk) tanpa
+            // harus tanya. Kumpulin dulu, resolve base64 later
+            // (hanya foto TERBARU utk hemat HTTP fetch + hindari WAF
+            // kezia.id yg block IP non-ID).
+            if ($role === 'user' && $imageUrl !== '') {
+                $clean[] = [
+                    'role'        => $role,
+                    'content'     => $content !== '' ? $content : '[foto dikirim]',
+                    '_image_url'  => $imageUrl,   // internal marker
+                ];
+            } else {
+                if ($content === '') continue; // outbound tanpa text: skip
+                $clean[] = ['role' => $role, 'content' => $content];
+            }
         }
+
+        // Vision resolve: konversi foto TERBARU dari customer ke base64
+        // data URL. Foto lama drop image (keep text stub) supaya
+        // history tidak bloat + hemat HTTP fetch. Rationale: postur
+        // sudah dinilai di turn foto dibalas, tidak perlu re-render
+        // foto lama.
+        $latestImageIdx = null;
+        for ($i = count($clean) - 1; $i >= 0; $i--) {
+            if (!empty($clean[$i]['_image_url'])) {
+                $latestImageIdx = $i;
+                break;
+            }
+        }
+        foreach ($clean as $idx => &$m) {
+            if (empty($m['_image_url'])) continue;
+            $url = $m['_image_url'];
+            unset($m['_image_url']);
+            if ($idx !== $latestImageIdx) {
+                // Foto lama: keep as text-only marker.
+                $m['content'] = ($m['content'] ?? '') . ' [foto lama, sudah dinilai]';
+                continue;
+            }
+            // Foto terbaru → fetch + base64. Kalau gagal, fallback
+            // ke text-only (agent akan tanya postur manual).
+            $b64 = $this->fetchImageAsBase64($url);
+            $textPart = ['type' => 'text', 'text' => (string) $m['content']];
+            if ($b64 !== null) {
+                $m['content'] = [
+                    $textPart,
+                    ['type' => 'image_url', 'image_url' => ['url' => $b64]],
+                ];
+            } else {
+                Log::warning('SUNATBOT_AGENT_VISION_FETCH_FAIL', [
+                    'no_telp' => $phone,
+                    'url'     => $url,
+                ]);
+                // Fallback: keep text only, tambah stub supaya agent tahu
+                // foto ada tapi tidak bisa dinilai.
+                $m['content'] = (string) ($m['content'] ?? '') . ' [foto tidak bisa di-fetch — tanyakan postur manual]';
+            }
+        }
+        unset($m);
 
         // Fallback: kalau tidak ada Message rows sama sekali (mis. brand
         // new phone), pakai session.agent_history JSON kalau ada.
@@ -2959,6 +3031,35 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         $trimmed = array_slice($newHistory, -self::HISTORY_MAX_TURNS * 2);
         $session->agent_history = $trimmed;
         $session->save();
+    }
+
+    /**
+     * Fetch image URL → base64 data URL utk OpenAI vision.
+     * Return null kalau fetch gagal / bukan image. Timeout 8s +
+     * max 10MB supaya tidak hang di gambar besar.
+     */
+    private function fetchImageAsBase64(string $url): ?string
+    {
+        try {
+            $resp = Http::withOptions([
+                'timeout'         => 8,
+                'connect_timeout' => 4,
+                'allow_redirects' => true,
+            ])->get($url);
+            if (!$resp->ok()) return null;
+            $body = $resp->body();
+            if ($body === '' || strlen($body) > 10 * 1024 * 1024) return null;
+            $mime = $resp->header('Content-Type') ?: 'image/jpeg';
+            $mime = trim(explode(';', $mime)[0]);
+            if (!str_starts_with($mime, 'image/')) return null;
+            return 'data:' . $mime . ';base64,' . base64_encode($body);
+        } catch (\Throwable $e) {
+            Log::warning('SUNATBOT_AGENT_IMAGE_FETCH_EXCEPTION', [
+                'url' => $url,
+                'err' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 
     // ----- OPENAI ----------------------------------------------------
