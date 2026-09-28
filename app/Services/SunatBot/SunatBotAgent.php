@@ -548,6 +548,12 @@ class SunatBotAgent
             }
         }
 
+        // Post-process safety (dr. Yoga 2026-09-28): LLM kadang
+        // hallucinate URL t.me/KlinikJatiElokBot atau wa.me/... langsung
+        // meski prompt sudah instruksikan pakai /tg redirect. Rewrite
+        // paksa supaya click tracking konsisten.
+        $replies = $this->rewriteTelegramLinks($replies);
+
         // Persist history (system + tool roles di-strip; cuma user +
         // assistant final yang relevan untuk konteks turn berikutnya).
         $this->saveHistory($session, $history, $userMessage, $replies);
@@ -562,6 +568,42 @@ class SunatBotAgent
             'escalate' => $escalate,
             'prefill'  => $prefill,
         ];
+    }
+
+    /**
+     * Post-process: replace URL t.me / wa.me variants yang LLM karang
+     * sendiri → tracked /tg redirect. Berlaku di semua bubble reply.
+     * Regex tolerant: match https://t.me/KlinikJatiElokBot,
+     * t.me/KlinikJatiElokBot, dgn/tanpa ?start= query, dgn/tanpa
+     * trailing slash.
+     */
+    private function rewriteTelegramLinks(array $replies): array
+    {
+        $tracked = 'https://www.klinikjatielok.com/tg?src=sunatbot_agent_rewrite';
+        foreach ($replies as &$r) {
+            if (!isset($r['text']) || !is_string($r['text']) || $r['text'] === '') continue;
+            $text = $r['text'];
+            // t.me/KlinikJatiElokBot dgn/tanpa https + start param
+            $text = preg_replace(
+                '~https?://t\.me/KlinikJatiElokBot(?:\?[^\s]*)?~i',
+                $tracked,
+                $text
+            );
+            $text = preg_replace(
+                '~(?<![\w/])t\.me/KlinikJatiElokBot(?:\?[^\s]*)?~i',
+                $tracked,
+                $text
+            );
+            // wa.me/6282113781271 (klinik utama WA yg sudah cutoff)
+            $text = preg_replace(
+                '~https?://wa\.me/6282113781271(?:\?[^\s]*)?~i',
+                $tracked,
+                $text
+            );
+            $r['text'] = $text;
+        }
+        unset($r);
+        return $replies;
     }
 
     private function buildSystemPrompt(): string
@@ -677,6 +719,13 @@ Kapan sebutkan link ini:
 - Customer minta layanan NON-sunat (USG, BPJS, dokter umum, dll) → SELALU kirim link {$klinikUtamaChannel} dalam reply text kamu, JANGAN cuma bilang "silakan chat admin". Format: "Silakan tap link berikut untuk chat admin klinik utama:\n\n{$klinikUtamaLink}". URL polos, tanpa markdown.
 - Customer EKSPLISIT tanya nomor/kontak → langsung sebutkan link {$klinikUtamaLink}.
 - Kalau tool `redirect_ke_klinik_utama` sudah pernah dipanggil hari ini (throttled), kamu WAJIB kirim reply text sendiri berisi link {$klinikUtamaChannel} — jangan silent.
+
+🚫🚫🚫 **DILARANG MUTLAK menulis URL manual selain {$klinikUtamaLink}** (dr. Yoga 2026-09-28). Contoh URL yg DILARANG kamu ketik ke reply:
+  ❌ "https://t.me/KlinikJatiElokBot" (langsung ke Telegram)
+  ❌ "t.me/KlinikJatiElokBot"
+  ❌ "wa.me/6282113781271" (WA sudah cutoff)
+  ❌ URL variasi lain yg kamu karang sendiri.
+✅ HANYA URL yg PERSIS = {$klinikUtamaLink}. Copy-paste dari prompt ini. JANGAN modifikasi, JANGAN singkat, JANGAN ganti host. Kalau kamu pakai URL selain ini, backend akan replace ke {$klinikUtamaLink} otomatis (post-processing safety), tapi tetap disini kamu WAJIB compliance.
 
 🪡 JAHITAN: Metode teknoklamp kami umumnya TIDAK perlu jahitan.
 
