@@ -144,7 +144,7 @@ class SunatBotEngine
         $cutoff = Carbon::create(2026, 9, 27, 0, 0, 0, 'Asia/Jakarta');
         $now    = Carbon::now('Asia/Jakarta');
         $link   = $now->greaterThanOrEqualTo($cutoff)
-            ? 'https://t.me/KlinikJatiElokBot'
+            ? 'https://www.klinikjatielok.com/tg?src=sunatbot_engine'
             : 'https://wa.me/6282113781271';
 
         return "Halo kak 🙏\n\n"

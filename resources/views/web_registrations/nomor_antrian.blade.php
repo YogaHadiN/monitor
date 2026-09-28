@@ -37,7 +37,7 @@
                     kirim nomor HP Kakak.
                 </p>
                 <a
-                    href="https://t.me/KlinikJatiElokBot"
+                    href="https://www.klinikjatielok.com/tg?src=web_reg"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="btn btn-lg btn-block"

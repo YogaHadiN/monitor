@@ -580,7 +580,7 @@ class SunatBotAgent
         $klinikUtamaCutoff = Carbon::create(2026, 9, 27, 0, 0, 0, 'Asia/Jakarta');
         $klinikUtamaAfterCutoff = Carbon::now('Asia/Jakarta')->greaterThanOrEqualTo($klinikUtamaCutoff);
         $klinikUtamaLink   = $klinikUtamaAfterCutoff
-            ? 'https://t.me/KlinikJatiElokBot'
+            ? 'https://www.klinikjatielok.com/tg?src=sunatbot_agent'
             : 'https://wa.me/6282113781271';
         $klinikUtamaLabel  = $klinikUtamaAfterCutoff
             ? 'Link Telegram bot: ' . $klinikUtamaLink
@@ -2101,7 +2101,7 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         $cutoff = Carbon::create(2026, 9, 27, 0, 0, 0, 'Asia/Jakarta');
         $now    = Carbon::now('Asia/Jakarta');
         $link   = $now->greaterThanOrEqualTo($cutoff)
-            ? 'https://t.me/KlinikJatiElokBot'
+            ? 'https://www.klinikjatielok.com/tg?src=sunatbot_agent'
             : 'https://wa.me/6282113781271';
 
         $text = "Halo kak 🙏\n\n"

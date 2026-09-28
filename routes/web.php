@@ -65,6 +65,36 @@ Route::get('/review/sunatboy/{periksa_id?}', function ($periksaId = null) use ($
     );
 })->where('periksa_id', '[0-9]+');
 
+// Telegram bot link tracker (dr. Yoga 2026-09-28): route pengganti utk
+// semua ref t.me/KlinikJatiElokBot supaya bisa dihitung click harian.
+// Reuse table review_link_clicks dgn slug='telegram_bot'. Optional
+// query ?src= untuk membedakan sumber (mis. tv_monitor, sunatbot_wa,
+// web_reg, dst).
+//   /tg?src=tv_monitor          → default no param
+//   /tg?src=sunatbot_wa
+Route::get('/tg', function () use ($logReviewClick) {
+    $src = trim((string) request()->query('src', ''));
+    // Simpan src di kolom user_agent tail supaya tidak butuh migration
+    // baru — pattern "[src=...]" prepended.
+    try {
+        \DB::table('review_link_clicks')->insert([
+            'slug'       => 'telegram_bot',
+            'periksa_id' => null,
+            'ip'         => request()->ip(),
+            'user_agent' => substr(($src !== '' ? "[src={$src}] " : '') . (string) request()->userAgent(), 0, 500),
+            'referer'    => substr((string) request()->headers->get('referer'), 0, 500),
+            'clicked_at' => now(),
+        ]);
+    } catch (\Throwable $e) {
+        \Log::warning('telegram_bot_click log fail', ['err' => $e->getMessage()]);
+    }
+    // Forward query ke t.me kalau ada `start=...` param dari QR TV
+    // (QR tv_monitor: /tg?src=tv_monitor&start=komplain).
+    $start = trim((string) request()->query('start', ''));
+    $target = 'https://t.me/KlinikJatiElokBot' . ($start !== '' ? '?start=' . urlencode($start) : '');
+    return redirect()->away($target, 302);
+});
+
 Route::get('/', [AntrianController::class, 'index']);
 /* Route::get('antrianperiksa/monitor', [AntrianController::class, 'monitor']); */
 Route::get('antrianperiksa/monitor_baru', [AntrianController::class, 'monitor_baru']);

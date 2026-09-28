@@ -101,8 +101,10 @@ class AntrianController extends Controller
     public function monitor_baru(){
 		// Telegram bot @KlinikJatiElokBot jadi channel utama sekarang
 		// (per instruksi dr. Yoga 2026-09-27, cutover dari WA).
-		$url = 'https://t.me/KlinikJatiElokBot?start=komplain';
-		$url_daftar_online = 'https://t.me/KlinikJatiElokBot?start=daftar';
+		// Pakai /tg redirect route (bukan t.me langsung) supaya click
+		// bisa dihitung di laporan harian (dr. Yoga 2026-09-28).
+		$url = 'https://www.klinikjatielok.com/tg?src=tv_monitor_komplain&start=komplain';
+		$url_daftar_online = 'https://www.klinikjatielok.com/tg?src=tv_monitor_daftar&start=daftar';
         $qr = new QrCodeController;
         $base64 = $qr->inPdf($url);
         $base64_daftar_online = $qr->inPdf($url_daftar_online);
