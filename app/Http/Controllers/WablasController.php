@@ -3633,6 +3633,25 @@ class WablasController extends Controller
         ];
         $hariIniStr = $hariIndo[\Carbon\Carbon::now('Asia/Jakarta')->dayOfWeek]; // contoh: "Senin"
 
+        // Substitutes: staf di petugas_pemeriksas hari ini tapi TIDAK
+        // di jadwal_konsultasis hari itu → dokter pengganti. Per
+        // instruksi dr. Yoga 2026-09-28: notif "Digantikan Dr. X".
+        $regularStafHariIni = collect($rows ?? [])
+            ->filter(fn ($r) => strcasecmp($r->hari, $hariIniStr) === 0)
+            ->pluck('staf_id')->all();
+        $subsRows = \App\Models\PetugasPemeriksa::with(['staf', 'staf.titel'])
+            ->where('tanggal', $today)
+            ->where('tenant_id', $tenant_id)
+            ->where('tipe_konsultasi_id', $param)
+            ->whereNotIn('staf_id', $regularStafHariIni)
+            ->get();
+        $substituteText = $subsRows->map(function ($p) {
+            $t = optional(optional($p->staf)->titel)->singkatan ?: 'dr';
+            $n = ucwords(strtolower(optional($p->staf)->nama ?? ''));
+            $jam = substr((string) $p->jam_mulai, 0, 5) . '-' . substr((string) $p->jam_akhir, 0, 5);
+            return $this->tambahkanGelar($t, $n) . ' (' . $jam . ')';
+        })->filter()->implode(', ');
+
         // ===== group by hari untuk compose message =====
         $result = [];
         foreach ($rows as $q) {
@@ -3686,16 +3705,31 @@ class WablasController extends Controller
                     $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' )';
                 }
 
-                // ===== Tambahkan (izin hari ini) bila:
-                // - ini adalah baris untuk HARI INI, dan
-                // - staf pada baris ini TIDAK ada di roster petugas_pemeriksas hari ini
+                // Notif hari ini kalau staf regular tidak di petugas_pemeriksas.
+                // Kalau ada pengganti → "Digantikan Dr. X (jam)".
+                // Kalau tidak → "Tidak praktek hari ini".
                 if (strcasecmp($hari, $hariIniStr) === 0) {
                     if (!in_array($d['staf_id'], $stafHariIni, true)) {
-                        $message .= ' (Izin Tidak Masuk)';
+                        if ($substituteText !== '') {
+                            $message .= ' *(Tidak praktek, digantikan ' . $substituteText . ')*';
+                        } else {
+                            $message .= ' *(Tidak praktek hari ini)*';
+                        }
                     }
                 }
 
                 $message .= PHP_EOL;
+            }
+        }
+
+        // Kalau ada pengganti + semua regular hari ini tetap hadir,
+        // tampilkan sebagai "dokter tambahan" supaya info tetap sampai.
+        if ($substituteText !== '') {
+            $allRegularHadir = collect($result[$hariIniStr] ?? [])
+                ->every(fn ($d) => in_array($d['staf_id'], $stafHariIni, true));
+            if ($allRegularHadir) {
+                $message .= PHP_EOL;
+                $message .= '👨‍⚕️ *Dokter tambahan hari ini:* ' . $substituteText . PHP_EOL;
             }
         }
 

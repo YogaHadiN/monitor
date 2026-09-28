@@ -2634,6 +2634,7 @@ class QiscusController extends Controller
         $query .= "TIME_FORMAT(jad.jam_mulai, '%H:%i') as jam_mulai, ";
         $query .= "TIME_FORMAT(jad.jam_akhir, '%H:%i') as jam_akhir, ";
         $query .= "tip.tipe_konsultasi, ";
+        $query .= "sta.id as staf_id, ";
         $query .= "sta.nama, ";
         $query .= "jad.schedulled_booking_allowed as online_only ";
         $query .= "FROM jadwal_konsultasis as jad ";
@@ -2652,6 +2653,7 @@ class QiscusController extends Controller
 
             foreach ($query as $q) {
                 $result[$q->hari][] = [
+                    'staf_id'     => $q->staf_id,
                     'nama'        => $q->nama,
                     'titel'       => $q->titel,
                     'jam_mulai'   => $q->jam_mulai,
@@ -2659,6 +2661,32 @@ class QiscusController extends Controller
                     'online_only' => (int) ($q->online_only ?? 0) === 1,
                 ];
             }
+
+            // Substitute logic (dr. Yoga 2026-09-28): cek petugas_pemeriksas
+            // hari ini vs jadwal_konsultasis hari itu.
+            $today       = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
+            $hariIndo    = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
+            $hariIniStr  = $hariIndo[\Carbon\Carbon::now('Asia/Jakarta')->dayOfWeek];
+            $stafHariIni = \App\Models\PetugasPemeriksa::query()
+                ->where('tanggal', $today)
+                ->where('tenant_id', $tenant_id)
+                ->where('tipe_konsultasi_id', $param)
+                ->pluck('staf_id')->all();
+            $regularStafHariIni = collect($query)
+                ->filter(fn ($r) => strcasecmp($r->hari, $hariIniStr) === 0)
+                ->pluck('staf_id')->all();
+            $subsRows = \App\Models\PetugasPemeriksa::with(['staf', 'staf.titel'])
+                ->where('tanggal', $today)
+                ->where('tenant_id', $tenant_id)
+                ->where('tipe_konsultasi_id', $param)
+                ->whereNotIn('staf_id', $regularStafHariIni)
+                ->get();
+            $substituteText = $subsRows->map(function ($p) {
+                $t = optional(optional($p->staf)->titel)->singkatan ?: 'dr';
+                $n = ucwords(strtolower(optional($p->staf)->nama ?? ''));
+                $jam = substr((string) $p->jam_mulai, 0, 5) . '-' . substr((string) $p->jam_akhir, 0, 5);
+                return $this->tambahkanGelar($t, $n) . ' (' . $jam . ')';
+            })->filter()->implode(', ');
             $adaOnlineOnly = false;
             $adaWalkinOnly = false;
             $message = '*Jadwal ' . ucwords(strtolower($query[0]->tipe_konsultasi)) . '*';
@@ -2693,9 +2721,31 @@ class QiscusController extends Controller
                     } else {
                         $message .= ' ( ' . $d['jam_mulai'] . '-' . $d['jam_akhir'] . ' )';
                     }
+
+                    // Notif hari ini kalau staf regular tidak di petugas_pemeriksas.
+                    if (strcasecmp($k, $hariIniStr) === 0
+                        && !in_array($d['staf_id'], $stafHariIni, true)) {
+                        if ($substituteText !== '') {
+                            $message .= ' *(Tidak praktek, digantikan ' . $substituteText . ')*';
+                        } else {
+                            $message .= ' *(Tidak praktek hari ini)*';
+                        }
+                    }
+
                     $message .= PHP_EOL;
                 }
             }
+
+            // Kalau ada pengganti + semua regular hari ini hadir → dokter tambahan.
+            if ($substituteText !== '') {
+                $allRegularHadir = collect($result[$hariIniStr] ?? [])
+                    ->every(fn ($d) => in_array($d['staf_id'], $stafHariIni, true));
+                if ($allRegularHadir) {
+                    $message .= PHP_EOL;
+                    $message .= '👨‍⚕️ *Dokter tambahan hari ini:* ' . $substituteText . PHP_EOL;
+                }
+            }
+
             // Section "PENTING — HARAP DIBACA" — MUNCUL HANYA di jadwal
             // Dokter Gigi (tipe=2). Per instruksi dr. Yoga 2026-09-22.
             if ((int) $param === 2) {
