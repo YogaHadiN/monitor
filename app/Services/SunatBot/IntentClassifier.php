@@ -73,7 +73,7 @@ class IntentClassifier
 
         try {
             $response = Http::withToken($apiKey)
-                ->timeout(15)
+                ->timeout(30)
                 ->post('https://api.openai.com/v1/chat/completions', $payload);
 
             $this->logCall('classify', $prompt, $payload, $response, $start);
@@ -145,7 +145,7 @@ class IntentClassifier
 
         try {
             $response = Http::withToken($apiKey)
-                ->timeout(15)
+                ->timeout(30)
                 ->post('https://api.openai.com/v1/chat/completions', $payload);
 
             $this->logCall('extractFields', $prompt, $payload, $response, $start);
@@ -203,7 +203,7 @@ class IntentClassifier
 
         try {
             $response = Http::withToken($apiKey)
-                ->timeout(15)
+                ->timeout(30)
                 ->post('https://api.openai.com/v1/chat/completions', $payload);
 
             $this->logCall('extractField:' . $field, $prompt, $payload, $response, $start);

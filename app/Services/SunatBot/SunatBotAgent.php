@@ -40,7 +40,8 @@ class SunatBotAgent
     //     • output $1.20 vs $1.60 (25% lebih murah)
     //     Expected: tool calling reliability naik (5.6 vs 4.1 gen).
     private const MODEL               = 'gpt-4.1-mini';
-    private const HTTP_TIMEOUT        = 20;
+    private const HTTP_TIMEOUT        = 45;
+    private const HTTP_RETRY_ONCE     = true;
 
     // Hard guard utk trigger_booking_flow — kalau user message ada kata
     // ini, BUKAN booking sunat → reject tool call, force agent re-route
@@ -3152,32 +3153,55 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         }
         $start = microtime(true);
 
-        try {
-            $response = Http::withToken($apiKey)
-                ->timeout(self::HTTP_TIMEOUT)
-                ->post('https://api.openai.com/v1/chat/completions', $payload);
+        // Retry once pada timeout/connection exception (dr. Yoga
+        // 2026-09-29): case 6282122332819 14:45 — cURL error 28 timeout
+        // 20s → bot silent. OpenAI kadang lambat 20-30s, retry sekali
+        // biasanya lolos. HTTP_TIMEOUT dinaikkan ke 45s + 1x retry.
+        $attempts = self::HTTP_RETRY_ONCE ? 2 : 1;
+        $lastException = null;
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            try {
+                $response = Http::withToken($apiKey)
+                    ->timeout(self::HTTP_TIMEOUT)
+                    ->post('https://api.openai.com/v1/chat/completions', $payload);
 
-            $this->logCall('agent:iter' . $iter, $messages, $payload, $response, $start);
+                $this->logCall('agent:iter' . $iter . ($attempt > 1 ? '.retry' : ''), $messages, $payload, $response, $start);
 
-            if (!$response->ok()) {
-                Log::warning('SUNAT_BOT_AGENT_HTTP_FAIL', [
-                    'status' => $response->status(),
-                    'iter'   => $iter,
-                    'body'   => mb_substr((string) $response->body(), 0, 500),
+                if (!$response->ok()) {
+                    Log::warning('SUNAT_BOT_AGENT_HTTP_FAIL', [
+                        'status'  => $response->status(),
+                        'iter'    => $iter,
+                        'attempt' => $attempt,
+                        'body'    => mb_substr((string) $response->body(), 0, 500),
+                    ]);
+                    // 5xx → retry, 4xx → no point retry.
+                    if ($response->status() >= 500 && $attempt < $attempts) {
+                        usleep(500_000); // 0.5s
+                        continue;
+                    }
+                    return null;
+                }
+
+                $json    = $response->json() ?? [];
+                $message = $json['choices'][0]['message'] ?? null;
+                if (!is_array($message)) return null;
+
+                return ['message' => $message, 'raw' => $json];
+            } catch (\Throwable $e) {
+                $lastException = $e;
+                $this->logCall('agent:iter' . $iter . ($attempt > 1 ? '.retry' : ''), $messages, $payload, null, $start, $e->getMessage());
+                Log::warning('SUNAT_BOT_AGENT_EXCEPTION', [
+                    'err'     => $e->getMessage(),
+                    'iter'    => $iter,
+                    'attempt' => $attempt,
                 ]);
-                return null;
+                if ($attempt < $attempts) {
+                    usleep(500_000);
+                    continue;
+                }
             }
-
-            $json    = $response->json() ?? [];
-            $message = $json['choices'][0]['message'] ?? null;
-            if (!is_array($message)) return null;
-
-            return ['message' => $message, 'raw' => $json];
-        } catch (\Throwable $e) {
-            $this->logCall('agent:iter' . $iter, $messages, $payload, null, $start, $e->getMessage());
-            Log::warning('SUNAT_BOT_AGENT_EXCEPTION', ['err' => $e->getMessage(), 'iter' => $iter]);
-            return null;
         }
+        return null;
     }
 
     private function logCall(string $method, array $messages, array $payload, $response, float $startUs, ?string $errorMessage = null): void
