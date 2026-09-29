@@ -5130,6 +5130,38 @@ class WablasController extends Controller
                             $this->input_nomor_bpjs              = $reservasi_online->nomor_asuransi_bpjs;
                             $this->input_registrasi_pembayaran_id = $reservasi_online->registrasi_pembayaran_id;
 
+                            // GUARD duplicate antrian aktif hari ini per
+                            // no_telp + tipe (dr. Yoga 2026-09-29). Cegah
+                            // pasien punya 2 antrian di tipe konsultasi
+                            // sama via WA bot.
+                            $existingByPhone = \App\Models\Antrian::where('no_telp', $reservasi_online->no_telp)
+                                ->whereDate('created_at', now('Asia/Jakarta')->toDateString())
+                                ->where('tipe_konsultasi_id', $reservasi_online->tipe_konsultasi_id)
+                                ->whereNull('deleted_at')
+                                ->whereIn('antriable_type', [
+                                    'App\\Models\\Antrian',
+                                    'App\\Models\\AntrianPoli',
+                                    'App\\Models\\AntrianPeriksa',
+                                ])
+                                ->orderByDesc('id')
+                                ->first();
+                            if ($existingByPhone) {
+                                \Log::warning('WA_BOT_DUPLICATE_BLOCKED', [
+                                    'no_telp'          => $reservasi_online->no_telp,
+                                    'tipe_konsultasi'  => $reservasi_online->tipe_konsultasi_id,
+                                    'existing_ant_id'  => $existingByPhone->id,
+                                    'existing_nomor'   => 'A' . $existingByPhone->nomor,
+                                ]);
+                                $reservasi_online->delete();
+                                $this->autoReply(
+                                    'Kakak sudah memiliki antrian aktif *A' . $existingByPhone->nomor
+                                    . '* di tipe konsultasi yang sama hari ini. '
+                                    . 'Untuk daftar antrian baru, silakan hapus antrian A' . $existingByPhone->nomor
+                                    . ' terlebih dahulu (balas *batalkan*), lalu daftar ulang.'
+                                );
+                                return;
+                            }
+
                             $antrian                        = $this->antrianPost(
                                 $reservasi_online->ruangan_id,
                                 $reservasi_online->tipe_konsultasi_id

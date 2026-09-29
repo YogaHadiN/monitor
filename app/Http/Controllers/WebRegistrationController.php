@@ -1049,6 +1049,46 @@ class WebRegistrationController extends Controller
         // ===== ANTRIAN WALK-IN (existing flow) =====
         $wablas->input_registrasi_pembayaran_id = $web_registration->registrasi_pembayaran_id;
 
+        // GUARD duplicate antrian aktif hari ini per no_telp + tipe.
+        // Per instruksi dr. Yoga 2026-09-29 (kasus Aryadhi Sukrati Mulyo
+        // 2x daftar via web reg — A240 18:19 + A266 19:12). Cek no_telp
+        // (bukan pasien_id karena reservasi_online sering pasien_id=null
+        // sampai scan QR). Kalau sudah ada antrian tipe sama aktif hari
+        // ini yang BELUM selesai (bukan Periksa/AntrianKasir/AntrianApotek),
+        // block dgn error message.
+        $existingByPhone = \App\Models\Antrian::where('no_telp', $web_registration->no_telp)
+            ->whereDate('created_at', now('Asia/Jakarta')->toDateString())
+            ->where('tipe_konsultasi_id', $web_registration->tipe_konsultasi_id)
+            ->whereNull('deleted_at')
+            ->whereIn('antriable_type', [
+                'App\\Models\\Antrian',
+                'App\\Models\\AntrianPoli',
+                'App\\Models\\AntrianPeriksa',
+            ])
+            ->orderByDesc('id')
+            ->first();
+        if ($existingByPhone) {
+            \Log::warning('WEB_REG_DUPLICATE_BLOCKED', [
+                'no_telp'          => $web_registration->no_telp,
+                'tipe_konsultasi'  => $web_registration->tipe_konsultasi_id,
+                'existing_ant_id'  => $existingByPhone->id,
+                'existing_nomor'   => 'A' . $existingByPhone->nomor,
+                'web_reg_id'       => $web_registration->id,
+            ]);
+            // Ubah pesan status: instruksikan pasien hapus antrian lama
+            // via link daftar_online yang sama.
+            $this->message = 'Anda sudah memiliki antrian aktif <strong>A' . $existingByPhone->nomor
+                . '</strong> di tipe konsultasi yang sama hari ini. '
+                . 'Untuk daftar antrian baru, silakan hapus antrian A' . $existingByPhone->nomor
+                . ' terlebih dahulu (klik "Batalkan Antrian" di halaman antrian Anda), lalu daftar ulang.';
+            $web_registration->delete();
+            $message = view('web_registrations.message', [
+                'message'    => $this->message,
+                'alert_type' => 'alert-warning',
+            ])->render();
+            return compact('message');
+        }
+
         // Pool mode: derive ruangan_id dari tipe default kalau
         // web_registration.ruangan_id belum di-set (client tidak pilih
         // dokter). Ini memastikan antrianPost + nomor generator dapat
