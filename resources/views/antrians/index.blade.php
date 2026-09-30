@@ -33,6 +33,25 @@
                 <h1>Daftar Online</h1>
                 <a href="{{ url('daftar_online') }}" class="mt-20 btn btn-info btn-block">Klik Disini</a>
             @endif
+
+            {{-- CTA Telegram Bot (dr. Yoga 2026-09-30). Route /tg
+                 track click di review_link_clicks (slug=telegram_bot,
+                 src=home_page) sebelum redirect ke t.me/KlinikJatiElokBot. --}}
+            <div class="mt-20" style="margin-top:24px;">
+                <div style="border-top:1px solid #ddd; padding-top:20px;">
+                    <p style="font-size:15px; color:#555; margin-bottom:12px;">
+                        📲 Aktifkan notifikasi antrian, jadwal dokter, dan info klinik via Telegram Bot
+                    </p>
+                    <a href="{{ url('tg?src=home_page') }}"
+                       target="_blank" rel="noopener noreferrer"
+                       class="btn btn-block"
+                       style="background:#0088cc; color:#fff; font-weight:600; padding:12px;">
+                        Chat via Telegram Bot
+                        <br>
+                        <small style="font-weight:normal; opacity:0.9;">@KlinikJatiElokBot</small>
+                    </a>
+                </div>
+            </div>
             {{-- <a href='finspot:FingerspotReg;{{ $url_register }}' class='btn btn-sm btn-primary'>Register</a> --}}
         </div>
     </body>
