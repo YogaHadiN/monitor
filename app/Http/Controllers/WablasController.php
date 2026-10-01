@@ -5180,7 +5180,14 @@ class WablasController extends Controller
                             $antrian->kartu_asuransi_image  = $reservasi_online->kartu_asuransi_image;
                             $antrian->data_bpjs_cocok       = $reservasi_online->data_bpjs_cocok;
                             $antrian->reservasi_online      = 1;
-                            $antrian->sumber_antrian_id     = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::WHATSAPP_BOT);
+                            // Pilih sumber berdasarkan channel (dr. Yoga 2026-10-01):
+                            // TelegramWablasBridge set $this->channel='tg' —
+                            // sumbernya telegram_bot. Default WA → whatsapp_bot.
+                            $antrian->sumber_antrian_id     = \App\Models\SumberAntrian::idFor(
+                                ($this->channel ?? '') === 'tg'
+                                    ? \App\Models\SumberAntrian::TELEGRAM_BOT
+                                    : \App\Models\SumberAntrian::WHATSAPP_BOT
+                            );
                             $antrian->sudah_hadir_di_klinik = 0;
 
                             // Pool mode + pasien pilih dokter tertentu via WA:

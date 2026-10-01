@@ -12,6 +12,7 @@ class SumberAntrian extends Model
     public const MOBILE_JKN   = 'mobile_jkn';
     public const WEB_KLINIK   = 'web_klinik';
     public const WHATSAPP_BOT = 'whatsapp_bot';
+    public const TELEGRAM_BOT = 'telegram_bot';
     public const WALK_IN      = 'walk_in';
 
     /**
