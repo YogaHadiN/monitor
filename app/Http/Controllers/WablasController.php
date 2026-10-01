@@ -6297,9 +6297,49 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         resetWhatsappRegistration($this->no_telp);
 
         if ($items->isEmpty()) {
-            if ($pendingNames->isNotEmpty()) {
-                $namaStr = $pendingNames->implode(', ');
-                return "Reservasi antrian atas nama *{$namaStr}* dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.";
+            // FIX dr. Yoga 2026-10-01 (report A52): $items di-filter
+            // `sudah_hadir_di_klinik=0`, jadi antrian yg sudah di-scan QR
+            // (sudah_hadir=1) ketangkap kosong di sini → generic message
+            // "dibatalkan" dikirim tapi antrian SURVIVE di DB → tetap
+            // ter-notif panggil berikutnya. Fallback: hard-delete semua
+            // antrian aktif hari ini utk no_telp ini (ignore sudah_hadir).
+            $todayStr = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
+            $lingering = \App\Models\Antrian::with('antriable')
+                ->whereDate('created_at', $todayStr)
+                ->where('no_telp', $this->no_telp)
+                ->whereNull('deleted_at')
+                ->get();
+
+            $deletedNames = [];
+            if ($lingering->isNotEmpty()) {
+                \DB::transaction(function () use ($lingering, &$deletedNames) {
+                    foreach ($lingering as $ant) {
+                        $deletedNames[] = $ant->nama;
+                        if (array_key_exists('dibatalkan_pasien', $ant->getAttributes())) {
+                            $ant->dibatalkan_pasien = 1;
+                            $ant->save();
+                        }
+                        if ($ant->antriable) {
+                            $ant->antriable->delete();
+                        }
+                        $ant->delete();
+                    }
+                });
+                \Log::info('HAPUS_ANTRIAN_FALLBACK_LINGERING', [
+                    'no_telp'       => $this->no_telp,
+                    'count_deleted' => $lingering->count(),
+                    'ids'           => $lingering->pluck('id')->all(),
+                ]);
+            }
+
+            $allNames = $pendingNames->concat(collect($deletedNames))
+                ->filter()
+                ->map(fn($n) => ucwords(mb_strtolower(trim((string) $n), 'UTF-8')))
+                ->unique()
+                ->values();
+
+            if ($allNames->isNotEmpty()) {
+                return "Reservasi antrian atas nama *{$allNames->implode(', ')}* dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.";
             }
             return 'Reservasi antrian dan semua fitur dibatalkan. Mohon dapat mengulangi kembali jika dibutuhkan.';
         }
