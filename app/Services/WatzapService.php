@@ -60,6 +60,12 @@ class WatzapService
 
     public function sendImage(string $phone, string $imageUrl, string $caption = ''): array
     {
+        // WA cutoff kill-switch (dr. Yoga 2026-10-01).
+        if (waCutoffActive()) {
+            Log::info('WATZAP_SEND_IMAGE_SUPPRESSED_CUTOFF', ['phone' => $phone]);
+            return ['ok' => false, 'reason' => 'wa_cutoff_active'];
+        }
+
         $phone = $this->normalizePhone($phone);
         $imageUrl = trim($imageUrl);
 
@@ -129,6 +135,12 @@ class WatzapService
      */
     public function sendDocument(string $phone, string $documentUrl, string $caption = '', ?string $filename = null): array
     {
+        // WA cutoff kill-switch (dr. Yoga 2026-10-01).
+        if (waCutoffActive()) {
+            Log::info('WATZAP_SEND_DOCUMENT_SUPPRESSED_CUTOFF', ['phone' => $phone]);
+            return ['ok' => false, 'reason' => 'wa_cutoff_active'];
+        }
+
         $phone       = $this->normalizePhone($phone);
         $documentUrl = trim($documentUrl);
 
@@ -190,6 +202,12 @@ class WatzapService
 
     public function sendVideo(string $phone, string $videoUrl, string $caption = ''): array
     {
+        // WA cutoff kill-switch (dr. Yoga 2026-10-01).
+        if (waCutoffActive()) {
+            Log::info('WATZAP_SEND_VIDEO_SUPPRESSED_CUTOFF', ['phone' => $phone]);
+            return ['ok' => false, 'reason' => 'wa_cutoff_active'];
+        }
+
         $phone = $this->normalizePhone($phone);
         $videoUrl = trim($videoUrl);
 
