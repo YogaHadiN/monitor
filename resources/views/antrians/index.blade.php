@@ -27,12 +27,15 @@
                     <h4>Klinik Jati Elok</h4>
                 </div>
             </div>
+            {{-- Tombol "Daftar Online" di-comment per instruksi dr. Yoga
+                 2026-10-01: daftar antrian diarahkan ke Telegram Bot saja.
             @if ($libur)
                 {{ $text_libur }}
             @else
                 <h1>Daftar Online</h1>
                 <a href="{{ url('daftar_online') }}" class="mt-20 btn btn-info btn-block">Klik Disini</a>
             @endif
+            --}}
 
             {{-- CTA Telegram Bot (dr. Yoga 2026-09-30). Route /tg
                  track click di review_link_clicks (slug=telegram_bot,
