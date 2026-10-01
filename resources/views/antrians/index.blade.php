@@ -36,17 +36,26 @@
 
             {{-- CTA Telegram Bot (dr. Yoga 2026-09-30). Route /tg
                  track click di review_link_clicks (slug=telegram_bot,
-                 src=home_page) sebelum redirect ke t.me/KlinikJatiElokBot. --}}
+                 src=home_page) sebelum redirect ke t.me/KlinikJatiElokBot.
+                 Note (2026-10-01): tegaskan chat admin HANYA via Telegram
+                 — WA sudah dinonaktifkan per cutoff. --}}
             <div class="mt-20" style="margin-top:24px;">
                 <div style="border-top:1px solid #ddd; padding-top:20px;">
-                    <p style="font-size:15px; color:#555; margin-bottom:12px;">
+                    <p style="font-size:15px; color:#555; margin-bottom:8px;">
                         📲 Aktifkan notifikasi antrian, jadwal dokter, dan info klinik via Telegram Bot
+                    </p>
+                    <p style="font-size:14px; color:#c0392b; font-weight:600; margin-bottom:12px;">
+                        💬 Chat dengan admin klinik <u>hanya</u> melalui Telegram.
+                        <br>
+                        <span style="font-weight:normal; color:#777;">
+                            (WhatsApp sudah tidak aktif)
+                        </span>
                     </p>
                     <a href="{{ url('tg?src=home_page') }}"
                        target="_blank" rel="noopener noreferrer"
                        class="btn btn-block"
                        style="background:#0088cc; color:#fff; font-weight:600; padding:12px;">
-                        Chat via Telegram Bot
+                        Chat Admin via Telegram Bot
                         <br>
                         <small style="font-weight:normal; opacity:0.9;">@KlinikJatiElokBot</small>
                     </a>
