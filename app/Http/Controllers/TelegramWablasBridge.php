@@ -123,6 +123,15 @@ class TelegramWablasBridge extends WablasController
     public function autoReply(string $message): void
     {
         $text = trim($message);
+        // Instrumentation (dr. Yoga 2026-10-03): trace semua bot reply ke
+        // Telegram. Report "bot tidak membalas apa2" — need visibility.
+        \Log::info('TG_BRIDGE_AUTOREPLY', [
+            'chat_id'    => $this->chatId,
+            'no_telp'    => $this->no_telp,
+            'inbound'    => mb_substr($this->message, 0, 80),
+            'reply_len'  => mb_strlen($text),
+            'reply_prev' => mb_substr($text, 0, 100),
+        ]);
         if ($text === '') return;
 
         $html = $this->waMarkdownToTelegramHtml($text);
@@ -132,13 +141,27 @@ class TelegramWablasBridge extends WablasController
         // Kirim per-bubble kalau text panjang (Telegram limit 4096
         // char/message). Split by newline supaya HTML tag utuh.
         if (mb_strlen($html) <= 4000) {
-            $this->tg->sendMessage($this->chatId, $html, $opts);
+            $res = $this->tg->sendMessage($this->chatId, $html, $opts);
+            if (!($res['ok'] ?? false)) {
+                \Log::warning('TG_BRIDGE_SEND_FAIL', [
+                    'chat_id' => $this->chatId,
+                    'no_telp' => $this->no_telp,
+                    'result'  => $res,
+                ]);
+            }
             return;
         }
 
         $chunks = $this->chunkByLines($html, 3800);
         foreach ($chunks as $chunk) {
-            $this->tg->sendMessage($this->chatId, $chunk, $opts);
+            $res = $this->tg->sendMessage($this->chatId, $chunk, $opts);
+            if (!($res['ok'] ?? false)) {
+                \Log::warning('TG_BRIDGE_SEND_FAIL', [
+                    'chat_id' => $this->chatId,
+                    'no_telp' => $this->no_telp,
+                    'result'  => $res,
+                ]);
+            }
         }
     }
 
