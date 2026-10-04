@@ -4421,11 +4421,23 @@ class WablasController extends Controller
                     }
                 }
 
-                // === GIGI ===
-                if ($tipeMsg === '2') {
+                // === RESERVASI TERJADWAL ===
+                // Branch untuk gigi (legacy, dgn tenant.dentist_* gates)
+                // DAN tipe lain yg di-flag pendaftaran_terjadwal=1 di
+                // tipe_konsultasis (spesialis kulit, dsb). Per instruksi
+                // dr. Yoga 2026-10-04: generalisasi flow gigi supaya
+                // tipe berjam-tetap lain ikut jalur reservasi terjadwal
+                // (bukan walk-in instan dgn warning "beresiko terhapus").
+                $isTerjadwalFlag = $tipe_konsultasi && (int) ($tipe_konsultasi->pendaftaran_terjadwal ?? 0) === 1;
+                if ($tipeMsg === '2' || $isTerjadwalFlag) {
                     $this->chatBotLog(__LINE__);
 
-                    $err = $this->validasiDokterPengambilanAntrianDokterGigi();
+                    // Validator: gigi pakai legacy (ada tenant.dentist_queue_enabled
+                    // / dentist_available / jadwalGigi gates). Tipe lain
+                    // pakai generic validator (ada petugas + jam_buka + deadline).
+                    $err = $tipeMsg === '2'
+                        ? $this->validasiDokterPengambilanAntrianDokterGigi()
+                        : $this->validasiPengambilanAntrianReservasiTerjadwal($tipeDbInt);
                     if (!is_null($err)) {
                         $err .= PHP_EOL.PHP_EOL.$this->hapusAntrianWhatsappBotReservasiOnline();
                         $this->autoReply($err);
@@ -4447,7 +4459,9 @@ class WablasController extends Controller
                     //   - schedulled_booking_allowed=0 → alur Antrian
                     //     langsung (schedulled_booking=0).
                     if (config('features.pool_antrian_enabled')) {
-                        $allDokterGigi = $this->dokterGigiHariIniListForRegistration();
+                        $allDokterGigi = $tipeMsg === '2'
+                            ? $this->dokterGigiHariIniListForRegistration()
+                            : $this->petugasReservasiTerjadwalHariIniListForRegistration($tipeDbInt);
 
                         if ($allDokterGigi->count() > 1) {
                             // >1 dokter → skip auto-pick, biarkan
@@ -5618,6 +5632,91 @@ class WablasController extends Controller
             ->get()
             ->unique('staf_id')
             ->values();
+    }
+
+    /**
+     * Generic listing petugas pemeriksa untuk tipe konsultasi dengan
+     * flag pendaftaran_terjadwal=1 (spesialis kulit, dsb). Mirror
+     * dokterGigiHariIniListForRegistration tapi parameterized.
+     * Per instruksi dr. Yoga 2026-10-04.
+     */
+    public function petugasReservasiTerjadwalHariIniListForRegistration(int $tipeId){
+        return \App\Models\PetugasPemeriksa::with('staf.titel')
+            ->whereDate('tanggal', date('Y-m-d'))
+            ->where('tipe_konsultasi_id', $tipeId)
+            ->orderBy('jam_mulai_default', 'asc')
+            ->get()
+            ->unique('staf_id')
+            ->values();
+    }
+
+    /**
+     * Generic validator untuk tipe konsultasi non-gigi yang di-flag
+     * pendaftaran_terjadwal=1. Mirror validasiDokterPengambilanAntrianDokterGigi
+     * tapi tanpa tenant.dentist_* gates (yang gigi-specific).
+     *
+     * Return error message string atau null kalau OK untuk lanjut.
+     *
+     * Guardrails yang diperiksa:
+     *   1. Ada petugas pemeriksa hari ini dgn online_registration_enabled=1
+     *      dan schedulled_booking_allowed=1
+     *   2. Jam buka tenant (jam_buka)
+     *   3. Deadline daftar online: jam_mulai_default - 60 menit
+     *
+     * Per instruksi dr. Yoga 2026-10-04.
+     */
+    public function validasiPengambilanAntrianReservasiTerjadwal(int $tipeId): ?string
+    {
+        $nowJkt = \Carbon\Carbon::now('Asia/Jakarta');
+
+        $afterHoursWhitelist = (array) config('clinic.after_hours_whitelist_phones', []);
+        if (in_array((string) $this->no_telp, $afterHoursWhitelist, true)) {
+            return null;
+        }
+
+        $tipeNama = ucwords(optional(\App\Models\TipeKonsultasi::find($tipeId))->tipe_konsultasi ?? 'pelayanan ini');
+
+        $ppTerjadwal = \App\Models\PetugasPemeriksa::query()
+            ->with(['staf', 'tipe_konsultasi'])
+            ->where('tipe_konsultasi_id', $tipeId)
+            ->whereDate('tanggal', $nowJkt->toDateString())
+            ->where('online_registration_enabled', 1)
+            ->where('schedulled_booking_allowed', 1)
+            ->orderBy('jam_mulai_default', 'asc')
+            ->get();
+
+        if ($ppTerjadwal->isEmpty()) {
+            return "Hari ini pelayanan reservasi terjadwal {$tipeNama} belum tersedia." . PHP_EOL
+                . 'Silakan mendaftar kembali saat jadwal tersedia.' . PHP_EOL
+                . 'Mohon maaf atas ketidaknyamanannya.';
+        }
+
+        if ($this->tenant && $this->tenant->jam_buka) {
+            $jam_buka = \Carbon\Carbon::parse($this->tenant->jam_buka, 'Asia/Jakarta');
+            if ($nowJkt->lt($jam_buka)) {
+                return 'Pendaftaran online baru dimulai pada ' . $jam_buka->format('H:i') . '.' . PHP_EOL
+                    . 'Silakan mendaftar kembali setelah jam tersebut.' . PHP_EOL
+                    . 'Mohon maaf atas ketidaknyamanannya.';
+            }
+        }
+
+        $ppAkhir = $ppTerjadwal->last();
+        if (!empty($ppAkhir->jam_mulai_default)) {
+            $deadline = \Carbon\Carbon::parse($ppAkhir->jam_mulai_default, 'Asia/Jakarta')->subMinutes(60);
+            if ($nowJkt->gte($deadline)) {
+                $message  = "Pendaftaran online terjadwal {$tipeNama} berakhir pukul {$deadline->format('H:i')}.";
+                $message .= PHP_EOL . PHP_EOL . "Jadwal {$tipeNama} hari ini :";
+                foreach ($ppTerjadwal as $pp) {
+                    $mulai = \Carbon\Carbon::parse($pp->jam_mulai_default, 'Asia/Jakarta')->format('H:i');
+                    $akhir = \Carbon\Carbon::parse($pp->jam_akhir_default, 'Asia/Jakarta')->subMinutes(30)->format('H:i');
+                    $nama  = optional($pp->staf)->nama_dengan_gelar ?? 'Dokter';
+                    $message .= PHP_EOL . "{$nama}: {$mulai}-{$akhir}";
+                }
+                return $message;
+            }
+        }
+
+        return null;
     }
 
     /**
