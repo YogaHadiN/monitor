@@ -25,7 +25,7 @@ use Log;
 class SendReservationConfirmationToWaitlist extends Command
 {
     protected $signature   = 'reservasi:send-waitlist-inquiry';
-    protected $description = 'Kirim WA inquiry ke pasien waitlist saat masih ada slot untuk petugas pemeriksa hari ini';
+    protected $description = 'Kirim inquiry (Telegram prioritas, WA fallback) ke pasien waitlist saat masih ada slot utk petugas pemeriksa hari ini';
 
     public function handle(): int
     {

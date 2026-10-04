@@ -78,8 +78,9 @@
                     @if ($isWaitlist)
                         <div class="mb-10 mt-10 text-warning">
                             <strong>QR belum aktif</strong> — Kakak masih di waitlist.
-                            Kalau ada slot batal, kami akan kirim WhatsApp inquiry.
-                            Balas <strong>ya</strong> di WA itu untuk konfirmasi, baru QR muncul di sini.
+                            Kalau ada slot batal, kami akan kirim <strong>inquiry via Telegram</strong>
+                            (atau WhatsApp kalau belum onboard Telegram). Balas <strong>ya</strong>
+                            di chat itu untuk konfirmasi, baru QR muncul di sini.
                         </div>
                     @else
                         <div class="mb-10 mt-10">Scan QR berikut saat tiba di klinik</div>
