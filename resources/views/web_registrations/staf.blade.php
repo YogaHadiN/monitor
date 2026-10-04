@@ -1,6 +1,18 @@
 <div class="text-center">
     <h2>Pilih Dokter</h2>
 </div>
+{{-- Warning jelas: booking BELUM selesai, pasien harus TAP salah
+     satu dokter untuk commit. Pasca komplain 1814 (pasien 6287855045030
+     kira sudah selesai saat melihat halaman ini, datang ke klinik,
+     ditolak krn tidak ada antrian). --}}
+<div class="alert alert-warning" style="border-left:5px solid #e67e22; margin-bottom:16px;">
+    <div style="font-size:16px; font-weight:bold; margin-bottom:4px;">⚠️ Booking belum selesai</div>
+    <div style="font-size:14px;">
+        Ketuk <b>nama dokter</b> di bawah untuk konfirmasi &amp; dapat
+        nomor antrian / QR code. Tanpa konfirmasi, Anda belum
+        terdaftar.
+    </div>
+</div>
 @foreach ($petugas_pemeriksas as $k => $petugas)
     @php
         $isScheduled = (int) ($petugas->schedulled_booking_allowed ?? 0) === 1;
@@ -16,7 +28,8 @@
             $btnClass = $isScheduled ? 'btn btn-warning btn-lg btn-block' : 'btn btn-info btn-lg btn-block';
         }
     @endphp
-    <button class="{{ $btnClass }}" value="{{$petugas->id}}" onclick="submit(this, 'staf');return false;">
+    <button class="{{ $btnClass }}" value="{{$petugas->id}}" onclick="submit(this, 'staf');return false;" style="margin-bottom:8px;">
+        <div style="font-size:12px; opacity:0.85; margin-bottom:2px;">👆 Ketuk untuk pilih:</div>
         {{ $petugas->staf->nama_dengan_gelar }}
         @if ($isWalkInOnly)
             <span class="label label-danger">Hanya Datang Langsung</span>

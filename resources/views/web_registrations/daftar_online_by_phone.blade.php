@@ -97,24 +97,12 @@ td {
         <div id="container">
 
         </div>
-        <br>
-        <div class="alert alert-danger">
-            @if (!empty($has_scheduled_dokter_gigi))
-                <ul>
-                    <li>Reservasi Anda adalah <b>Reservasi Terjadwal Dokter Gigi</b>, bukan antrian walk-in.</li>
-                    <li>Melakukan <b>Scan QR</b> di klinik sebelum pukul <b>{{ $scheduled_scan_deadline ?? '—' }}</b> (15 menit sebelum jam praktik dokter) atau reservasi ini <b>dihapus otomatis</b> oleh sistem.</li>
-                    <li>Nomor antrian diberikan <b>setelah Scan QR</b>, urutan berdasarkan urutan scan.</li>
-                    <li>Pelayanan Dokter Gigi adalah pelayanan <b>tindakan</b> sehingga durasi layanan tidak bisa dipastikan.</li>
-                    <li>Pendaftaran dokter gigi secara langsung dimulai jam <b>{{ $scheduled_jam_mulai ?? '—' }}</b> hanya bila slot pendaftaran masih tersedia.</li>
-                </ul>
-            @else
-                <ul>
-                    <li>Mohon kedatangannya <b>30 menit sebelum</b> perkiraan panggilan antrian, <b>atau saat sisa 10 antrian di depan</b></li>
-                    <li>Jangan Lupa <b>SCAN QR CODE</b> saat sudah tiba di klinik</li>
-                    <li>Apabila antrian terlewat mohon ambil antrian baru</li>
-                </ul>
-            @endif
-        </div>
+        {{-- Aturan antrian DIHAPUS dari halaman ini (dr. Yoga 2026-10-04,
+             pasca komplain 1814): sebelumnya ditampilkan di sini, pasien
+             kira sudah selesai booking → datang ke klinik, dapati tidak
+             ada antrian. Aturan sekarang hanya muncul di
+             data_terkonfirmasi.blade.php (SETELAH pasien konfirmasi
+             dokter) — titik di mana booking benar2 ter-commit. --}}
     </div>
 <!-- Bootstrap core JavaScript -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
