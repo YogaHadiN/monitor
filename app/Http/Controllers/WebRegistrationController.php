@@ -437,13 +437,15 @@ class WebRegistrationController extends Controller
         // Idempotensi tetap dijaga per-pasien di level Antrian creation
         // (pasien_id unique per periksa).
 
-        // Untuk dokter gigi (tipe=2): aturan disamakan dengan WablasController
-        // validasiDokterPengambilanAntrianDokterGigi (line 6347-6463) — kecuali
-        // fallback "hanya lewat whatsapp" tidak dipakai karena web sudah punya
-        // fitur reservasi terjadwal yang sama dengan whatsapp bot.
-        if ($tipe_konsultasi_id == '2') {
+        // Flow reservasi terjadwal (per instruksi dr. Yoga 2026-10-04):
+        // tipe konsultasi dgn `pendaftaran_terjadwal=1` di tabel
+        // tipe_konsultasis jalankan flow yg sama dgn dokter gigi (validasi
+        // window + jadwal booking). Sebelumnya hardcoded tipe_konsultasi_id='2',
+        // tapi spesialis kulit (id=6) dsb juga butuh flow ini.
+        $tipeKonsultasiRow = TipeKonsultasi::find($tipe_konsultasi_id);
+        if ($tipeKonsultasiRow && (int) ($tipeKonsultasiRow->pendaftaran_terjadwal ?? 0) === 1) {
             $petugas_pemeriksa_terjadwal = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
-                ->where('tipe_konsultasi_id', 2)
+                ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                 ->where('schedulled_booking_allowed', 1)
                 ->where('online_registration_enabled', 1)
                 ->where('registration_enabled', 1)
@@ -451,7 +453,7 @@ class WebRegistrationController extends Controller
                 ->get();
 
             if ($petugas_pemeriksa_terjadwal->isEmpty()) {
-                $this->message = $this->pesanPelayananGigiLibur();
+                $this->message = $this->pesanPelayananTerjadwalLibur($tipeKonsultasiRow->tipe_konsultasi);
                 $message = view('web_registrations.message', ['message' => $this->message])->render();
                 return compact('message');
             }
@@ -796,19 +798,27 @@ class WebRegistrationController extends Controller
         if (
              $petugas_pemeriksas->count()
         ) {
+            // Tipe dgn jam praktek tetap (flag pendaftaran_terjadwal=1 di
+            // tipe_konsultasis) — kalau ada jadwal hari ini tapi belum masuk
+            // waktu, tampilkan "Pendaftaran dimulai jam X" (bukan "Tidak ada
+            // petugas"). Per instruksi dr. Yoga 2026-10-04 (spesialis kulit
+            // jam 22:00 tidak muncul saat pasien buka halaman jam 09:00).
+            // Dokter umum (walk-in sepanjang hari) tidak perlu banner ini.
+            $tipeKonsultasiRow = TipeKonsultasi::find($tipe_konsultasi_id);
+            $isTerjadwal = $tipeKonsultasiRow && (int) ($tipeKonsultasiRow->pendaftaran_terjadwal ?? 0) === 1;
             if (
-                $tipe_konsultasi_id == 2 // dokter gigi
+                $isTerjadwal
             ) {
-                $jam_akhir_gigi = $petugas_pemeriksas[0]->jam_akhir;
-                $jam_akhir_pendaftaran_gigi = Carbon::parse( $petugas_pemeriksas[0]->jam_akhir )->subMinutes(30)->format('H:i:s');
+                $tipeNama = ucwords((string) ($tipeKonsultasiRow->tipe_konsultasi ?? 'ini'));
+                $jam_akhir_pendaftaran = Carbon::parse( $petugas_pemeriksas[0]->jam_akhir )->subMinutes(30)->format('H:i:s');
                 if (
                     $petugas_pemeriksas[0]->jam_mulai >= date("H:i:s")
                 ) {
-                    $this->message = 'Pendaftaran dokter gigi dimulai jam ' . $petugas_pemeriksas[0]->jam_mulai;
+                    $this->message = 'Pendaftaran ' . $tipeNama . ' dimulai jam ' . substr((string) $petugas_pemeriksas[0]->jam_mulai, 0, 5);
                 } else if (
-                    $jam_akhir_pendaftaran_gigi <= date("H:i:s")
+                    $jam_akhir_pendaftaran <= date("H:i:s")
                 ) {
-                    $this->message = 'Pendaftaran dokter gigi telah berakhir hari ini';
+                    $this->message = 'Pendaftaran ' . $tipeNama . ' telah berakhir hari ini';
                 }
             } else  {
 
@@ -1537,16 +1547,24 @@ class WebRegistrationController extends Controller
     }
 
     /**
-     * Pesan ketika tidak ada jadwal reservasi terjadwal dokter gigi yang aktif
-     * hari ini. Mirror WablasController pelayananPoliGigiLibur (line 6709) tanpa
-     * instruksi WA-specific.
+     * Pesan ketika tidak ada jadwal reservasi terjadwal untuk tipe konsultasi
+     * tertentu hari ini. Generalisasi dari pesanPelayananGigiLibur legacy
+     * (per instruksi dr. Yoga 2026-10-04 — ikut flag pendaftaran_terjadwal
+     * di tipe_konsultasis, bukan hardcoded gigi).
      */
-    private function pesanPelayananGigiLibur(): string
+    private function pesanPelayananTerjadwalLibur(string $namaTipe): string
     {
+        $nama = ucwords($namaTipe);
         return
-            "Hari ini pelayanan reservasi terjadwal dokter gigi belum tersedia.\n" .
+            "Hari ini pelayanan reservasi terjadwal {$nama} belum tersedia.\n" .
             "Silakan mendaftar kembali saat jadwal tersedia.\n" .
             "Mohon maaf atas ketidaknyamanannya.";
+    }
+
+    /** @deprecated Pakai pesanPelayananTerjadwalLibur('dokter gigi') */
+    private function pesanPelayananGigiLibur(): string
+    {
+        return $this->pesanPelayananTerjadwalLibur('dokter gigi');
     }
 
     /**
