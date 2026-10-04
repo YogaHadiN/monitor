@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToTenant;
 
 class ReservasiOnline extends Model
 {
-    use BelongsToTenant,HasFactory;
+    use BelongsToTenant, HasFactory, SoftDeletes;
     protected $guarded = [];
     public function whatsappBot(){
         return $this->belongsTo(WhatsappBot::class);
