@@ -12,6 +12,9 @@
     $scan_deadline = $jam_mulai
         ? \Carbon\Carbon::parse($jam_mulai)->subMinutes(15)->format('H:i')
         : null;
+    // Nama tipe konsultasi — dinamis supaya tidak hardcoded "Dokter Gigi"
+    // utk tipe lain (spesialis kulit, dsb). Per instruksi dr. Yoga 2026-10-04.
+    $tipeNama = ucwords((string) ($web_registration->tipe_konsultasi->tipe_konsultasi ?? 'Pemeriksa'));
 @endphp
 <h2>Konfirmasi Data</h2>
 @if ($isScheduled)
@@ -37,8 +40,8 @@
             <li>Jika antrean terlewat, silakan mengambil antrean kembali.</li>
             <li>Melakukan scan QR di klinik sebelum pukul <strong>{{ $scan_deadline ?? '—' }}</strong> (15 menit sebelum jam praktik dimulai) atau reservasi ini dihapus oleh sistem.</li>
             <li>Nomor Antrian diberikan setelah Scan QR Code dan urutan nomor antrian berdasarkan urutan Scan QR Code.</li>
-            <li>Pelayanan Dokter Gigi adalah pelayanan tindakan sehingga tidak bisa diperkirakan durasi layanan.</li>
-            <li>Pendaftaran dokter gigi secara langsung dimulai jam <strong>{{ $jam_mulai ?? '—' }}</strong> hanya bila slot pendaftaran masih tersedia.</li>
+            <li>Pelayanan {{ $tipeNama }} adalah pelayanan tindakan sehingga tidak bisa diperkirakan durasi layanan.</li>
+            <li>Pendaftaran {{ $tipeNama }} secara langsung dimulai jam <strong>{{ $jam_mulai ?? '—' }}</strong> hanya bila slot pendaftaran masih tersedia.</li>
         </ul>
     </div>
 @endif
