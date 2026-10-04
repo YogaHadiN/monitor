@@ -9,6 +9,9 @@ class Complain extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    protected $casts = [
+        'image_urls' => 'array',
+    ];
     public static function boot(){
         parent::boot();
     }

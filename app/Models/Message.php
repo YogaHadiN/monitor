@@ -36,6 +36,38 @@ class Message extends Model
 
                 $query->update(['sudah_dibalas' => 1]);
             }
+
+            // Attach foto inbound ke komplain pending hari ini (dr. Yoga
+            // 2026-10-04). Forward-capture: pasien kirim foto SETELAH
+            // text keluhan (seperti komplain 1814 — text 16:19:14 lalu
+            // foto 16:19:17). Backward-capture di WablasController
+            // menangkap foto SEBELUM text; observer ini menangkap foto
+            // SETELAH text.
+            if (
+                (int) $message->sending === 0
+                && !empty($message->image_url)
+                && !empty($message->no_telp)
+            ) {
+                try {
+                    $complain = \App\Models\Complain::where('no_telp', $message->no_telp)
+                        ->whereNull('auto_reply_sent_at')
+                        ->whereDate('created_at', \Carbon\Carbon::now('Asia/Jakarta')->toDateString())
+                        ->first();
+                    if ($complain) {
+                        $existingUrls = is_array($complain->image_urls) ? $complain->image_urls : [];
+                        if (!in_array($message->image_url, $existingUrls, true)) {
+                            $existingUrls[] = $message->image_url;
+                            $complain->image_urls = $existingUrls;
+                            $complain->save();
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('MESSAGE_OBSERVER_ATTACH_COMPLAIN_IMAGE_FAIL', [
+                        'message_id' => $message->id,
+                        'err'        => $e->getMessage(),
+                    ]);
+                }
+            }
         });
     }
 }

@@ -1990,6 +1990,35 @@ class WablasController extends Controller
             $complain->save();
         }
 
+        // Attach foto screenshot pasien ke komplain (dr. Yoga 2026-10-04,
+        // report komplain 1814: pasien kirim 4 screenshot WA bersama
+        // text keluhan, tapi foto tidak linked ke complain → tidak ikut
+        // di notif owner, tidak ter-highlight di page reply).
+        // Backward scan 10 menit terakhir inbound image dari no_telp ini.
+        try {
+            $recentPhotos = \DB::table('messages')
+                ->where('no_telp', $this->no_telp)
+                ->whereNotNull('image_url')
+                ->where('image_url', '!=', '')
+                ->where('sending', 0)
+                ->where('created_at', '>=', $now->copy()->subMinutes(10))
+                ->orderBy('created_at')
+                ->pluck('image_url')
+                ->unique()
+                ->values()
+                ->all();
+            if (!empty($recentPhotos)) {
+                $existingUrls = is_array($complain->image_urls) ? $complain->image_urls : [];
+                $merged = collect($existingUrls)->concat($recentPhotos)->unique()->values()->all();
+                if ($merged !== $existingUrls) {
+                    $complain->image_urls = $merged;
+                    $complain->save();
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('COMPLAIN_IMAGE_ATTACH_FAIL', ['complain_id' => $complain->id, 'err' => $e->getMessage()]);
+        }
+
         // Auto-link complain ke antrian pasien supaya muncul di Laporan
         // Kepuasan Bulanan (kolom Complain). Prefer antrian_id yg sudah
         // di-set di WhatsappComplaint (via flow satisfaction survey =
