@@ -101,8 +101,6 @@
                             <strong>Scan QR berikut saat tiba di klinik</strong>
                             @if ($srJamMulai)
                                 <ul style="padding-left:18px; margin:8px 0 0; font-size:13px;">
-                                    <li>Praktek jam <strong>{{ $srJamMulai }}</strong> hari ini.</li>
-                                    <li>Datang ke klinik mulai pukul <strong>{{ $srDatangDari }}</strong> (30 menit sebelum praktek) untuk scan QR.</li>
                                     <li>Batas akhir scan QR pukul <strong>{{ $srDeadline }}</strong> &mdash; reservasi otomatis <strong>dibatalkan sistem</strong> jika lewat.</li>
                                     <li>Nomor antrian diberikan setelah scan QR; urutan antrian mengikuti urutan scan.</li>
                                 </ul>
