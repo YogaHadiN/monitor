@@ -6310,6 +6310,33 @@ class WablasController extends Controller
                 $lines[] = '- Melakukan *scan QR* di klinik *paling lambat 15 menit* sebelum jam mulai pemeriksaan gigi.';
                 $lines[] = '- Antrean akan *dibatalkan* apabila terlambat melakukan scan.';
             }
+        } elseif ($reservasi_online->tipe_konsultasi && (int) ($reservasi_online->tipe_konsultasi->pendaftaran_terjadwal ?? 0) === 1) {
+            // Tipe reservasi terjadwal non-gigi (spesialis kulit, dsb).
+            // Per instruksi dr. Yoga 2026-10-04: syarat & ketentuan WAJIB
+            // sebut jam praktek + QR deadline + konsekuensi terlambat,
+            // seperti gigi tapi label dinamis mengikuti nama tipe.
+            $tipeNama = ucwords($reservasi_online->tipe_konsultasi->tipe_konsultasi);
+            $jamMulaiStr = optional($reservasi_online->petugas_pemeriksa)->jam_mulai_default;
+            if (empty($jamMulaiStr)) {
+                $pp = \App\Models\PetugasPemeriksa::query()
+                    ->where('tipe_konsultasi_id', $tipe_id)
+                    ->whereDate('tanggal', $now->toDateString())
+                    ->orderBy('jam_mulai_default', 'asc')
+                    ->first();
+                $jamMulaiStr = optional($pp)->jam_mulai_default ?: optional($pp)->jam_mulai;
+            }
+            if (!empty($jamMulaiStr)) {
+                $jamMulai      = $this->parseTodayTime($jamMulaiStr, $tz, $now);
+                $jamScanMulai  = $jamMulai->copy()->subMinutes(30)->format('H:i');
+                $jamScanAkhir  = $jamMulai->copy()->subMinutes(15)->format('H:i');
+                $lines[] = "- *{$tipeNama} praktek jam {$jamMulai->format('H:i')}* hari ini.";
+                $lines[] = "- Datang ke klinik *mulai pukul {$jamScanMulai}* (30 menit sebelum praktek) untuk *scan QR*.";
+                $lines[] = "- Batas akhir *scan QR* pukul *{$jamScanAkhir}* (15 menit sebelum praktek). Reservasi otomatis *dibatalkan sistem* jika lewat.";
+                $lines[] = "- Nomor antrian diberikan setelah scan QR; urutan antrian mengikuti urutan scan.";
+            } else {
+                $lines[] = "- Melakukan *scan QR* di klinik *paling lambat 15 menit* sebelum jam mulai pemeriksaan.";
+                $lines[] = "- Antrean akan *dibatalkan* apabila terlambat melakukan scan.";
+            }
         } elseif ($tipe_id === 3) {
             // USG Kehamilan (menu code WhatsApp = 3 di reservasi_online)
             $lines[] = '';
@@ -9120,7 +9147,37 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
      */
     private function balasanReservasiTerjadwalDibuat($reservasi_online)
     {
-        $message = "Booking terjadwal sudah tercatat.\nSilakan gunakan QR saat datang.";
+        $message = "Booking terjadwal sudah tercatat.";
+
+        // Info jam praktek + QR deadline + konsekuensi terlambat
+        // (per instruksi dr. Yoga 2026-10-04). Sumber jam:
+        //   1. petugas_pemeriksa->jam_mulai_default (kalau sudah ter-pick)
+        //   2. PetugasPemeriksa earliest tipe=X tanggal=hari ini (fallback)
+        $tz           = 'Asia/Jakarta';
+        $now          = \Carbon\Carbon::now($tz);
+        $tipeId       = (int) ($reservasi_online->tipe_konsultasi_id ?? 0);
+        $jamMulaiStr  = optional($reservasi_online->petugas_pemeriksa)->jam_mulai_default;
+        if (empty($jamMulaiStr) && $tipeId > 0) {
+            $pp = \App\Models\PetugasPemeriksa::query()
+                ->where('tipe_konsultasi_id', $tipeId)
+                ->whereDate('tanggal', $now->toDateString())
+                ->orderBy('jam_mulai_default', 'asc')
+                ->first();
+            $jamMulaiStr = optional($pp)->jam_mulai_default ?: optional($pp)->jam_mulai;
+        }
+
+        if (!empty($jamMulaiStr)) {
+            $jamMulai     = $this->parseTodayTime($jamMulaiStr, $tz, $now);
+            $jamScanMulai = $jamMulai->copy()->subMinutes(30)->format('H:i');
+            $jamScanAkhir = $jamMulai->copy()->subMinutes(15)->format('H:i');
+            $message .= PHP_EOL . PHP_EOL;
+            $message .= "*Praktek jam {$jamMulai->format('H:i')}* hari ini." . PHP_EOL;
+            $message .= "Datang *mulai pukul {$jamScanMulai}* untuk scan QR." . PHP_EOL;
+            $message .= "Batas akhir scan QR pukul *{$jamScanAkhir}* — reservasi otomatis *dibatalkan sistem* jika lewat.";
+        } else {
+            $message .= PHP_EOL . "Silakan gunakan QR saat datang.";
+        }
+
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= 'Klik link berikut untuk melihat qr code :';
