@@ -35,7 +35,9 @@
             <span class="label label-danger">Hanya Datang Langsung</span>
             <div><small>Jam praktek {{ substr((string) $petugas->jam_mulai_default, 0, 5) }} - {{ substr((string) $petugas->jam_akhir_default, 0, 5) }}</small></div>
         @elseif ($isScheduled)
-            <span class="label label-default">Reservasi Terjadwal</span>
+            {{-- Label "Reservasi Terjadwal" dihapus (dr. Yoga 2026-10-04):
+                 pasien bingung — "terjadwal" terasa seperti sudah booked,
+                 padahal baru opsi. Jam praktek saja sudah cukup. --}}
             <div><small>Jam {{ $petugas->jam_mulai }} - {{ $petugas->jam_akhir }}</small></div>
         @endif
         {{-- Sisa antrian + "Antrian Terpendek" hint sengaja
