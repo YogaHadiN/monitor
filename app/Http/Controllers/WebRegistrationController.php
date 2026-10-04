@@ -150,14 +150,16 @@ class WebRegistrationController extends Controller
                 is_null( $web_registration->tipe_konsultasi_id )
             )
         ) {
-            $tipe_konsultasi_dokter_umum = TipeKonsultasi::find(1);
-            $tipe_konsultasi_dokter_gigi = TipeKonsultasi::find(2);
-            $tipe_konsultasi_bidan = TipeKonsultasi::find(3);
+            $tipe_konsultasi_dokter_umum     = TipeKonsultasi::find(1);
+            $tipe_konsultasi_dokter_gigi     = TipeKonsultasi::find(2);
+            $tipe_konsultasi_bidan           = TipeKonsultasi::find(3);
+            $tipe_konsultasi_spesialis_kulit = TipeKonsultasi::find(6);
             return view('web_registrations.tipe_konsultasi', compact(
                 'antrians',
                 'tipe_konsultasi_dokter_umum',
                 'tipe_konsultasi_dokter_gigi',
-                'tipe_konsultasi_bidan'
+                'tipe_konsultasi_bidan',
+                'tipe_konsultasi_spesialis_kulit'
             ));
         } else if (
             !is_null( $web_registration ) &&
@@ -409,14 +411,16 @@ class WebRegistrationController extends Controller
             !is_null( $web_registration )
         ) {
             $web_registration->delete();
-            $tipe_konsultasi_dokter_umum = TipeKonsultasi::find(1);
-            $tipe_konsultasi_dokter_gigi = TipeKonsultasi::find(2);
-            $tipe_konsultasi_bidan = TipeKonsultasi::find(3);
+            $tipe_konsultasi_dokter_umum     = TipeKonsultasi::find(1);
+            $tipe_konsultasi_dokter_gigi     = TipeKonsultasi::find(2);
+            $tipe_konsultasi_bidan           = TipeKonsultasi::find(3);
+            $tipe_konsultasi_spesialis_kulit = TipeKonsultasi::find(6);
             return view('web_registrations.tipe_konsultasi', compact(
                 'antrians',
                 'tipe_konsultasi_dokter_umum',
                 'tipe_konsultasi_dokter_gigi',
-                'tipe_konsultasi_bidan'
+                'tipe_konsultasi_bidan',
+                'tipe_konsultasi_spesialis_kulit'
             ));
         }
     }

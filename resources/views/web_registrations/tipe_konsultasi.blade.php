@@ -10,6 +10,9 @@
 <button id="bidan" class="btn btn-info btn-lg btn-block" value="3" onclick="submit(this, 'tipe_konsultasi');return false;">
     Bidan ( {{ $tipe_konsultasi_bidan->sisa_antrian }} antrian )
 </button>
+<button id="dokter_spesialis_kulit" class="btn btn-info btn-lg btn-block" value="6" onclick="submit(this, 'tipe_konsultasi');return false;">
+    Dokter Spesialis Kulit dan Kelamin ( {{ $tipe_konsultasi_spesialis_kulit->sisa_antrian }} antrian )
+</button>
 
 @if ($antrians->count())
     <button class="btn btn-lg btn-danger btn-block ulangi" onclick="ulangi(this);return false;">
