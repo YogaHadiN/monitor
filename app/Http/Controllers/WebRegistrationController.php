@@ -245,30 +245,28 @@ class WebRegistrationController extends Controller
             is_null( $web_registration->staf_id ) &&
             (
                 !config('features.pool_antrian_enabled')
-                || (int) $web_registration->tipe_konsultasi_id === 2
+                || $this->isPendaftaranTerjadwalTipe((int) $web_registration->tipe_konsultasi_id)
                 || $web_registration->akses_dokter_choice === 'pilih_dokter'
             )
         ) {
-            // Dokter gigi (tipe=2) SELALU harus lewat step "Pilih Dokter"
-            // walaupun pool_antrian_enabled=true — karena reservasi terjadwal
-            // gigi butuh assignment ke petugas_pemeriksa spesifik (per spec
-            // dr. Yoga 2026-09-08: booking gigi = schedulled_reservation,
-            // bukan pool). Untuk tipe umum (=1), pool mode tetap skip step ini.
+            // Tipe dgn pendaftaran_terjadwal=1 (gigi, spesialis kulit, dsb)
+            // SELALU harus lewat step "Pilih Dokter" walaupun
+            // pool_antrian_enabled=true — karena reservasi terjadwal
+            // butuh assignment ke petugas_pemeriksa spesifik (per spec
+            // dr. Yoga 2026-09-08 utk gigi, extended 2026-10-04 utk
+            // tipe terjadwal lain). Pool mode tetap untuk tipe umum (=1).
             $web_registration = WebRegistration::where('no_telp', $no_telp)
                                             ->whereDate('created_at', date('Y-m-d'))
                                             ->first();
             $tipe_konsultasi_id = $web_registration->tipe_konsultasi_id;
 
-            // Dokter gigi via web: tampilkan SEMUA dokter gigi praktek
-            // hari ini — baik yg online_registration_enabled=1 maupun =0.
-            // Per instruksi dr. Yoga 2026-09-22: pasien bisa lihat semua
-            // dokter beserta jadwalnya. Kalau pasien pilih dokter dgn
-            // online_registration=0, handler staf() akan tolak dgn
-            // pesanHanyaPendaftaranLangsung. Sebelumnya query di-filter
-            // ke online=1 saja → dokter walk-in tidak muncul.
-            if ($tipe_konsultasi_id == 2) {
+            // Tipe terjadwal (gigi, spesialis kulit, dsb): tampilkan SEMUA
+            // dokter praktek hari ini — baik yg online_registration_enabled=1
+            // maupun =0 (biar pasien tahu ada jadwal walk-in juga).
+            // Guard ruangan_id > 0 supaya tidak crash di antrianPost.
+            if ($this->isPendaftaranTerjadwalTipe((int) $tipe_konsultasi_id)) {
                 $petugas_pemeriksas = PetugasPemeriksa::whereDate('tanggal', date('Y-m-d'))
-                    ->where('tipe_konsultasi_id', 2)
+                    ->where('tipe_konsultasi_id', $tipe_konsultasi_id)
                     ->where('registration_enabled', 1)
                     ->where('ruangan_id', '>', 0)
                     ->orderBy('jam_mulai_default', 'asc')
@@ -1565,6 +1563,18 @@ class WebRegistrationController extends Controller
     private function pesanPelayananGigiLibur(): string
     {
         return $this->pesanPelayananTerjadwalLibur('dokter gigi');
+    }
+
+    /**
+     * Cek apakah tipe konsultasi memakai flow pendaftaran terjadwal
+     * (dokter gigi, spesialis kulit, dsb). Flag `pendaftaran_terjadwal`
+     * di tabel tipe_konsultasis. Per instruksi dr. Yoga 2026-10-04.
+     */
+    private function isPendaftaranTerjadwalTipe(int $tipeId): bool
+    {
+        if ($tipeId <= 0) return false;
+        $row = TipeKonsultasi::find($tipeId);
+        return $row && (int) ($row->pendaftaran_terjadwal ?? 0) === 1;
     }
 
     /**
