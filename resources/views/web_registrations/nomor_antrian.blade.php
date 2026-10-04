@@ -13,11 +13,11 @@
             </button>
         </div>
     </div>
-    <div class="alert alert-danger">
-        Mohon kehadiran nya 30 menit sebelum perkiraan panggilan <br>
-        pastikan <strong>Scan QR CODE</strong> dibawah ini saat sudah tiba di klinik <br>
-        Mohon ambil antrian kembali apabila antrian terlewat
-    </div>
+    {{-- Aturan generic DIHAPUS dari sini (dr. Yoga 2026-10-04).
+         Scan QR specific info dipindah ke dalam SETIAP box reservasi /
+         antrian di bawah, dgn label disesuaikan apakah reservasi
+         terjadwal (ada deadline scan + konsekuensi dibatalkan) atau
+         walk-in biasa (30 menit sebelum panggilan / sisa 10 antrian). --}}
 
     {{-- CTA aktivasi Telegram bot. Setelah pasien daftar via web,
          arahkan mereka onboard bot Telegram supaya semua notif
@@ -83,7 +83,35 @@
                             di chat itu untuk konfirmasi, baru QR muncul di sini.
                         </div>
                     @else
-                        <div class="mb-10 mt-10">Scan QR berikut saat tiba di klinik</div>
+                        @php
+                            // Resolve jam praktek + deadline scan — spesifik per reservasi
+                            // (petugas_pemeriksa) biar label akurat utk setiap tipe terjadwal
+                            // (gigi 17:00, spesialis kulit 22:00, dsb). Per instruksi dr. Yoga
+                            // 2026-10-04.
+                            $srPp         = $sr->petugas_pemeriksa ?? null;
+                            $srJamMulai   = $srPp ? substr((string) ($srPp->jam_mulai_default ?: $srPp->jam_mulai), 0, 5) : null;
+                            $srDatangDari = $srJamMulai
+                                ? \Carbon\Carbon::parse($srJamMulai)->subMinutes(30)->format('H:i')
+                                : null;
+                            $srDeadline   = $srJamMulai
+                                ? \Carbon\Carbon::parse($srJamMulai)->subMinutes(15)->format('H:i')
+                                : null;
+                        @endphp
+                        <div class="mb-10 mt-10" style="padding:10px; background:#fff; border-radius:4px; border:1px solid #f0ad4e;">
+                            <strong>Scan QR berikut saat tiba di klinik</strong>
+                            @if ($srJamMulai)
+                                <ul style="padding-left:18px; margin:8px 0 0; font-size:13px;">
+                                    <li>Praktek jam <strong>{{ $srJamMulai }}</strong> hari ini.</li>
+                                    <li>Datang ke klinik mulai pukul <strong>{{ $srDatangDari }}</strong> (30 menit sebelum praktek) untuk scan QR.</li>
+                                    <li>Batas akhir scan QR pukul <strong>{{ $srDeadline }}</strong> &mdash; reservasi otomatis <strong>dibatalkan sistem</strong> jika lewat.</li>
+                                    <li>Nomor antrian diberikan setelah scan QR; urutan antrian mengikuti urutan scan.</li>
+                                </ul>
+                            @else
+                                <ul style="padding-left:18px; margin:8px 0 0; font-size:13px;">
+                                    <li>Scan QR paling lambat 15 menit sebelum jam praktek &mdash; reservasi otomatis dibatalkan jika lewat.</li>
+                                </ul>
+                            @endif
+                        </div>
                         <div>
                             @if (!is_null($sr->qrcode))
                                 <img class="center-fit" src="{{ \Storage::disk('s3')->url($sr->qrcode) }}" alt=''/>
