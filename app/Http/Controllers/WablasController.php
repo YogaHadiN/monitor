@@ -847,22 +847,19 @@ class WablasController extends Controller
                     $this->autoReply($this->hapusAntrianWhatsappBotReservasiOnline() );
                 } else if (
                     // "cek antrian" tetap jalan walaupun pasien dalam chat admin
-                    // (per instruksi dr. Yoga 2026-10-04): pasien yang punya
-                    // antrian aktif hari ini dapat info antrian terakhir meski
-                    // admin sedang hadir di chat panel. Guard: harus ada antrian
-                    // aktif, kalau tidak biarkan fall-through ke dalamChatAdmin
-                    // supaya admin tetap bisa handle percakapan umum.
-                    (
-                        str_contains((string) $this->message, 'cek antrian')
-                        || str_contains((string) $this->message, 'cek antrin')
-                        || str_contains((string) $this->message, 'cek antri')
-                        || str_contains((string) $this->message, 'cek antran')
-                        || str_contains((string) $this->message, 'ck antrian')
-                        || str_contains((string) $this->message, 'ck antrin')
-                        || str_contains((string) $this->message, 'ck antri')
-                        || str_contains((string) $this->message, 'ck antran')
-                    )
-                    && $this->noTelpAdaDiAntrianPeriksa()
+                    // (per instruksi dr. Yoga 2026-10-04 + reconfirm 2026-10-07).
+                    // Guard noTelpAdaDiAntrianPeriksa DIHAPUS: cekAntrian() sudah
+                    // handle "Belum ada antrian tercatat..." fallback sendiri.
+                    // Yg penting: pasien SELALU dapat reply, bukan silent fall
+                    // ke dalamChatAdmin.
+                    str_contains((string) $this->message, 'cek antrian')
+                    || str_contains((string) $this->message, 'cek antrin')
+                    || str_contains((string) $this->message, 'cek antri')
+                    || str_contains((string) $this->message, 'cek antran')
+                    || str_contains((string) $this->message, 'ck antrian')
+                    || str_contains((string) $this->message, 'ck antrin')
+                    || str_contains((string) $this->message, 'ck antri')
+                    || str_contains((string) $this->message, 'ck antran')
                 ) {
                     $this->chatBotLog(__LINE__);
                     $this->autoReply($this->cekAntrian());
