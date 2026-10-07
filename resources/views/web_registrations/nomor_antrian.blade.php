@@ -20,31 +20,133 @@
          walk-in biasa (30 menit sebelum panggilan / sisa 10 antrian). --}}
 
     {{-- CTA aktivasi Telegram bot. Setelah pasien daftar via web,
-         arahkan mereka onboard bot Telegram supaya semua notif
+         arahkan mereka onboard bot Telegram supaya semua pemberitahuan
          (panggilan antrian, survey, followup) auto route ke TG.
-         Per instruksi dr. Yoga 2026-09-23. --}}
+         Per instruksi dr. Yoga 2026-09-23. Design refresh 2026-10-07. --}}
+    <style>
+        @keyframes tg_pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(0,136,204,0.55); }
+            70%  { box-shadow: 0 0 0 14px rgba(0,136,204,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,136,204,0); }
+        }
+        .tg-cta-wrap {
+            background: linear-gradient(135deg, #e8f4fb 0%, #d4ecf7 100%);
+            border: 1px solid #b6dcf0;
+            border-radius: 10px;
+            padding: 18px 16px;
+            text-align: left;
+        }
+        .tg-cta-head {
+            display:flex; align-items:center; gap:10px;
+            margin-bottom: 10px;
+        }
+        .tg-cta-badge {
+            display:inline-block;
+            background:#ff5252; color:#fff;
+            font-size:11px; font-weight:700;
+            padding: 3px 9px; border-radius: 12px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+        .tg-cta-title {
+            margin: 0;
+            color: #0b4b73;
+            font-weight: 700;
+            font-size: 18px;
+            line-height: 1.3;
+        }
+        .tg-cta-sub {
+            margin: 0 0 12px;
+            color: #345062;
+            font-size: 13.5px;
+            line-height: 1.5;
+        }
+        .tg-cta-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 14px;
+        }
+        .tg-cta-list li {
+            padding: 5px 0;
+            color: #1b3a4e;
+            font-size: 13.5px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .tg-cta-list li .tg-check {
+            color: #0088cc;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .tg-cta-btn {
+            display:block;
+            background: linear-gradient(180deg, #0098e0 0%, #0088cc 100%);
+            color: #fff !important;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none !important;
+            border: none;
+            animation: tg_pulse 2s infinite;
+            transition: transform 0.1s ease;
+        }
+        .tg-cta-btn:hover, .tg-cta-btn:focus {
+            background: linear-gradient(180deg, #00a3f0 0%, #0098e0 100%);
+            color: #fff !important;
+            transform: translateY(-1px);
+            text-decoration: none !important;
+        }
+        .tg-cta-steps {
+            text-align:center;
+            margin: 10px 0 0;
+            color: #4a6c80;
+            font-size: 12px;
+        }
+        .tg-cta-footer {
+            text-align:center;
+            margin: 6px 0 0;
+            color: #4a6c80;
+            font-size: 11.5px;
+            font-style: italic;
+        }
+    </style>
     <div class="row mb-10">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <div class="alert alert-info" style="border-left: 4px solid #0088cc;">
-                <h4 style="margin-top:0;">📲 Aktifkan Notifikasi Telegram</h4>
-                <p style="margin-bottom:8px;">
-                    Terima notifikasi panggilan antrian, konfirmasi jadwal,
-                    dan info klinik langsung via <strong>Telegram Bot</strong>
-                    &mdash; tanpa gangguan spam.
+            <div class="tg-cta-wrap">
+                <div class="tg-cta-head">
+                    <span style="font-size:28px; line-height:1;">📲</span>
+                    <div>
+                        <span class="tg-cta-badge">Gratis &amp; Praktis</span>
+                        <h4 class="tg-cta-title">Pantau Antrian Lewat Telegram</h4>
+                    </div>
+                </div>
+                <p class="tg-cta-sub">
+                    Tidak perlu bolak-balik buka halaman ini. Semua pemberitahuan
+                    langsung masuk ke <strong>Telegram</strong> Kakak.
                 </p>
-                <p style="margin-bottom:12px; font-size:12px; color:#555;">
-                    Tap tombol di bawah &rarr; tap <strong>Start</strong> di Telegram &rarr;
-                    kirim nomor HP Kakak.
-                </p>
+                <ul class="tg-cta-list">
+                    <li><span class="tg-check">✓</span> <span><strong>Pemberitahuan panggilan antrian</strong> real-time saat giliran Kakak hampir tiba</span></li>
+                    <li><span class="tg-check">✓</span> <span><strong>Pengingat scan QR</strong> ketika mendekati jam praktek</span></li>
+                    <li><span class="tg-check">✓</span> <span><strong>Konfirmasi slot kosong</strong> jika Kakak di waitlist</span></li>
+                    <li><span class="tg-check">✓</span> <span>Bisa <strong>chat langsung</strong> dengan admin klinik</span></li>
+                </ul>
                 <a
                     href="https://www.klinikjatielok.com/tg?src=web_reg"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="btn btn-lg btn-block"
-                    style="background:#0088cc; color:#fff; font-weight:600;"
+                    class="tg-cta-btn"
                 >
-                    Aktifkan Telegram Bot
+                    🚀 Aktifkan Sekarang &mdash; Gratis
                 </a>
+                <p class="tg-cta-steps">
+                    Tap tombol &rarr; tap <strong>Start</strong> di Telegram &rarr; kirim nomor HP Kakak
+                </p>
+                <p class="tg-cta-footer">
+                    Tanpa spam. Hanya informasi penting seputar antrian Kakak.
+                </p>
             </div>
         </div>
     </div>
