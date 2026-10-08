@@ -9,7 +9,7 @@
         <div class="mb-10 mt-10" style="padding:10px; background:#fff; border-radius:4px; border:1px solid #5bc0de;">
             <strong>Scan QR berikut saat tiba di klinik</strong>
             <ul style="padding-left:18px; margin:8px 0 0; font-size:13px; color:#31708f;">
-                <li>Mohon kedatangan <strong>30 menit sebelum</strong> perkiraan panggilan atau saat sisa <strong>10 antrian</strong> di depan.</li>
+                <li>Mohon sudah tiba di klinik <strong>paling lambat 30 menit sebelum</strong> perkiraan panggilan. Berangkatlah saat perkiraan waktu tunggu Anda tersisa sekitar <strong>30 menit</strong>.</li>
                 <li>Scan QR di klinik untuk konfirmasi kehadiran.</li>
                 <li>Apabila antrian terlewat, mohon ambil antrian baru.</li>
             </ul>
