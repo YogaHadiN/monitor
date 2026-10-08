@@ -1130,6 +1130,11 @@ class WebRegistrationController extends Controller
         // dokter_dipilih_id + pilih_dokter_by='pasien'. staf_id kembali
         // null supaya antrian tetap pool-eligible (dokter apapun on-duty
         // bisa panggil, dgn preferensi ke staf yg dipilih).
+        //
+        // Resolve PP dokter hari ini (dr. Yoga 2026-10-08): tanpa
+        // ini antrian.ruangan_id tetap default tipe (mis. 3), bukan
+        // ruangan tempat dokter yg dipilih berjadwal (mis. 4). Hasilnya
+        // display Ruangan + Pemeriksa di tbody antrian kosong "-".
         $webPickedDokter = false;
         if (
             config('features.pool_antrian_enabled') &&
@@ -1141,6 +1146,22 @@ class WebRegistrationController extends Controller
             $antrian->pilih_dokter_by   = 'pasien';
             $antrian->staf_id           = null;
             $webPickedDokter            = true;
+
+            // Resolve PP today → set ruangan_id + pp_id supaya kolom
+            // Ruangan/Pemeriksa di nurse station tbody terisi.
+            $tzReg    = 'Asia/Jakarta';
+            $todayReg = now($tzReg)->toDateString();
+            $ppReg = \App\Models\PetugasPemeriksa::whereDate('tanggal', $todayReg)
+                ->where('staf_id', $web_registration->staf_id)
+                ->where('tipe_konsultasi_id', $web_registration->tipe_konsultasi_id)
+                ->orderBy('jam_mulai')
+                ->first();
+            if ($ppReg) {
+                if ((int) $ppReg->ruangan_id > 0) {
+                    $antrian->ruangan_id = (int) $ppReg->ruangan_id;
+                }
+                $antrian->petugas_pemeriksa_id = (int) $ppReg->id;
+            }
         }
 
         // POOL DISTRIBUSI FIX (dr. Yoga 2026-09-27): kalau pool mode +
