@@ -484,7 +484,7 @@ class AntrianOnlineController extends Controller
                 'namapoli'       => $antrian->tipe_konsultasi->poli_bpjs->nmPoli,
                 'sisaantrean'    => (string)($antrian->sisa_antrian ?? 0),
                 'antreanpanggil' => $antreanPanggil ?: "",
-                'keterangan'     => "Apabila antrean terlewat harap mengambil antrean kembali"
+                'keterangan'     => "Harap lapor kepada petugas pendaftaran bahwa Anda mendaftar melalui Mobile JKN dan sudah hadir di klinik"
             ],
             'metadata' => [
                 'message' => 'Ok',
@@ -526,7 +526,7 @@ class AntrianOnlineController extends Controller
                 'namapoli'       => $antrian->tipe_konsultasi->poli_bpjs->nmPoli,
                 'sisaantrean'    => $antrian->sisa_antrian,
                 'antreanpanggil' => $antrian->ruangan->antrian->nomor_antrian ?? null,
-                'keterangan'     => 'Apabila antrean terlewat harap mengambil antrean kembali.'
+                'keterangan'     => 'Harap lapor kepada petugas pendaftaran bahwa Anda mendaftar melalui Mobile JKN dan sudah hadir di klinik.'
             ],
             'metadata' => [
                 'message' => 'Ok',
@@ -803,7 +803,7 @@ class AntrianOnlineController extends Controller
                 'namapoli'       => $namapoli,
                 'sisaantrean'    => (string)($antrian->sisa_antrian ?? 0),
                 'antreanpanggil' => $antreanPanggil ?: "",
-                'keterangan'     => "Apabila antrean terlewat harap mengambil antrean kembali"
+                'keterangan'     => "Harap lapor kepada petugas pendaftaran bahwa Anda mendaftar melalui Mobile JKN dan sudah hadir di klinik"
             ],
             'metadata' => [
                 'message' => 'Ok',
