@@ -106,15 +106,15 @@ class WatzapController extends Controller
             ], 422);
         }
 
-        // Per instruksi dr. Yoga 2026-09-02: kalau inbound phone match
-        // rujukan pending PDF (H+1 kalender-based), auto-kirim PDF
-        // rujukan BPJS. Jam ≥ 8 WIB → send now. Jam < 8 WIB → schedule
-        // ke jam 8 pagi. WA bot reply biasa tetap jalan setelahnya
-        // (proceeded ke WablasController::webhook di bawah).
-        $this->maybeAutoSendRujukanPdf(
-            (string) $normalized['phone'],
-            (string) ($normalized['message'] ?? '')
-        );
+        // Trigger lama (inbound WA → send PDF) DINONAKTIFKAN per
+        // instruksi dr. Yoga 2026-10-11. Pengiriman PDF rujukan BPJS
+        // sekarang via Telegram daily batch jam 7 pagi — lihat command
+        // rujukan:auto-send-daily-telegram + schedule di Kernel.
+        //
+        // $this->maybeAutoSendRujukanPdf(
+        //     (string) $normalized['phone'],
+        //     (string) ($normalized['message'] ?? '')
+        // );
 
         // Inject ke request aktif agar Input::get() di WablasController bisa membaca
         $request->merge($normalized);

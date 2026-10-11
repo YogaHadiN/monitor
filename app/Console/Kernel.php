@@ -15,14 +15,18 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Process pending scheduled rujukan PDF sends (customer WA
-        // sebelum jam 8 pagi → schedule ke jam 8 pagi). Runs setiap
-        // 5 menit supaya delayed sends fire cepat setelah jam 8.
-        // Per instruksi dr. Yoga 2026-09-02.
-        $schedule->command('rujukan:send-pending-pdfs')
-            ->everyFiveMinutes()
-            ->withoutOverlapping(10)
+        // Auto-send PDF rujukan BPJS via Telegram tiap jam 7 pagi WIB
+        // (dr. Yoga 2026-10-11). Replaces trigger lama "inbound WA
+        // customer" dgn push schedule harian — pasien onboard TG dapat
+        // rujukan tanpa harus chat admin dulu.
+        $schedule->command('rujukan:auto-send-daily-telegram')
+            ->dailyAt('07:00')
+            ->withoutOverlapping(15)
             ->timezone('Asia/Jakarta');
+
+        // Legacy: rujukan:send-pending-pdfs (WA scheduled fallback)
+        // DIMATIKAN per instruksi dr. Yoga 2026-10-11. Command tetap
+        // ada di repo untuk manual run kalau butuh backfill via WA.
     }
 
     /**
