@@ -33,13 +33,12 @@ class SunatBotAgent
     //   gpt-4o-mini → gpt-4.1-mini (jam 15:30, commit f13c435e) —
     //     mini lama sering skip save_harga_data (kasus 628886332272
     //     Kak Ayu). 4.1-mini tool-calling lebih reliable.
-    //   gpt-4.1-mini → gpt-5.6-luna (jam 23:xx) — generasi baru
-    //     GPT-5.6 series lebih murah AND lebih reliable:
-    //     • input $0.20 vs $0.40 (50% lebih murah)
-    //     • cached $0.02 vs $0.10 (80% lebih murah)
-    //     • output $1.20 vs $1.60 (25% lebih murah)
-    //     Expected: tool calling reliability naik (5.6 vs 4.1 gen).
-    private const MODEL               = 'gpt-4.1-mini';
+    //   gpt-4.1-mini → gpt-4.1 (dr. Yoga 2026-10-13) — full gpt-4
+    //     generation (bukan mini), tool-calling + instruction-following
+    //     lebih reliable. Kasus 6281384495815 Faqih: mini skip
+    //     save_booking_data berkali-kali, bot tanya nama lengkap 3x.
+    //     dr. Yoga eksplisit MINTA gpt-4 bukan gpt-5.
+    private const MODEL               = 'gpt-4.1';
     private const HTTP_TIMEOUT        = 45;
     private const HTTP_RETRY_ONCE     = true;
 
