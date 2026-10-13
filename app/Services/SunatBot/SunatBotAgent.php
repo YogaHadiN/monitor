@@ -902,7 +902,7 @@ Angka harga HANYA muncul dari tool `send_harga_quote` (template quote_harga_pake
 
 📋 FIELD WAJIB TERKUMPUL sebelum kasih quote (5 field):
 1. `nama_orang_tua`       — nama depan ortu / pengirim pesan (contoh "Yeni")
-2. `usia_anak`            — usia + satuan ("7 tahun" atau "8 bulan")
+2. `usia_tahun` + `usia_bulan` — angka terpisah. "7 tahun" → usia_tahun=7, usia_bulan=0. "8 bulan" → usia_tahun=0, usia_bulan=8. "3 tahun 10 bulan" → usia_tahun=3, usia_bulan=10.
 3. `indikasi_khitan`      — keluhan medis atau "tidak ada"
 4. `postur_tubuh`         — "gemuk" / "tidak gemuk" / "normal" (gantiin BB — ini yg dipakai utk risk assessment)
 5. `riwayat_kesehatan`    — kondisi medis (jantung, autisme, dll) atau "tidak ada"
@@ -1072,7 +1072,7 @@ CONTOH GOOD FLOW:
 2. `jam`               — HH:MM. Slot valid: 07-11, 13-17
 3. `nama_anak`         — nama LENGKAP anak (mis. "Aiman Ghani Adyaksa", "Faiz Nabil Rahman"). Bukan panggilan.
 4. `nama_panggilan`    — nama PANGGILAN singkat / nickname (mis. "Aiman", "Faiz"). Biasanya kata pertama dari nama lengkap.
-5. `usia_anak`         — "X tahun" / "X bulan"
+5. `usia_tahun` + `usia_bulan` — angka terpisah. Contoh: "3 tahun 10 bulan" → usia_tahun=3, usia_bulan=10. "8 bulan" → usia_tahun=0, usia_bulan=8. "5 tahun" → usia_tahun=5, usia_bulan=0. KAMU extract + convert, backend TIDAK parse.
 6. `indikasi_khitan`   — keluhan medis / alasan khusus atau "tidak ada"
 7. `postur_tubuh`      — "gemuk" / "tidak gemuk" / "normal" (gantiin BB — dipakai utk risk assessment)
 8. `riwayat_kesehatan` — kondisi medis (jantung, autisme, dll) atau "tidak ada"
@@ -1502,7 +1502,8 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                             'nama_orang_tua'    => ['type' => 'string', 'description' => 'nama depan ortu, mis. "Yeni"'],
                             'domisili'          => ['type' => 'string', 'description' => 'kota/kecamatan, mis. "Tangerang"'],
                             'jumlah_anak'       => ['type' => 'integer', 'description' => 'JUMLAH anak yg mau sunat (1, 2, 3, dst). Kalau customer sebut singular ("anak saya"), default 1. Kalau customer sebut "2 anak" / "kembar" / "sepupu juga ikut sunat", pass jumlah aktual. Dipakai utk hitung diskon rombongan (2 anak: -500rb, 3 anak: -1jt).'],
-                            'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan, mis. "7 tahun" / "8 bulan". Kalau >1 anak, sebutkan usia setiap anak dgn koma (mis. "7 tahun, 5 tahun").'],
+                            'usia_tahun'        => ['type' => 'integer', 'description' => 'usia dalam TAHUN (angka saja, 0-99). "3 tahun 10 bulan" → usia_tahun=3, usia_bulan=10. "8 bulan" → usia_tahun=0, usia_bulan=8. KAMU extract + convert sendiri, backend tidak parse regex. Kalau multi-anak, pass usia_tahun+usia_bulan utk anak pertama saja.'],
+                            'usia_bulan'        => ['type' => 'integer', 'description' => 'sisa bulan setelah tahun (angka 0-11). "3 tahun" → usia_bulan=0. "3 tahun 10 bulan" → usia_bulan=10.'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'OPSIONAL — jangan pernah TANYA berat badan. Postur_tubuh (gemuk/tidak) sudah cukup utk risk assessment. Field ini masih ada untuk backward compat: kalau customer volunteering angka BB dalam pesan, boleh pass; kalau tidak, SKIP param ini (jangan pass 0).'],
                             'tinggi_badan_anak' => ['type' => 'number', 'description' => 'OPSIONAL — jangan pernah TANYA tinggi badan. Kalau customer volunteering angka tinggi (cm), pass. Kalau BB + tinggi keduanya di-pass di turn yg sama (atau salah satu sudah tersimpan sebelumnya), backend AUTO-DERIVE postur_tubuh via BMI — kamu TIDAK PERLU tanya postur lagi.'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas isi jawaban customer soal keluhan/alasan medis. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
@@ -1537,7 +1538,8 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                             'jam'               => ['type' => 'string', 'description' => 'HH:MM atau angka (7, 10, dst). Slot valid: 07-11, 13-17'],
                             'nama_anak'         => ['type' => 'string', 'description' => 'nama LENGKAP anak (mis. "Aiman Ghani Adyaksa" / "Faiz Nabil Rahman"). Biasanya 2-4 kata. Kalau customer cuma kasih 1 kata, itu PANGGILAN, JANGAN save di sini — tanya nama lengkap dulu.'],
                             'nama_panggilan'    => ['type' => 'string', 'description' => 'nama PANGGILAN / nickname (mis. "Aiman", "Nio"). Biasanya 1 kata, sering = kata pertama dari nama lengkap.'],
-                            'usia_anak'         => ['type' => 'string', 'description' => 'usia + satuan (mis. "7 tahun" / "8 bulan")'],
+                            'usia_tahun'        => ['type' => 'integer', 'description' => 'usia dalam TAHUN (angka saja). "3 tahun 10 bulan" → usia_tahun=3, usia_bulan=10. "8 bulan" → usia_tahun=0, usia_bulan=8. KAMU extract + convert sendiri — tidak perlu regex. Range 0-99.'],
+                            'usia_bulan'        => ['type' => 'integer', 'description' => 'sisa bulan setelah tahun (angka 0-11). "3 tahun" → usia_bulan=0. "3 tahun 10 bulan" → usia_bulan=10. Range 0-11.'],
                             'berat_badan_anak'  => ['type' => 'number', 'description' => 'OPSIONAL — jangan pernah TANYA berat badan. Postur_tubuh (gemuk/tidak) sudah cukup. Kalau customer volunteering angka BB, boleh pass; kalau tidak, SKIP param ini.'],
                             'tinggi_badan_anak' => ['type' => 'number', 'description' => 'OPSIONAL — jangan tanya. Kalau customer volunteer tinggi (cm) bersama BB, pass. Backend auto-derive postur_tubuh via BMI — kamu tidak perlu tanya postur.'],
                             'indikasi_khitan'   => ['type' => 'string', 'description' => 'ringkas jawaban customer. Kalau customer bilang "tidak ada"/"sehat"/"cuma mau khitan", save "tidak ada".'],
@@ -1849,21 +1851,31 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
             $saved[] = 'booking_nama_panggilan';
         }
 
-        // usia_anak — parse int + satuan terpisah (mirror parseUsia engine)
-        $usiaRaw = trim((string) ($args['usia_anak'] ?? ''));
-        if ($usiaRaw !== '') {
-            $lower = mb_strtolower($usiaRaw);
-            if (preg_match('/(\d+)\s*(?:bln|bulan|bulanan)\b/u', $lower, $m)) {
-                $session->setData('booking_usia_anak', (int) $m[1]);
-                $session->setData('booking_usia_anak_satuan', 'bulan');
-            } elseif (preg_match('/(\d+)\s*(?:thn|tahun|taun|th)\b/u', $lower, $m)) {
-                $session->setData('booking_usia_anak', (int) $m[1]);
-                $session->setData('booking_usia_anak_satuan', 'tahun');
-            } elseif (preg_match('/(\d+)/', $lower, $m)) {
-                $session->setData('booking_usia_anak', (int) $m[1]);
-                $session->setData('booking_usia_anak_satuan', 'tahun');
+        // usia — LLM pass structured (usia_tahun + usia_bulan) langsung,
+        // backend tinggal store (dr. Yoga 2026-10-13: ganti regex parser
+        // dgn LLM extraction via tool schema). Backward-compat: terima
+        // juga string `usia_anak` lama kalau LLM salah pass format.
+        $usiaTahun = isset($args['usia_tahun']) && is_numeric($args['usia_tahun']) ? (int) $args['usia_tahun'] : null;
+        $usiaBulan = isset($args['usia_bulan']) && is_numeric($args['usia_bulan']) ? (int) $args['usia_bulan'] : null;
+
+        if ($usiaTahun !== null || $usiaBulan !== null) {
+            $totalBulan = (($usiaTahun ?? 0) * 12) + ($usiaBulan ?? 0);
+            if ($totalBulan > 0) {
+                // Store format normalisasi: kalau >= 24 bulan, display sbg
+                // tahun+bulan; kalau < 24, display bulan.
+                if ($usiaTahun && $usiaTahun >= 2) {
+                    $session->setData('booking_usia_anak', $usiaTahun);
+                    $session->setData('booking_usia_anak_satuan', 'tahun');
+                    if ($usiaBulan && $usiaBulan > 0) {
+                        $session->setData('booking_usia_anak_bulan_sisa', $usiaBulan);
+                    }
+                } else {
+                    $session->setData('booking_usia_anak', $totalBulan);
+                    $session->setData('booking_usia_anak_satuan', 'bulan');
+                }
+                $session->setData('booking_usia_total_bulan', $totalBulan);
+                $saved[] = 'booking_usia_anak';
             }
-            $saved[] = 'booking_usia_anak';
         }
 
         if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
@@ -2265,22 +2277,28 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 $update
             );
         }
-        // usia_anak: parse ke integer + simpan satuan terpisah, supaya
-        // template render "8 tahun" (bukan "8 tahun tahun").
-        $usiaRaw = trim((string) ($args['usia_anak'] ?? ''));
-        if ($usiaRaw !== '') {
-            $lower = mb_strtolower($usiaRaw);
-            if (preg_match('/(\d+)\s*(?:bln|bulan|bulanan)\b/u', $lower, $m)) {
-                $session->setData('usia_anak', (int) $m[1]);
-                $session->setData('usia_anak_satuan', 'bulan');
-            } elseif (preg_match('/(\d+)\s*(?:thn|tahun|taun|th)\b/u', $lower, $m)) {
-                $session->setData('usia_anak', (int) $m[1]);
-                $session->setData('usia_anak_satuan', 'tahun');
-            } elseif (preg_match('/(\d+)/', $lower, $m)) {
-                $session->setData('usia_anak', (int) $m[1]);
-                $session->setData('usia_anak_satuan', 'tahun');
+        // usia — LLM pass structured usia_tahun + usia_bulan (dr. Yoga
+        // 2026-10-13: ganti regex parser dgn LLM extraction via tool
+        // schema). Template "8 tahun" (bukan "8 tahun tahun") tetap
+        // bekerja via usia_anak_satuan.
+        $usiaTahun = isset($args['usia_tahun']) && is_numeric($args['usia_tahun']) ? (int) $args['usia_tahun'] : null;
+        $usiaBulan = isset($args['usia_bulan']) && is_numeric($args['usia_bulan']) ? (int) $args['usia_bulan'] : null;
+        if ($usiaTahun !== null || $usiaBulan !== null) {
+            $totalBulan = (($usiaTahun ?? 0) * 12) + ($usiaBulan ?? 0);
+            if ($totalBulan > 0) {
+                if ($usiaTahun && $usiaTahun >= 2) {
+                    $session->setData('usia_anak', $usiaTahun);
+                    $session->setData('usia_anak_satuan', 'tahun');
+                    if ($usiaBulan && $usiaBulan > 0) {
+                        $session->setData('usia_anak_bulan_sisa', $usiaBulan);
+                    }
+                } else {
+                    $session->setData('usia_anak', $totalBulan);
+                    $session->setData('usia_anak_satuan', 'bulan');
+                }
+                $session->setData('usia_total_bulan', $totalBulan);
+                $saved[] = 'usia_anak';
             }
-            $saved[] = 'usia_anak';
         }
         if (isset($args['berat_badan_anak']) && is_numeric($args['berat_badan_anak'])) {
             $bb = (float) $args['berat_badan_anak'];
