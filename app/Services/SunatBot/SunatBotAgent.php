@@ -1144,6 +1144,8 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
 
 8. **⚠️ ESCALATION GATE (safety) — KAMU klasifikasi:** Sama seperti HARGA flow, saat save salah satu safety-field di `save_booking_data`, WAJIB pass `perlu_review_dokter` (bool) berdasarkan judgment kamu terhadap jawaban customer. Kalau `escalate=true` di return, engine handoff, **JANGAN** call finalize_booking.
 
+9. **⚠️ SETIAP JAWABAN SAFETY FIELD WAJIB di-save LANGSUNG via save_booking_data** (dr. Yoga 2026-10-13). Customer jawab satu kata pun untuk indikasi/postur/riwayat (mis. "tidak ada", "gemuk", "sehat", "autis", "tidak gemuk", "jantung") → WAJIB call save_booking_data di turn itu dgn field tsb terisi. JANGAN cuma reply text tanya field berikutnya tanpa save — kalau tidak save, session tetap kosong, bot bakal tanya ulang terus. Contoh: user "tidak gemuk" → `save_booking_data(postur_tubuh="tidak gemuk", perlu_review_dokter=false)`. User "jantung" → `save_booking_data(riwayat_kesehatan="jantung", perlu_review_dokter=true)`.
+
 ═══ ROUTING TOOL (untuk action, bukan info) ═══
 
 - `save_harga_data` → simpan field harga (nama, domisili, usia, indikasi, postur, riwayat). Return missing[]. BB opsional — jangan tanya, terima kalau volunteering.
@@ -1554,10 +1556,13 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 'type' => 'function',
                 'function' => [
                     'name'        => 'finalize_booking',
-                    'description' => 'Commit booking ke jadwal_sunats + kirim bubble booking_sukses. WAJIB dipanggil HANYA setelah: (a) semua 6 field booking + 3 safety field terkumpul, (b) save_booking_data terakhir return slot_status="ok" + escalate=false, DAN (c) customer sudah eksplisit konfirmasi summary + biaya di turn sebelumnya (customer msg current mulai dgn "ya"/"setuju"/"ok"/"iya"/"benar"/"sip"/"lanjut"/"siap"). Kalau customer belum konfirmasi (mis. cuma baru kasih nama panggilan), tool REJECT — kamu harus emit summary booking + info biaya "mulai Rp 2.500.000, bisa lebih kalau ada kondisi khusus" sbg text reply DULU, tunggu customer confirm. Setelah call, output text KOSONG.',
+                    'description' => 'Commit booking ke jadwal_sunats + kirim bubble booking_sukses. WAJIB dipanggil HANYA setelah: (a) semua 6 field booking + 3 safety field terkumpul, (b) save_booking_data terakhir return slot_status="ok" + escalate=false, DAN (c) customer sudah eksplisit konfirmasi summary + biaya di turn sebelumnya. Kalau customer belum konfirmasi (mis. cuma baru kasih nama panggilan), tool REJECT — kamu harus emit summary booking + info biaya "mulai Rp 2.500.000, bisa lebih kalau ada kondisi khusus" sbg text reply DULU, tunggu customer confirm. Pass customer_confirmed=true HANYA kalau customer pesan terakhir eksplisit setuju (ya/iya/ok/setuju/benar/sip/lanjut/siap/jadi/gas/deal/yes). Pass false kalau customer baru kasih info lain (nama, usia, dll) atau netral.',
                     'parameters'  => [
                         'type' => 'object',
-                        'properties' => new \stdClass(),
+                        'properties' => [
+                            'customer_confirmed' => ['type' => 'boolean', 'description' => 'HASIL KLASIFIKASI KAMU dari pesan customer TURN INI: true = customer eksplisit setuju commit booking (jawaban affirmatif setelah lihat summary). false = customer belum confirm (masih kasih info field atau netral).'],
+                        ],
+                        'required' => ['customer_confirmed'],
                     ],
                 ],
             ],
@@ -1637,7 +1642,7 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 return [$summary, $sideEffect];
 
             case 'finalize_booking':
-                [$summary, $bubbles] = $this->toolFinalizeBooking($session);
+                [$summary, $bubbles] = $this->toolFinalizeBooking($session, $args);
                 return [$summary, ['replies' => $bubbles]];
 
             case 'save_lead_sunat':
@@ -2062,7 +2067,7 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
      *
      * @return array{0:array, 1:array<array>}
      */
-    private function toolFinalizeBooking(BotSession $session): array
+    private function toolFinalizeBooking(BotSession $session, array $args = []): array
     {
         $missing = [];
         foreach (self::BOOKING_REQUIRED_FIELDS as $f) {
@@ -2089,18 +2094,12 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
             ];
         }
 
-        // Konfirmasi gate — per instruksi dr. Yoga 2026-08-16: booking
-        // TIDAK boleh dikomit ke database tanpa konfirmasi eksplisit
-        // customer (setelah lihat summary + biaya 2.5jt). Cek current
-        // user message di turn ini — harus mulai dgn kata konfirmasi.
-        // Kalau LLM call finalize_booking tanpa customer confirm (mis.
-        // langsung setelah collect nama_panggilan), tool reject → LLM
-        // dipaksa emit summary + tunggu approval dulu.
-        $rawMsg = mb_strtolower(trim($this->currentUserMessage));
-        $isConfirmation = (bool) preg_match(
-            '/^(ya|iya|ok|oke|okay|okey|setuju|benar|betul|sip|lanjut|jadi|gas|siap|deal|yoi|yes|y|k)\b/iu',
-            $rawMsg
-        );
+        // Konfirmasi gate (dr. Yoga 2026-10-13 revised 100% LLM):
+        // LLM klasifikasi via arg `customer_confirmed:bool` di tool call.
+        // Backend trust hasil klasifikasi — tidak ada regex guard sekunder.
+        // Kalau LLM lie (pass true saat customer belum confirm), tanggung
+        // jawab di prompt + model (gpt-4.1 reliable).
+        $isConfirmation = (bool) ($args['customer_confirmed'] ?? false);
         if (!$isConfirmation) {
             return [
                 ['ok' => false, 'error' => 'customer belum konfirmasi eksplisit. WAJIB tampilkan summary booking (nama, tanggal, jam, usia, BB) + biaya "mulai Rp 2.500.000, bisa lebih kalau ada kondisi khusus" sbg text reply, TUNGGU customer bilang "ya"/"setuju"/"ok" dulu baru call finalize_booking. Jangan finalize di turn ini.'],
