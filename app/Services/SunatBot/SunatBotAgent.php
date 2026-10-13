@@ -2922,18 +2922,27 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
             $lines[] = "- {$label}: {$strVal}";
         }
 
-        // Booking fields (subset — kalau session in booking mode)
+        // Booking fields — key di DB prefixed `booking_*` (lihat
+        // handleSaveBookingData line 1838+). Bug fix dr. Yoga 2026-10-13:
+        // sebelumnya baca unprefixed → snapshot kosong → LLM tanya ulang
+        // nama_anak padahal sudah di-save (kasus 6281384495815 Faqih).
         $bookingKeys = [
-            'tanggal'         => 'Tanggal booking',
-            'jam'             => 'Jam booking',
-            'nama_anak'       => 'Nama anak',
-            'nama_panggilan'  => 'Nama panggilan anak',
+            'booking_tanggal'        => 'Tanggal booking',
+            'booking_jam'            => 'Jam booking',
+            'booking_nama_anak'      => 'Nama anak',
+            'booking_nama_panggilan' => 'Nama panggilan anak',
+            'booking_usia_anak'      => 'Usia anak (booking)',
         ];
         foreach ($bookingKeys as $key => $label) {
             $val = $data[$key] ?? null;
             if ($val === null || $val === '') continue;
             $strVal = trim((string) $val);
             if ($strVal === '') continue;
+            // Append satuan utk usia booking
+            if ($key === 'booking_usia_anak') {
+                $satuan = trim((string) ($data['booking_usia_anak_satuan'] ?? 'tahun'));
+                $strVal .= ' ' . $satuan;
+            }
             $lines[] = "- {$label}: {$strVal}";
         }
 
