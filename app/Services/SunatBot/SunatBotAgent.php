@@ -145,53 +145,11 @@ class SunatBotAgent
 
             if (empty($toolCalls)) {
                 // Tidak ada tool call → agent jawab text langsung.
-                // GUARD: kalau tool sudah emit reply DAN tidak ada
-                // active collection (harga/booking) — text ini
-                // kemungkinan improvisation. Drop.
-                // Tapi kalau ada collection in-progress dgn field
-                // belum terisi, text = resume "Balik ke tadi kak,
-                // [pertanyaan]" yang WAJIB dikirim (interrupt handling).
-                //
-                // ALSO KEEP: kalau user message mengandung trigger
-                // keyword HARGA / BOOKING dan flow-nya belum aktif,
-                // text ini kemungkinan = flow opener ("Untuk biaya
-                // sunat tergantung usia..." / "Boleh tau tanggal
-                // berapa..."). Multi-topic message spt "sistem, lokasi,
-                // mahar berapa?" bakal panggil pertanyaan_metode +
-                // pertanyaan_lokasi tools, lalu iter2 text = opener
-                // HARGA — tanpa exception ini text di-drop dan
-                // pertanyaan mahar tidak ter-address.
-                $userMsgLower = mb_strtolower((string) $this->currentUserMessage);
-                $hargaTriggerRe = '/(mahar|harga|biaya|berapa|brp|\bpl\b|price)/u';
-                $bookingTriggerRe = '/(mau daftar|mau booking|nyunatin|khitan[- ]?in|jadwalin|ambil jadwal|set jadwal|atur jadwal|booking\b|book\b)/u';
-                $userAskedHarga = (bool) preg_match($hargaTriggerRe, $userMsgLower);
-                $userAskedBooking = (bool) preg_match($bookingTriggerRe, $userMsgLower);
-                $keepAsFlowOpener = ($userAskedHarga && !$session->getData('_harga_sent'))
-                                 || ($userAskedBooking && !$session->is_complete);
-
-                // Extra drop condition: kalau media slug (pertanyaan_lokasi/
-                // metode/dsb) sudah di-render via get_intent_response di
-                // turn ini, drop text kecuali text = resume interrupt
-                // ("Balik ke tadi kak..."). Ini nangkap kasus dimana
-                // hasActiveCollection true (misal lead sudah tercapture)
-                // tapi agent tetap output alamat/maps text = double bubble.
-                $isResumeInterrupt = (bool) preg_match('/balik ke tadi/iu', $textContent);
-                $mediaDrop = !empty($mediaSlugRendered) && !$isResumeInterrupt && !$keepAsFlowOpener;
-
-                if ($toolEmittedReplies && !$this->hasActiveCollection($session) && !$keepAsFlowOpener) {
-                    Log::info('SUNAT_BOT_AGENT_DROPPED_POST_TOOL_TEXT', [
-                        'phone' => $session->no_telp,
-                        'iter'  => $iter,
-                        'text'  => mb_substr($textContent, 0, 200),
-                    ]);
-                } elseif ($mediaDrop) {
-                    Log::info('SUNAT_BOT_AGENT_DROPPED_POST_MEDIA_TEXT', [
-                        'phone'  => $session->no_telp,
-                        'iter'   => $iter,
-                        'slugs'  => $mediaSlugRendered,
-                        'text'   => mb_substr($textContent, 0, 200),
-                    ]);
-                } elseif ($textContent !== '') {
+                // 100% LLM trust (dr. Yoga 2026-10-13 phase 3): trust
+                // LLM output — hapus semua regex guard yg sebelumnya
+                // detect harga/booking trigger utk decide keep/drop.
+                // Kalau LLM improvise double-bubble, tuning via prompt.
+                if ($textContent !== '') {
                     $replies = array_merge($replies, $this->splitToTextBubbles($textContent));
                 }
                 break;
@@ -1536,8 +1494,8 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                     'parameters'  => [
                         'type' => 'object',
                         'properties' => [
-                            'tanggal'           => ['type' => 'string', 'description' => 'natural date: YYYY-MM-DD / "5 Juli 2026" / "besok" / "lusa" / "hari ini"'],
-                            'jam'               => ['type' => 'string', 'description' => 'HH:MM atau angka (7, 10, dst). Slot valid: 07-11, 13-17'],
+                            'tanggal'           => ['type' => 'string', 'description' => 'WAJIB format ISO YYYY-MM-DD (mis. "2026-10-20"). KAMU convert "besok" → tanggal hari ini + 1, "senin" → tanggal senin terdekat, "5 juli 2026" → "2026-07-05". Backend TIDAK parse natural date (hanya ISO).'],
+                            'jam'               => ['type' => 'string', 'description' => 'WAJIB format HH:MM dgn leading zero (mis. "07:00", "13:00"). Slot valid: 07:00, 08:00, 09:00, 10:00, 11:00, 13:00, 14:00, 15:00, 16:00, 17:00. KAMU convert "jam 8 pagi" → "08:00", "jam 2 siang" → "14:00". Backend TIDAK terima angka telanjang / HH tanpa menit.'],
                             'nama_anak'         => ['type' => 'string', 'description' => 'nama LENGKAP anak (mis. "Aiman Ghani Adyaksa" / "Faiz Nabil Rahman"). Biasanya 2-4 kata. Kalau customer cuma kasih 1 kata, itu PANGGILAN, JANGAN save di sini — tanya nama lengkap dulu.'],
                             'nama_panggilan'    => ['type' => 'string', 'description' => 'nama PANGGILAN / nickname (mis. "Aiman", "Nio"). Biasanya 1 kata, sering = kata pertama dari nama lengkap.'],
                             'usia_tahun'        => ['type' => 'integer', 'description' => 'usia dalam TAHUN (angka saja). "3 tahun 10 bulan" → usia_tahun=3, usia_bulan=10. "8 bulan" → usia_tahun=0, usia_bulan=8. KAMU extract + convert sendiri — tidak perlu regex. Range 0-99.'],

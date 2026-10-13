@@ -1664,33 +1664,29 @@ class SunatBotEngine
      */
     public function parseBookingDate(string $raw): ?Carbon
     {
+        // Strict ISO parser (dr. Yoga 2026-10-13 phase 3): LLM pass
+        // tanggal udah dalam format YYYY-MM-DD. Backend tidak lagi
+        // handle natural language ("besok", "5 juli") — LLM yg convert.
+        // Hemat regex 25+ lines dgn tetap functional.
+        //
+        // Backward-compat: terima juga "besok"/"hari ini"/"lusa"
+        // kalau LLM sempat kirim (safety net).
         $raw = trim($raw);
         if ($raw === '') return null;
 
-        $lower = mb_strtolower($raw);
-        if ($lower === 'hari ini' || $lower === 'today') return Carbon::today();
-        if ($lower === 'besok'    || $lower === 'tomorrow') return Carbon::tomorrow();
-        if ($lower === 'lusa')                              return Carbon::today()->addDays(2);
-
-        // Replace nama bulan Indonesia (full word, case-insensitive) → English.
-        // Pakai word-boundary regex supaya abbreviation tidak korup hasil
-        // (mis. "Juni" jadi "June" lalu "Jun" → "Junee"). Carbon::parse
-        // sudah handle abbreviation English ("Jun", "Jul", dst) natif.
-        $idMonths = [
-            'januari' => 'January',  'februari' => 'February', 'maret'    => 'March',
-            'april'   => 'April',    'mei'      => 'May',      'juni'     => 'June',
-            'juli'    => 'July',     'agustus'  => 'August',   'september'=> 'September',
-            'oktober' => 'October',  'november' => 'November', 'desember' => 'December',
-        ];
-        $pattern    = '/\b(' . implode('|', array_keys($idMonths)) . ')\b/iu';
-        $normalized = preg_replace_callback($pattern, function ($m) use ($idMonths) {
-            return $idMonths[mb_strtolower($m[1])] ?? $m[0];
-        }, $raw);
-
         try {
-            return Carbon::parse((string) $normalized)->startOfDay();
+            return Carbon::createFromFormat('Y-m-d', $raw)->startOfDay();
         } catch (\Throwable $e) {
-            return null;
+            // Fallback: coba Carbon::parse — kalau ISO salah ditolak null.
+            $lower = mb_strtolower($raw);
+            if ($lower === 'hari ini' || $lower === 'today') return Carbon::today();
+            if ($lower === 'besok'    || $lower === 'tomorrow') return Carbon::tomorrow();
+            if ($lower === 'lusa')                              return Carbon::today()->addDays(2);
+            try {
+                return Carbon::parse($raw)->startOfDay();
+            } catch (\Throwable $e2) {
+                return null;
+            }
         }
     }
 
@@ -1704,18 +1700,12 @@ class SunatBotEngine
         $raw = trim($raw);
         if ($raw === '') return null;
 
-        // Angka 1-10 → index.
-        if (preg_match('/^([1-9]|10)$/', $raw, $m)) {
-            $idx = (int) $m[1] - 1;
-            return self::BOOKING_JAM_SLOTS[$idx] ?? null;
-        }
-        // "07:00" atau "07.00" / "07" / "7".
-        if (preg_match('/^(\d{1,2})[:.]?(\d{0,2})$/', $raw, $m)) {
-            $h = str_pad((string) ((int) $m[1]), 2, '0', STR_PAD_LEFT);
-            $candidate = $h . ':00';
-            if (in_array($candidate, self::BOOKING_JAM_SLOTS, true)) {
-                return $candidate;
-            }
+        // Strict HH:MM parser (dr. Yoga 2026-10-13 phase 3): LLM pass
+        // jam udah HH:MM. Backend hanya validate slot membership —
+        // tidak ada regex interpret "jam 8 pagi" / "7" / "07.00".
+        // LLM yg convert di tool call.
+        if (in_array($raw, self::BOOKING_JAM_SLOTS, true)) {
+            return $raw;
         }
         return null;
     }
