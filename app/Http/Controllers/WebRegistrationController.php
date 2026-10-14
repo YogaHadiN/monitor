@@ -1483,7 +1483,9 @@ class WebRegistrationController extends Controller
         foreach ($antrians as $antrian) {
             $data[] = [
                 'nomor_antrian_terakhir' => $antrian->nomor_antrian_dipanggil,
-                'nama_ruangan'           => $antrian->ruangan->nama,
+                // Ruangan bisa null di mode pool (baru di-assign saat Panggil)
+                // → nullsafe supaya cek antrian online tidak error.
+                'nama_ruangan'           => $antrian->ruangan?->nama ?? 'Belum ditentukan',
                 'nomor_antrian_anda'     => $antrian->nomor_antrian
             ];
         }
