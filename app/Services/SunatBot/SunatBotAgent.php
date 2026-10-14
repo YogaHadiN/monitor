@@ -38,10 +38,13 @@ class SunatBotAgent
     //   gpt-4.1-mini → gpt-4.1 (2026-10-14 sore) — kembali lagi
     //     karena nama_panggilan bug.
     //   gpt-4.1 → gpt-4.1-mini (2026-10-14 malam) — hemat cost.
-    //   gpt-4.1-mini → gpt-4.1 (2026-10-14 malam, ganti ke-5) —
-    //     final decision dr. Yoga: reliability > cost. Pakai cost
-    //     tracker /openai_logs/sunat-cost untuk pantau burn rate.
-    private const MODEL               = 'gpt-4.1';
+    //   gpt-4.1-mini → gpt-4.1 (2026-10-14 malam, ganti ke-5).
+    //   gpt-4.1 → gpt-4.1-mini (2026-10-14 malam, ganti ke-6) —
+    //     bahkan 4.1 full MASIH re-ask nama_lengkap berulang
+    //     (kasus 6281381912803 Aiman 18:12-18:30). Bug ternyata
+    //     bukan di model, tapi di flow/snapshot. Downgrade kembali
+    //     ke mini sambil investigate root cause.
+    private const MODEL               = 'gpt-4.1-mini';
     private const HTTP_TIMEOUT        = 45;
     private const HTTP_RETRY_ONCE     = true;
 
