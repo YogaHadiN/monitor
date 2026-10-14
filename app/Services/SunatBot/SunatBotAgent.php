@@ -2927,6 +2927,31 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         }
         if (!empty($data['booking_started'])) {
             $lines[] = '- ⚠️ Booking flow sedang aktif — save_harga_data akan di-reject engine, pakai save_booking_data.';
+
+            // Explicit MISSING fields untuk booking flow (dr. Yoga 2026-10-14):
+            // mini sering skip save kalau user kasih jawaban 1-kata (mis.
+            // "Yoga" sebagai nama_panggilan). Snapshot cuma listing filled
+            // = ambiguous. Sekarang listing MISSING eksplisit supaya LLM
+            // tahu field apa yg next harus di-save.
+            $bookingAllFields = [
+                'booking_tanggal'         => 'tanggal',
+                'booking_jam'             => 'jam',
+                'booking_nama_anak'       => 'nama_anak (lengkap)',
+                'booking_nama_panggilan'  => 'nama_panggilan',
+                'booking_usia_anak'       => 'usia_tahun+usia_bulan',
+                'indikasi_khitan'         => 'indikasi_khitan',
+                'postur_tubuh'            => 'postur_tubuh',
+                'riwayat_kesehatan'       => 'riwayat_kesehatan',
+            ];
+            $missing = [];
+            foreach ($bookingAllFields as $key => $label) {
+                $v = $data[$key] ?? null;
+                if ($v === null || $v === '') $missing[] = $label;
+            }
+            if (!empty($missing)) {
+                $lines[] = '- ⚠️ BOOKING MISSING fields (customer belum kasih, ATAU kamu belum save_booking_data walau customer sudah kasih): ' . implode(', ', $missing);
+                $lines[] = '- 🚨 KALAU customer di turn ini jawab salah satu field di atas (bahkan 1 kata), WAJIB call `save_booking_data(<field>=<value>)` di turn YG SAMA. Kalau cuma reply text tanpa call tool, field tidak ter-save → kamu bakal tanya ulang terus = BUG.';
+            }
         }
 
         if (empty($lines)) return '';
