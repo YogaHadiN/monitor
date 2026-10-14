@@ -137,22 +137,38 @@ class SunatBotAgent
         while ($iter < self::MAX_TOOL_ITERATIONS) {
             $iter++;
 
-            // tool_choice force (dr. Yoga 2026-10-14 Fix #1):
-            // Kalau booking/harga flow aktif DAN masih ada field missing,
-            // paksa LLM call tool (bukan reply text saja). Mencegah
-            // kasus Aiman 18:12-18:30: LLM reply "Boleh info nama lengkap"
-            // tapi tidak call save_booking_data → session tetap kosong
-            // → bot re-ask terus. Dengan 'required', LLM wajib call salah
-            // satu tool di schema (umumnya save_booking_data).
-            //
-            // Guard: hanya iter 1 (first turn). Iter 2+ setelah tool call
-            // sudah proses tool result, bisa reply text natural.
+            // tool_choice force (dr. Yoga 2026-10-14 Fix #1 + 2026-10-14 malam
+            // optimize cost): HANYA set 'required' saat BENAR-BENAR butuh
+            // (masih ada field missing di collection flow). Sebelumnya
+            // 'required' di-trigger utk SEMUA turn selama flow aktif → bikin
+            // tiap turn 2 LLM call (iter1 tool + iter2 reply). Sekarang
+            // kalau flow sudah complete atau tidak aktif, pakai 'auto' —
+            // LLM bisa reply text langsung 1 call.
             $tc = 'auto';
             if ($iter === 1) {
+                // Required jika ada collection in-progress + masih missing field
                 $bookingActive = (bool) $session->getData('booking_started');
-                $hargaActive   = $session->getData('nama_orang_tua') !== null
-                              && !$session->getData('_harga_sent');
-                if ($bookingActive || $hargaActive) {
+                $bookingMissing = $bookingActive && (
+                    $session->getData('booking_tanggal') === null
+                    || $session->getData('booking_jam') === null
+                    || empty($session->getData('booking_nama_anak'))
+                    || empty($session->getData('booking_nama_panggilan'))
+                    || $session->getData('booking_usia_anak') === null
+                    || empty($session->getData('indikasi_khitan'))
+                    || empty($session->getData('postur_tubuh'))
+                    || empty($session->getData('riwayat_kesehatan'))
+                );
+
+                $hargaStarted = $session->getData('nama_orang_tua') !== null;
+                $hargaNotSent = !$session->getData('_harga_sent');
+                $hargaMissing = $hargaStarted && $hargaNotSent && (
+                    empty($session->getData('usia_anak'))
+                    || empty($session->getData('indikasi_khitan'))
+                    || empty($session->getData('postur_tubuh'))
+                    || empty($session->getData('riwayat_kesehatan'))
+                );
+
+                if ($bookingMissing || $hargaMissing) {
                     $tc = 'required';
                 }
             }
