@@ -1015,7 +1015,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
 
 3. **Tanya field belum NATURAL, 1-2 field per bubble:**
    - Belum ada tanggal → "Boleh tau tanggal berapa mau sunat kak?"
-   - Belum ada jam → "Untuk jamnya, mau jam berapa kak?"
+   - Belum ada jam → kalau tanggal sudah ter-save DAN tool return `available_jams`, SEBUTKAN jam-jam kosong eksplisit. Contoh: "Untuk tanggal [tgl], jam yg masih kosong: 07:00, 09:00, 10:00, 13:00, 14:00. Mau pilih jam yg mana kak?" (format HH:MM comma-separated, HANYA dari `available_jams` tool result). Kalau `available_jams` tidak ada / kosong, pakai "Untuk jamnya mau jam berapa kak?" generic.
    - Belum ada nama_anak → "Boleh tau nama LENGKAP anaknya kak?"
    - Belum ada nama_panggilan → "Kalau nama panggilan sehari-hari, biasanya dipanggil apa kak?"
    - Belum ada indikasi_khitan → "Ada keluhan medis atau alasan khusus kenapa mau khitan kak?"
@@ -1032,7 +1032,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
 
 4. **Slot conflict handling** (baca response save_booking_data). Tool auto-emit bubble kalender terpisah — kamu cukup kirim reply text ajakan pilih ulang:
    - `slot_status="blackout_or_invalid_date"` → "Mohon maaf tanggal itu tidak tersedia kak. Mau pilih tanggal lain?"
-   - `slot_status="jam_blocked_or_booked"` → "Mohon maaf jam itu tidak tersedia kak. Mau pilih jam lain?"
+   - `slot_status="jam_blocked_or_booked"` → sebutkan jam yg masih kosong dari `available_jams` di tool result. Contoh: "Mohon maaf jam [X] di tanggal [Y] sudah terisi kak. Yang masih kosong: 07:00, 09:00, 10:00, 13:00, 14:00. Mau pilih jam yg mana?" (format HH:MM comma-separated). Kalau `available_jams` kosong, bilang "semua jam tanggal itu sudah terisi, mau tanggal lain?".
    - `slot_status="conflict"` → generic "Slot tidak tersedia kak."
    - **JANGAN** tulis URL kalender di reply text kamu — tool sudah kirim bubble link deterministic.
 
@@ -1923,6 +1923,26 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 // langsung auto-open detail slot per tanggal itu.
                 $calendarUrl = 'https://www.kezia.id/sunat-calendar'
                              . ($tglIsoForLink !== '' ? '?date=' . $tglIsoForLink : '');
+
+                // dr. Yoga 2026-10-14: expose daftar jam yg AVAILABLE
+                // supaya LLM bisa sebut ke customer eksplisit (bukan
+                // cuma suruh buka kalender). Hanya untuk kasus
+                // jam_blocked_or_booked — tanggal valid tapi jam penuh.
+                if ($slotStatus === 'jam_blocked_or_booked' && $tglIsoForLink !== '') {
+                    $availableJams = $engine->availableJamsForDate($tglIsoForLink);
+                }
+            }
+        }
+
+        // dr. Yoga 2026-10-14: kalau tanggal sudah ter-save TAPI jam
+        // belum (user baru kasih tanggal, belum jam), expose available
+        // slots supaya LLM bisa include di pertanyaan "jam berapa kak?".
+        if ($slotStatus === 'ok'
+            && $session->getData('booking_tanggal') !== null
+            && $session->getData('booking_jam') === null) {
+            $tglAvail = (string) $session->getData('booking_tanggal');
+            if ($tglAvail !== '') {
+                $availableJams = $engine->availableJamsForDate($tglAvail);
             }
         }
 
@@ -1944,6 +1964,7 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         ];
         if ($slotError !== null) $result['slot_error'] = $slotError;
         if ($calendarUrl !== null) $result['calendar_url'] = $calendarUrl;
+        if (isset($availableJams)) $result['available_jams'] = $availableJams;
         if ($reason !== null)     $result['reason'] = $reason;
 
         // Side-effect: kalau slot invalid, inject calendar bubble

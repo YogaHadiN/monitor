@@ -1720,6 +1720,52 @@ class SunatBotEngine
      * Bila $tanggalStr kosong (placeholder dipakai di luar konteks
      * booking) — return list polos tanpa marker.
      */
+    /**
+     * Return list jam yang MASIH AVAILABLE untuk tanggal tsb (string "HH:MM").
+     * Exclude slot BOOKED (+ 2-jam spillover) dan blackout. Dipakai bot
+     * untuk tanya customer "slot kosong jam: 7, 9, 11, 13, 14 kak".
+     * dr. Yoga 2026-10-14.
+     */
+    public function availableJamsForDate(string $tanggalStr): array
+    {
+        if ($tanggalStr === '') return [];
+
+        $taken = [];
+        $blackoutSlots = [];
+        $fullBlackout  = false;
+
+        $bookedJam = JadwalSunat::where('tanggal', $tanggalStr)
+            ->where('status', 'BOOKED')
+            ->pluck('jam')
+            ->map(fn ($j) => substr((string) $j, 0, 5))
+            ->all();
+        foreach ($bookedJam as $j) {
+            $taken[$j] = true;
+            $next = sprintf('%02d:00', ((int) substr($j, 0, 2)) + 1);
+            if (in_array($next, self::BOOKING_JAM_SLOTS, true)) {
+                $taken[$next] = true;
+            }
+        }
+
+        $blackout = $this->blackoutForDate($tanggalStr);
+        if ($blackout !== null) {
+            if (is_array($blackout->blocked_slots) && !empty($blackout->blocked_slots)) {
+                $blackoutSlots = $blackout->blocked_slots;
+            } else {
+                $fullBlackout = true;
+            }
+        }
+        if ($fullBlackout) return [];
+
+        $available = [];
+        foreach (self::BOOKING_JAM_SLOTS as $jam) {
+            if (isset($taken[$jam])) continue;
+            if (in_array($jam, $blackoutSlots, true)) continue;
+            $available[] = $jam;
+        }
+        return $available;
+    }
+
     private function buildJamList(string $tanggalStr): string
     {
         $taken         = [];
