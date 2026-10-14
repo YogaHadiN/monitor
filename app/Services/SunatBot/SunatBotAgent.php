@@ -34,12 +34,13 @@ class SunatBotAgent
     //     mini lama sering skip save_harga_data (kasus 628886332272).
     //   gpt-4.1-mini → gpt-4.1 (2026-10-13 pagi) — kasus Faqih tanya
     //     nama 3x karena mini skip save_booking_data.
-    //   gpt-4.1 → gpt-4.1-mini (2026-10-14) — downgrade kembali:
-    //     bug utama (snapshot renderer mismatch key + prompt rule #9
-    //     safety-field save) sudah di-fix di code level, mini
-    //     seharusnya cukup. gpt-4.1 full 5x lebih mahal, saldo OpenAI
-    //     habis dalam ~2 jam setelah upgrade. Hemat 5x cost.
-    private const MODEL               = 'gpt-4.1-mini';
+    //   gpt-4.1 → gpt-4.1-mini (2026-10-14 pagi) — downgrade krn cost.
+    //   gpt-4.1-mini → gpt-4.1 (2026-10-14 sore) — kembali lagi:
+    //     mini masih skip save_booking_data walau snapshot renderer
+    //     sudah highlight MISSING fields eksplisit. Kasus Yoga
+    //     6281381912803: nama_panggilan ditanya 2x. Trade-off cost
+    //     naik ~5x diterima utk reliability tool calling.
+    private const MODEL               = 'gpt-4.1';
     private const HTTP_TIMEOUT        = 45;
     private const HTTP_RETRY_ONCE     = true;
 
