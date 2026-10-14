@@ -136,7 +136,28 @@ class SunatBotAgent
 
         while ($iter < self::MAX_TOOL_ITERATIONS) {
             $iter++;
-            $result = $this->callOpenAI($apiKey, $messages, $tools, $iter);
+
+            // tool_choice force (dr. Yoga 2026-10-14 Fix #1):
+            // Kalau booking/harga flow aktif DAN masih ada field missing,
+            // paksa LLM call tool (bukan reply text saja). Mencegah
+            // kasus Aiman 18:12-18:30: LLM reply "Boleh info nama lengkap"
+            // tapi tidak call save_booking_data → session tetap kosong
+            // → bot re-ask terus. Dengan 'required', LLM wajib call salah
+            // satu tool di schema (umumnya save_booking_data).
+            //
+            // Guard: hanya iter 1 (first turn). Iter 2+ setelah tool call
+            // sudah proses tool result, bisa reply text natural.
+            $tc = 'auto';
+            if ($iter === 1) {
+                $bookingActive = (bool) $session->getData('booking_started');
+                $hargaActive   = $session->getData('nama_orang_tua') !== null
+                              && !$session->getData('_harga_sent');
+                if ($bookingActive || $hargaActive) {
+                    $tc = 'required';
+                }
+            }
+
+            $result = $this->callOpenAI($apiKey, $messages, $tools, $iter, $tc);
             if ($result === null) {
                 return $this->fallbackReply();
             }
@@ -3144,7 +3165,7 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
 
     // ----- OPENAI ----------------------------------------------------
 
-    private function callOpenAI(string $apiKey, array $messages, array $tools, int $iter): ?array
+    private function callOpenAI(string $apiKey, array $messages, array $tools, int $iter, string $toolChoice = 'auto'): ?array
     {
         // gpt-5.x family (luna/terra/sol) menolak `max_tokens` (harus
         // `max_completion_tokens`) dan menolak `temperature` != 1.
@@ -3154,7 +3175,7 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
             'model'       => self::MODEL,
             'messages'    => $messages,
             'tools'       => $tools,
-            'tool_choice' => 'auto',
+            'tool_choice' => $toolChoice,
         ];
         if ($isGpt5) {
             $payload['max_completion_tokens'] = 500;
