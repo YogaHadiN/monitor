@@ -2934,11 +2934,69 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
             }
         }
 
+        // Customer history (dr. Yoga 2026-10-15): inject lead data +
+        // booking history dari sessions sebelumnya biar bot tidak amnesia
+        // antar hari. Customer kemarin booking anak → hari ini chat lagi,
+        // bot harus tahu nama ortu + nama anak dari history.
+        // CATATAN: inject SEBELUM early-return supaya walaupun session
+        // fresh (collected_data kosong), history tetap tersampaikan ke LLM.
+        $histLines = $this->renderCustomerHistoryLines((string) $session->no_telp);
+        if (!empty($histLines)) {
+            $lines = array_merge($lines, $histLines);
+        }
+
         if (empty($lines)) return '';
 
         return "═══ SESSION STATE (data yang sudah terkumpul — JANGAN tanya ulang) ═══\n"
              . implode("\n", $lines)
              . "\n\nAturan: kalau field di atas sudah ada, LARANG tanya lagi. Lanjut ke field yg belum ada, atau kalau semua field HARGA_REQUIRED sudah lengkap dan customer minta harga → langsung `send_harga_quote()`.";
+    }
+
+    /**
+     * Render customer historical context — nama ortu (leads_sunats) +
+     * booking history (jadwal_sunats recent). Supaya bot inget customer
+     * returning tidak tanya nama dari awal lagi.
+     * dr. Yoga 2026-10-15.
+     */
+    private function renderCustomerHistoryLines(string $phone): array
+    {
+        if ($phone === '') return [];
+        $lines = [];
+
+        try {
+            // Lead data: nama ortu + domisili (persistent across sessions)
+            $lead = \DB::table('leads_sunats')->where('no_telp', $phone)->first(['nama_lawan_bicara', 'alamat']);
+            if ($lead) {
+                $parts = [];
+                if (!empty($lead->nama_lawan_bicara)) $parts[] = 'nama ortu: ' . $lead->nama_lawan_bicara;
+                if (!empty($lead->alamat))           $parts[] = 'domisili: ' . $lead->alamat;
+                if ($parts) {
+                    $lines[] = '- 📇 Riwayat lead (dari leads_sunats, persist antar sesi): ' . implode(', ', $parts);
+                }
+            }
+
+            // Booking history terakhir (max 3 jadwal, 180 hari terakhir)
+            $jadwal = \DB::table('jadwal_sunats')
+                ->where('no_telp', $phone)
+                ->where('created_at', '>=', now()->subDays(180))
+                ->orderByDesc('tanggal')
+                ->limit(3)
+                ->get(['tanggal', 'nama_pasien', 'nama_panggilan', 'status']);
+            if ($jadwal->count() > 0) {
+                $items = [];
+                foreach ($jadwal as $j) {
+                    $tglLabel = \Carbon\Carbon::parse($j->tanggal)->isoFormat('D MMM Y');
+                    $panggilan = !empty($j->nama_panggilan) ? ' (' . $j->nama_panggilan . ')' : '';
+                    $items[] = $j->nama_pasien . $panggilan . ' @ ' . $tglLabel . ' [' . $j->status . ']';
+                }
+                $lines[] = '- 📅 Booking sebelumnya (anak yg pernah di-booking): ' . implode('; ', $items);
+                $lines[] = '- ℹ️ Kalau customer tanya booking BARU utk anak yg SAMA, pakai nama dari list di atas, JANGAN tanya ulang. Kalau anak BERBEDA, baru tanya nama anak baru.';
+            }
+        } catch (\Throwable $e) {
+            Log::warning('SUNAT_BOT_AGENT_HISTORY_RENDER_FAIL', ['phone' => $phone, 'err' => $e->getMessage()]);
+        }
+
+        return $lines;
     }
 
     // ----- HISTORY ---------------------------------------------------
