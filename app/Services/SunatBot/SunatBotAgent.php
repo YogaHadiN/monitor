@@ -3221,7 +3221,9 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
             $aiContent = null;
             $ok        = false;
             $inTok     = null;
+            $cachedTok = null;
             $outTok    = null;
+            $costUsd   = null;
             if ($response !== null) {
                 try {
                     $status = $response->status();
@@ -3230,11 +3232,16 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                     $usage  = $json['usage'] ?? [];
                     $inTok  = $usage['prompt_tokens']     ?? null;
                     $outTok = $usage['completion_tokens'] ?? null;
+                    // OpenAI usage.prompt_tokens_details.cached_tokens (gpt-4.x)
+                    $cachedTok = $usage['prompt_tokens_details']['cached_tokens'] ?? null;
                     $msg    = $json['choices'][0]['message'] ?? [];
                     $aiContent = json_encode([
                         'content'    => $msg['content'] ?? null,
                         'tool_calls' => $msg['tool_calls'] ?? null,
                     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                    // Cost calc per model pricing (dr. Yoga 2026-10-14).
+                    $costUsd = $this->calculateCostUsd(self::MODEL, (int) $inTok, (int) $cachedTok, (int) $outTok);
                 } catch (\Throwable $e) {}
             }
             // Promp ringkas: user message terakhir saja, supaya kolom prompt tidak meledak.
@@ -3246,21 +3253,51 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 }
             }
             \DB::table('openai_logs')->insert([
-                'feature'       => 'sunatbot.' . mb_substr($method, 0, 64),
-                'periksa_id'    => null,
-                'no_telp'       => $this->contextPhone,
-                'prompt'        => mb_substr($lastUser, 0, 65000),
-                'response'      => $aiContent !== null ? mb_substr($aiContent, 0, 65000) : null,
-                'success'       => $ok ? 1 : 0,
-                'error'         => $errorMessage !== null ? mb_substr($errorMessage, 0, 2000) : null,
-                'input_tokens'  => $inTok,
-                'output_tokens' => $outTok,
-                'created_at'    => now(),
-                'updated_at'    => now(),
+                'feature'              => 'sunatbot.' . mb_substr($method, 0, 64),
+                'model'                => self::MODEL,
+                'periksa_id'           => null,
+                'no_telp'              => $this->contextPhone,
+                'prompt'               => mb_substr($lastUser, 0, 65000),
+                'response'             => $aiContent !== null ? mb_substr($aiContent, 0, 65000) : null,
+                'success'              => $ok ? 1 : 0,
+                'error'                => $errorMessage !== null ? mb_substr($errorMessage, 0, 2000) : null,
+                'input_tokens'         => $inTok,
+                'cached_input_tokens'  => $cachedTok,
+                'output_tokens'        => $outTok,
+                'cost_usd'             => $costUsd,
+                'created_at'           => now(),
+                'updated_at'           => now(),
             ]);
         } catch (\Throwable $e) {
             Log::warning('OPENAI_LOG_INSERT_FAIL', ['err' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Hitung cost USD per OpenAI call berdasarkan pricing per model.
+     * Harga per 1M tokens. Pricing update manual kalau OpenAI ganti.
+     * Cached tokens = input yg di-cache (lebih murah 4-8x).
+     *
+     * Ref: https://openai.com/api/pricing/ (2026-10-14 snapshot).
+     */
+    private function calculateCostUsd(string $model, int $inputTokens, int $cachedTokens, int $outputTokens): ?float
+    {
+        $pricing = [
+            // model => [input_per_M, cached_per_M, output_per_M]
+            'gpt-4.1'        => [2.00, 0.50, 8.00],
+            'gpt-4.1-mini'   => [0.40, 0.10, 1.60],
+            'gpt-4.1-nano'   => [0.10, 0.025, 0.40],
+            'gpt-4o'         => [2.50, 1.25, 10.00],
+            'gpt-4o-mini'    => [0.15, 0.075, 0.60],
+            'gpt-5.6-luna'   => [0.20, 0.02, 1.20],
+        ];
+        $p = $pricing[$model] ?? null;
+        if ($p === null) return null;
+
+        $nonCachedInput = max(0, $inputTokens - $cachedTokens);
+        $cost = ($nonCachedInput * $p[0] + $cachedTokens * $p[1] + $outputTokens * $p[2]) / 1_000_000;
+
+        return round($cost, 6);
     }
 
     // ----- HELPERS ---------------------------------------------------
