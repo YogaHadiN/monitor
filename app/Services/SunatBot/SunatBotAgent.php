@@ -92,8 +92,20 @@ class SunatBotAgent
             return $this->fallbackReply();
         }
 
+        // Hybrid mode (dr. Yoga 2026-10-16): kalau feature flag on + session
+        // punya active_specialist, pakai prompt + tools FOCUSED untuk mode itu.
+        // Mengurangi context noise (55K → ~35K per call tergantung mode).
+        $hybridEnabled  = (bool) config('features.sunatbot_hybrid', false);
+        $specialistMode = null;
+        if ($hybridEnabled) {
+            $sm = (string) ($session->getData('active_specialist') ?? '');
+            if (in_array($sm, ['harga', 'booking'], true)) {
+                $specialistMode = $sm;
+            }
+        }
+
         $history      = $this->loadHistory($session);
-        $systemPrompt = $this->buildSystemPrompt();
+        $systemPrompt = $this->buildSystemPrompt($specialistMode);
         $sessionState = $this->renderSessionStateSnapshot($session);
 
         // Append user turn — disimpan ke history setelah loop selesai.
@@ -108,7 +120,7 @@ class SunatBotAgent
             [['role' => 'user', 'content' => $userMessage]]
         );
 
-        $tools = $this->toolDefinitions();
+        $tools = $this->toolDefinitions($specialistMode);
 
         $replies             = [];
         $signal              = null;
@@ -607,7 +619,37 @@ class SunatBotAgent
         return $replies;
     }
 
-    private function buildSystemPrompt(): string
+    /**
+     * Build system prompt. Hybrid mode (dr. Yoga 2026-10-16):
+     * $specialistMode = null  → orchestrator mode (all sections)
+     * $specialistMode = 'harga' → strip BOOKING section, keep HARGA
+     * $specialistMode = 'booking' → strip HARGA section, keep BOOKING
+     * Section markers di prompt body: <!--SECTION:HARGA_START--> ... <!--SECTION:HARGA_END-->
+     */
+    private function buildSystemPrompt(?string $specialistMode = null): string
+    {
+        $raw = $this->buildFullSystemPrompt();
+        // Partition: strip sections tidak relevan ke mode spesialist current.
+        if ($specialistMode === 'harga') {
+            $raw = $this->stripSection($raw, 'BOOKING');
+        } elseif ($specialistMode === 'booking') {
+            $raw = $this->stripSection($raw, 'HARGA');
+        }
+        // Hapus marker comments (visible noise untuk LLM kalau tidak dihilangkan).
+        return preg_replace('/<!--SECTION:[A-Z_]+-->\n?/u', '', $raw);
+    }
+
+    /**
+     * Helper: hapus section range dari prompt string.
+     * Pakai markers <!--SECTION:X_START--> ... <!--SECTION:X_END-->.
+     */
+    private function stripSection(string $prompt, string $sectionName): string
+    {
+        $pattern = '/<!--SECTION:' . preg_quote($sectionName, '/') . '_START-->.*?<!--SECTION:' . preg_quote($sectionName, '/') . '_END-->\n?/su';
+        return preg_replace($pattern, '', $prompt);
+    }
+
+    private function buildFullSystemPrompt(): string
     {
         $klinik = (string) config('sunatbot.alamat_klinik', '');
         $maps   = (string) config('sunatbot.link_maps', '');
@@ -857,6 +899,28 @@ CONTOH 4 SKIP (lead sudah pernah tercapture, customer lanjut nanya harga):
   Bot: "Untuk sunat di SunatBoy kak: *Anak Rp 2.500.000* (usia <17 tahun, postur non-gemuk), *Dewasa atau kondisi postur gemuk Rp 3.500.000*. Kalau kakak mau saya kalkulasi pasti sesuai kondisi anak, boleh infokan usia + posturnya ya kak."
        "Boleh infokan usia anaknya kak?"    ← LANGSUNG lompat ke usia, tidak re-tanya nama/domisili yang sudah ada
 
+═══ 🔀 HYBRID DELEGATION (BARU 2026-10-16) ═══
+
+**KAMU adalah ORCHESTRATOR**. Tugas utama: routing cepat ke specialist agent.
+
+Ada 2 specialist agent terpisah:
+- `delegate_to_harga_agent` — handle flow tanya biaya (collect 5 field + emit quote)
+- `delegate_to_booking_agent` — handle flow daftar sunat (collect 8 field + finalize jadwal)
+
+**Kapan delegate:**
+
+| User trigger | Action |
+|---|---|
+| "berapa harga?" / "biaya brp?" / "mahar?" / "PL" | `delegate_to_harga_agent(reason="customer tanya biaya")` → specialist handle |
+| "mau daftar" / "mau booking" / "jadwalin" / "mau sunat tgl X" | `delegate_to_booking_agent(reason="customer mau daftar [date]")` → specialist handle |
+| Tanya lokasi / metode / hadiah / testimoni / durasi sembuh | **JANGAN delegate**, call `get_intent_response(slug)` langsung |
+| Greeting kosong / "halo" | **JANGAN delegate**, tanya keperluan dulu |
+| Non-sunat (USG/BPJS/gigi) | `redirect_ke_klinik_utama` |
+
+**Setelah delegate call**, output text SINGKAT pengantar (opsional, mis. "Oke kak, saya bantu infokan ya..."), lalu backend akan auto-handle lanjutan via specialist di turn berikutnya.
+
+Session state `active_specialist` menandakan flow siapa yg aktif. KAMU tidak perlu cek field2 harga/booking — specialist yg handle.
+
 ═══ ⚠️ HARGA vs BOOKING — 2 FLOW BERBEDA, JANGAN CAMPUR ⚠️ ═══
 
 Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
@@ -874,7 +938,10 @@ Ada 2 flow terpisah dengan field + tool sendiri-sendiri:
 
 Executor engine akan REJECT tool call yang salah flow (mis. save_harga_data saat booking aktif). Kalau kamu dapat error "Booking flow aktif" → berarti kamu salah pick tool, ganti ke save_booking_data.
 
+<!--SECTION:HARGA_START-->
 ═══ ATURAN HARGA (natural collection — KAMU yang drive percakapan) ═══
+
+🔙 **HANDOFF BACK (hybrid mode)**: Call `handoff_back_to_orchestrator(reason)` SETELAH `send_harga_quote` sukses + customer ack / ganti topik ke non-harga (mis. tanya lokasi, metode, atau tanya booking). Jangan hold specialist mode kalau sudah selesai — orchestrator yg handle Q&A umum lebih efisien.
 
 🚫 DILARANG MUTLAK menulis angka harga sunat di reply text kamu, BAHKAN KALAU CUSTOMER MEMINTA. Contoh angka yang DILARANG:
 - "Rp 2.500.000", "Rp 3.000.000", "Rp 4.500.000" (apapun)
@@ -1000,8 +1067,12 @@ CONTOH GOOD FLOW:
   Customer: "Ga ada. Postur normal, riwayat kesehatan juga ga ada."
   → save_harga_data(indikasi_khitan="tidak ada", postur_tubuh="normal", riwayat_kesehatan="tidak ada")
   → missing[] kosong → send_harga_quote()  [emit quote bundle]
+<!--SECTION:HARGA_END-->
 
+<!--SECTION:BOOKING_START-->
 ═══ ATURAN BOOKING (natural collection — KAMU yang drive, mirip harga flow) ═══
+
+🔙 **HANDOFF BACK (hybrid mode)**: Call `handoff_back_to_orchestrator(reason)` SETELAH `finalize_booking` sukses + customer ack / ganti topik ke non-booking. Specialist mode cuma utk flow aktif — selesai = balik ke orchestrator.
 
 🚫 DILARANG mengulang info harga/testimoni/fasilitas/paket kalau customer EKSPLISIT bilang mau booking. Langsung mulai collection.
 
@@ -1083,6 +1154,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
 8. **⚠️ ESCALATION GATE (safety) — KAMU klasifikasi:** Sama seperti HARGA flow, saat save salah satu safety-field di `save_booking_data`, WAJIB pass `perlu_review_dokter` (bool) berdasarkan judgment kamu terhadap jawaban customer. Kalau `escalate=true` di return, engine handoff, **JANGAN** call finalize_booking.
 
 9. **⚠️ SETIAP JAWABAN FIELD WAJIB save_booking_data LANGSUNG** di turn itu. Satu kata ("tidak ada", "gemuk", "sehat", "autis", "jantung") pun WAJIB di-save. Reply text tanpa call tool = session kosong = bot tanya ulang. Contoh: user "tidak gemuk" → `save_booking_data(postur_tubuh="tidak gemuk", perlu_review_dokter=false)`.
+<!--SECTION:BOOKING_END-->
 
 ═══ ROUTING TOOL (untuk action, bukan info) ═══
 
@@ -1316,7 +1388,34 @@ Setelah `save_lead_sunat` atau `save_harga_data` yg pertama kali capture nama_or
 PROMPT;
     }
 
-    private function toolDefinitions(): array
+    /**
+     * Return tool definitions. Hybrid mode: filter berdasarkan specialist
+     * mode (dr. Yoga 2026-10-16). Orchestrator get full set + delegate_*;
+     * specialist get subset + handoff_back_to_orchestrator.
+     */
+    private function toolDefinitions(?string $specialistMode = null): array
+    {
+        $all = $this->toolDefinitionsAll();
+
+        if ($specialistMode === 'harga') {
+            $allowed = ['lookup_knowledge', 'get_intent_response', 'save_harga_data', 'send_harga_quote', 'save_lead_sunat', 'request_konsul_dokter', 'handoff_to_admin', 'handoff_back_to_orchestrator'];
+        } elseif ($specialistMode === 'booking') {
+            $allowed = ['get_intent_response', 'save_booking_data', 'finalize_booking', 'request_konsul_dokter', 'handoff_to_admin', 'handoff_back_to_orchestrator'];
+        } else {
+            // Orchestrator mode: all tools except handoff_back (specialist-only)
+            $allowed = null; // null = all except handoff_back
+        }
+
+        return array_values(array_filter($all, function ($t) use ($allowed) {
+            $name = $t['function']['name'] ?? '';
+            if ($allowed === null) {
+                return $name !== 'handoff_back_to_orchestrator';
+            }
+            return in_array($name, $allowed, true);
+        }));
+    }
+
+    private function toolDefinitionsAll(): array
     {
         return [
             [
@@ -1499,6 +1598,49 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                     ],
                 ],
             ],
+            // ──── HYBRID DELEGATION TOOLS (dr. Yoga 2026-10-16) ────
+            [
+                'type' => 'function',
+                'function' => [
+                    'name'        => 'delegate_to_harga_agent',
+                    'description' => 'Trigger ketika customer EKSPLISIT minta harga/biaya/mahar/PL/berapa. Set active_specialist=harga di session → turn ini + turn berikutnya di-handle oleh prompt FOCUSED harga flow (tanpa noise booking rules). Specialist akan collect 5 field + emit send_harga_quote. Setelah quote dikirim atau customer ganti topik, specialist akan handoff balik ke orchestrator.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => [
+                            'reason' => ['type' => 'string', 'description' => 'alasan singkat utk log, mis. "customer tanya biaya sunat"'],
+                        ],
+                        'required' => ['reason'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name'        => 'delegate_to_booking_agent',
+                    'description' => 'Trigger ketika customer EKSPLISIT mau booking/daftar/jadwalin sunat (sebut tanggal + mau atur jadwal). Set active_specialist=booking di session → turn ini + turn berikutnya di-handle oleh prompt FOCUSED booking flow (tanpa noise harga rules). Specialist akan collect 8 field + emit finalize_booking.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => [
+                            'reason' => ['type' => 'string', 'description' => 'alasan singkat utk log, mis. "customer mau daftar sunat tanggal 20 Oktober"'],
+                        ],
+                        'required' => ['reason'],
+                    ],
+                ],
+            ],
+            [
+                'type' => 'function',
+                'function' => [
+                    'name'        => 'handoff_back_to_orchestrator',
+                    'description' => '🔙 **SPECIALIST ONLY** — call ketika flow kamu SELESAI atau customer ganti topik. Contoh harga specialist: send_harga_quote sukses + customer ack / tanya hal lain non-harga. Contoh booking specialist: finalize_booking sukses + customer ack / tanya hal lain non-booking. Clear active_specialist di session → turn berikutnya kembali ke orchestrator utk routing umum.',
+                    'parameters'  => [
+                        'type' => 'object',
+                        'properties' => [
+                            'reason' => ['type' => 'string', 'description' => 'alasan singkat, mis. "booking confirmed, customer thank you" / "customer ganti topik ke lokasi"'],
+                        ],
+                        'required' => ['reason'],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -1565,6 +1707,43 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
 
             case 'save_lead_sunat':
                 return [$this->toolSaveLeadSunat($args, $session), []];
+
+            // ──── HYBRID delegation handlers (dr. Yoga 2026-10-16) ────
+            case 'delegate_to_harga_agent':
+                $reason = trim((string) ($args['reason'] ?? ''));
+                $session->setData('active_specialist', 'harga');
+                $session->setData('specialist_entered_at', now()->toDateTimeString());
+                $session->setData('specialist_reason', $reason);
+                $session->save();
+                Log::info('SUNAT_BOT_AGENT_DELEGATE_HARGA', ['phone' => $session->no_telp, 'reason' => $reason]);
+                return [
+                    ['ok' => true, 'note' => 'active_specialist=harga set. Specialist akan handle turn ini kalau re-reply, atau turn berikutnya. Output text pengantar harga singkat.'],
+                    [],
+                ];
+
+            case 'delegate_to_booking_agent':
+                $reason = trim((string) ($args['reason'] ?? ''));
+                $session->setData('active_specialist', 'booking');
+                $session->setData('specialist_entered_at', now()->toDateTimeString());
+                $session->setData('specialist_reason', $reason);
+                $session->save();
+                Log::info('SUNAT_BOT_AGENT_DELEGATE_BOOKING', ['phone' => $session->no_telp, 'reason' => $reason]);
+                return [
+                    ['ok' => true, 'note' => 'active_specialist=booking set. Specialist akan handle turn ini kalau re-reply, atau turn berikutnya.'],
+                    [],
+                ];
+
+            case 'handoff_back_to_orchestrator':
+                $reason = trim((string) ($args['reason'] ?? ''));
+                $session->setData('active_specialist', null);
+                $session->setData('specialist_entered_at', null);
+                $session->setData('specialist_reason', null);
+                $session->save();
+                Log::info('SUNAT_BOT_AGENT_HANDOFF_BACK', ['phone' => $session->no_telp, 'reason' => $reason]);
+                return [
+                    ['ok' => true, 'note' => 'active_specialist cleared. Turn berikutnya kembali ke orchestrator.'],
+                    [],
+                ];
 
             case 'request_konsul_dokter':
                 $reason = trim((string) ($args['reason'] ?? ''));
