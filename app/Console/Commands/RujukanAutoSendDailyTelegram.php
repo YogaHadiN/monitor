@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class RujukanAutoSendDailyTelegram extends Command
 {
-    protected $signature   = 'rujukan:auto-send-daily-telegram {--limit=200 : Max rujukan per run}';
+    protected $signature   = 'rujukan:auto-send-daily-telegram {--limit=200 : Max rujukan per run} {--max-age-days=7 : Hanya rujukan yang dibuat <= N hari terakhir}';
     protected $description = 'Auto-send PDF rujukan BPJS via Telegram tiap jam 7 pagi (pasien onboard TG).';
 
     public function handle(TelegramClient $tg): int
@@ -47,24 +47,42 @@ class RujukanAutoSendDailyTelegram extends Command
             ->join('pasiens as ps', 'ps.id', '=', 'p.pasien_id')
             ->leftJoin('tujuan_rujuks as tr', 'tr.id', '=', 'r.tujuan_rujuk_id')
             ->leftJoin('rumah_sakits as rs', 'rs.id', '=', 'r.rumah_sakit_id')
+            // Fallback match via NOMOR HP: satu nomor WA/Telegram sering
+            // dipakai satu keluarga (mis. 6281293747131 = 5 pasien), tapi
+            // telegram_chat_id hanya tersimpan di SATU pasien. Rujukan
+            // anggota keluarga lain jadi tidak pernah terkirim (kasus
+            // Iyom Maryamah, komplain 1821, 2026-10-17). Ambil chat_id
+            // dari telegram_users berdasarkan r.no_telp / ps.no_telp.
+            ->leftJoin('telegram_users as tu', function ($j) {
+                $j->on(DB::raw("COALESCE(NULLIF(r.no_telp,''), ps.no_telp)"), '=', 'tu.no_telp')
+                  ->whereNotNull('tu.no_telp');
+            })
             ->whereNotNull('r.pdf_rujukan_bpjs_path')
             ->whereNull('r.pdf_sent_at')
             ->where('r.created_at', '<', $todayWIB->toDateTimeString())
-            ->whereNotNull('ps.telegram_chat_id')
-            ->where('ps.telegram_chat_id', '!=', '')
+            // Jangan kirim rujukan lama yang menumpuk (sudah ditangani manual).
+            ->where('r.created_at', '>=', $todayWIB->copy()->subDays((int) ($this->option('max-age-days') ?: 7))->toDateTimeString())
+            ->where(function ($q) {
+                $q->where(function ($qq) {
+                        $qq->whereNotNull('ps.telegram_chat_id')->where('ps.telegram_chat_id', '!=', '');
+                    })
+                  ->orWhereNotNull('tu.chat_id');
+            })
             ->select(
                 'r.id as rujukan_id',
                 'r.no_telp',
                 'r.pdf_rujukan_bpjs_path',
                 'ps.id as pasien_id',
                 'ps.nama as pasien_nama',
-                'ps.telegram_chat_id',
+                DB::raw("COALESCE(NULLIF(ps.telegram_chat_id,''), tu.chat_id) as telegram_chat_id"),
                 'tr.tujuan_rujuk as spesialisasi',
                 'rs.nama as rumah_sakit'
             )
             ->orderBy('r.created_at', 'asc')
             ->limit($limit)
-            ->get();
+            ->get()
+            ->unique('rujukan_id')
+            ->values();
 
         if ($rujukans->isEmpty()) {
             $this->info('No pending rujukan PDFs (onboard Telegram).');
