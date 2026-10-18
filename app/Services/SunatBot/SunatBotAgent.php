@@ -3035,9 +3035,16 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 $q->whereNull('flagged_intent')
                   ->orWhereNotIn('flagged_intent', $skipIntents);
             })
-            ->orderBy('id', 'asc')
+            // BUG FIX 2026-10-18: sebelumnya orderBy ASC + limit → ambil 24
+            // pesan TERTUA dalam 7 hari, bukan terbaru. Begitu percakapan
+            // >24 pesan/minggu, turn terbaru tidak pernah masuk konteks
+            // (bot "lupa" baru saja menawarkan 25 Okt, lalu tanya tanggal lagi).
+            // Ambil TERBARU lalu balik urutan ke kronologis.
+            ->orderBy('id', 'desc')
             ->limit(self::HISTORY_MAX_TURNS * 4) // buffer sblm filter final
-            ->get(['id', 'message', 'sending', 'flagged_intent', 'image_url']);
+            ->get(['id', 'message', 'sending', 'flagged_intent', 'image_url'])
+            ->reverse()
+            ->values();
 
         $clean = [];
         foreach ($rows as $row) {
