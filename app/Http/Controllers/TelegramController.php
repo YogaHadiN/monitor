@@ -111,9 +111,26 @@ class TelegramController extends Controller
         // gate semua interaksi lain dgn permintaan nomor HP. Bot tidak
         // bisa serve booking / info sebelum tau siapa pasien-nya.
         if (empty($tgUser->no_telp) && empty($tgUser->pasien_id)) {
+            // Fallback (dr. Yoga 2026-10-18): banyak user (terutama iPhone)
+            // tidak melihat tombol reply-keyboard dan MENGETIK nomornya.
+            // Terima nomor HP yang diketik (08xx / 62xx / +62xx, 9-15 digit)
+            // seperti share-contact. Keamanan: user_id disamakan dgn
+            // pengirim supaya lolos cek di handleContact.
+            $digits = preg_replace('/\D+/', '', $text);
+            if (preg_match('/^(0|62)8\d{7,13}$/', $digits)) {
+                $this->handleContact($chatId, [
+                    'phone_number' => $digits,
+                    'user_id'      => (int) ($msg['from']['id'] ?? 0),
+                    'first_name'   => (string) ($msg['from']['first_name'] ?? ''),
+                ], $msg['from'] ?? [], $tgUser);
+                return;
+            }
+
             $this->requestPhone($chatId,
                 "Sebelum lanjut, mohon share nomor HP Kakak dulu ya 🙏\n\n" .
-                "Tap tombol *📱 Kirim Nomor HP* di bawah."
+                "Tap tombol *📱 Kirim Nomor HP* di bawah.\n" .
+                "_Kalau tombolnya tidak terlihat, tekan ikon keyboard/kotak ⌨️ di sebelah kanan kolom ketik._\n\n" .
+                "Atau *ketik langsung nomor HP Kakak*, contoh: 0812xxxxxxxx"
             );
             return;
         }
