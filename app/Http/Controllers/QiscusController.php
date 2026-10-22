@@ -5815,7 +5815,7 @@ class QiscusController extends Controller
         $message .= PHP_EOL;
         $message .= "Perkiraan waktu tunggu *{$waktuTunggu} menit*";
         $message .= PHP_EOL . PHP_EOL;
-        $message .= $this->pesanHadirWaktuBased($waktuTunggu, $waktuTungguMin, false);
+        $message .= $this->pesanHadirWaktuBased($waktuTunggu, $waktuTungguMin, false, $sisa);
         $message .= PHP_EOL . PHP_EOL;
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
         $message .= PHP_EOL . PHP_EOL;
@@ -5825,36 +5825,33 @@ class QiscusController extends Controller
     }
 
     /**
-     * Pesan hadir di klinik berbasis waktu (dr. Yoga 2026-10-08).
-     * Mirror WablasController::pesanHadirWaktuBased — pool multi-dokter
-     * bikin "10 antrian di depan" tidak lagi proxy untuk "30 menit".
-     *
-     * Threshold:
-     *   - Waktu > 45 menit  → normal: hadir 30 menit sebelum
-     *   - Waktu 15-45 menit → warning: segera berangkat
-     *   - Waktu < 15 menit  → critical: beresiko terhapus
+     * Peringatan hadir (dr. Yoga 2026-10-22, komplain antrian A89):
+     *   - Pasien SUDAH hadir/scan QR  → tidak ada peringatan sama sekali.
+     *   - Sudah melewati batas (sisa ≤ 10 antrian ATAU perkiraan ≤ 30
+     *     menit) dan belum hadir → "ANTRIAN ANDA BERESIKO TERHAPUS".
+     *   - Selain itu → pengingat normal (30 menit / 10 antrian).
+     * Wording sama di semua channel online (WA, Telegram, web, broadcast
+     * atika PolisController). Param ke-3 = true kalau sudah hadir/scan.
      */
-    private function pesanHadirWaktuBased(string $waktuTunggu, int $waktuTungguMin, bool $belumScanButSudahHadir): string
+    private function pesanHadirWaktuBased(string $waktuTunggu, int $waktuTungguMin, bool $sudahHadir, ?int $sisaAntrian = null): string
     {
-        if ($waktuTungguMin < 15) {
-            $msg  = '⚠️ *ANTRIAN BERESIKO TERHAPUS*';
-            $msg .= PHP_EOL;
-            if ($belumScanButSudahHadir) {
-                $msg .= "Panggilan Anda diperkirakan ~*{$waktuTunggu} menit lagi*. Pastikan sudah scan QR di klinik — kalau belum, antrian otomatis dihapus saat dipanggil.";
-            } else {
-                $msg .= "Panggilan Anda diperkirakan ~*{$waktuTunggu} menit lagi*. Segera tiba di klinik + scan QR, kalau tidak antrian otomatis dihapus.";
-            }
-            return $msg;
+        if ($sudahHadir) {
+            return '';
         }
 
-        if ($waktuTungguMin < 45) {
-            $msg  = '⚠️ *SEGERA BERANGKAT KE KLINIK*';
-            $msg .= PHP_EOL;
-            $msg .= "Panggilan Anda diperkirakan ~*{$waktuTunggu} menit lagi*. Pastikan sudah tiba + scan QR *paling lambat 30 menit sebelum panggilan*, kalau tidak antrian otomatis dihapus.";
-            return $msg;
+        $normal = 'Harap datang paling lambat *30 menit sebelum* antrian Anda dipanggil, atau saat sisa *10 antrian di depan*.';
+
+        $lewatBatas = $waktuTungguMin <= 30 || ($sisaAntrian !== null && $sisaAntrian <= 10);
+        if (!$lewatBatas) {
+            return $normal;
         }
 
-        return 'Harap sudah tiba di klinik *paling lambat 30 menit sebelum panggilan*. Berangkatlah saat perkiraan waktu tunggu Anda tersisa sekitar *30 menit*.';
+        $msg  = '⚠️ *ANTRIAN ANDA BERESIKO TERHAPUS*';
+        $msg .= PHP_EOL;
+        $msg .= 'Kakak sudah *melewati batas waktu 30 menit* harus datang sebelum panggilan *dan 10 antrian di depan*. Antrian ini bisa terhapus kapan saja. Silakan buat antrian baru apabila antrian terlewat.';
+        $msg .= PHP_EOL . PHP_EOL;
+        $msg .= $normal;
+        return $msg;
     }
 
     public function cekAntrian(){
@@ -5898,18 +5895,16 @@ class QiscusController extends Controller
 
         // Warning waktu-based (dr. Yoga 2026-10-08) — bukan sisa<=10
         // karena pool multi-dokter 10 antrian bisa = 20 menit.
-        if ($sisa_antrian > 0 && $waktuTungguMin < 45) {
+        if ((int) $ant->sudah_hadir_di_klinik !== 1) {
             $waktuTungguStr = (string) $this->waktuTunggu($sisa_antrian, $this->numPetugasAktifSaatIni((int) $ant->tipe_konsultasi_id));
-            $belumScanButSudahHadir = (int) $ant->sudah_hadir_di_klinik === 1;
             $message .= PHP_EOL . PHP_EOL;
-            $message .= $this->pesanHadirWaktuBased($waktuTungguStr, $waktuTungguMin, $belumScanButSudahHadir);
+            $message .= $this->pesanHadirWaktuBased($waktuTungguStr, $waktuTungguMin, false, $sisa_antrian);
         }
 
         // Per instruksi dr. Yoga 2026-09-17: SELALU cantumkan Scan QR
         // reminder + link untuk pasien reservasi_online yg belum hadir.
         if ($ant->reservasi_online && $ant->sudah_hadir_di_klinik == 0) {
             $message .= PHP_EOL . PHP_EOL;
-            $message .= 'Harap sudah tiba di klinik *paling lambat 30 menit sebelum panggilan*.' . PHP_EOL . PHP_EOL;
             $message .= 'Jangan lupa *Scan QR CODE* saat sudah tiba di klinik' . PHP_EOL . PHP_EOL;
             $message .= 'Untuk melihat qr code klik di link dibawah ini :' . PHP_EOL;
             $message .= 'https://www.klinikjatielok.com/antrians/get/qrcode/' . $ant->id . PHP_EOL . PHP_EOL;
