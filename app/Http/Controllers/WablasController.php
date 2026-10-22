@@ -8148,8 +8148,10 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
         $message .= PHP_EOL;
         $message .= "Perkiraan waktu tunggu *{$waktuTunggu} menit*";
         $message .= PHP_EOL . PHP_EOL;
-        $message .= $this->pesanHadirWaktuBased($waktuTunggu, $waktuTungguMin, false, $sisa);
-        $message .= PHP_EOL . PHP_EOL;
+        $peringatan = $this->pesanHadirWaktuBased($waktuTunggu, $waktuTungguMin, (int) ($antrian->sudah_hadir_di_klinik ?? 0) === 1, $sisa);
+        if ($peringatan !== '') {
+            $message .= $peringatan . PHP_EOL . PHP_EOL;
+        }
         $message .= '_*Scan QR CODE di klinik untuk mengkonfirmasikan kehadiran anda*_';
         $message .= PHP_EOL . PHP_EOL;
         $message .= $this->aktifkan_notifikasi_otomatis_text();
