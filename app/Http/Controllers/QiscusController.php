@@ -1687,7 +1687,7 @@ class QiscusController extends Controller
         $message .= PHP_EOL;
         $message .= '1. Jadwal Pelayanan';
         $message .= PHP_EOL;
-        $message .= '2. Daftar lewat Whatsapp';
+        $message .= '2. Daftar Online';
         $message .= PHP_EOL;
         $message .= '3. Kode Faskes Klinik Jati Elok';
         $message .= PHP_EOL;
