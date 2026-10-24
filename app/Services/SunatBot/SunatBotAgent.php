@@ -1558,10 +1558,20 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 return [$summary, $sideEffect];
 
             case 'save_booking_data':
-                [$summary, $sideEffect] = $this->toolSaveBookingData($args, $session);
                 // Per instruksi dr. Yoga 2026-10-24: daftar online sunat
                 // minimal H-1. Customer minta HARI INI → handoff ke admin
                 // (manusia yg cek apakah tim bisa), bot tidak booking.
+                // Cek SEBELUM toolSaveBookingData (yg bisa reset tanggal
+                // kalau jam hari ini sudah lewat).
+                $tglArg = trim((string) ($args['tanggal'] ?? ''));
+                $tglParsed = $tglArg !== '' ? app(\App\Services\SunatBot\SunatBotEngine::class)->parseBookingDate($tglArg) : null;
+                if ($tglParsed !== null && \App\Services\SunatBot\SunatBotEngine::isSameDayBooking($tglParsed->format('Y-m-d'))) {
+                    $session->setData('booking_tanggal', $tglParsed->format('Y-m-d'));
+                    $jamArg = trim((string) ($args['jam'] ?? ''));
+                    if ($jamArg !== '') $session->setData('booking_jam', $jamArg);
+                    return $this->sameDayHandoff($session);
+                }
+                [$summary, $sideEffect] = $this->toolSaveBookingData($args, $session);
                 if (\App\Services\SunatBot\SunatBotEngine::isSameDayBooking((string) $session->getData('booking_tanggal'))) {
                     return $this->sameDayHandoff($session);
                 }
