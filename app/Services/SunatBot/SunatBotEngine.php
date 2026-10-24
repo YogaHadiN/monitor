@@ -1217,6 +1217,17 @@ class SunatBotEngine
         return array_merge($this->renderIntent($slug, $session), [$this->bookingFallbackBubble()]);
     }
 
+    /** Booking untuk hari ini (WIB)? Bot hanya terima minimal H-1. */
+    public static function isSameDayBooking(?string $tanggal): bool
+    {
+        if (!$tanggal) return false;
+        try {
+            return Carbon::parse($tanggal, 'Asia/Jakarta')->toDateString() === Carbon::today('Asia/Jakarta')->toDateString();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     private function handleBookingTanggal(BotSession $session, string $msg): array
     {
         $tanggal = $this->parseBookingDate($msg);
@@ -1227,6 +1238,13 @@ class SunatBotEngine
         // Tanggal harus hari ini atau di masa depan.
         if ($tanggal->lt(Carbon::today())) {
             return $this->reAskWithFallback('booking_tanggal_invalid', $session);
+        }
+
+        // Per dr. Yoga 2026-10-24: daftar online minimal H-1. Hari ini → admin manusia.
+        if (self::isSameDayBooking($tanggal->format('Y-m-d'))) {
+            $session->setData('_handoff_reason', 'Customer minta sunat HARI INI (' . $tanggal->format('Y-m-d') . ') — daftar online minimal H-1, mohon admin cek ketersediaan tim.');
+            $session->save();
+            return $this->escalate($session, [['text' => "Untuk jadwal sunat di *hari yang sama*, saya cek dulu ke tim ya kak 🙏 Admin kami akan segera membalas untuk memastikan ketersediaan dokter & jamnya.\n\n(Pendaftaran online biasanya paling lambat H-1 / sehari sebelumnya.)", 'media' => null]]);
         }
 
         // Cek blackout full-day. Blackout partial (blocked_slots) dicek
@@ -1840,6 +1858,12 @@ class SunatBotEngine
                 $session->save();
                 return $this->reAskWithFallback('booking_tanggal_invalid', $session);
             }
+            if (self::isSameDayBooking($tanggalStr)) {
+                $session->setData('_handoff_reason', 'Customer minta sunat HARI INI (' . $tanggalStr . ' ' . ($jam ?: '') . ') — daftar online minimal H-1, mohon admin cek ketersediaan tim.');
+                $session->setData('booking_tanggal', null);
+                $session->save();
+                return $this->escalate($session, [['text' => "Untuk jadwal sunat di *hari yang sama*, saya cek dulu ke tim ya kak 🙏 Admin kami akan segera membalas untuk memastikan ketersediaan dokter & jamnya.\n\n(Pendaftaran online biasanya paling lambat H-1 / sehari sebelumnya.)", 'media' => null]]);
+            }
         } catch (\Throwable $e) {}
 
         // Full-day blackout
@@ -2124,6 +2148,8 @@ class SunatBotEngine
             if ($usia !== null && $usia !== '') $lines[] = 'Usia anak  : ' . $usia . ' ' . $satuan;
             if ($bb !== null && $bb !== '')     $lines[] = 'BB anak    : ' . $bb . ' kg';
             if ($domisili !== '') $lines[] = 'Domisili   : ' . $domisili;
+            $alasan = trim((string) ($session->getData('_handoff_reason') ?? ''));
+            if ($alasan !== '') { $lines[] = ''; $lines[] = '📌 Alasan   : ' . $alasan; }
             $lines[] = '';
             $lines[] = '🩺 Data safety:';
             $lines[] = '• Indikasi : ' . ($indikasi !== '' ? $indikasi : '-');

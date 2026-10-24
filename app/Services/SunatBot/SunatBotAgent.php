@@ -634,7 +634,7 @@ class SunatBotAgent
 Kamu adalah CS WhatsApp klinik sunat anak SunatBoy (Klinik Jati Elok, Tangerang).
 Bicaranya santai, ramah, natural — seperti staf admin manusia. Jawab langsung dari FAKTA di bawah, paraphrase bebas, JANGAN ubah angka/nama/detail teknis.
 
-📅 HARI INI: {$todayLabel} ({$todayStr}). Kalau customer sebut tanggal tanpa tahun (mis. "5 juli"), ASUMSIKAN tahun sekarang. Kalau tanggal itu sudah lewat di tahun sekarang, ambil tahun DEPAN. JANGAN pernah guess ke tahun 2023 atau tahun lain.
+📅 HARI INI: {$todayLabel} ({$todayStr}). ⛔ Pendaftaran/booking sunat online MINIMAL H-1 (paling cepat besok). Kalau customer minta sunat HARI INI, tetap panggil save_booking_data dgn tanggal hari ini — backend otomatis handoff ke admin manusia; JANGAN janjikan slot hari ini & JANGAN tolak sendiri. Kalau customer sebut tanggal tanpa tahun (mis. "5 juli"), ASUMSIKAN tahun sekarang. Kalau tanggal itu sudah lewat di tahun sekarang, ambil tahun DEPAN. JANGAN pernah guess ke tahun 2023 atau tahun lain.
 
 ═══ 🚫 KATA TERLARANG (MUTLAK — JANGAN PERNAH DIPAKAI) 🚫 ═══
 
@@ -1559,6 +1559,12 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
 
             case 'save_booking_data':
                 [$summary, $sideEffect] = $this->toolSaveBookingData($args, $session);
+                // Per instruksi dr. Yoga 2026-10-24: daftar online sunat
+                // minimal H-1. Customer minta HARI INI → handoff ke admin
+                // (manusia yg cek apakah tim bisa), bot tidak booking.
+                if (\App\Services\SunatBot\SunatBotEngine::isSameDayBooking((string) $session->getData('booking_tanggal'))) {
+                    return $this->sameDayHandoff($session);
+                }
                 return [$summary, $sideEffect];
 
             case 'finalize_booking':
@@ -1728,6 +1734,34 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
      *
      * @return array{0:array,1:array}
      */
+    /**
+     * Booking sunat untuk HARI INI tidak dilayani bot (minimal H-1, per
+     * dr. Yoga 2026-10-24) → kosongkan tanggal & escalate ke admin manusia.
+     */
+    private function sameDayHandoff(BotSession $session): array
+    {
+        Log::info('SUNAT_BOT_SAME_DAY_HANDOFF', [
+            'phone'   => $session->no_telp,
+            'tanggal' => $session->getData('booking_tanggal'),
+            'jam'     => $session->getData('booking_jam'),
+        ]);
+        $session->setData('_handoff_reason', 'Customer minta sunat HARI INI ('
+            . $session->getData('booking_tanggal') . ' ' . ($session->getData('booking_jam') ?: 'jam belum disebut')
+            . ') — daftar online minimal H-1, mohon admin cek ketersediaan tim.');
+        $session->setData('booking_tanggal', null);
+        $session->save();
+        return [
+            ['ok' => false, 'handoff' => true, 'note' => 'Booking hari yang sama tidak bisa via bot (minimal H-1). Engine escalate ke admin + kirim pesan tunggu. Output text KOSONG.'],
+            [
+                'escalate' => true,
+                'replies'  => [[
+                    'text'  => "Untuk jadwal sunat di *hari yang sama*, saya cek dulu ke tim ya kak 🙏 Admin kami akan segera membalas untuk memastikan ketersediaan dokter & jamnya.\n\n(Pendaftaran online biasanya paling lambat H-1 / sehari sebelumnya.)",
+                    'media' => null,
+                ]],
+            ],
+        ];
+    }
+
     private function toolSaveBookingData(array $args, BotSession $session): array
     {
         $engine = app(\App\Services\SunatBot\SunatBotEngine::class);
