@@ -175,6 +175,83 @@ class TelegramController extends Controller
      * rjk_ok → approved = 1 (hijau), rjk_no → approved = -1 (merah),
      * rjk_done → info saja. Status bisa diganti (approve ↔ disapprove).
      */
+    /**
+     * Notif "Complain baru" → tombol ⭐ Kirim link Google Review (dr. Yoga
+     * 2026-10-25). Dua langkah: cmp_rv → minta konfirmasi bahwa isi
+     * komplain memang KEPUASAN; cmp_rvok → kirim link review ke pengirim
+     * (Telegram kalau terhubung, kalau tidak via WA Gowa Kezia).
+     */
+    private function handleComplainReview(string $callbackId, int $chatId, int $messageId, string $aksi, int $complainId): void
+    {
+        $reviewer = (int) env('TELEGRAM_RUJUKAN_REVIEWER_CHAT_ID', 5231471981);
+        if ($chatId !== $reviewer) {
+            $this->tg->answerCallbackQuery($callbackId, 'Tidak diizinkan.', true);
+            return;
+        }
+        $c = \DB::table('complains')->where('id', $complainId)->first(['id', 'no_telp', 'complain', 'review_link_sent_at']);
+        if (!$c) {
+            $this->tg->answerCallbackQuery($callbackId, 'Komplain tidak ditemukan.', true);
+            return;
+        }
+        $setTombol = function (array $row) use ($chatId, $messageId) {
+            if ($messageId > 0) $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [$row]]);
+        };
+        $sudah = fn () => [['text' => '⭐ Link review terkirim ' . \Carbon\Carbon::parse($c->review_link_sent_at ?? now())->format('d/m H:i'), 'callback_data' => 'cmp_rvdone:' . $complainId]];
+
+        if ($c->review_link_sent_at) {
+            $this->tg->answerCallbackQuery($callbackId, 'Link review sudah pernah dikirim.');
+            $setTombol($sudah());
+            return;
+        }
+        if ($aksi === 'rvdone') { $this->tg->answerCallbackQuery($callbackId); return; }
+        if ($aksi === 'rvx') {
+            $this->tg->answerCallbackQuery($callbackId, 'Dibatalkan');
+            $setTombol([['text' => '⭐ Kirim link Google Review', 'callback_data' => 'cmp_rv:' . $complainId]]);
+            return;
+        }
+        if ($aksi === 'rv') {
+            $this->tg->answerCallbackQuery($callbackId, 'Pastikan isi komplain ini memang KEPUASAN/pujian.', true);
+            $setTombol([
+                ['text' => '✅ Ya, ini kepuasan — kirim', 'callback_data' => 'cmp_rvok:' . $complainId],
+                ['text' => '✖️ Batal', 'callback_data' => 'cmp_rvx:' . $complainId],
+            ]);
+            return;
+        }
+
+        // cmp_rvok → kirim link
+        $url  = (string) env('GOOGLE_REVIEW_JATIELOK_URL', 'https://bit.ly/3DInVOr');
+        $teks = "Terima kasih banyak atas masukan & doanya kak 🙏😊\n\n"
+              . "Kalau berkenan, bantu kami dengan memberi ulasan di Google ya kak ⭐⭐⭐⭐⭐\n{$url}\n\n"
+              . "Ulasan kakak sangat berarti untuk Klinik Jati Elok 💚";
+        $hp   = preg_replace('/\D+/', '', (string) $c->no_telp);
+        $alts = [$hp, str_starts_with($hp, '62') ? '0' . substr($hp, 2) : $hp];
+        $tgId = \DB::table('no_telps')->whereIn('no_telp', $alts)->whereNotNull('telegram_chat_id')->where('telegram_chat_id', '<>', '')->value('telegram_chat_id')
+             ?: \DB::table('pasiens')->whereIn('no_telp', $alts)->whereNotNull('telegram_chat_id')->where('telegram_chat_id', '<>', '')->value('telegram_chat_id');
+
+        $via = null;
+        if ($tgId) {
+            $res = $this->tg->sendMessage((int) $tgId, $teks, ['disable_web_page_preview' => false]);
+            if ($res['ok'] ?? false) $via = 'telegram';
+        }
+        if (!$via && $hp !== '') {
+            \DB::table('gowa_outbound_messages')->insert([
+                'kind' => 'complain_review_link', 'to_phone' => $hp, 'to_label' => 'complain #' . $complainId,
+                'body' => $teks, 'device_id' => 'kezia', 'status' => 'pending', 'attempts' => 0, 'max_attempts' => 3,
+                'scheduled_at' => now()->addSeconds(30), 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            $via = 'whatsapp';
+        }
+        if (!$via) {
+            $this->tg->answerCallbackQuery($callbackId, 'Gagal: nomor pengirim tidak valid.', true);
+            return;
+        }
+        \DB::table('complains')->where('id', $complainId)->update(['review_link_sent_at' => now()]);
+        $c->review_link_sent_at = now();
+        Log::info('COMPLAIN_REVIEW_LINK_SENT', ['complain_id' => $complainId, 'via' => $via]);
+        $this->tg->answerCallbackQuery($callbackId, 'Link review terkirim via ' . ($via === 'telegram' ? 'Telegram' : 'WhatsApp') . ' ✅');
+        $setTombol($sudah());
+    }
+
     private function handleRujukanApprove(string $callbackId, int $chatId, int $messageId, string $aksi, int $rujukanId): void
     {
         $reviewer = (int) env('TELEGRAM_RUJUKAN_REVIEWER_CHAT_ID', 5231471981);
@@ -230,6 +307,11 @@ class TelegramController extends Controller
 
         // Approve rujukan dari notifikasi RUJUKAN BARU (dikirim kezia,
         // RujukanTelegramNotifier). Hanya chat reviewer yg boleh.
+        if (preg_match('/^cmp_(rv|rvok|rvx|rvdone):(\d+)$/', $data, $m)) {
+            $this->handleComplainReview($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
+            return;
+        }
+
         if (preg_match('/^rjk_(ok|no|done):(\d+)$/', $data, $m)) {
             $this->handleRujukanApprove($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
             return;
