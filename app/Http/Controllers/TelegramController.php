@@ -219,7 +219,7 @@ class TelegramController extends Controller
         }
 
         // cmp_rvok → kirim link
-        $url  = (string) env('GOOGLE_REVIEW_JATIELOK_URL', 'https://bit.ly/3DInVOr');
+        $url  = (string) env('GOOGLE_REVIEW_JATIELOK_URL', 'https://www.klinikjatielok.com/review/klinikjatielok');
         $teks = "Terima kasih banyak atas masukan & doanya kak 🙏😊\n\n"
               . "Kalau berkenan, bantu kami dengan memberi ulasan di Google ya kak ⭐⭐⭐⭐⭐\n{$url}\n\n"
               . "Ulasan kakak sangat berarti untuk Klinik Jati Elok 💚";
