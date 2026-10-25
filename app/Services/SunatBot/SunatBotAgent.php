@@ -634,7 +634,7 @@ class SunatBotAgent
 Kamu adalah CS WhatsApp klinik sunat anak SunatBoy (Klinik Jati Elok, Tangerang).
 Bicaranya santai, ramah, natural — seperti staf admin manusia. Jawab langsung dari FAKTA di bawah, paraphrase bebas, JANGAN ubah angka/nama/detail teknis.
 
-📅 HARI INI: {$todayLabel} ({$todayStr}). ⛔ Pendaftaran/booking sunat online MINIMAL H-1 (paling cepat besok). Kalau customer minta sunat HARI INI, tetap panggil save_booking_data dgn tanggal hari ini — backend otomatis handoff ke admin manusia; JANGAN janjikan slot hari ini & JANGAN tolak sendiri. Kalau customer sebut tanggal tanpa tahun (mis. "5 juli"), ASUMSIKAN tahun sekarang. Kalau tanggal itu sudah lewat di tahun sekarang, ambil tahun DEPAN. JANGAN pernah guess ke tahun 2023 atau tahun lain.
+📅 HARI INI: {$todayLabel} ({$todayStr}). ⛔ Pendaftaran/booking sunat online MINIMAL H-1 (paling cepat besok). ⛔ JANGAN PERNAH menebak/mengisi tanggal sendiri: kalau customer belum menyebut tanggal/hari, TANYA dulu "Untuk tanggal berapa rencana sunatnya kak?" — jangan otomatis pakai besok. Kalau customer minta sunat HARI INI, tetap panggil save_booking_data dgn tanggal hari ini — backend otomatis handoff ke admin manusia; JANGAN janjikan slot hari ini & JANGAN tolak sendiri. Kalau customer sebut tanggal tanpa tahun (mis. "5 juli"), ASUMSIKAN tahun sekarang. Kalau tanggal itu sudah lewat di tahun sekarang, ambil tahun DEPAN. JANGAN pernah guess ke tahun 2023 atau tahun lain.
 
 ═══ 🚫 KATA TERLARANG (MUTLAK — JANGAN PERNAH DIPAKAI) 🚫 ═══
 
@@ -1507,6 +1507,24 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
     /**
      * @return array{0:array, 1:array} tuple [tool_result_for_llm, side_effect_for_engine]
      */
+    /**
+     * Apakah customer (pesan sekarang + ±6 pesan user terakhir) pernah menyebut
+     * tanggal/hari? Dipakai utk mencegah LLM mengarang tanggal booking.
+     */
+    private function customerMentionedDate(BotSession $session): bool
+    {
+        $texts = [(string) ($this->currentUserMessage ?? '')];
+        $hist = (array) ($session->agent_history ?? []);
+        foreach (array_slice(array_reverse($hist), 0, 12) as $h) {
+            if (($h['role'] ?? '') === 'user') $texts[] = (string) ($h['content'] ?? '');
+        }
+        $t = mb_strtolower(implode(' ', $texts));
+        $pola = '/\b(\d{1,2}\s*[\/\-.]\s*\d{1,2}|tgl|tanggal|tanggal\s*\d|\d{1,2}\s*(jan|feb|mar|apr|mei|jun|jul|agu|agt|sep|okt|nov|des)[a-z]*|'
+              . 'hari\s*ini|besok|lusa|minggu\s*depan|bulan\s*depan|pekan\s*depan|nanti\s*(sore|siang|malam|pagi)|'
+              . 'senin|selasa|rabu|kamis|jumat|jum\x27at|sabtu|minggu|ahad|libur(an)?\s*sekolah)\b/u';
+        return (bool) preg_match($pola, $t);
+    }
+
     private function executeTool(string $name, array $args, BotSession $session): array
     {
         switch ($name) {
@@ -1564,6 +1582,17 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                 // Cek SEBELUM toolSaveBookingData (yg bisa reset tanggal
                 // kalau jam hari ini sudah lewat).
                 $tglArg = trim((string) ($args['tanggal'] ?? ''));
+                // dr. Yoga 2026-10-25: JANGAN mengarang tanggal. Kalau
+                // customer belum pernah menyebut tanggal/hari sama sekali,
+                // buang arg tanggal → bot harus tanya "untuk tanggal berapa".
+                if ($tglArg !== '' && empty($session->getData('booking_tanggal')) && !$this->customerMentionedDate($session)) {
+                    Log::info('SUNAT_BOT_TANGGAL_DIKARANG_DIBUANG', ['phone' => $session->no_telp, 'tanggal' => $tglArg]);
+                    unset($args['tanggal'], $args['jam']);
+                    $tglArg = '';
+                    if (count(array_filter($args, fn ($v) => trim((string) $v) !== '')) === 0) {
+                        return [['ok' => false, 'note' => 'Customer BELUM menyebut tanggal. Tanggal TIDAK disimpan. Tanyakan dulu: "Untuk tanggal berapa rencana sunatnya kak?" (pendaftaran online minimal H-1). JANGAN menebak tanggal & JANGAN tawarkan jam dulu.'], []];
+                    }
+                }
                 $tglParsed = $tglArg !== '' ? app(\App\Services\SunatBot\SunatBotEngine::class)->parseBookingDate($tglArg) : null;
                 if ($tglParsed !== null && \App\Services\SunatBot\SunatBotEngine::isSameDayBooking($tglParsed->format('Y-m-d'))) {
                     $session->setData('booking_tanggal', $tglParsed->format('Y-m-d'));
