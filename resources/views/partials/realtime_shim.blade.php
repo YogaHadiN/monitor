@@ -5,16 +5,17 @@
     dgn KEY = PUSHER_APP_KEY diarahkan ke server Reverb sendiri (wss://HOST/app/KEY).
     Rollback cukup kosongkan REVERB_WS_HOST + kembalikan PUSHER_* di .env.
 --}}
-@if (env('REVERB_WS_HOST'))
+@if (env('REVERB_WS_HOST') && env('REVERB_APP_KEY'))
 <script>
 (function () {
     if (!window.Pusher || window.Pusher.__reverbShim) return;
-    var KEY = @json(env('PUSHER_APP_KEY')), HOST = @json(env('REVERB_WS_HOST'));
+    var KEY = @json(env('PUSHER_APP_KEY')), RKEY = @json(env('REVERB_APP_KEY')), HOST = @json(env('REVERB_WS_HOST'));
     var Orig = window.Pusher;
     window.Pusher = new Proxy(Orig, {
         construct: function (target, args) {
             var key = args[0], opts = Object.assign({}, args[1] || {});
-            if (key === KEY) {
+            if (key === KEY || key === RKEY) {
+                key = RKEY;
                 opts.wsHost = HOST; opts.wsPort = 443; opts.wssPort = 443;
                 opts.forceTLS = true; opts.enabledTransports = ['ws', 'wss'];
                 opts.disableStats = true; opts.cluster = opts.cluster || 'mt1';
