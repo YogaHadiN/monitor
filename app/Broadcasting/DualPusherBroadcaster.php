@@ -25,8 +25,13 @@ class DualPusherBroadcaster extends PusherBroadcaster
 
     public function broadcast(array $channels, $event, array $payload = [])
     {
+        $t = microtime(true);
         try {
             $this->secondary->broadcast($channels, $event, $payload);
+            $ms = (int) round((microtime(true) - $t) * 1000);
+            if ($ms > 1000) {
+                Log::warning('broadcast.reverb_slow', ['event' => $event, 'ms' => $ms]);
+            }
         } catch (\Throwable $e) {
             Log::warning('broadcast.reverb_fail', ['event' => $event, 'err' => $e->getMessage()]);
         }
