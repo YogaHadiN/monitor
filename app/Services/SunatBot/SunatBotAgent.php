@@ -2220,8 +2220,22 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         // Reject nama_orang_tua = "Rona" (nama admin bot). Kasus
         // 6281318081779 2026-08-26: agent hallucinate nama dari greeting.
         $botNames = ['rona', 'admin', 'admin sunat', 'sunatboy', 'bot', 'cs'];
+        // Placeholder/non-nama (auto-improve 2026-10-26: kasus ...0804
+        // 2026-10-25 nama_orang_tua="tidak ada" tersimpan + masuk
+        // leads_sunats). Buang supaya bot tetap tanya nama asli.
+        $placeholderNames = ['tidak ada', 'tdk ada', 'gak ada', 'ga ada', 'nggak ada', 'tidak tahu',
+            'belum', 'belum ada', '-', '--', 'n/a', 'na', 'none', 'null', 'unknown', 'anonim',
+            'kak', 'kakak', 'bunda', 'ibu', 'bapak', 'ayah', 'pengirim', 'customer'];
         if (isset($args['nama_orang_tua'])) {
             $namaLower = mb_strtolower(trim((string) $args['nama_orang_tua']));
+            if (in_array($namaLower, $placeholderNames, true)) {
+                Log::info('SUNAT_BOT_AGENT_HARGA_REJECT_PLACEHOLDER_NAME', [
+                    'phone' => (string) $session->no_telp,
+                    'nama'  => $args['nama_orang_tua'],
+                ]);
+                unset($args['nama_orang_tua']);
+                $namaLower = '';
+            }
             if (in_array($namaLower, $botNames, true)) {
                 Log::info('SUNAT_BOT_AGENT_HARGA_REJECT_BOT_NAME', [
                     'phone' => (string) $session->no_telp,
