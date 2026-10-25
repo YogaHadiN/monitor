@@ -27,6 +27,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Transisi Pusher → Reverb (2026-10-25)
+        \Illuminate\Support\Facades\Broadcast::extend('dual', function ($app, $config) {
+            $mgr = $app->make(\Illuminate\Broadcasting\BroadcastManager::class);
+            $conns = $app['config']['broadcasting.connections'];
+            return new \App\Broadcasting\DualPusherBroadcaster(
+                $mgr->pusher($conns[$config['primary']]),
+                $mgr->pusher($conns[$config['secondary']])
+            );
+        });
+
         if(env('APP_ENV') === 'production') {
             \URL::forceScheme('https');
         }
