@@ -188,7 +188,7 @@ class TelegramController extends Controller
             $this->tg->answerCallbackQuery($callbackId, 'Tidak diizinkan.', true);
             return;
         }
-        $c = \DB::table('complains')->where('id', $complainId)->first(['id', 'no_telp', 'complain', 'review_link_sent_at']);
+        $c = \DB::table('complains')->where('id', $complainId)->first(['id', 'no_telp', 'complain', 'review_link_sent_at', 'review_status', 'review_status_at']);
         if (!$c) {
             $this->tg->answerCallbackQuery($callbackId, 'Komplain tidak ditemukan.', true);
             return;
@@ -198,6 +198,49 @@ class TelegramController extends Controller
         };
         $sudah = fn () => [['text' => '⭐ Link review terkirim ' . \Carbon\Carbon::parse($c->review_link_sent_at ?? now())->format('d/m H:i'), 'callback_data' => 'cmp_rvdone:' . $complainId]];
 
+        $jamS = fn () => \Carbon\Carbon::parse($c->review_status_at ?? now())->format('d/m H:i');
+        $tombolKomplain = fn () => [
+            ['text' => '⚠️ KOMPLAIN (approved ' . $jamS() . ')', 'callback_data' => 'cmp_rvdone:' . $complainId],
+            ['text' => '↩️ Ubah', 'callback_data' => 'cmp_ubah:' . $complainId],
+        ];
+        $tombolKlasifikasi = [
+            ['text' => '⚠️ Approved complaint', 'callback_data' => 'cmp_ok:' . $complainId],
+            ['text' => '😊 Bukan komplain (pujian)', 'callback_data' => 'cmp_puji:' . $complainId],
+        ];
+        $tombolPuji = fn () => [
+            ['text' => '⭐ Kirim link Google Review', 'callback_data' => 'cmp_rv:' . $complainId],
+            ['text' => '↩️ Ubah', 'callback_data' => 'cmp_ubah:' . $complainId],
+        ];
+
+        // ---- Langkah 1: klasifikasi (2026-10-25) ----
+        if (in_array($aksi, ['ok', 'puji', 'ubah'], true)) {
+            if ($c->review_link_sent_at) {
+                $this->tg->answerCallbackQuery($callbackId, 'Link review sudah terkirim, status tidak bisa diubah.', true);
+                return;
+            }
+            $status = $aksi === 'ok' ? 1 : ($aksi === 'puji' ? -1 : null);
+            \DB::table('complains')->where('id', $complainId)->update([
+                'review_status' => $status, 'review_status_at' => $status === null ? null : now(),
+            ]);
+            $c->review_status = $status; $c->review_status_at = now();
+            Log::info('COMPLAIN_KLASIFIKASI', ['complain_id' => $complainId, 'status' => $status]);
+            $this->tg->answerCallbackQuery($callbackId, $status === 1 ? 'Ditandai KOMPLAIN ⚠️ — link review diblokir.' : ($status === -1 ? 'Ditandai bukan komplain 😊' : 'Status direset'));
+            $setTombol($status === 1 ? $tombolKomplain() : ($status === -1 ? $tombolPuji() : $tombolKlasifikasi));
+            return;
+        }
+
+        // ---- Langkah 2: link review HANYA kalau sudah ditandai pujian ----
+        if ((int) $c->review_status === 1) {
+            $this->tg->answerCallbackQuery($callbackId, 'Ini ditandai KOMPLAIN — link Google Review tidak boleh dikirim.', true);
+            $setTombol($tombolKomplain());
+            return;
+        }
+        if ((int) $c->review_status !== -1 && !$c->review_link_sent_at) {
+            $this->tg->answerCallbackQuery($callbackId, 'Tandai dulu: komplain atau bukan.', true);
+            $setTombol($tombolKlasifikasi);
+            return;
+        }
+
         if ($c->review_link_sent_at) {
             $this->tg->answerCallbackQuery($callbackId, 'Link review sudah pernah dikirim.');
             $setTombol($sudah());
@@ -206,7 +249,7 @@ class TelegramController extends Controller
         if ($aksi === 'rvdone') { $this->tg->answerCallbackQuery($callbackId); return; }
         if ($aksi === 'rvx') {
             $this->tg->answerCallbackQuery($callbackId, 'Dibatalkan');
-            $setTombol([['text' => '⭐ Kirim link Google Review', 'callback_data' => 'cmp_rv:' . $complainId]]);
+            $setTombol($tombolPuji());
             return;
         }
         if ($aksi === 'rv') {
@@ -307,7 +350,7 @@ class TelegramController extends Controller
 
         // Approve rujukan dari notifikasi RUJUKAN BARU (dikirim kezia,
         // RujukanTelegramNotifier). Hanya chat reviewer yg boleh.
-        if (preg_match('/^cmp_(rv|rvok|rvx|rvdone):(\d+)$/', $data, $m)) {
+        if (preg_match('/^cmp_(ok|puji|ubah|rv|rvok|rvx|rvdone):(\d+)$/', $data, $m)) {
             $this->handleComplainReview($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
             return;
         }
