@@ -170,7 +170,11 @@ class TelegramController extends Controller
         }
     }
 
-    /** Tombol "✅ Approve" rujukan → rujukans.approved 0 → 1 (dr. Yoga 2026-10-25). */
+    /**
+     * Tombol review rujukan di notifikasi RUJUKAN BARU (dr. Yoga 2026-10-25):
+     * rjk_ok → approved = 1 (hijau), rjk_no → approved = -1 (merah),
+     * rjk_done → info saja. Status bisa diganti (approve ↔ disapprove).
+     */
     private function handleRujukanApprove(string $callbackId, int $chatId, int $messageId, string $aksi, int $rujukanId): void
     {
         $reviewer = (int) env('TELEGRAM_RUJUKAN_REVIEWER_CHAT_ID', 5231471981);
@@ -186,22 +190,32 @@ class TelegramController extends Controller
             return;
         }
 
-        if ((int) $r->approved === 1) {
-            $jam = $r->approved_at ? \Carbon\Carbon::parse($r->approved_at)->format('d/m H:i') : '';
-            $this->tg->answerCallbackQuery($callbackId, "Sudah di-approve {$jam}");
+        $status = (int) $r->approved;
+        $jamAt  = $r->approved_at;
+        if ($aksi === 'done') {
+            $label = $status === 1 ? 'Sudah di-approve' : ($status === -1 ? 'Sudah di-disapprove' : 'Belum di-review');
+            $this->tg->answerCallbackQuery($callbackId, $label);
         } else {
-            \DB::table('rujukans')->where('id', $rujukanId)->where('approved', 0)->update([
-                'approved'            => 1,
-                'approved_at'         => now(),
+            $status = $aksi === 'ok' ? 1 : -1;
+            $jamAt  = now();
+            \DB::table('rujukans')->where('id', $rujukanId)->update([
+                'approved'            => $status,
+                'approved_at'         => $jamAt,
                 'approved_by_chat_id' => $chatId,
             ]);
-            Log::info('RUJUKAN_APPROVED', ['rujukan_id' => $rujukanId, 'chat_id' => $chatId]);
-            $this->tg->answerCallbackQuery($callbackId, 'Rujukan disetujui ✅');
+            Log::info('RUJUKAN_REVIEW', ['rujukan_id' => $rujukanId, 'status' => $status, 'chat_id' => $chatId]);
+            $this->tg->answerCallbackQuery($callbackId, $status === 1 ? 'Rujukan disetujui ✅' : 'Rujukan ditolak ❌');
         }
 
         if ($messageId > 0) {
+            $jam = $jamAt ? \Carbon\Carbon::parse($jamAt)->format('d/m H:i') : null;
             $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
-                ['text' => '✅ Approved ' . now()->format('d/m H:i'), 'callback_data' => 'rjk_done:' . $rujukanId],
+                $status === 1
+                    ? ['text' => '✅ APPROVED' . ($jam ? " {$jam}" : ''), 'callback_data' => 'rjk_done:' . $rujukanId]
+                    : ['text' => '✅ Approve', 'callback_data' => 'rjk_ok:' . $rujukanId],
+                $status === -1
+                    ? ['text' => '❌ DISAPPROVED' . ($jam ? " {$jam}" : ''), 'callback_data' => 'rjk_done:' . $rujukanId]
+                    : ['text' => '❌ Disapprove', 'callback_data' => 'rjk_no:' . $rujukanId],
             ]]]);
         }
     }
@@ -216,7 +230,7 @@ class TelegramController extends Controller
 
         // Approve rujukan dari notifikasi RUJUKAN BARU (dikirim kezia,
         // RujukanTelegramNotifier). Hanya chat reviewer yg boleh.
-        if (preg_match('/^rjk_(ok|done):(\d+)$/', $data, $m)) {
+        if (preg_match('/^rjk_(ok|no|done):(\d+)$/', $data, $m)) {
             $this->handleRujukanApprove($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
             return;
         }
