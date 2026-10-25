@@ -170,15 +170,58 @@ class TelegramController extends Controller
         }
     }
 
+    /** Tombol "✅ Approve" rujukan → rujukans.approved 0 → 1 (dr. Yoga 2026-10-25). */
+    private function handleRujukanApprove(string $callbackId, int $chatId, int $messageId, string $aksi, int $rujukanId): void
+    {
+        $reviewer = (int) env('TELEGRAM_RUJUKAN_REVIEWER_CHAT_ID', 5231471981);
+        if ($chatId !== $reviewer) {
+            $this->tg->answerCallbackQuery($callbackId, 'Tidak diizinkan.', true);
+            Log::warning('RUJUKAN_APPROVE_DITOLAK', ['chat_id' => $chatId, 'rujukan_id' => $rujukanId]);
+            return;
+        }
+
+        $r = \DB::table('rujukans')->where('id', $rujukanId)->first(['id', 'approved', 'approved_at']);
+        if (!$r) {
+            $this->tg->answerCallbackQuery($callbackId, 'Rujukan tidak ditemukan.', true);
+            return;
+        }
+
+        if ((int) $r->approved === 1) {
+            $jam = $r->approved_at ? \Carbon\Carbon::parse($r->approved_at)->format('d/m H:i') : '';
+            $this->tg->answerCallbackQuery($callbackId, "Sudah di-approve {$jam}");
+        } else {
+            \DB::table('rujukans')->where('id', $rujukanId)->where('approved', 0)->update([
+                'approved'            => 1,
+                'approved_at'         => now(),
+                'approved_by_chat_id' => $chatId,
+            ]);
+            Log::info('RUJUKAN_APPROVED', ['rujukan_id' => $rujukanId, 'chat_id' => $chatId]);
+            $this->tg->answerCallbackQuery($callbackId, 'Rujukan disetujui ✅');
+        }
+
+        if ($messageId > 0) {
+            $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
+                ['text' => '✅ Approved ' . now()->format('d/m H:i'), 'callback_data' => 'rjk_done:' . $rujukanId],
+            ]]]);
+        }
+    }
+
     private function handleCallbackQuery(array $cbq): void
     {
         $callbackId = (string) ($cbq['id'] ?? '');
         if ($callbackId === '') return;
 
-        $this->tg->answerCallbackQuery($callbackId);
-
         $chatId = (int) ($cbq['message']['chat']['id'] ?? 0);
         $data   = (string) ($cbq['data'] ?? '');
+
+        // Approve rujukan dari notifikasi RUJUKAN BARU (dikirim kezia,
+        // RujukanTelegramNotifier). Hanya chat reviewer yg boleh.
+        if (preg_match('/^rjk_(ok|done):(\d+)$/', $data, $m)) {
+            $this->handleRujukanApprove($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
+            return;
+        }
+
+        $this->tg->answerCallbackQuery($callbackId);
 
         Log::info('TELEGRAM_CALLBACK_QUERY', [
             'chat_id' => $chatId,
