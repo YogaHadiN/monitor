@@ -8421,7 +8421,13 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
                         ->sendText($this->no_telp, $text);
 
                     if (!($result['ok'] ?? false)) {
-                        Log::error('AUTO_REPLY_WATZAP_FAILED', $result);
+                        // wa_cutoff_active = WA bot sengaja dimatikan (pasien
+                        // dialihkan ke Telegram) -> bukan error, cukup info.
+                        if (($result['reason'] ?? null) === 'wa_cutoff_active') {
+                            Log::info('AUTO_REPLY_WATZAP_SKIPPED_CUTOFF', $result);
+                        } else {
+                            Log::error('AUTO_REPLY_WATZAP_FAILED', $result);
+                        }
                     } else {
                         $this->logOutboundAutoReply($text);
                     }
