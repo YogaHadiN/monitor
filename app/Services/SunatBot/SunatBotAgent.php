@@ -437,7 +437,20 @@ class SunatBotAgent
                         if ($v !== null && $v !== '') { $hargaAktif = true; break; }
                     }
                 }
-                if ($toolName === 'save_booking_data' && $hargaAktif && !$session->getData('booking_started')) {
+                // dr. Yoga 2026-10-26: customer minta sunat HARI INI saat flow harga
+                // → jangan di-block; teruskan ke save_booking_data supaya backend
+                // handoff H-0 ke admin (kasus …1909, 24 Okt: "Hari ini bisa" diabaikan).
+                $isSameDayReq = false;
+                if ($toolName === 'save_booking_data') {
+                    $tg = trim((string) ($args['tanggal'] ?? ''));
+                    if ($tg !== '') {
+                        try {
+                            $tp = app(\App\Services\SunatBot\SunatBotEngine::class)->parseBookingDate($tg);
+                            $isSameDayReq = $tp !== null && \App\Services\SunatBot\SunatBotEngine::isSameDayBooking($tp->format('Y-m-d'));
+                        } catch (\Throwable $e) {}
+                    }
+                }
+                if ($toolName === 'save_booking_data' && $hargaAktif && !$session->getData('booking_started') && !$isSameDayReq) {
                     Log::info('SUNAT_BOT_AGENT_BLOCK_BOOKING_DURING_HARGA', ['phone' => $session->no_telp]);
                     $toolResult = [
                         'ok'    => false,
@@ -634,7 +647,7 @@ class SunatBotAgent
 Kamu adalah CS WhatsApp klinik sunat anak SunatBoy (Klinik Jati Elok, Tangerang).
 Bicaranya santai, ramah, natural — seperti staf admin manusia. Jawab langsung dari FAKTA di bawah, paraphrase bebas, JANGAN ubah angka/nama/detail teknis.
 
-📅 HARI INI: {$todayLabel} ({$todayStr}). ⛔ Pendaftaran/booking sunat online MINIMAL H-1 (paling cepat besok). ⛔ JANGAN PERNAH menebak/mengisi tanggal sendiri: kalau customer belum menyebut tanggal/hari, TANYA dulu "Untuk tanggal berapa rencana sunatnya kak?" — jangan otomatis pakai besok. Kalau customer minta sunat HARI INI, tetap panggil save_booking_data dgn tanggal hari ini — backend otomatis handoff ke admin manusia; JANGAN janjikan slot hari ini & JANGAN tolak sendiri. Kalau customer sebut tanggal tanpa tahun (mis. "5 juli"), ASUMSIKAN tahun sekarang. Kalau tanggal itu sudah lewat di tahun sekarang, ambil tahun DEPAN. JANGAN pernah guess ke tahun 2023 atau tahun lain.
+📅 HARI INI: {$todayLabel} ({$todayStr}). ⛔ Pendaftaran/booking sunat online MINIMAL H-1 (paling cepat besok). ⛔ JANGAN PERNAH menebak/mengisi tanggal sendiri: kalau customer belum menyebut tanggal/hari, TANYA dulu "Untuk tanggal berapa rencana sunatnya kak?" — jangan otomatis pakai besok. Kalau customer minta/bertanya sunat HARI INI (mis. "hari ini bisa?"), di flow APA PUN (termasuk sedang tanya harga), LANGSUNG panggil save_booking_data dgn tanggal hari ini — backend otomatis handoff ke admin manusia; JANGAN abaikan, JANGAN lanjut tanya usia/postur dulu, JANGAN janjikan slot hari ini & JANGAN tolak sendiri. Kalau customer sebut tanggal tanpa tahun (mis. "5 juli"), ASUMSIKAN tahun sekarang. Kalau tanggal itu sudah lewat di tahun sekarang, ambil tahun DEPAN. JANGAN pernah guess ke tahun 2023 atau tahun lain.
 
 ═══ 🚫 KATA TERLARANG (MUTLAK — JANGAN PERNAH DIPAKAI) 🚫 ═══
 
