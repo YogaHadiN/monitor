@@ -240,6 +240,30 @@ class SunatBotAgent
                     }
                 }
 
+                // Guard (auto-improve 2026-10-29, kasus ...5478 2026-10-28):
+                // customer cuma tanya harga + usia + BB, agent kirim template
+                // bius + video (6 bubble) yg tidak ditanya sebelum harga.
+                // pertanyaan_jarum_bius hanya boleh kalau pesan customer
+                // memang menyinggung bius/suntik/sakit.
+                if ($toolName === 'get_intent_response'
+                    && trim((string) ($args['slug'] ?? '')) === 'pertanyaan_jarum_bius'
+                    && !preg_match('/bius|suntik|jarum|sakit|anestesi|injeksi|nyeri|perih|takut|kebal|ngilu/u', mb_strtolower((string) $this->currentUserMessage))) {
+                    Log::info('SUNAT_BOT_AGENT_BLOCK_UNASKED_BIUS', [
+                        'phone' => $session->no_telp,
+                        'msg'   => mb_substr((string) $this->currentUserMessage, 0, 120),
+                    ]);
+                    $toolResult = [
+                        'ok'    => false,
+                        'error' => 'Customer TIDAK menanyakan bius/suntik/sakit di pesan ini. JANGAN kirim info bius. Jawab hanya yang customer tanya (mis. harga -> opener 2 harga + lanjut HARGA flow).',
+                    ];
+                    $messages[] = [
+                        'role'         => 'tool',
+                        'tool_call_id' => $callId,
+                        'content'      => json_encode($toolResult, JSON_UNESCAPED_UNICODE),
+                    ];
+                    continue;
+                }
+
                 // Dedupe CROSS-TURN: kalau slug sudah pernah dirender
                 // di session (persist di collected_data._slugs_shown),
                 // block. LLM sering re-call pertanyaan_metode dst di
@@ -895,7 +919,7 @@ Executor engine akan REJECT tool call yang salah flow (mis. save_harga_data saat
 Angka harga HANYA muncul dari tool `send_harga_quote` (template quote_harga_paket). Kamu JANGAN PERNAH tebak atau sebut angka sendiri.
 
 📋 FIELD WAJIB TERKUMPUL sebelum kasih quote (5 field):
-1. `nama_orang_tua`       — nama depan ortu / pengirim pesan (contoh "Yeni")
+1. `nama_orang_tua`       — nama depan ortu / pengirim pesan (contoh "Yeni"). Kalau customer balik tanya "nama anak atau nama ayah/ibunya?" → JAWAB jelas: "Nama kakak (orang tua) ya kak 🙏" — jangan cuma ulang pertanyaan yg sama.
 2. `usia_tahun` + `usia_bulan` — angka terpisah. "7 tahun" → usia_tahun=7, usia_bulan=0. "8 bulan" → usia_tahun=0, usia_bulan=8. "3 tahun 10 bulan" → usia_tahun=3, usia_bulan=10.
 3. `indikasi_khitan`      — keluhan medis atau "tidak ada"
 4. `postur_tubuh`         — "gemuk" / "tidak gemuk" / "normal" (gantiin BB — ini yg dipakai utk risk assessment)
@@ -2873,7 +2897,8 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         ]);
 
         return [
-            ['ok' => true, 'bubbles' => count($bubbles), 'slug' => $quoteSlug],
+            ['ok' => true, 'bubbles' => count($bubbles), 'slug' => $quoteSlug,
+             'note' => 'Bundle quote sudah terkirim lengkap dan SUDAH ditutup pertanyaan lanjutan. Output text KOSONG di turn ini - JANGAN tambah ringkasan biaya / penutup / pertanyaan lagi (jadi dobel).'],
             $bubbles,
             false,
         ];
