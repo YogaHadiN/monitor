@@ -75,6 +75,13 @@ class TelegramController extends Controller
 
         $tgUser = $this->touchUser($chatId, $msg['from'] ?? []);
 
+        // Reviewer sedang diminta alasan disapprove rujukan → pesan ini = alasannya.
+        $pendingRjk = \Cache::get('rjk_alasan:' . $chatId);
+        if ($pendingRjk && isset($msg['text']) && !str_starts_with(trim((string) $msg['text']), '/')) {
+            $this->simpanAlasanDisapprove($chatId, (array) $pendingRjk, trim((string) $msg['text']));
+            return;
+        }
+
         // Prioritas: kalau user tap tombol "Kirim Nomor HP", Telegram
         // kirim update dgn message.contact — handle dulu.
         if (isset($msg['contact'])) {
@@ -315,6 +322,21 @@ class TelegramController extends Controller
         if ($aksi === 'done') {
             $label = $status === 1 ? 'Sudah di-approve' : ($status === -1 ? 'Sudah di-disapprove' : 'Belum di-review');
             $this->tg->answerCallbackQuery($callbackId, $label);
+        } elseif ($aksi === 'no') {
+            // Disapprove: tanya alasan dulu (dr. Yoga 2026-10-29). Status baru disimpan
+            // setelah alasan dibalas, lalu alasan dikirim ke dokter pemeriksa via WA.
+            \Cache::put('rjk_alasan:' . $chatId, ['rujukan_id' => $rujukanId, 'message_id' => $messageId], now()->addHour());
+            $this->tg->answerCallbackQuery($callbackId, 'Tulis alasan disapprove');
+            $nama = \DB::table('rujukans as r')->join('periksas as p', 'p.id', '=', 'r.periksa_id')->join('pasiens as ps', 'ps.id', '=', 'p.pasien_id')
+                ->where('r.id', $rujukanId)->value('ps.nama');
+            $nama = $nama ? $this->mdx($nama) : null;
+            $this->tg->sendMessage($chatId,
+                "✍️ Alasan *disapprove* rujukan " . ($nama ? "*{$nama}*" : "#{$rujukanId}") . "?\n\n"
+                . "Balas pesan ini dengan alasannya — akan dikirim ke dokter pemeriksa via WhatsApp untuk diperbaiki.\n"
+                . "Ketik *batal* untuk membatalkan.",
+                ['parse_mode' => 'Markdown', 'reply_markup' => ['force_reply' => true, 'input_field_placeholder' => 'Alasan disapprove…']]
+            );
+            return;
         } else {
             $status = $aksi === 'ok' ? 1 : -1;
             $jamAt  = now();
@@ -338,6 +360,91 @@ class TelegramController extends Controller
                     : ['text' => '❌ Disapprove', 'callback_data' => 'rjk_no:' . $rujukanId],
             ]]]);
         }
+    }
+
+    /**
+     * Simpan alasan disapprove rujukan lalu kirim ke dokter pemeriksa via WA
+     * (gowa_outbound_messages, device 'atika'). Dipanggil dari handleMessage
+     * saat reviewer membalas pertanyaan alasan.
+     */
+    private function simpanAlasanDisapprove(int $chatId, array $pending, string $alasan): void
+    {
+        $rujukanId = (int) ($pending['rujukan_id'] ?? 0);
+        $messageId = (int) ($pending['message_id'] ?? 0);
+
+        if (in_array(mb_strtolower($alasan), ['batal', 'cancel', 'batalkan'], true)) {
+            \Cache::forget('rjk_alasan:' . $chatId);
+            $this->tg->sendMessage($chatId, 'Disapprove dibatalkan. Status rujukan tidak diubah.');
+            return;
+        }
+        if (mb_strlen($alasan) < 3) {
+            $this->tg->sendMessage($chatId, 'Alasannya terlalu pendek. Tulis alasan disapprove, atau ketik *batal*.', ['parse_mode' => 'Markdown']);
+            return;
+        }
+
+        $d = \DB::table('rujukans as r')
+            ->join('periksas as p', 'p.id', '=', 'r.periksa_id')
+            ->join('pasiens as ps', 'ps.id', '=', 'p.pasien_id')
+            ->leftJoin('stafs as s', 's.id', '=', 'p.staf_id')
+            ->leftJoin('asuransis as a', 'a.id', '=', 'p.asuransi_id')
+            ->leftJoin('diagnosas as dg', 'dg.id', '=', 'r.diagnosa_id')
+            ->leftJoin('tujuan_rujuks as tr', 'tr.id', '=', 'r.tujuan_rujuk_id')
+            ->leftJoin('rumah_sakits as rs', 'rs.id', '=', 'r.rumah_sakit_id')
+            ->where('r.id', $rujukanId)
+            ->first(['r.id', 'r.periksa_id', 'p.tanggal', 'ps.id as rm', 'ps.nama as pasien', 's.nama as dokter',
+                     's.no_hp', 's.no_telp', 'a.nama as asuransi', 'dg.diagnosa', 'tr.tujuan_rujuk', 'rs.nama as rs']);
+        \Cache::forget('rjk_alasan:' . $chatId);
+        if (!$d) {
+            $this->tg->sendMessage($chatId, 'Rujukan tidak ditemukan.');
+            return;
+        }
+
+        \DB::table('rujukans')->where('id', $rujukanId)->update([
+            'approved' => -1, 'approved_at' => now(), 'approved_by_chat_id' => $chatId, 'disapprove_reason' => $alasan,
+        ]);
+        Log::info('RUJUKAN_REVIEW', ['rujukan_id' => $rujukanId, 'status' => -1, 'chat_id' => $chatId, 'alasan' => true]);
+
+        if ($messageId > 0) {
+            $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
+                ['text' => '✅ Approve', 'callback_data' => 'rjk_ok:' . $rujukanId],
+                ['text' => '❌ DISAPPROVED ' . now()->format('d/m H:i'), 'callback_data' => 'rjk_done:' . $rujukanId],
+            ]]]);
+        }
+
+        $hp = preg_replace('/\D+/', '', (string) ($d->no_hp ?: $d->no_telp));
+        if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
+        if ($hp === '' || strlen($hp) < 10) {
+            $this->tg->sendMessage($chatId, "❌ Rujukan ditolak & alasan disimpan, tapi *nomor WA " . $this->mdx((string) $d->dokter) . " belum ada* di data staf — alasan tidak terkirim.", ['parse_mode' => 'Markdown']);
+            return;
+        }
+
+        $tgl  = $d->tanggal ? \Carbon\Carbon::parse($d->tanggal)->format('d/m/Y') : '-';
+        $body = "Halo {$d->dokter} 🙏\n\n"
+              . "Rujukan berikut *belum disetujui* oleh dr. Yoga dan mohon diperbaiki pemeriksaannya:\n\n"
+              . "👤 {$d->pasien} (RM {$d->rm}) · " . ($d->asuransi ?: '-') . "\n"
+              . "📅 Tgl periksa: {$tgl}\n"
+              . "🩺 Diagnosa: " . ($d->diagnosa ?: '-') . "\n"
+              . "🏥 Tujuan: " . trim(($d->tujuan_rujuk ?: '-') . ($d->rs ? " → {$d->rs}" : '')) . "\n\n"
+              . "❗ *Alasan:* {$alasan}\n\n"
+              . "Perbaiki pemeriksaan: https://www.kezia.id/periksas/{$d->periksa_id}\n"
+              . "Rujukan: https://www.kezia.id/rujukans/{$d->id}/edit\n\n"
+              . "Terima kasih dok 🙏";
+
+        \DB::table('gowa_outbound_messages')->insert([
+            'kind' => 'rujukan_disapprove', 'to_phone' => $hp, 'to_label' => 'rujukan #' . $rujukanId . ' ' . $d->dokter,
+            'body' => $body, 'device_id' => 'atika', 'status' => 'pending', 'attempts' => 0, 'max_attempts' => 3,
+            'scheduled_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        \DB::table('rujukans')->where('id', $rujukanId)->update(['disapprove_notified_at' => now()]);
+
+        $this->tg->sendMessage($chatId,
+            "❌ Rujukan *" . $this->mdx($d->pasien) . "* ditolak.\nAlasan dikirim ke *" . $this->mdx((string) $d->dokter) . "* via WhatsApp (Gowa Atika) dalam ±1 menit.",
+            ['parse_mode' => 'Markdown']);
+    }
+
+    private function mdx(string $t): string
+    {
+        return str_replace(['*', '_', '`', '['], '', $t);
     }
 
     private function handleCallbackQuery(array $cbq): void
