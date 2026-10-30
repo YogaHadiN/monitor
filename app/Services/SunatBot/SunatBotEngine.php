@@ -106,6 +106,7 @@ class SunatBotEngine
             'cek darah', 'dokter umum', 'dokter gigi', 'gigi', 'kulit',
             'vaksin', 'imunisasi', 'mobile jkn', 'mobile-jkn',
             'jkn', 'obat', 'resep',
+            'rontgen', 'ronsen', 'rongsen', 'rontgent', 'roentgen', 'x-ray', 'xray', 'x ray', 'thorax', 'torax',
         ];
         $lower = mb_strtolower(trim($message));
         if ($lower === '') return false;
@@ -2300,7 +2301,8 @@ class SunatBotEngine
         // sunat. Biarkan agent yang handle (route ke redirect).
         $nonSunatKw = ['usg', 'kandungan', 'kehamilan', 'hamil', 'lab',
             'cek darah', 'dokter umum', 'gigi', 'kulit', 'vaksin',
-            'imunisasi', 'mobile jkn', 'mobile-jkn', 'obat', 'resep'];
+            'imunisasi', 'mobile jkn', 'mobile-jkn', 'obat', 'resep',
+            'rontgen', 'ronsen', 'rongsen', 'rontgent', 'roentgen', 'x-ray', 'xray', 'x ray', 'thorax', 'torax'];
         foreach ($nonSunatKw as $kw) {
             if (str_contains($msgLower, $kw)) {
                 return false;

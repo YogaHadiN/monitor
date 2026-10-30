@@ -56,6 +56,8 @@ class SunatBotAgent
         'cek darah', 'dokter umum', 'gigi', 'kulit',
         'vaksin', 'imunisasi', 'mobile jkn', 'mobile-jkn',
         'jkn', 'obat', 'resep',
+        // 2026-10-31: rontgen/x-ray (kasus …5830 "ada rongsen")
+        'rontgen', 'ronsen', 'rongsen', 'rontgent', 'roentgen', 'x-ray', 'xray', 'x ray', 'thorax', 'torax',
     ];
     private const SUNAT_KEYWORDS = [
         'sunat', 'khitan', 'sirkumsis', 'circumcis',
@@ -365,6 +367,10 @@ class SunatBotAgent
                         'surat sakit', 'surat sehat', 'surat keterangan',
                         'penyakit dalam', 'jantung', 'saraf', 'mata',
                         'tht', 'jiwa', 'gizi',
+                        // 2026-10-31: kasus …5830 "ada rongsen" → redirect di-block,
+                        // bot malah kirim alamat+maps 2x tanpa jawab pertanyaan.
+                        'rontgen', 'ronsen', 'rongsen', 'rontgent', 'roentgen',
+                        'x-ray', 'xray', 'x ray', 'thorax', 'torax',
                     ];
                     $reasonMentionsHarga = false;
                     foreach ($hargaKw as $kw) { if (str_contains($reason, $kw)) { $reasonMentionsHarga = true; break; } }
