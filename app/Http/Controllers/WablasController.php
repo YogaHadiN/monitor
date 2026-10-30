@@ -6484,10 +6484,19 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             // ter-notif panggil berikutnya. Fallback: hard-delete semua
             // antrian aktif hari ini utk no_telp ini (ignore sudah_hadir).
             $todayStr = \Carbon\Carbon::now('Asia/Jakarta')->toDateString();
+            // Hanya antrian yg BELUM diperiksa (pra-pemeriksaan). Antrian yg
+            // antriable-nya sudah Periksa/Kasir/Apotek = kunjungan selesai /
+            // sedang diproses; menghapusnya = force delete periksas (ditolak
+            // trigger DB) dan melanggar aturan "pasien hadir tidak dihapus".
             $lingering = \App\Models\Antrian::with('antriable')
                 ->whereDate('created_at', $todayStr)
                 ->where('no_telp', $this->no_telp)
                 ->whereNull('deleted_at')
+                ->whereIn('antriable_type', [
+                    'App\Models\Antrian',
+                    'App\Models\AntrianPeriksa',
+                    'App\Models\AntrianPoli',
+                ])
                 ->get();
 
             $deletedNames = [];
