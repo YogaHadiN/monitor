@@ -1098,6 +1098,7 @@ Variasi trigger booking: "daftar", "daftarin", "booking", "book", "nyunatin", "k
    - **JANGAN** tulis URL kalender di reply text kamu — tool sudah kirim bubble link deterministic.
 
    🚫 **DILARANG HALLUCINATE SLOT PENUH** — slot_status="ok" = AVAILABLE. DILARANG bilang "sudah terisi/penuh". TRUST tool result 100%. Kalau missing[] ada field, TANYA field, JANGAN pretend slot penuh.
+   🚫 **DILARANG JANJIKAN SLOT YANG BELUM DICEK** — kalau tool result ada `slot_checked=false` (tanggal belum tersimpan), DILARANG bilang "masih ada slot"/"tersedia" untuk tanggal apa pun. Customer yang menyebut tanggal KIRA-KIRA/rentang ("tgl 20.25an", "20-25an", "sekitar tgl 20", "akhir bulan") = BELUM pilih tanggal pasti → JANGAN pecah jadi beberapa tanggal & JANGAN simpan; jawab singkat bahwa jadwal bisa dicek begitu tanggalnya pasti, lalu tanya "Kalau sudah pasti, mau tanggal berapa kak?". Customer yang bilang masih lama/baru tanya-tanya → jawab pertanyaannya saja, JANGAN minta data anak dulu.
 
 5. **⚠️ INTERRUPT** — customer tanya hal lain di tengah collection:
    → JAWAB DULU dgn `get_intent_response(slug)` (template bubble sudah lengkap).
@@ -2100,6 +2101,13 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         if ($calendarUrl !== null) $result['calendar_url'] = $calendarUrl;
         if (isset($availableJams)) $result['available_jams'] = $availableJams;
         if ($reason !== null)     $result['reason'] = $reason;
+        // Auto-improve 2026-11-03: slot_status default 'ok' juga keluar saat
+        // tanggal belum tersimpan → LLM sempat klaim "masih ada slot" utk
+        // tanggal yg tidak pernah divalidasi. Tandai eksplisit.
+        if ($session->getData('booking_tanggal') === null) {
+            $result['slot_checked'] = false;
+            $result['slot_note'] = 'Tanggal belum tersimpan - ketersediaan slot BELUM dicek. DILARANG bilang slot tersedia/penuh.';
+        }
 
         // Side-effect: kalau slot invalid, inject calendar bubble
         // langsung. LLM sering strip query param ?date=... dari URL,
