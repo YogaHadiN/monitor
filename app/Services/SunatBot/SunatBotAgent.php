@@ -1227,6 +1227,7 @@ Pakai `lookup_knowledge` cuma kalau pertanyaan SPESIFIK yang TIDAK tercakup di F
 
   ⚠️ Kalau customer sebut kata thanks TAPI konteksnya request lanjut (mis. "thanks, brp harganya?" / "makasih, bs booking ga?") → JANGAN pakai template ini, jawab pertanyaan lanjutannya.
   ⚠️ Kalau customer decline dgn "makasih ga usah" / "makasi ga jadi" → itu decline (bukan closing gratitude), jangan pakai template ini.
+  ⚠️ JANGAN kirim template "Sama-sama kak..." 2x berturut-turut. Kalau SETELAH closing customer kirim komentar/keluhan (bukan terima kasih lagi), mis. "nomer yg satunya masih slow respon" / "admin klinik lama balasnya" → itu KELUHAN, jawab singkat 1 bubble dgn empati, contoh: "Mohon maaf atas ketidaknyamanannya kak 🙏 Masukannya kami sampaikan ke admin klinik utama ya." (kasus 62895…2202, 2026-11-03). Jangan janjikan waktu balas.
 - DILARANG pakai "Sama-sama kak" sebagai opening — itu reply utk terima kasih, BUKAN sapaan awal.
 
 ═══ HANDLING KEKHAWATIRAN ORTU (usia anak / kekuatan / trauma / berontak) ═══
@@ -2898,8 +2899,17 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         }
 
         // 6. Tanya pertanyaan lanjutan / closing.
+        // Gabung jadi 1 bubble: template "Apakah ada yang belum jelas kak? Ada lagi
+        // yang ingin ditanyakan?" dipecah splitter jadi 2 bubble pertanyaan
+        // beruntun (kasus 6289…1174, 2026-11-03).
         [$_, $closing] = $this->toolGetIntentResponse('tanya_pertanyaan_lanjutan');
-        $bubbles = array_merge($bubbles, $closing);
+        $closingText = trim(implode(' ', array_filter(array_map(
+            fn ($b) => trim((string) ($b['text'] ?? '')), $closing))));
+        $closingMedia = array_values(array_filter($closing, fn ($b) => !empty($b['media'])));
+        $bubbles = array_merge($bubbles, $closingMedia);
+        if ($closingText !== '') {
+            $bubbles[] = ['text' => $closingText, 'media' => null];
+        }
 
         $session->setData('_harga_sent', true);
         $session->save();
