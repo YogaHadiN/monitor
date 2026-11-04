@@ -7,6 +7,33 @@ use Illuminate\Support\Facades\Log;
 
 class WatzapService
 {
+    /**
+     * Kirim teks via Watzap TANPA prioritas Telegram & TANPA WA cutoff.
+     * Khusus auto-reply pengalihan WA → Telegram (dr. Yoga 2026-11-04).
+     * Hanya valid dalam jendela 24 jam setelah pesan masuk (aturan Meta).
+     */
+    public function sendTextDirect(string $phone, string $message): array
+    {
+        $phone = $this->normalizePhone($phone);
+        $message = trim($message);
+        if ($phone === '' || $message === '') {
+            return ['ok' => false, 'reason' => 'invalid_phone_or_message'];
+        }
+        $response = Http::acceptJson()->timeout(30)->post('https://api.watzap.id/v1/waba_send_message', [
+            'api_key'     => env('WATZAP_TOKEN'),
+            'phone_no'    => $phone,
+            'message'     => $message,
+            'apps_source' => null,
+        ]);
+        $resp = $this->safeJson($response->body());
+        $ok = $response->ok();
+        if (is_array($resp)) {
+            if (array_key_exists('status', $resp) && (string) $resp['status'] !== '200') $ok = false;
+            if (array_key_exists('ack', $resp) && strtolower((string) $resp['ack']) === 'failure') $ok = false;
+        }
+        return ['ok' => $ok, 'status' => $response->status(), 'resp' => $resp];
+    }
+
     public function sendText(string $phone, string $message): array
     {
         $phone = $this->normalizePhone($phone);

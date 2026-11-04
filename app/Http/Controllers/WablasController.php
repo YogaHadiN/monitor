@@ -664,6 +664,16 @@ class WablasController extends Controller
                 ]);
             }
 
+            // WA nomor klinik tidak dibalas lagi → auto-reply arahkan ke Telegram
+            // (delay acak 1–5 mnt, 1 WA/menit global, 1x/nomor/6 jam). dr. Yoga 2026-11-04.
+            if (($this->provider ?? 'wablas') !== 'telegram' && waCutoffActive()) {
+                try {
+                    \App\Jobs\WaRedirectTelegramReply::dispatchUntuk((string) $this->no_telp, (int) optional($this->inbound_message)->id);
+                } catch (\Throwable $e) {
+                    \Log::warning('WA_REDIRECT_TG_DISPATCH_FAIL', ['err' => $e->getMessage()]);
+                }
+            }
+
             // Sunat follow-up session detect — bila pesan inbound mengandung
             // kata kunci "sunat"/"khitan" dan belum ada session aktif untuk
             // nomor ini, buat session baru + 7 baris follow-up terjadwal
