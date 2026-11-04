@@ -90,7 +90,8 @@ class WaRedirectTelegramReply implements ShouldQueue
                 Log::warning('WA_REDIRECT_TG_LOG_FAIL', ['err' => $e->getMessage()]);
             }
         } else {
-            // Jangan retry (hindari spam); cukup log.
+            // Jangan retry (hindari spam); cukup log. Buka lagi kuota 6 jam supaya pesan berikutnya dicoba lagi.
+            Cache::forget('wa_redirect_tg:' . $this->phone);
             Log::warning('WA_REDIRECT_TG_GAGAL', ['phone' => $this->phone, 'status' => $res['status'] ?? null, 'resp' => $res['resp'] ?? ($res['reason'] ?? null)]);
         }
     }
