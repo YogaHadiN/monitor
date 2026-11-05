@@ -106,6 +106,9 @@ class WatzapController extends Controller
             ], 422);
         }
 
+        // Terakhir kontak ke klinik via WhatsApp (Meta/Watzap) — dr. Yoga 2026-11-05
+        \App\Support\KontakTerakhir::catat((string) $normalized['phone'], null, 'watzap');
+
         // Trigger lama (inbound WA → send PDF) DINONAKTIFKAN per
         // instruksi dr. Yoga 2026-10-11. Pengiriman PDF rujukan BPJS
         // sekarang via Telegram daily batch jam 7 pagi — lihat command

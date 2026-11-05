@@ -27,7 +27,7 @@ class KontakTerakhir
                 return;
             }
             // Maks 1 tulis / 60 dtk per nomor / chat (hemat DB saat chat beruntun)
-            $key = 'kontak_terakhir:' . ($phone !== '' ? $phone : 'tg' . $chat);
+            $key = 'kontak_terakhir:' . $channel . ':' . ($phone !== '' ? $phone : 'tg' . $chat);
             if (!Cache::add($key, 1, 60)) {
                 return;
             }
@@ -39,7 +39,10 @@ class KontakTerakhir
             } else {
                 $q->where('telegram_chat_id', $chat);
             }
-            $q->update(['terakhir_kontak_at' => now()]);
+            // Kolom per platform (dr. Yoga 2026-11-05): telegram → terakhir_kontak_telegram_at,
+            // WhatsApp (watzap/Meta & gowa) → terakhir_kontak_whatsapp_at. terakhir_kontak_at = paling akhir semua.
+            $kolom = $channel === 'telegram' ? 'terakhir_kontak_telegram_at' : 'terakhir_kontak_whatsapp_at';
+            $q->update([$kolom => now(), 'terakhir_kontak_at' => now()]);
         } catch (\Throwable $e) {
             Log::warning('KONTAK_TERAKHIR_FAIL', ['channel' => $channel, 'err' => $e->getMessage()]);
         }
