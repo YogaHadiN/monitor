@@ -211,13 +211,9 @@ class Antrian extends Model
         // Sisa dihitung dari jarak antrian latest dipanggil ke user.
         // Per instruksi dr. Yoga 2026-09-18. Auto-exclude antrian yg
         // stuck di dokter lain (tidak di jalur user).
-        $latestCalledId = (int) self::whereDate('created_at', $this->created_at)
-            ->where('id', '<', $this->id)
-            ->where('dipanggil_pemeriksa', 1)
-            ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
-            ->whereNull('deleted_at')
-            ->max('id');
-
+        // dr. Yoga 2026-11-05: tidak lagi dipotong dari "antrian terakhir dipanggil"
+        // (pemanggilan antar ruangan bisa tidak urut → sisa salah, mis. 7 jadi 1).
+        // Hitung semua pre-periksa di depan, kecuali dipanggil=1 + sudah hadir.
         $q = self::whereDate('created_at', $this->created_at)
             ->where('id', '<', $this->id)
             ->whereIn('antriable_type', [
@@ -226,10 +222,11 @@ class Antrian extends Model
                 'App\\Models\\AntrianPeriksa',
             ])
             ->where('tipe_konsultasi_id', $this->tipe_konsultasi_id)
-            ->whereNull('deleted_at');
-        if ($latestCalledId > 0) {
-            $q->where('id', '>=', $latestCalledId);
-        }
+            ->whereNull('deleted_at')
+            ->where(function ($w) {
+                $w->where('dipanggil_pemeriksa', 0)->orWhereNull('dipanggil_pemeriksa')
+                  ->orWhere('sudah_hadir_di_klinik', 0)->orWhereNull('sudah_hadir_di_klinik');
+            });
         return (int) $q->count();
     }
 
