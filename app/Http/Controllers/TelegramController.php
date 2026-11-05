@@ -48,6 +48,16 @@ class TelegramController extends Controller
 
         $update = $request->all();
 
+        // Terakhir kontak ke klinik via Telegram (pesan & tombol) — dr. Yoga 2026-11-05
+        try {
+            $tgChat = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'] ?? null;
+            if ($tgChat) {
+                $tgPhone = \DB::table('telegram_users')->where('chat_id', $tgChat)->value('no_telp');
+                \App\Support\KontakTerakhir::catat($tgPhone, $tgChat, 'telegram');
+            }
+        } catch (\Throwable $e) {
+        }
+
         try {
             if (isset($update['message'])) {
                 $this->handleMessage($update['message']);
