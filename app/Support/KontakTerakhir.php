@@ -41,8 +41,18 @@ class KontakTerakhir
             }
             // Kolom per platform (dr. Yoga 2026-11-05): telegram → terakhir_kontak_telegram_at,
             // WhatsApp (watzap/Meta & gowa) → terakhir_kontak_whatsapp_at. terakhir_kontak_at = paling akhir semua.
-            $kolom = $channel === 'telegram' ? 'terakhir_kontak_telegram_at' : 'terakhir_kontak_whatsapp_at';
-            $q->update([$kolom => now(), 'terakhir_kontak_at' => now()]);
+            // WA dipisah lagi: klinik utama vs chat sunat (gowa_sunat).
+            $set = ['terakhir_kontak_at' => now()];
+            if ($channel === 'telegram') {
+                $set['terakhir_kontak_telegram_at'] = now();
+            } elseif ($channel === 'gowa_sunat') {
+                $set['terakhir_kontak_wa_sunat_at'] = now();
+                $set['terakhir_kontak_whatsapp_at'] = now();
+            } else { // watzap (nomor klinik Meta) & gowa non-sunat
+                $set['terakhir_kontak_wa_klinik_at'] = now();
+                $set['terakhir_kontak_whatsapp_at'] = now();
+            }
+            $q->update($set);
         } catch (\Throwable $e) {
             Log::warning('KONTAK_TERAKHIR_FAIL', ['channel' => $channel, 'err' => $e->getMessage()]);
         }
