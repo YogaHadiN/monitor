@@ -52,7 +52,20 @@ class KontakTerakhir
                 $set['terakhir_kontak_wa_klinik_at'] = now();
                 $set['terakhir_kontak_whatsapp_at'] = now();
             }
-            $q->update($set);
+            $n = $q->update($set);
+
+            // Nomor belum ada di no_telps → tambahkan otomatis (dr. Yoga 2026-11-05),
+            // supaya waktu kontaknya tetap tercatat. Hanya utk nomor HP valid (62xxxxxxxx).
+            if ($n === 0 && $phone !== '' && preg_match('/^62\d{8,13}$/', $phone)
+                && !DB::table('no_telps')->where('no_telp', $phone)->exists()) {
+                DB::table('no_telps')->insertOrIgnore(array_merge($set, [
+                    'no_telp'          => $phone,
+                    'telegram_chat_id' => $chat !== '' ? $chat : null,
+                    'tenant_id'        => 1,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]));
+            }
         } catch (\Throwable $e) {
             Log::warning('KONTAK_TERAKHIR_FAIL', ['channel' => $channel, 'err' => $e->getMessage()]);
         }
