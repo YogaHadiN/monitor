@@ -594,8 +594,5 @@ class AntrianController extends Controller
             'antrian_view'
         );
     }
-    public function phpinfo(){
-        return phpinfo();
-    }
 
 }
