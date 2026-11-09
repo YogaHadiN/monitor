@@ -15,6 +15,7 @@ class JadwalSunat extends Model
     protected $table = 'jadwal_sunats';
 
     protected $fillable = [
+        'usia','berat_badan','nama_orang_tua','domisili','riwayat_kesehatan','metode',
         'tenant_id', 'pasien_id', 'tanggal', 'jam', 'status',
         'nama_pasien', 'nama_panggilan', 'no_telp', 'catatan', 'created_by',
     ];

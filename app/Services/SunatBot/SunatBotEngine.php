@@ -1497,6 +1497,30 @@ class SunatBotEngine
             $catatan  .= ' | Usia: ' . $usia . ' ' . $unit . ', BB: ' . $bbDisplay . ' kg';
         }
 
+        // Jawaban pertanyaan booking → kolom jadwal_sunats (dr. Yoga 2026-11-09).
+        $ambil = function (array $keys) use ($session) {
+            foreach ($keys as $k) {
+                $v = $session->getData($k);
+                if ($v !== null && $v !== '' && $v !== 'unknown') return is_scalar($v) ? trim((string) $v) : null;
+            }
+            return null;
+        };
+        $usiaVal  = $ambil(['booking_usia_anak', 'usia_anak']);
+        $usiaSat  = $ambil(['booking_usia_anak_satuan', 'usia_anak_satuan']) ?? 'tahun';
+        $bbJawab  = $ambil(['booking_berat_badan_anak', 'berat_badan_anak']);
+        if ($bbJawab !== null && is_numeric($bbJawab)) {
+            $bbJawab = (string) ((fmod((float) $bbJawab, 1.0) == 0) ? (int) $bbJawab : (float) $bbJawab);
+        }
+        $jawaban = [
+            'usia'              => $usiaVal !== null ? (is_numeric($usiaVal) ? $usiaVal . ' ' . $usiaSat : $usiaVal) : null,
+            'berat_badan'       => $bbJawab,
+            'nama_orang_tua'    => $ambil(['nama_orang_tua']),
+            'domisili'          => $ambil(['domisili']),
+            'riwayat_kesehatan' => $ambil(['riwayat_kesehatan']),
+            'metode'            => $ambil(['metode', 'metode_dipilih']),
+        ];
+        $jawaban = array_map(fn ($v) => $v !== null ? mb_substr($v, 0, 150) : null, $jawaban);
+
         // Race-safety + handle slot bekas CANCELLED. Unique constraint
         // `(tenant_id, tanggal, jam)` tidak melihat status, jadi row
         // CANCELLED lama bisa block insert baru. Pola: kalau ada row di
@@ -1526,7 +1550,7 @@ class SunatBotEngine
                     'catatan'        => $catatan,
                     'source'         => $this->leadSourceForPhone((string) $session->no_telp),
                     'created_by'     => null,
-                ]);
+                ] + $jawaban);
                 $row = $existing->fresh();
             } else {
                 $row = JadwalSunat::create([
@@ -1541,7 +1565,7 @@ class SunatBotEngine
                     'catatan'        => $catatan,
                     'source'         => $this->leadSourceForPhone((string) $session->no_telp),
                     'created_by'     => null,
-                ]);
+                ] + $jawaban);
             }
         } catch (\Throwable $e) {
             Log::error('SUNAT_BOOKING_INSERT_FAILED', [
@@ -1637,6 +1661,15 @@ class SunatBotEngine
                 'Jam         : ' . substr((string) $row->jam, 0, 5),
                 'No. HP      : ' . $row->no_telp,
             ];
+            $v  = fn ($x) => trim((string) ($x ?? '')) !== '' ? trim((string) $x) : '-';
+            $bb = $v($row->berat_badan ?? null);
+            if ($bb !== '-' && is_numeric($bb)) $bb .= ' kg';
+            $lines[] = 'Usia        : ' . $v($row->usia ?? null);
+            $lines[] = 'Berat Badan : ' . $bb;
+            $lines[] = 'Nama Orang Tua : ' . $v($row->nama_orang_tua ?? null);
+            $lines[] = 'Domisili    : ' . $v($row->domisili ?? null);
+            $lines[] = 'Riwayat Kesehatan : ' . $v($row->riwayat_kesehatan ?? null);
+            $lines[] = 'Metode      : ' . $v($row->metode ?? null);
             $sourceLabel = $this->formatSourceLabel($row->source);
             if ($sourceLabel !== null) {
                 $lines[] = 'Sumber Lead : ' . $sourceLabel;
