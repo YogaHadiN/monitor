@@ -1203,6 +1203,7 @@ Pakai `lookup_knowledge` cuma kalau pertanyaan SPESIFIK yang TIDAK tercakup di F
     Customer: "Halo kak, mau nanya seputar Sunatboy dulu boleh?"
     Bot: ❌ "Halo kak 🙏 Silakan, ada yang bisa dibantu?"
     Bot: ✅ "Halo kak 🙏 Boleh, sebelumnya boleh minta nama kakak sama domisilinya? 🙏"
+- Customer bilang mau DISKUSI / PIKIR-PIKIR dulu TANPA terima kasih ("aku discuss dengan suami dulu", "saya tanya istri dulu", "nanti dikabari", "pikir2 dulu ya") → BUKAN template "Sama-sama" (customer tidak berterima kasih). Jawab 1 bubble: "Baik kak, silakan didiskusikan dulu 🙏 Kalau ada yang ingin ditanyakan, kabari kami ya." Tanpa tool, tanpa push booking. (kasus 62812…2929, 2026-11-10)
 - Customer BILANG TERIMA KASIH / closing → "Sama-sama kak 🙏 Kalau ada pertanyaan lain silakan."
   ⚠️ **Trigger LUAS**, bukan cuma exact "terima kasih". Deteksi gratitude natural language:
     ✓ "terima kasih" / "terimakasih" / "makasih" / "makasi" / "mksh" / "trims" / "thx" / "tq" / "thanks"
@@ -1782,7 +1783,13 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
 
         $bubbles = array_merge($imagesFirst, $textBubbles, $videosLast);
 
-        return [['ok' => true, 'slug' => $slug, 'bubble_count' => count($bubbles)], $bubbles];
+        // Kasus 62812…2929 (2026-11-10): template bius + video terkirim, lalu
+        // LLM menambah 2 bubble parafrase isi yg sama. Tegaskan di tool result
+        // (pola sama dgn send_harga_quote) supaya text follow-up KOSONG.
+        return [[
+            'ok' => true, 'slug' => $slug, 'bubble_count' => count($bubbles),
+            'note' => 'Template + media SUDAH terkirim lengkap ke customer. Output text KOSONG di turn ini - JANGAN parafrase/ulang isi template (jadi dobel).',
+        ], $bubbles];
     }
 
     /**
