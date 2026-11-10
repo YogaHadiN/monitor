@@ -85,6 +85,13 @@ class TelegramController extends Controller
 
         $tgUser = $this->touchUser($chatId, $msg['from'] ?? []);
 
+        // Reviewer sedang diminta alasan disapprove EDIT TRANSAKSI → pesan ini = alasannya.
+        $pendingTrx = \Cache::get('trx_alasan:' . $chatId);
+        if ($pendingTrx && isset($msg['text']) && !str_starts_with(trim((string) $msg['text']), '/')) {
+            $this->simpanAlasanTolakTransaksi($chatId, (array) $pendingTrx, trim((string) $msg['text']));
+            return;
+        }
+
         // Reviewer sedang diminta alasan disapprove rujukan → pesan ini = alasannya.
         $pendingRjk = \Cache::get('rjk_alasan:' . $chatId);
         if ($pendingRjk && isset($msg['text']) && !str_starts_with(trim((string) $msg['text']), '/')) {
@@ -312,6 +319,86 @@ class TelegramController extends Controller
         $setTombol($sudah());
     }
 
+    /**
+     * Approve / Disapprove edit transaksi periksa dari staf (dikirim kezia,
+     * TransaksiEditApprovalService). Di sini hanya status yang diubah; eksekusi
+     * perubahan data & kabar ke staf dilakukan kezia (transaksi-edit:proses tiap menit).
+     * dr. Yoga 2026-11-10.
+     */
+    private function handleTransaksiEdit(string $callbackId, int $chatId, int $messageId, string $aksi, int $id): void
+    {
+        $reviewer = (int) env('TELEGRAM_RUJUKAN_REVIEWER_CHAT_ID', 5231471981);
+        if ($chatId !== $reviewer) {
+            $this->tg->answerCallbackQuery($callbackId, 'Tidak diizinkan.', true);
+            Log::warning('TRX_EDIT_APPROVE_DITOLAK', ['chat_id' => $chatId, 'id' => $id]);
+            return;
+        }
+        $a = \DB::table('transaksi_edit_approvals')->where('id', $id)->first(['id', 'status']);
+        if (!$a) {
+            $this->tg->answerCallbackQuery($callbackId, 'Pengajuan tidak ditemukan.', true);
+            return;
+        }
+        if ($aksi === 'done' || $a->status !== 'pending') {
+            $label = ['pending' => 'Belum diputuskan', 'approved' => 'Disetujui, sedang diterapkan', 'applied' => 'Sudah disetujui & diterapkan',
+                'rejected' => 'Sudah ditolak', 'gagal' => 'Disetujui tapi gagal diterapkan'][$a->status] ?? $a->status;
+            $this->tg->answerCallbackQuery($callbackId, $label);
+            return;
+        }
+        if ($aksi === 'no') {
+            \Cache::put('trx_alasan:' . $chatId, ['id' => $id, 'message_id' => $messageId], now()->addHour());
+            $this->tg->answerCallbackQuery($callbackId, 'Tulis alasan disapprove');
+            $this->tg->sendMessage($chatId,
+                "✍️ Alasan *disapprove* edit transaksi #{$id}?\n\n"
+                . "Balas pesan ini dengan alasannya — akan dikirim ke staf yang mengajukan.\n"
+                . "Ketik *batal* untuk membatalkan.",
+                ['parse_mode' => 'Markdown', 'reply_markup' => ['force_reply' => true, 'input_field_placeholder' => 'Alasan disapprove…']]
+            );
+            return;
+        }
+        // Approve: hanya ubah status. Data dieksekusi kezia ≤1 menit.
+        $n = \DB::table('transaksi_edit_approvals')->where('id', $id)->where('status', 'pending')->update([
+            'status' => 'approved', 'decided_at' => now(), 'decided_by_chat_id' => $chatId, 'updated_at' => now(),
+        ]);
+        Log::info('TRX_EDIT_APPROVED', ['id' => $id, 'chat_id' => $chatId, 'n' => $n]);
+        $this->tg->answerCallbackQuery($callbackId, 'Disetujui ✅ — diterapkan dalam ±1 menit');
+        if ($messageId > 0) {
+            $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
+                ['text' => '⏳ Disetujui — sedang diterapkan…', 'callback_data' => 'trx_done:' . $id],
+            ]]]);
+        }
+    }
+
+    private function simpanAlasanTolakTransaksi(int $chatId, array $pending, string $alasan): void
+    {
+        $id = (int) ($pending['id'] ?? 0);
+        $messageId = (int) ($pending['message_id'] ?? 0);
+        if (in_array(mb_strtolower($alasan), ['batal', 'cancel', 'batalkan'], true)) {
+            \Cache::forget('trx_alasan:' . $chatId);
+            $this->tg->sendMessage($chatId, 'Disapprove dibatalkan. Pengajuan masih menunggu keputusan.');
+            return;
+        }
+        if (mb_strlen($alasan) < 3) {
+            $this->tg->sendMessage($chatId, 'Alasannya terlalu pendek. Tulis alasan disapprove, atau ketik *batal*.', ['parse_mode' => 'Markdown']);
+            return;
+        }
+        \Cache::forget('trx_alasan:' . $chatId);
+        $n = \DB::table('transaksi_edit_approvals')->where('id', $id)->where('status', 'pending')->update([
+            'status' => 'rejected', 'alasan' => mb_substr($alasan, 0, 2000), 'decided_at' => now(),
+            'decided_by_chat_id' => $chatId, 'updated_at' => now(),
+        ]);
+        Log::info('TRX_EDIT_REJECTED', ['id' => $id, 'chat_id' => $chatId, 'n' => $n]);
+        if (!$n) {
+            $this->tg->sendMessage($chatId, "Pengajuan #{$id} sudah tidak menunggu keputusan, alasan tidak disimpan.");
+            return;
+        }
+        if ($messageId > 0) {
+            $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
+                ['text' => '❌ DISAPPROVED ' . now()->format('d/m H:i'), 'callback_data' => 'trx_done:' . $id],
+            ]]]);
+        }
+        $this->tg->sendMessage($chatId, "❌ Edit transaksi #{$id} ditolak. Data tidak diubah; alasan dikirim ke staf pengaju dalam ±1 menit.");
+    }
+
     private function handleRujukanApprove(string $callbackId, int $chatId, int $messageId, string $aksi, int $rujukanId): void
     {
         $reviewer = (int) env('TELEGRAM_RUJUKAN_REVIEWER_CHAT_ID', 5231471981);
@@ -469,6 +556,11 @@ class TelegramController extends Controller
         // RujukanTelegramNotifier). Hanya chat reviewer yg boleh.
         if (preg_match('/^cmp_(ok|puji|ubah|rv|rvok|rvx|rvdone):(\d+)$/', $data, $m)) {
             $this->handleComplainReview($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
+            return;
+        }
+
+        if (preg_match('/^trx_(ok|no|done):(\d+)$/', $data, $m)) {
+            $this->handleTransaksiEdit($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
             return;
         }
 
