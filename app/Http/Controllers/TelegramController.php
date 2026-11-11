@@ -397,10 +397,10 @@ class TelegramController extends Controller
             'status' => $status, 'decided_at' => now(), 'decided_by_chat_id' => $chatId, 'updated_at' => now(),
         ]);
         Log::info('KAL_' . strtoupper($status), ['id' => $id]);
-        $this->tg->answerCallbackQuery($callbackId, $status === 'approved' ? 'Disetujui ✅ — diproses ±1 menit' : 'Ditolak ❌');
+        $this->tg->answerCallbackQuery($callbackId, $status === 'approved' ? 'Disetujui ✅ — diproses ±1 menit' : 'Rejected ❌');
         if ($messageId > 0) {
             $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
-                ['text' => $status === 'approved' ? '⏳ Disetujui — sedang diproses…' : '❌ DITOLAK ' . now()->format('d/m H:i'),
+                ['text' => $status === 'approved' ? '⏳ Disetujui — sedang diproses…' : '❌ REJECTED ' . now()->format('d/m H:i'),
                  'callback_data' => 'kal_done:' . $id],
             ]]]);
         }
