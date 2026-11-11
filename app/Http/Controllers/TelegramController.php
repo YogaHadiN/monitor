@@ -431,7 +431,7 @@ class TelegramController extends Controller
         }
         if ($messageId > 0) {
             $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
-                ['text' => '❌ DISAPPROVED ' . now()->format('d/m H:i'), 'callback_data' => 'trx_done:' . $id],
+                ['text' => '❌ REJECTED ' . now()->format('d/m H:i'), 'callback_data' => 'trx_done:' . $id],
             ]]]);
         }
         $this->tg->sendMessage($chatId, "❌ Edit transaksi #{$id} ditolak. Data tidak diubah; alasan dikirim ke staf pengaju dalam ±1 menit.");
@@ -491,8 +491,8 @@ class TelegramController extends Controller
                     ? ['text' => '✅ APPROVED' . ($jam ? " {$jam}" : ''), 'callback_data' => 'rjk_done:' . $rujukanId]
                     : ['text' => '✅ Approve', 'callback_data' => 'rjk_ok:' . $rujukanId],
                 $status === -1
-                    ? ['text' => '❌ DISAPPROVED' . ($jam ? " {$jam}" : ''), 'callback_data' => 'rjk_done:' . $rujukanId]
-                    : ['text' => '❌ Disapprove', 'callback_data' => 'rjk_no:' . $rujukanId],
+                    ? ['text' => '❌ REJECTED' . ($jam ? " {$jam}" : ''), 'callback_data' => 'rjk_done:' . $rujukanId]
+                    : ['text' => '❌ Reject', 'callback_data' => 'rjk_no:' . $rujukanId],
             ]]]);
         }
     }
@@ -542,7 +542,7 @@ class TelegramController extends Controller
         if ($messageId > 0) {
             $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
                 ['text' => '✅ Approve', 'callback_data' => 'rjk_ok:' . $rujukanId],
-                ['text' => '❌ DISAPPROVED ' . now()->format('d/m H:i'), 'callback_data' => 'rjk_done:' . $rujukanId],
+                ['text' => '❌ REJECTED ' . now()->format('d/m H:i'), 'callback_data' => 'rjk_done:' . $rujukanId],
             ]]]);
         }
 
