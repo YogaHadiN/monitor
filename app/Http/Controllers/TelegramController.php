@@ -368,6 +368,44 @@ class TelegramController extends Controller
         }
     }
 
+    /**
+     * Tombol Approve / Disapprove untuk penulisan Google Calendar (dr. Yoga 2026-11-11).
+     * Hanya mengubah status; isi event tetap di hermes-vps yang mengeksekusi ≤1 menit.
+     */
+    private function handleKalenderApprove(string $callbackId, int $chatId, int $messageId, string $aksi, int $id): void
+    {
+        $reviewer = (int) env('TELEGRAM_RUJUKAN_REVIEWER_CHAT_ID', 5231471981);
+        if ($chatId !== $reviewer) {
+            $this->tg->answerCallbackQuery($callbackId, 'Tidak diizinkan.', true);
+            Log::warning('KAL_APPROVE_DITOLAK', ['chat_id' => $chatId, 'id' => $id]);
+            return;
+        }
+        $a = \DB::table('kalender_approvals')->where('id', $id)->first(['id', 'status']);
+        if (!$a) {
+            $this->tg->answerCallbackQuery($callbackId, 'Pengajuan tidak ditemukan.', true);
+            return;
+        }
+        if ($aksi === 'done' || $a->status !== 'pending') {
+            $label = ['approved' => 'Disetujui, sedang diproses', 'applied' => 'Sudah masuk kalender',
+                'rejected' => 'Sudah ditolak', 'notified' => 'Sudah ditolak', 'gagal' => 'Disetujui tapi gagal',
+                'expired' => 'Kedaluwarsa'][$a->status] ?? $a->status;
+            $this->tg->answerCallbackQuery($callbackId, $label);
+            return;
+        }
+        $status = $aksi === 'ok' ? 'approved' : 'rejected';
+        \DB::table('kalender_approvals')->where('id', $id)->where('status', 'pending')->update([
+            'status' => $status, 'decided_at' => now(), 'decided_by_chat_id' => $chatId, 'updated_at' => now(),
+        ]);
+        Log::info('KAL_' . strtoupper($status), ['id' => $id]);
+        $this->tg->answerCallbackQuery($callbackId, $status === 'approved' ? 'Disetujui ✅ — diproses ±1 menit' : 'Ditolak ❌');
+        if ($messageId > 0) {
+            $this->tg->editMessageReplyMarkup($chatId, $messageId, ['inline_keyboard' => [[
+                ['text' => $status === 'approved' ? '⏳ Disetujui — sedang diproses…' : '❌ DITOLAK ' . now()->format('d/m H:i'),
+                 'callback_data' => 'kal_done:' . $id],
+            ]]]);
+        }
+    }
+
     private function simpanAlasanTolakTransaksi(int $chatId, array $pending, string $alasan): void
     {
         $id = (int) ($pending['id'] ?? 0);
@@ -556,6 +594,12 @@ class TelegramController extends Controller
         // RujukanTelegramNotifier). Hanya chat reviewer yg boleh.
         if (preg_match('/^cmp_(ok|puji|ubah|rv|rvok|rvx|rvdone):(\d+)$/', $data, $m)) {
             $this->handleComplainReview($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
+            return;
+        }
+
+        // Approval tulis Google Calendar (dr. Yoga 2026-11-11). Eksekusi oleh hermes-vps.
+        if (preg_match('/^kal_(ok|no|done):(\d+)$/', $data, $m)) {
+            $this->handleKalenderApprove($callbackId, $chatId, (int) ($cbq['message']['message_id'] ?? 0), $m[1], (int) $m[2]);
             return;
         }
 
