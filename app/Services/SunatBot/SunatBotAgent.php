@@ -371,6 +371,10 @@ class SunatBotAgent
                         // bot malah kirim alamat+maps 2x tanpa jawab pertanyaan.
                         'rontgen', 'ronsen', 'rongsen', 'rontgent', 'roentgen',
                         'x-ray', 'xray', 'x ray', 'thorax', 'torax',
+                        // 2026-11-12: kasus …3233 "skrng kalau daftar mau berobat
+                        // lewat mana?" → redirect di-block, bot jawab 2 bubble
+                        // (mulai "daftar sunat lewat WA ini" yg tidak ditanya).
+                        'berobat',
                     ];
                     $reasonMentionsHarga = false;
                     foreach ($hargaKw as $kw) { if (str_contains($reason, $kw)) { $reasonMentionsHarga = true; break; } }
