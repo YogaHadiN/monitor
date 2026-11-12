@@ -303,6 +303,14 @@ class WablasController extends Controller
         // selain ack opt-out.
         if (!is_null($this->message) && !is_null($this->no_telp)) {
             $earlyAction = $this->detectSunatFollowupButton($this->message);
+            // dr. Yoga 2026-11-13: "stop" hanya dianggap opt-out SUNAT bila nomor ini memang
+            // ada di pipeline follow-up sunat dan pesannya bukan dari Telegram. Selain itu
+            // (mis. pasien antrian via Telegram bridge) → lanjut ke handler "stop" antrian
+            // (notifikasi_panggilan_aktif = 0) di bawah.
+            if ($earlyAction === 'opt_out' && !$this->dalamPipelineSunat((string) $this->no_telp)) {
+                \Log::info('SUNAT_OPT_OUT_SKIP_NON_SUNAT', ['phone' => $this->no_telp, 'channel' => $this->channel ?? null]);
+                $earlyAction = null;
+            }
             if ($earlyAction === 'opt_out') {
                 // Simpan pesan inbound dulu di chat history. chat_sunat=0
                 // karena inbound ini datang lewat Meta/Watzap resmi —
@@ -7223,6 +7231,21 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
      * (tap button di WABA dikirim sebagai pesan teks dengan label
      * tepat). Return 'booking' | 'opt_out' | null (= default handoff).
      */
+    /** Nomor ada di pipeline follow-up sunat (sesi aktif/booked atau WhatsappBot sunat_followup) dan bukan via Telegram. */
+    private function dalamPipelineSunat(string $phone): bool
+    {
+        if (($this->channel ?? '') === 'tg') return false;
+        try {
+            if (\App\Models\SunatChatSession::where('phone', $phone)->whereIn('status', ['active', 'booked'])->exists()) return true;
+            $serviceId = (int) \DB::table('whatsapp_bot_services')->where('whatsapp_bot_service', 'sunat_followup')->value('id');
+            if ($serviceId > 0 && \App\Models\WhatsappBot::where('no_telp', $phone)->where('whatsapp_bot_service_id', $serviceId)->exists()) return true;
+        } catch (\Throwable $e) {
+            \Log::warning('dalamPipelineSunat gagal', ['phone' => $phone, 'err' => $e->getMessage()]);
+            return true; // aman: perilaku lama
+        }
+        return false;
+    }
+
     private function detectSunatFollowupButton(?string $message): ?string
     {
         if (is_null($message)) return null;
