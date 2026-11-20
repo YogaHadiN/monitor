@@ -674,7 +674,8 @@ class WablasController extends Controller
 
             // WA nomor klinik tidak dibalas lagi → auto-reply arahkan ke Telegram
             // (delay acak 1–5 mnt, 1 WA/menit global, 1x/nomor/6 jam). dr. Yoga 2026-11-04.
-            if (($this->provider ?? 'wablas') !== 'telegram' && waCutoffActive()) {
+            // gowa_kezia (survei kepuasan via Gowa, dr. Yoga 2026-11-20): jangan redirect ke Telegram.
+            if (!in_array(($this->provider ?? 'wablas'), ['telegram', 'gowa_kezia'], true) && waCutoffActive()) {
                 try {
                     \App\Jobs\WaRedirectTelegramReply::dispatchUntuk((string) $this->no_telp, (int) optional($this->inbound_message)->id);
                 } catch (\Throwable $e) {
@@ -1949,6 +1950,49 @@ class WablasController extends Controller
      *
      * @return void
      */
+    /**
+     * Survei kepuasan via Gowa kezia (dr. Yoga 2026-11-20). HANYA memproses state
+     * survei kepuasan / keluhan lanjutan — tidak menjalankan menu bot lain
+     * (daftar, sunat, chat admin), karena WA umum sudah dihentikan.
+     * Return false kalau nomor tidak sedang dalam survei/keluhan.
+     */
+    public function prosesSurveiGowa(): bool
+    {
+        if (empty($this->no_telp) || $this->message === null || $this->message === '') {
+            return false;
+        }
+        $this->whatsapp_complaint = WhatsappComplaint::where('no_telp', $this->no_telp)
+            ->whereRaw("DATE_ADD( updated_at, interval 1 hour ) > '" . date('Y-m-d H:i:s') . "'")
+            ->first();
+        $this->whatsapp_satisfaction_survey = WhatsappSatisfactionSurvey::where('no_telp', $this->no_telp)
+            ->whereRaw("DATE_ADD( updated_at, interval 23 hour ) > '" . date('Y-m-d H:i:s') . "'")
+            ->first();
+        if (is_null($this->whatsapp_complaint) && is_null($this->whatsapp_satisfaction_survey)) {
+            return false;
+        }
+        try {
+            Message::create([
+                'no_telp'       => $this->no_telp,
+                'message'       => $this->message,
+                'tanggal'       => date('Y-m-d H:i:s'),
+                'sending'       => 0,
+                'sudah_dibalas' => 1,
+                'tenant_id'     => 1,
+                'touched'       => 0,
+                'chat_admin'    => 0,
+                'chat_sunat'    => 0,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('GOWA_SURVEY_MSG_LOG_FAIL', ['no_telp' => $this->no_telp, 'err' => $e->getMessage()]);
+        }
+        if (!is_null($this->whatsapp_complaint)) {
+            $this->registerWhatsappComplaint();
+        } else {
+            $this->registerWhatsappSatisfactionSurvey();
+        }
+        return true;
+    }
+
     private function registerWhatsappComplaint()
     {
         $this->chatBotLog(__LINE__);
@@ -2010,7 +2054,8 @@ class WablasController extends Controller
             $this->chatBotLog(__LINE__);
             $complain = \App\Models\Complain::create([
                 'tanggal'   => $now,
-                'media'     => (($this->provider ?? 'wablas') === 'telegram') ? 'Telegram Bot' : 'Whatsapp Bot',
+                'media'     => (($this->provider ?? 'wablas') === 'telegram') ? 'Telegram Bot'
+                    : ((($this->provider ?? 'wablas') === 'gowa_kezia') ? 'Whatsapp Gowa' : 'Whatsapp Bot'),
                 'no_telp'   => $this->no_telp,
                 'tenant_id' => 1,
                 'complain'  => $this->message,

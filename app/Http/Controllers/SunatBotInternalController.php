@@ -325,4 +325,29 @@ class SunatBotInternalController extends Controller
             ]],
         ];
     }
+
+    /**
+     * Survei kepuasan via Gowa kezia (dr. Yoga 2026-11-20): proses balasan pasien lewat
+     * state machine WablasController (survei/keluhan), kembalikan balasan bot ke atika
+     * untuk di-enqueue ke outbox Gowa. Tidak mengirim apa pun sendiri.
+     */
+    public function processSurveyForGowa(Request $request): JsonResponse
+    {
+        $data = (array) $request->json()->all();
+        $validator = Validator::make($data, [
+            'no_telp' => 'required|string|max:32',
+            'message' => 'required|string|max:2000',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['ok' => false, 'message' => 'Invalid payload'], 422);
+        }
+        try {
+            $bridge  = new GowaSurveyBridge((string) $data['no_telp'], (string) $data['message']);
+            $handled = $bridge->prosesSurveiGowa();
+            return response()->json(['ok' => true, 'handled' => $handled, 'replies' => array_values($bridge->replies)]);
+        } catch (\Throwable $e) {
+            \Log::error('GOWA_SURVEY_PROCESS_FAIL', ['no_telp' => $data['no_telp'], 'err' => $e->getMessage()]);
+            return response()->json(['ok' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
 }

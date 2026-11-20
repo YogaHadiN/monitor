@@ -119,6 +119,20 @@ class WatzapController extends Controller
         //     (string) ($normalized['message'] ?? '')
         // );
 
+        // Survei kepuasan via Gowa kezia (dr. Yoga 2026-11-20): nomor Meta & Gowa kezia sama
+        // (coexistence) → pesan pasien masuk ke DUA webhook. Selama pasien dalam sesi survei
+        // Gowa (24 jam), pesan diproses atika (GowaWebhookController → survey-process-for-gowa);
+        // di sini diabaikan supaya tidak dobel (balasan via Telegram / menu utama).
+        $sesiSurveiGowa = \DB::table('gowa_outbound_messages')
+            ->where('to_phone', (string) $normalized['phone'])
+            ->whereIn('kind', ['survei_kepuasan', 'survei_lanjutan'])
+            ->where('created_at', '>=', now()->subHours(24))
+            ->exists();
+        if ($sesiSurveiGowa) {
+            Log::info('WATZAP_SKIP_SURVEI_GOWA', ['phone' => $normalized['phone']]);
+            return response()->json(['status' => true, 'message' => 'ditangani gowa (survei)']);
+        }
+
         // Inject ke request aktif agar Input::get() di WablasController bisa membaca
         $request->merge($normalized);
         app()->instance('request', $request);
@@ -296,12 +310,9 @@ class WatzapController extends Controller
             return ['ok' => false, 'reason' => 'no_pdf_uploaded'];
         }
 
-        // Generate signed URL S3 (10 menit TTL — Watzap fetch cepat)
+        // Link permanen via route signed (tanpa expiry) — lihat routes/web.php
         try {
-            $signedUrl = \Storage::disk('s3')->temporaryUrl(
-                $rujukan->pdf_rujukan_bpjs_path,
-                \Carbon\Carbon::now()->addMinutes(10)
-            );
+            $signedUrl = rujukanPdfUrl((int) $rujukan->id);
         } catch (\Throwable $e) {
             \Log::error('RUJUKAN_PDF_S3_SIGNED_URL_FAIL', [
                 'rujukan_id' => $rujukanId,
