@@ -125,7 +125,7 @@ class WatzapController extends Controller
         // di sini diabaikan supaya tidak dobel (balasan via Telegram / menu utama).
         $sesiSurveiGowa = \DB::table('gowa_outbound_messages')
             ->where('to_phone', (string) $normalized['phone'])
-            ->whereIn('kind', ['survei_kepuasan', 'survei_lanjutan'])
+            ->whereIn('kind', ['survei_kepuasan', 'survei_lanjutan', 'survei_meta'])
             ->where('created_at', '>=', now()->subHours(24))
             ->exists();
         if ($sesiSurveiGowa) {
