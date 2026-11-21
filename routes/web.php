@@ -9,6 +9,25 @@ use App\Http\Controllers\ReservationQrController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+// Link PDF rujukan BPJS permanen (2026-10-17): HMAC(APP_KEY) atas id,
+// tanpa expiry, independen dari scheme/host (app di belakang CloudFront
+// http-only, jadi middleware 'signed' bawaan Laravel gagal validasi).
+// Stream dari S3 saat diklik. Menggantikan presigned S3 10 menit.
+Route::get('/rujukan/{id}/pdf', function ($id) {
+    $sig = (string) request()->query('s', '');
+    $expected = rujukanPdfSignature((int) $id);
+    abort_if($sig === '' || !hash_equals($expected, $sig), 403);
+    $r = \DB::table('rujukans')->where('id', (int) $id)->first(['id', 'pdf_rujukan_bpjs_path']);
+    abort_if(!$r || empty($r->pdf_rujukan_bpjs_path), 404);
+    $disk = \Storage::disk('s3');
+    abort_if(!$disk->exists($r->pdf_rujukan_bpjs_path), 404);
+    return response($disk->get($r->pdf_rujukan_bpjs_path), 200, [
+        'Content-Type'        => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="Rujukan_BPJS_' . $r->id . '.pdf"',
+        'Cache-Control'       => 'private, max-age=86400',
+    ]);
+})->where('id', '[0-9]+')->name('rujukan.pdf');
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -50,19 +69,46 @@ $logReviewClick = function (string $slug, ?int $periksaId = null) {
         \Log::warning('review_link_click log fail', ['slug' => $slug, 'err' => $e->getMessage()]);
     }
 };
-Route::get('/review/klinikjatielok/{periksa_id?}', function ($periksaId = null) use ($logReviewClick) {
+// dr. Yoga 2026-11-22: robot pratinjau link (WhatsApp/Meta/Telegram/dll.) TIDAK dicatat sbg klik
+// pasien, dan diberi kartu pratinjau "Beri ulasan di Google Maps" (Open Graph). Manusia → 302 ke Google.
+$reviewLinkBot = function (): bool {
+    $ua = strtolower((string) request()->userAgent());
+    if ($ua === '') return true;
+    foreach (['facebookexternal', 'whatsapp', 'telegrambot', 'twitterbot', 'slackbot', 'discordbot',
+              'linkedinbot', 'skypeuripreview', 'googlebot', 'bingbot', 'applebot', 'bot/', 'bot;', 'crawler',
+              'spider', 'preview', 'curl/', 'python-', 'go-http'] as $k) {
+        if (str_contains($ua, $k)) return true;
+    }
+    return false;
+};
+$reviewPreview = function (string $nama, string $img, string $target) {
+    $t = e("$nama – Beri ulasan di Google Maps ⭐⭐⭐⭐⭐");
+    $d = e("Klik untuk memberi ulasan $nama di Google Maps. Terima kasih atas dukungan Anda!");
+    $i = e(url($img));
+    $u = e($target);
+    $html = "<!doctype html><html lang=\"id\"><head><meta charset=\"utf-8\"><title>$t</title>"
+        . "<meta property=\"og:type\" content=\"website\"><meta property=\"og:site_name\" content=\"Google Maps · $nama\">"
+        . "<meta property=\"og:title\" content=\"$t\"><meta property=\"og:description\" content=\"$d\">"
+        . "<meta property=\"og:image\" content=\"$i\"><meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\">"
+        . "<meta name=\"twitter:card\" content=\"summary_large_image\"><meta http-equiv=\"refresh\" content=\"0;url=$u\"></head>"
+        . "<body><a href=\"$u\">$t</a></body></html>";
+    return response($html, 200)->header('Content-Type', 'text/html; charset=utf-8');
+};
+Route::get('/review/klinikjatielok/{periksa_id?}', function ($periksaId = null) use ($logReviewClick, $reviewLinkBot, $reviewPreview) {
+    $target = 'https://search.google.com/local/writereview?placeid=ChIJsRyOtNP4aS4R4hIwu5yMnk0';
+    if ($reviewLinkBot()) {
+        return $reviewPreview('Klinik Jati Elok', '/images/og-review-jatielok.png', $target);
+    }
     $logReviewClick('klinikjatielok', $periksaId !== null ? (int) $periksaId : null);
-    return redirect()->away(
-        'https://search.google.com/local/writereview?placeid=ChIJsRyOtNP4aS4R4hIwu5yMnk0',
-        302
-    );
+    return redirect()->away($target, 302);
 })->where('periksa_id', '[0-9]+');
-Route::get('/review/sunatboy/{periksa_id?}', function ($periksaId = null) use ($logReviewClick) {
+Route::get('/review/sunatboy/{periksa_id?}', function ($periksaId = null) use ($logReviewClick, $reviewLinkBot, $reviewPreview) {
+    $target = 'https://search.google.com/local/writereview?placeid=ChIJsd_YRQDjaS4R9aVhjW76t3Y';
+    if ($reviewLinkBot()) {
+        return $reviewPreview('SunatBoy Tangerang', '/images/og-review-sunatboy.png', $target);
+    }
     $logReviewClick('sunatboy', $periksaId !== null ? (int) $periksaId : null);
-    return redirect()->away(
-        'https://search.google.com/local/writereview?placeid=ChIJsd_YRQDjaS4R9aVhjW76t3Y',
-        302
-    );
+    return redirect()->away($target, 302);
 })->where('periksa_id', '[0-9]+');
 
 // Telegram bot link tracker (dr. Yoga 2026-09-28): route pengganti utk

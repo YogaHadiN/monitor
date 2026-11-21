@@ -1842,7 +1842,7 @@ class WablasController extends Controller
         $message .= "kami berharap dapat melayani anda dengan lebih baik lagi.";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
-        $message .= "mohon memberikan nilai layanan kami dengan memberikan ulasan *Bintang 5* di google review Klinik Jati Elok hanya dengan klik link dibawah ini : ";
+        $message .= "mohon memberikan ulasan *Bintang 5* untuk Klinik Jati Elok di *Google Maps* dengan klik link di bawah ini ⭐⭐⭐⭐⭐";
         $message .= PHP_EOL;
         $message .= PHP_EOL;
         $message .= $reviewUrl;
