@@ -1791,6 +1791,23 @@ class WablasController extends Controller
      */
     private function kirimkanLinkGoogleReview()
     {
+        // dr. Yoga 2026-11-21: ulasan Google terakhir pasien (google_reviews, impor email harian) sudah
+        // bintang 5 → jangan kirim link lagi. Kalau berubah (< 5) → link dikirim lagi.
+        try {
+            $pidB5 = isset($this->antrian) && $this->antrian
+                ? ($this->antrian->pasien_id ?: optional($this->antrian->antriable)->pasien_id) : null;
+            if ($pidB5) {
+                $ratingTerakhir = \DB::table('google_reviews')->where('pasien_id', $pidB5)->where('bisnis', 'Klinik Jati Elok')
+                    ->whereNotNull('rating')->orderByDesc('review_date')->orderByDesc('id')->value('rating');
+                if ((int) $ratingTerakhir === 5) {
+                    \Log::info('REVIEW_LINK_SKIP_SUDAH_BINTANG5', ['pasien_id' => $pidB5]);
+                    return "Terima kasih atas penilaian Anda 🙏\nKami senang Anda puas dengan pelayanan Klinik Jati Elok, dan terima kasih juga atas ulasan Bintang 5 yang pernah Anda berikan.";
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('REVIEW_LINK_B5_CHECK_FAIL', ['err' => $e->getMessage()]);
+        }
+
         // Cari periksa_id dari antrian konteks. Cek 2 sumber:
         //   1. Antrian.antriable_id kalau antriable_type = Periksa
         //      (early stage, dokter baru selesai)
