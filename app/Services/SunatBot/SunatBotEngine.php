@@ -1654,7 +1654,8 @@ class SunatBotEngine
             $tglFormat = $tgl->day . ' ' . $idMonths[(int) $tgl->month] . ' ' . $tgl->year;
 
             $lines = [
-                '📌 *BOOKING SUNAT BARU (SunatBot)*',
+                '📌 *BOOKING SUNAT BARU — OTOMATIS OLEH BOT*',
+                '🤖 Dibooking oleh : SunatBot (chat pasien, tanpa staf)',
                 '',
                 'Nama Pasien : ' . $row->nama_pasien,
                 'Tanggal     : ' . $tglFormat,
