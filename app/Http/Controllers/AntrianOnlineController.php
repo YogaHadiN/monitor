@@ -295,8 +295,17 @@ class AntrianOnlineController extends Controller
          * (baik via Antrian.nomor_bpjs maupun via Pasien.nomor_asuransi_bpjs),
          * pakai antrian yang sudah ada — jangan bikin baru.
          */
-        $existing = $this->cariAntrianHariIni($nomorkartu, $nik, $norm);
+        $existing = $this->cariAntrianHariIni($nomorkartu);
         if (!is_null($existing)) {
+            if (!$this->antrianPembayaranBpjs($existing)) {
+                \Log::info('MOBILE_JKN_TOLAK_NON_BPJS', ['antrian_id' => $existing->id]);
+                return Response::json([
+                    'metadata' => [
+                        'message' => 'Anda sudah terdaftar di antrian klinik hari ini dengan pembayaran non-BPJS. Mobile JKN hanya untuk pembayaran BPJS.',
+                        'code'    => 201
+                    ]
+                ], 201);
+            }
             $this->tandaiDipakaiMobileJkn($existing, $nomorkartu, $nohp);
             return Response::json($this->buildAmbilAntreanResponse($existing), 200);
         }
@@ -770,17 +779,15 @@ class AntrianOnlineController extends Controller
      * Validasi: Pasien BPJS hanya boleh daftar 1x per hari
      */
     /**
-     * dr. Yoga 2026-11-25: pasien yang SUDAH ada di antrian klinik hari ini (daftar langsung, WA,
-     * Telegram, web, dll.) tetap bisa ambil antrean di Mobile JKN dan mendapat nomor antrian +
-     * antrian_id yang SAMA. Dicocokkan lewat nomor kartu, NIK, atau No. RM — apa pun jenis
-     * pembayaran saat daftar (dulu hanya registrasi_pembayaran_id = 2 & nomor kartu).
+     * dr. Yoga 2026-11-25: pasien BPJS yang SUDAH ada di antrian klinik hari ini (daftar langsung,
+     * WA, Telegram, web) tetap bisa ambil antrean di Mobile JKN dan mendapat nomor antrian +
+     * antrian_id yang SAMA. Hanya dicocokkan lewat nomor asuransi BPJS (Antrian.nomor_bpjs /
+     * Pasien.nomor_asuransi_bpjs). Mobile JKN hanya untuk pembayaran BPJS.
      */
-    private function cariAntrianHariIni($nomorkartu, $nik = null, $norm = null)
+    private function cariAntrianHariIni($nomorkartu)
     {
         $nomorkartu = trim((string) $nomorkartu);
-        $nik        = trim((string) $nik);
-        $norm       = trim((string) $norm);
-        if ($nomorkartu === '' && $nik === '' && $norm === '') {
+        if ($nomorkartu === '') {
             return null;
         }
 
@@ -788,22 +795,42 @@ class AntrianOnlineController extends Controller
         $startOfDay = Carbon::now($tz)->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay   = Carbon::now($tz)->endOfDay()->format('Y-m-d H:i:s');
 
-        $pasienIds = Pasien::query()
-            ->where(function ($q) use ($nomorkartu, $nik, $norm) {
-                if ($nomorkartu !== '') $q->orWhere('nomor_asuransi_bpjs', $nomorkartu);
-                if (strlen($nik) === 16) $q->orWhere('nomor_ktp', $nik);
-                if ($norm !== '' && ctype_digit($norm)) $q->orWhere('id', (int) $norm);
-            })
-            ->pluck('id');
-
         return Antrian::with('pasien', 'tipe_konsultasi.poli_bpjs', 'ruangan.antrian')
             ->whereBetween('created_at', [$startOfDay, $endOfDay])
-            ->where(function ($q) use ($nomorkartu, $pasienIds) {
-                if ($nomorkartu !== '') $q->orWhere('nomor_bpjs', $nomorkartu);
-                if ($pasienIds->isNotEmpty()) $q->orWhereIn('pasien_id', $pasienIds);
+            ->where(function ($q) use ($nomorkartu) {
+                $q->where('nomor_bpjs', $nomorkartu)
+                  ->orWhereHas('pasien', function ($p) use ($nomorkartu) {
+                      $p->where('nomor_asuransi_bpjs', $nomorkartu);
+                  });
             })
             ->latest('id')
             ->first();
+    }
+
+    /**
+     * Pembayaran antrian ini BPJS? Tahap pendaftaran → registrasi_pembayaran_id = 2.
+     * Setelah masuk poli/periksa/kasir → asuransi di tahap tsb bertipe BPJS (tipe_asuransi_id 5).
+     */
+    private function antrianPembayaranBpjs(Antrian $antrian): bool
+    {
+        $tahap = $antrian->antriable_type;
+        if ($tahap && $tahap !== 'App\\Models\\Antrian' && class_exists($tahap)) {
+            $tabel = (new $tahap)->getTable();
+            if (\Schema::hasColumn($tabel, 'asuransi_id')) {
+                $asuransiId = DB::table($tabel)->where('id', $antrian->antriable_id)->value('asuransi_id');
+                if (!is_null($asuransiId)) {
+                    return (int) DB::table('asuransis')->where('id', $asuransiId)->value('tipe_asuransi_id') === 5;
+                }
+            } elseif (\Schema::hasColumn($tabel, 'periksa_id')) {
+                // antrian kasir / apotek: pembayaran dari periksa-nya
+                $periksaId  = DB::table($tabel)->where('id', $antrian->antriable_id)->value('periksa_id');
+                $asuransiId = $periksaId ? DB::table('periksas')->where('id', $periksaId)->value('asuransi_id') : null;
+                if (!is_null($asuransiId)) {
+                    return (int) DB::table('asuransis')->where('id', $asuransiId)->value('tipe_asuransi_id') === 5;
+                }
+            }
+        }
+        return (int) $antrian->registrasi_pembayaran_id === 2;
     }
 
     /** Lengkapi antrian yang dipakai ulang dari Mobile JKN tanpa mengubah nomor / alurnya. */
@@ -815,10 +842,6 @@ class AntrianOnlineController extends Controller
         }
         if (empty(trim((string) $antrian->no_telp)) && !empty($nohp)) {
             $antrian->no_telp = $nohp; $ubah[] = 'no_telp';
-        }
-        // Masih di tahap pendaftaran → pembayaran disesuaikan ke BPJS (Mobile JKN = peserta BPJS).
-        if ($antrian->antriable_type === 'App\\Models\\Antrian' && (int) $antrian->registrasi_pembayaran_id !== 2) {
-            $antrian->registrasi_pembayaran_id = 2; $ubah[] = 'registrasi_pembayaran_id';
         }
         if ($ubah) {
             $antrian->save();
