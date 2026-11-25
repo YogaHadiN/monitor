@@ -662,6 +662,8 @@ class AntrianOnlineController extends Controller
             $antrian->delete();
         }
 
+        $this->notifBatalDariMobileJkn($antrian);
+
         return [
             'code'    => 200,
             'message' => 'Ok',
@@ -679,6 +681,44 @@ class AntrianOnlineController extends Controller
      * + kodebooking dari saat antrean dibuat). Sementara hanya log
      * supaya jejak terlihat dan implementasi nanti bisa drop-in.
      */
+    /**
+     * dr. Yoga 2026-11-25: beri tahu pasien bila antrean dibatalkan dari Mobile JKN.
+     * Telegram bila nomor terhubung bot; kalau tidak, WA lewat Gowa kezia (outbox, berjeda).
+     */
+    private function notifBatalDariMobileJkn($antrian)
+    {
+        try {
+            $hp = preg_replace('/\D/', '', (string) ($antrian->no_telp ?: optional($antrian->pasien)->no_telp));
+            if (str_starts_with($hp, '0')) $hp = '62' . substr($hp, 1);
+            if (strlen($hp) < 9) {
+                Log::info('MJKN_BATAL_NOTIF_SKIP_NO_HP', ['antrian_id' => $antrian->id]);
+                return;
+            }
+            $nama  = trim((string) ($antrian->nama ?: optional($antrian->pasien)->nama));
+            $pesan = "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n"
+                . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui Mobile JKN.\n\n"
+                . "Bila ingin berobat, silakan daftar kembali. Terima kasih 🙏";
+
+            $viaTg = false;
+            try {
+                $viaTg = app(\App\Services\ChannelDispatcher::class)->trySendTelegram($hp, $pesan);
+            } catch (\Throwable $e) {
+                Log::warning('MJKN_BATAL_NOTIF_TG_FAIL', ['antrian_id' => $antrian->id, 'err' => $e->getMessage()]);
+            }
+            if (!$viaTg) {
+                DB::table('gowa_outbound_messages')->insert([
+                    'kind' => 'mjkn_batal', 'to_phone' => $hp, 'to_label' => 'mjkn_batal', 'device_id' => 'kezia',
+                    'pasien_id' => $antrian->pasien_id, 'body' => $pesan, 'scheduled_at' => now(),
+                    'attempts' => 0, 'max_attempts' => 3, 'status' => 'pending',
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+            Log::info('MJKN_BATAL_NOTIF', ['antrian_id' => $antrian->id, 'via' => $viaTg ? 'telegram' : 'gowa_kezia']);
+        } catch (\Throwable $e) {
+            Log::warning('MJKN_BATAL_NOTIF_FAIL', ['antrian_id' => $antrian->id ?? null, 'err' => $e->getMessage()]);
+        }
+    }
+
     public function notifyBpjsAntreanBatal($nomorkartu, $tanggalperiksa, $kodepoli = null)
     {
         Log::info('BPJS_ANTREAN_BATAL_OUTBOUND_PENDING', [
