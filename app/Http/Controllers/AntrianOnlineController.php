@@ -721,8 +721,10 @@ class AntrianOnlineController extends Controller
                 return $halo
                     . "Antrean *{$antrian->nomor_antrian}* di aplikasi Mobile JKN baru saja dibatalkan.\n\n"
                     . "Kemungkinan ini dilakukan oleh *petugas klinik* untuk keperluan pendaftaran ulang di Mobile JKN. "
-                    . "Antrian Anda di Klinik Jati Elok *tetap berlaku* dengan nomor yang sama, tidak perlu melakukan apa-apa.\n\n"
-                    . "Bila Anda memang *ingin membatalkan* antrian berobat hari ini, {$caraBatal}. Terima kasih 🙏";
+                    . "Antrian Anda di Klinik Jati Elok *tetap berlaku* dengan nomor yang sama.\n\n"
+                    . "👉 *Abaikan* pesan ini jika Anda tetap ingin berobat di klinik.\n"
+                    . "👉 Bila Anda memang *ingin membatalkan* antrian berobat hari ini, {$caraBatal}.\n\n"
+                    . "Terima kasih 🙏";
             };
             $pesanHapus = $halo
                 . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui Mobile JKN.\n\n"
