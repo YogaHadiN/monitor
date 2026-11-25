@@ -653,8 +653,15 @@ class AntrianOnlineController extends Controller
         // dr. Yoga 2026-11-25: antrian dari kanal lain (Telegram/web/langsung) TIDAK dihapus saat
         // pasien klik batal di Mobile JKN — hanya ditandai (ambil_antrol_pcare_done=2 → tidak dikirim
         // ulang otomatis). Bila pasien daftar lagi lewat Mobile JKN, antrian ini dipakai ulang.
-        $mjkn = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::MOBILE_JKN);
-        if ((int) $antrian->sumber_antrian_id !== (int) $mjkn) {
+        // dr. Yoga 2026-11-25 (revisi): antrian hanya DIPERTAHANKAN bila pasien sedang di
+        // nurse station (antrian_polis) / sudah lewat nurse station (antrian_periksas) — itu
+        // pembatalan oleh petugas utk daftar ulang Mobile JKN. Di luar itu (masih di pendaftaran)
+        // pasien membatalkan sendiri → antrian di sistem ikut dihapus.
+        $tahapDipertahankan = [
+            'App\\Models\\AntrianPoli',
+            'App\\Models\\AntrianPeriksa',
+        ];
+        if (in_array((string) $antrian->antriable_type, $tahapDipertahankan, true)) {
             \DB::table('antrians')->where('id', $antrian_id)->update([
                 'ambil_antrol_pcare_done' => 2,
                 'hadir_antrol_pcare_done' => 0,
@@ -727,8 +734,10 @@ class AntrianOnlineController extends Controller
                     . "Terima kasih 🙏";
             };
             $pesanHapus = $halo
-                . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui Mobile JKN.\n\n"
-                . "Bila ingin berobat, silakan daftar kembali. Terima kasih 🙏";
+                . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui aplikasi Mobile JKN, "
+                . "sehingga antrian Anda di klinik juga *sudah dihapus*.\n\n"
+                . "Bila pembatalan ini tidak disengaja atau Anda tetap ingin berobat hari ini, silakan *daftar kembali* "
+                . "(nomor antrian akan baru). Terima kasih 🙏";
 
             $viaTg = false;
             try {
