@@ -898,23 +898,18 @@ class AntrianOnlineController extends Controller
     }
 
     /** Lengkapi antrian yang dipakai ulang dari Mobile JKN tanpa mengubah nomor / alurnya. */
+    /**
+     * dr. Yoga 2026-11-25: daftar ulang via Mobile JKN TIDAK mengubah data antrian apa pun
+     * (dokter, staf, petugas pemeriksa, no telp, nomor bpjs, tahap). Hanya penanda status sinkron
+     * BPJS (ambil_antrol_pcare_done=1) supaya pembatalan/hadir berikutnya tetap terkirim.
+     */
     private function tandaiDipakaiMobileJkn(Antrian $antrian, $nomorkartu, $nohp)
     {
-        $ubah = [];
-        if (empty($antrian->nomor_bpjs) && !empty($nomorkartu)) {
-            $antrian->nomor_bpjs = $nomorkartu; $ubah[] = 'nomor_bpjs';
-        }
-        if (empty(trim((string) $antrian->no_telp)) && !empty($nohp)) {
-            $antrian->no_telp = $nohp; $ubah[] = 'no_telp';
-        }
-        if ($ubah) {
-            $antrian->save();
-        }
-        // sudah terdaftar lagi di BPJS lewat Mobile JKN (termasuk setelah sebelumnya dibatalkan)
         \DB::table('antrians')->where('id', $antrian->id)->update(['ambil_antrol_pcare_done' => 1]);
         \Log::info('MOBILE_JKN_ANTRIAN_SAMA', [
             'antrian_id' => $antrian->id, 'nomor' => $antrian->nomor_antrian,
-            'tahap' => class_basename((string) $antrian->antriable_type), 'diubah' => $ubah,
+            'tahap' => class_basename((string) $antrian->antriable_type),
+            'dokter_dipilih_id' => $antrian->dokter_dipilih_id, 'petugas_pemeriksa_id' => $antrian->petugas_pemeriksa_id,
         ]);
     }
 
