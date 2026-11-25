@@ -295,8 +295,9 @@ class AntrianOnlineController extends Controller
          * (baik via Antrian.nomor_bpjs maupun via Pasien.nomor_asuransi_bpjs),
          * pakai antrian yang sudah ada — jangan bikin baru.
          */
-        $existing = $this->cariAntrianHariIni($nomorkartu);
+        $existing = $this->cariAntrianHariIni($nomorkartu, $nik, $norm);
         if (!is_null($existing)) {
+            $this->tandaiDipakaiMobileJkn($existing, $nomorkartu, $nohp);
             return Response::json($this->buildAmbilAntreanResponse($existing), 200);
         }
 
@@ -768,9 +769,18 @@ class AntrianOnlineController extends Controller
     /**
      * Validasi: Pasien BPJS hanya boleh daftar 1x per hari
      */
-    private function cariAntrianHariIni($nomorkartu)
+    /**
+     * dr. Yoga 2026-11-25: pasien yang SUDAH ada di antrian klinik hari ini (daftar langsung, WA,
+     * Telegram, web, dll.) tetap bisa ambil antrean di Mobile JKN dan mendapat nomor antrian +
+     * antrian_id yang SAMA. Dicocokkan lewat nomor kartu, NIK, atau No. RM — apa pun jenis
+     * pembayaran saat daftar (dulu hanya registrasi_pembayaran_id = 2 & nomor kartu).
+     */
+    private function cariAntrianHariIni($nomorkartu, $nik = null, $norm = null)
     {
-        if (empty(trim((string) $nomorkartu))) {
+        $nomorkartu = trim((string) $nomorkartu);
+        $nik        = trim((string) $nik);
+        $norm       = trim((string) $norm);
+        if ($nomorkartu === '' && $nik === '' && $norm === '') {
             return null;
         }
 
@@ -778,17 +788,45 @@ class AntrianOnlineController extends Controller
         $startOfDay = Carbon::now($tz)->startOfDay()->format('Y-m-d H:i:s');
         $endOfDay   = Carbon::now($tz)->endOfDay()->format('Y-m-d H:i:s');
 
+        $pasienIds = Pasien::query()
+            ->where(function ($q) use ($nomorkartu, $nik, $norm) {
+                if ($nomorkartu !== '') $q->orWhere('nomor_asuransi_bpjs', $nomorkartu);
+                if (strlen($nik) === 16) $q->orWhere('nomor_ktp', $nik);
+                if ($norm !== '' && ctype_digit($norm)) $q->orWhere('id', (int) $norm);
+            })
+            ->pluck('id');
+
         return Antrian::with('pasien', 'tipe_konsultasi.poli_bpjs', 'ruangan.antrian')
-            ->where('registrasi_pembayaran_id', 2)
             ->whereBetween('created_at', [$startOfDay, $endOfDay])
-            ->where(function ($q) use ($nomorkartu) {
-                $q->where('nomor_bpjs', $nomorkartu)
-                  ->orWhereHas('pasien', function ($p) use ($nomorkartu) {
-                      $p->where('nomor_asuransi_bpjs', $nomorkartu);
-                  });
+            ->where(function ($q) use ($nomorkartu, $pasienIds) {
+                if ($nomorkartu !== '') $q->orWhere('nomor_bpjs', $nomorkartu);
+                if ($pasienIds->isNotEmpty()) $q->orWhereIn('pasien_id', $pasienIds);
             })
             ->latest('id')
             ->first();
+    }
+
+    /** Lengkapi antrian yang dipakai ulang dari Mobile JKN tanpa mengubah nomor / alurnya. */
+    private function tandaiDipakaiMobileJkn(Antrian $antrian, $nomorkartu, $nohp)
+    {
+        $ubah = [];
+        if (empty($antrian->nomor_bpjs) && !empty($nomorkartu)) {
+            $antrian->nomor_bpjs = $nomorkartu; $ubah[] = 'nomor_bpjs';
+        }
+        if (empty(trim((string) $antrian->no_telp)) && !empty($nohp)) {
+            $antrian->no_telp = $nohp; $ubah[] = 'no_telp';
+        }
+        // Masih di tahap pendaftaran → pembayaran disesuaikan ke BPJS (Mobile JKN = peserta BPJS).
+        if ($antrian->antriable_type === 'App\\Models\\Antrian' && (int) $antrian->registrasi_pembayaran_id !== 2) {
+            $antrian->registrasi_pembayaran_id = 2; $ubah[] = 'registrasi_pembayaran_id';
+        }
+        if ($ubah) {
+            $antrian->save();
+        }
+        \Log::info('MOBILE_JKN_ANTRIAN_SAMA', [
+            'antrian_id' => $antrian->id, 'nomor' => $antrian->nomor_antrian,
+            'tahap' => class_basename((string) $antrian->antriable_type), 'diubah' => $ubah,
+        ]);
     }
 
     private function buildAmbilAntreanResponse($antrian)
