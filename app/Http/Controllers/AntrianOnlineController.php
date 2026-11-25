@@ -721,12 +721,16 @@ class AntrianOnlineController extends Controller
                 return;
             }
             $nama  = trim((string) ($antrian->nama ?: optional($antrian->pasien)->nama));
-            $halo  = "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n";
+            // sapaan rapi (dr. Yoga 2026-11-25): sapa Bapak/Ibu (pasien bisa anak), nama pasien
+            // ditulis rapi (Title Case) di isi pesan
+            $nama  = preg_replace('/\s+/', ' ', mb_convert_case(mb_strtolower($nama), MB_CASE_TITLE, 'UTF-8'));
+            $an    = $nama !== '' ? " atas nama *{$nama}*" : '';
+            $halo  = "Halo Bapak/Ibu,\n\n";
             // dr. Yoga 2026-11-25: pembatalan di Mobile JKN biasanya dilakukan petugas (daftar ulang
             // Mobile JKN) — antrian klinik tetap; pasien yg benar-benar batal diminta ketik "batalkan".
-            $pesanTetap = function (string $caraBatal) use ($halo, $antrian) {
+            $pesanTetap = function (string $caraBatal) use ($halo, $antrian, $an) {
                 return $halo
-                    . "Antrean *{$antrian->nomor_antrian}* di aplikasi Mobile JKN baru saja dibatalkan.\n\n"
+                    . "Antrean *{$antrian->nomor_antrian}*{$an} di aplikasi Mobile JKN baru saja dibatalkan.\n\n"
                     . "Kemungkinan ini dilakukan oleh *petugas klinik* untuk keperluan pendaftaran ulang di Mobile JKN. "
                     . "Antrian Anda di Klinik Jati Elok *tetap berlaku* dengan nomor yang sama.\n\n"
                     . "👉 *Abaikan* pesan ini jika Anda tetap ingin berobat di klinik.\n"
@@ -734,7 +738,7 @@ class AntrianOnlineController extends Controller
                     . "Terima kasih 🙏";
             };
             $pesanHapus = $halo
-                . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui aplikasi Mobile JKN, "
+                . "Antrian *{$antrian->nomor_antrian}*{$an} di Klinik Jati Elok hari ini sudah *dibatalkan* melalui aplikasi Mobile JKN, "
                 . "sehingga antrian Anda di klinik juga *sudah dihapus*.\n\n"
                 . "Bila pembatalan ini tidak disengaja atau Anda tetap ingin berobat hari ini, silakan *daftar kembali* "
                 . "(nomor antrian akan baru). Terima kasih 🙏";
