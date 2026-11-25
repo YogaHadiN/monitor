@@ -650,6 +650,25 @@ class AntrianOnlineController extends Controller
         $antrian    = $this->antrian;
         $antrian_id = $antrian->id;
 
+        // dr. Yoga 2026-11-25: antrian dari kanal lain (Telegram/web/langsung) TIDAK dihapus saat
+        // pasien klik batal di Mobile JKN — hanya ditandai (ambil_antrol_pcare_done=2 → tidak dikirim
+        // ulang otomatis). Bila pasien daftar lagi lewat Mobile JKN, antrian ini dipakai ulang.
+        $mjkn = \App\Models\SumberAntrian::idFor(\App\Models\SumberAntrian::MOBILE_JKN);
+        if ((int) $antrian->sumber_antrian_id !== (int) $mjkn) {
+            \DB::table('antrians')->where('id', $antrian_id)->update([
+                'ambil_antrol_pcare_done' => 2,
+                'hadir_antrol_pcare_done' => 0,
+                'updated_at'              => now(),
+            ]);
+            \Log::info('MOBILE_JKN_BATAL_ANTRIAN_DIPERTAHANKAN', ['antrian_id' => $antrian_id, 'nomor' => $antrian->nomor_antrian]);
+            $this->notifBatalDariMobileJkn($antrian, true);
+            return [
+                'code'    => 200,
+                'message' => 'Ok',
+                'antrian' => $antrian,
+            ];
+        }
+
         // Hapus child (antriable) — guard null karena polymorph
         // bisa orphan (antriable_id/type tidak punya record terkait
         // lagi), trigger "Call to a member function delete() on null".
@@ -685,7 +704,7 @@ class AntrianOnlineController extends Controller
      * dr. Yoga 2026-11-25: beri tahu pasien bila antrean dibatalkan dari Mobile JKN.
      * Telegram bila nomor terhubung bot; kalau tidak, WA lewat Gowa kezia (outbox, berjeda).
      */
-    private function notifBatalDariMobileJkn($antrian)
+    private function notifBatalDariMobileJkn($antrian, bool $antrianTetap = false)
     {
         try {
             $hp = preg_replace('/\D/', '', (string) ($antrian->no_telp ?: optional($antrian->pasien)->no_telp));
@@ -695,9 +714,14 @@ class AntrianOnlineController extends Controller
                 return;
             }
             $nama  = trim((string) ($antrian->nama ?: optional($antrian->pasien)->nama));
-            $pesan = "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n"
-                . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui Mobile JKN.\n\n"
-                . "Bila ingin berobat, silakan daftar kembali. Terima kasih 🙏";
+            $pesan = $antrianTetap
+                ? "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n"
+                  . "Antrean *{$antrian->nomor_antrian}* di aplikasi Mobile JKN sudah *dibatalkan*.\n"
+                  . "Antrian Anda di Klinik Jati Elok *tetap berlaku* dengan nomor yang sama.\n\n"
+                  . "Bila ingin antreannya tampil lagi di Mobile JKN, silakan daftar kembali lewat Mobile JKN — nomor antrian Anda tidak berubah. Terima kasih 🙏"
+                : "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n"
+                  . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui Mobile JKN.\n\n"
+                  . "Bila ingin berobat, silakan daftar kembali. Terima kasih 🙏";
 
             $viaTg = false;
             try {
@@ -886,6 +910,8 @@ class AntrianOnlineController extends Controller
         if ($ubah) {
             $antrian->save();
         }
+        // sudah terdaftar lagi di BPJS lewat Mobile JKN (termasuk setelah sebelumnya dibatalkan)
+        \DB::table('antrians')->where('id', $antrian->id)->update(['ambil_antrol_pcare_done' => 1]);
         \Log::info('MOBILE_JKN_ANTRIAN_SAMA', [
             'antrian_id' => $antrian->id, 'nomor' => $antrian->nomor_antrian,
             'tahap' => class_basename((string) $antrian->antriable_type), 'diubah' => $ubah,
