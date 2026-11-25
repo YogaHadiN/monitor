@@ -714,21 +714,31 @@ class AntrianOnlineController extends Controller
                 return;
             }
             $nama  = trim((string) ($antrian->nama ?: optional($antrian->pasien)->nama));
-            $pesan = $antrianTetap
-                ? "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n"
-                  . "Antrean *{$antrian->nomor_antrian}* di aplikasi Mobile JKN sudah *dibatalkan*.\n"
-                  . "Antrian Anda di Klinik Jati Elok *tetap berlaku* dengan nomor yang sama.\n\n"
-                  . "Bila ingin antreannya tampil lagi di Mobile JKN, silakan daftar kembali lewat Mobile JKN — nomor antrian Anda tidak berubah. Terima kasih 🙏"
-                : "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n"
-                  . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui Mobile JKN.\n\n"
-                  . "Bila ingin berobat, silakan daftar kembali. Terima kasih 🙏";
+            $halo  = "Halo" . ($nama !== '' ? " {$nama}" : '') . ",\n\n";
+            // dr. Yoga 2026-11-25: pembatalan di Mobile JKN biasanya dilakukan petugas (daftar ulang
+            // Mobile JKN) — antrian klinik tetap; pasien yg benar-benar batal diminta ketik "batalkan".
+            $pesanTetap = function (string $caraBatal) use ($halo, $antrian) {
+                return $halo
+                    . "Antrean *{$antrian->nomor_antrian}* di aplikasi Mobile JKN baru saja dibatalkan.\n\n"
+                    . "Kemungkinan ini dilakukan oleh *petugas klinik* untuk keperluan pendaftaran ulang di Mobile JKN. "
+                    . "Antrian Anda di Klinik Jati Elok *tetap berlaku* dengan nomor yang sama, tidak perlu melakukan apa-apa.\n\n"
+                    . "Bila Anda memang *ingin membatalkan* antrian berobat hari ini, {$caraBatal}. Terima kasih 🙏";
+            };
+            $pesanHapus = $halo
+                . "Antrian *{$antrian->nomor_antrian}* di Klinik Jati Elok hari ini sudah *dibatalkan* melalui Mobile JKN.\n\n"
+                . "Bila ingin berobat, silakan daftar kembali. Terima kasih 🙏";
 
             $viaTg = false;
             try {
-                $viaTg = app(\App\Services\ChannelDispatcher::class)->trySendTelegram($hp, $pesan);
+                $viaTg = app(\App\Services\ChannelDispatcher::class)->trySendTelegram(
+                    $hp, $antrianTetap ? $pesanTetap('ketik *batalkan* di sini') : $pesanHapus
+                );
             } catch (\Throwable $e) {
                 Log::warning('MJKN_BATAL_NOTIF_TG_FAIL', ['antrian_id' => $antrian->id, 'err' => $e->getMessage()]);
             }
+            $pesan = $antrianTetap
+                ? $pesanTetap('ketik *batalkan* di Telegram klinik: https://t.me/klinikjatielokbot')
+                : $pesanHapus;
             if (!$viaTg) {
                 DB::table('gowa_outbound_messages')->insert([
                     'kind' => 'mjkn_batal', 'to_phone' => $hp, 'to_label' => 'mjkn_batal', 'device_id' => 'kezia',
