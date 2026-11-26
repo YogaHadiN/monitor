@@ -3911,8 +3911,7 @@ class WablasController extends Controller
             }
 
             $message .= '⏰ *Cara Daftar Online*' . PHP_EOL;
-            $message .= 'Window daftar online: mulai jam *07:00 pagi* sampai *1 jam sebelum jam mulai praktek* pada hari yang sama.' . PHP_EOL;
-            $message .= 'Contoh: praktek jam 17:00 → daftar online paling lambat jam 16:00 hari itu.' . PHP_EOL;
+            $message .= 'Daftar online jam *07.00–16.00* di hari praktek.' . PHP_EOL;
         }
 
         // Tambahan keterangan dokter umum yang sedang praktik (kode asli)
