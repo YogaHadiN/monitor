@@ -384,6 +384,13 @@ class SunatBotAgent
                     }
                     $userMsgHasNonSunat = false;
                     foreach ($nonSunatKw as $kw) { if (str_contains($userMsg, $kw)) { $userMsgHasNonSunat = true; break; } }
+                    // 2026-11-27: kasus …4305 — bot baru saja redirect (poli gigi),
+                    // lalu customer lanjut "apa ada jadwal hari ini?" (masih soal
+                    // gigi, tanpa kata sunat). Follow-up topik non-sunat boleh
+                    // di-redirect lagi.
+                    if (!$userMsgHasNonSunat && !$this->pesanSebutSunat($userMsg) && $this->baruSajaRedirectNonSunat($session)) {
+                        $userMsgHasNonSunat = true;
+                    }
                     if (($reasonMentionsHarga || $userMsgHasHarga) && !$userMsgHasNonSunat) {
                         Log::info('SUNAT_BOT_AGENT_BLOCK_REDIRECT_HARGA', [
                             'phone'  => $session->no_telp,
@@ -1644,6 +1651,16 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
                     }
                 }
                 $tglParsed = $tglArg !== '' ? app(\App\Services\SunatBot\SunatBotEngine::class)->parseBookingDate($tglArg) : null;
+                // 2026-11-27: kasus …4305 — customer tanya poli gigi, bot redirect,
+                // lalu "apa ada jadwal hari ini?" dianggap sunat hari ini → handoff
+                // admin yg tidak perlu. Kalau ≤30 menit lalu bot redirect ke klinik
+                // utama & pesan ini tidak menyebut sunat/khitan, jangan booking.
+                if ($tglParsed !== null && empty($session->getData('booking_started'))
+                    && !$this->pesanSebutSunat((string) $this->currentUserMessage)
+                    && $this->baruSajaRedirectNonSunat($session)) {
+                    Log::info('SUNAT_BOT_BOOKING_DITOLAK_KONTEKS_NON_SUNAT', ['phone' => $session->no_telp, 'msg' => mb_substr((string) $this->currentUserMessage, 0, 120)]);
+                    return [['ok' => false, 'error' => 'Customer barusan di-redirect karena menanyakan layanan NON-sunat; pertanyaan jadwal ini kemungkinan besar soal layanan tsb, BUKAN booking sunat. Jangan booking/handoff. Panggil redirect_ke_klinik_utama (jadwal layanan lain ditanyakan ke admin klinik utama). Kalau jelas maksudnya sunat, tanyakan singkat dulu.'], []];
+                }
                 if ($tglParsed !== null && \App\Services\SunatBot\SunatBotEngine::isSameDayBooking($tglParsed->format('Y-m-d'))) {
                     $session->setData('booking_tanggal', $tglParsed->format('Y-m-d'));
                     $jamArg = trim((string) ($args['jam'] ?? ''));
@@ -2224,6 +2241,42 @@ Customer: "Kemarin ada yg udah kering terus ngelupas sendiri, terus ini pas dili
         }
 
         return null;
+    }
+
+    /** Pesan customer menyebut sunat/khitan eksplisit. */
+    private function pesanSebutSunat(string $msg): bool
+    {
+        $lower = mb_strtolower($msg);
+        foreach (self::SUNAT_KEYWORDS as $kw) {
+            if (str_contains($lower, $kw)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * True kalau dalam 30 menit terakhir salah satu dari 3 balasan bot
+     * terakhir ke nomor ini = redirect agent ke klinik utama
+     * (link tg?src=sunatbot_agent) → topik customer sedang non-sunat.
+     */
+    private function baruSajaRedirectNonSunat(BotSession $session): bool
+    {
+        $phone = (string) $session->no_telp;
+        if ($phone === '') return false;
+        try {
+            $rows = \App\Models\Message::where('no_telp', $phone)
+                ->where('chat_sunat', 1)
+                ->where('sending', 1)
+                ->where('created_at', '>=', Carbon::now()->subMinutes(30))
+                ->orderBy('id', 'desc')
+                ->limit(3)
+                ->pluck('message');
+            foreach ($rows as $m) {
+                if (str_contains((string) $m, 'tg?src=sunatbot_agent')) return true;
+            }
+        } catch (\Throwable $e) {
+            return false;
+        }
+        return false;
     }
 
     private function toolRedirectKeKlinikUtama(BotSession $session, string $reason): array
