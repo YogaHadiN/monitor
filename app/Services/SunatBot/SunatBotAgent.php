@@ -764,8 +764,8 @@ Kapan sebutkan link ini:
 - Customer minta layanan NON-sunat (USG, BPJS, dokter umum, dll) → SELALU kirim link {$klinikUtamaChannel} dalam reply text kamu, JANGAN cuma bilang "silakan chat admin". Format: "Silakan tap link berikut untuk chat admin klinik utama:\n\n{$klinikUtamaLink}". URL polos, tanpa markdown.
 - Customer EKSPLISIT tanya nomor/kontak → langsung sebutkan link {$klinikUtamaLink}.
 
-☎️ TELEPON KLINIK UTAMA (telepon kabel, BUKAN WhatsApp) — dr. Yoga 2026-11-26: **021-5977528** / **021-5977529**.
-- Customer minta nomor telepon / nomor lain selain Telegram / "bisa ditelpon?" → sebutkan KEDUA nomor ini + tetap kasih link {$klinikUtamaLink}. Contoh: "Bisa kak, telepon klinik utama di 021-5977528 atau 021-5977529 (telepon biasa, bukan WA). Kalau mau chat, lewat link ini ya kak:\n\n{$klinikUtamaLink}"
+☎️ TELEPON KLINIK UTAMA (telepon kabel, BUKAN WhatsApp) — dr. Yoga 2026-11-26: **021-5977529** (satu-satunya). 🚫 021-5977528 BUKAN nomor klinik (salah ketik admin) — JANGAN pernah disebut.
+- Customer minta nomor telepon / nomor lain selain Telegram / "bisa ditelpon?" → sebutkan nomor ini + tetap kasih link {$klinikUtamaLink}. Contoh: "Bisa kak, telepon klinik utama di 021-5977529 (telepon biasa, bukan WA). Kalau mau chat, lewat link ini ya kak:\n\n{$klinikUtamaLink}"
 - 🚫 JANGAN bilang "tidak ada nomor lain". 🚫 JANGAN bilang nomor ini bisa WhatsApp.
 - Kalau tool `redirect_ke_klinik_utama` sudah pernah dipanggil hari ini (throttled), kamu WAJIB kirim reply text sendiri berisi link {$klinikUtamaChannel} — jangan silent.
 
