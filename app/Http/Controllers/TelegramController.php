@@ -127,8 +127,18 @@ class TelegramController extends Controller
         // /start [payload]
         if (str_starts_with($text, '/start')) {
             $payload = trim(substr($text, 6));
-            $this->handleStart($chatId, $payload, $tgUser);
-            return;
+            // dr. Yoga 2026-11-26: link t.me/...?start=daftar → pasien lama langsung masuk alur
+            // pendaftaran (sama dgn mengetik "daftar"); pasien baru tetap diminta nomor HP dulu.
+            if (strtolower($payload) === 'daftar' && (!empty($tgUser->no_telp) || !empty($tgUser->pasien_id))) {
+                \Log::info('TG_START_DAFTAR', ['chat_id' => $chatId]);
+                $text = 'daftar';
+            } else {
+                if (strtolower($payload) === 'daftar') {
+                    \Illuminate\Support\Facades\Cache::put('tg_pending_daftar_' . $chatId, 1, now()->addHours(2));
+                }
+                $this->handleStart($chatId, $payload, $tgUser);
+                return;
+            }
         }
 
         // Kalau user belum share nomor & belum linked ke pasien →
@@ -766,6 +776,11 @@ class TelegramController extends Controller
         }
 
         $this->sendMainMenu($chatId, $noTelp, $header, true);
+
+        // Datang dari link ?start=daftar (dr. Yoga 2026-11-26) → ingatkan langsung daftar.
+        if (\Illuminate\Support\Facades\Cache::pull('tg_pending_daftar_' . $chatId)) {
+            $this->tg->sendMessage($chatId, "Untuk mendaftar antrian, balas <b>2</b> ya kak 🙏", ['parse_mode' => 'HTML']);
+        }
     }
 
     /**

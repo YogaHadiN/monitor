@@ -647,6 +647,15 @@ class WablasController extends Controller
                 ? 0
                 : ($dalamChatSunat ? ($botAkanBalas ? 1 : 0) : 1);
 
+            // dr. Yoga 2026-11-26: SEMUA pesan WA masuk ke nomor klinik (kezia) masuk "chat admin"
+            // tanpa kata kunci — KECUALI jelas mau mendaftar → auto-reply pendaftaran via Telegram.
+            $kanalWa   = !in_array(($this->provider ?? 'wablas'), ['telegram', 'gowa_kezia'], true);
+            $niatDaftar = \App\Support\NiatDaftar::cek((string) $this->message);
+            if ($kanalWa && !$dalamChatSunat && !$niatDaftar && trim((string) $this->message) !== '') {
+                $dalamChatAdmin = true;
+                $sudahDibalas   = 0;
+            }
+
             if (!$this->skipMessageLog) {
                 $this->inbound_message = Message::create([
                     'no_telp'          => $this->no_telp,
@@ -675,7 +684,7 @@ class WablasController extends Controller
             // WA nomor klinik tidak dibalas lagi → auto-reply arahkan ke Telegram
             // (delay acak 1–5 mnt, 1 WA/menit global, 1x/nomor/6 jam). dr. Yoga 2026-11-04.
             // gowa_kezia (survei kepuasan via Gowa, dr. Yoga 2026-11-20): jangan redirect ke Telegram.
-            if (!in_array(($this->provider ?? 'wablas'), ['telegram', 'gowa_kezia'], true) && waCutoffActive()) {
+            if (!in_array(($this->provider ?? 'wablas'), ['telegram', 'gowa_kezia'], true) && waCutoffActive() && $niatDaftar) {
                 try {
                     \App\Jobs\WaRedirectTelegramReply::dispatchUntuk((string) $this->no_telp, (int) optional($this->inbound_message)->id);
                 } catch (\Throwable $e) {
