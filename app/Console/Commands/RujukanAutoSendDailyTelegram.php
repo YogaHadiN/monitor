@@ -118,10 +118,8 @@ class RujukanAutoSendDailyTelegram extends Command
     private function sendOne(TelegramClient $tg, $r, Carbon $now): bool
     {
         try {
-            $signedUrl = Storage::disk('s3')->temporaryUrl(
-                $r->pdf_rujukan_bpjs_path,
-                $now->copy()->addMinutes(10)
-            );
+            // Link permanen via route signed (tanpa expiry) — lihat routes/web.php
+            $signedUrl = rujukanPdfUrl((int) $r->rujukan_id);
         } catch (\Throwable $e) {
             Log::error('RUJUKAN_TG_S3_SIGNED_URL_FAIL', [
                 'rujukan_id' => $r->rujukan_id,
