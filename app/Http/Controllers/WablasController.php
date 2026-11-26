@@ -651,7 +651,7 @@ class WablasController extends Controller
             // tanpa kata kunci — KECUALI jelas mau mendaftar → auto-reply pendaftaran via Telegram.
             $kanalWa   = !in_array(($this->provider ?? 'wablas'), ['telegram', 'gowa_kezia'], true);
             $niatDaftar = \App\Support\NiatDaftar::cek((string) $this->message);
-            if ($kanalWa && !$dalamChatSunat && !$niatDaftar && trim((string) $this->message) !== '') {
+            if ($kanalWa && !$niatDaftar && trim((string) $this->message) !== '') {
                 $dalamChatAdmin = true;
                 $sudahDibalas   = 0;
             }
@@ -690,6 +690,17 @@ class WablasController extends Controller
                 } catch (\Throwable $e) {
                     \Log::warning('WA_REDIRECT_TG_DISPATCH_FAIL', ['err' => $e->getMessage()]);
                 }
+            }
+
+            // dr. Yoga 2026-11-26: bot WA (menu/daftar/akhiri/dll) sudah tidak dipakai — pesan WA
+            // cukup diarsip sbg chat admin (atau dialihkan ke Telegram bila mau daftar). Hentikan
+            // alur bot lama supaya tidak membuat balasan otomatis yg tidak terkirim & mengacaukan chat.
+            if ($kanalWa && waCutoffActive() && !$this->skipMessageLog && !$dalamChatSunat) {
+                Log::info('WA_INBOUND_CHAT_ADMIN', [
+                    'phone' => $this->no_telp, 'niat_daftar' => $niatDaftar,
+                    'message_id' => optional($this->inbound_message)->id,
+                ]);
+                return null;
             }
 
             // Sunat follow-up session detect — bila pesan inbound mengandung
