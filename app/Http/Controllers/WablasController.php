@@ -700,6 +700,13 @@ class WablasController extends Controller
                     'phone' => $this->no_telp, 'niat_daftar' => $niatDaftar,
                     'message_id' => optional($this->inbound_message)->id,
                 ]);
+                // Tampilkan seketika di halaman chat yg sedang dibuka staf (pusher), tanpa refresh.
+                try {
+                    event(new \App\Events\RefreshDiscussion($this->no_telp));
+                    event(new \App\Events\RefreshChat());
+                } catch (\Throwable $e) {
+                    Log::warning('WA_INBOUND_REFRESH_EVENT_FAIL', ['err' => $e->getMessage()]);
+                }
                 return null;
             }
 
