@@ -580,10 +580,31 @@ class TelegramController extends Controller
             'body' => $body, 'device_id' => 'atika', 'status' => 'pending', 'attempts' => 0, 'max_attempts' => 3,
             'scheduled_at' => now(), 'created_at' => now(), 'updated_at' => now(),
         ]);
+        // dr. Yoga 2026-11-27: info yang sama ke grup WA staf & karyawan "Klinik Jati Elok"
+        // (sapaan ke staf, bukan ke dokter) supaya petugas depan ikut menindaklanjuti.
+        $grupStaf = '6281381912803-1443413833@g.us';
+        $bodyGrup = "Halo rekan-rekan staf Klinik Jati Elok 🙏\n\n"
+              . "Ada rujukan yang *belum disetujui* oleh dr. Yoga dan perlu ditindaklanjuti:\n\n"
+              . "👤 {$d->pasien} (RM {$d->rm}) · " . ($d->asuransi ?: '-') . "\n"
+              . "📅 Tgl periksa: {$tgl}\n"
+              . "🩺 Dokter pemeriksa: " . ($d->dokter ?: '-') . "\n"
+              . "🩺 Diagnosa: " . ($d->diagnosa ?: '-') . "\n"
+              . "🏥 Tujuan: " . trim(($d->tujuan_rujuk ?: '-') . ($d->rs ? " → {$d->rs}" : '')) . "\n\n"
+              . "❗ *Alasan:* {$alasan}\n\n"
+              . "Mohon dibantu koordinasi dengan dokter pemeriksa (mis. menghubungi pasien / rumah sakit bila perlu data tambahan). "
+              . "Rujukan *tidak dikirim* ke pasien sampai diperbaiki dan disetujui.\n\n"
+              . "Pemeriksaan: https://www.kezia.id/periksas/{$d->periksa_id}\n"
+              . "Rujukan: https://www.kezia.id/rujukans/{$d->id}/edit\n\n"
+              . "Terima kasih 🙏";
+        \DB::table('gowa_outbound_messages')->insert([
+            'kind' => 'rujukan_disapprove_grup', 'to_phone' => $grupStaf, 'to_label' => 'grup Klinik Jati Elok · rujukan #' . $rujukanId,
+            'body' => $bodyGrup, 'device_id' => 'atika', 'status' => 'pending', 'attempts' => 0, 'max_attempts' => 3,
+            'scheduled_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
         \DB::table('rujukans')->where('id', $rujukanId)->update(['disapprove_notified_at' => now()]);
 
         $this->tg->sendMessage($chatId,
-            "❌ Rujukan *" . $this->mdx($d->pasien) . "* ditolak.\nAlasan dikirim ke *" . $this->mdx((string) $d->dokter) . "* via WhatsApp (Gowa Atika) dalam ±1 menit.",
+            "❌ Rujukan *" . $this->mdx($d->pasien) . "* ditolak.\nAlasan dikirim ke *" . $this->mdx((string) $d->dokter) . "* dan grup WA staf Klinik Jati Elok via WhatsApp (Gowa Atika) dalam ±1 menit.",
             ['parse_mode' => 'Markdown']);
     }
 
