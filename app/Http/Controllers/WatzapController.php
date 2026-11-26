@@ -193,6 +193,7 @@ class WatzapController extends Controller
                 ->where('r.no_telp', $phone)
                 ->whereNotNull('r.pdf_rujukan_bpjs_path')
                 ->whereNull('r.pdf_sent_at')
+                ->where('r.approved', 1) // hanya yg approved (dr. Yoga 2026-11-27)
                 ->where('r.created_at', '<', $todayWIB->toDateTimeString())
                 ->select(
                     'r.id as rujukan_id',
@@ -290,6 +291,7 @@ class WatzapController extends Controller
                 'r.no_telp',            // Snapshot phone rujukan
                 'r.pdf_rujukan_bpjs_path',
                 'r.pdf_sent_at',
+                'r.approved',
                 'ps.nama as pasien_nama',
                 'ps.no_telp as pasien_no_telp',
                 'tr.tujuan_rujuk as spesialisasi',
@@ -308,6 +310,11 @@ class WatzapController extends Controller
         if (empty($rujukan->pdf_rujukan_bpjs_path)) {
             \Log::warning('RUJUKAN_PDF_SEND_NO_PDF', ['rujukan_id' => $rujukanId]);
             return ['ok' => false, 'reason' => 'no_pdf_uploaded'];
+        }
+        // dr. Yoga 2026-11-27: hanya rujukan yang APPROVED yang boleh terkirim otomatis.
+        if ((int) $rujukan->approved !== 1) {
+            \Log::info('RUJUKAN_PDF_SEND_SKIP_NOT_APPROVED', ['rujukan_id' => $rujukanId, 'approved' => $rujukan->approved]);
+            return ['ok' => false, 'reason' => 'not_approved'];
         }
 
         // Link permanen via route signed (tanpa expiry) — lihat routes/web.php

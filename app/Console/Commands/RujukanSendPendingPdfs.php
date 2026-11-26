@@ -37,6 +37,7 @@ class RujukanSendPendingPdfs extends Command
         $pending = DB::table('rujukans')
             ->whereNotNull('pdf_scheduled_send_at')
             ->whereNull('pdf_sent_at')
+            ->where('approved', 1) // hanya yg approved (dr. Yoga 2026-11-27)
             ->whereNotNull('pdf_rujukan_bpjs_path')
             ->where('pdf_scheduled_send_at', '<=', $nowWIB->toDateTimeString())
             ->orderBy('pdf_scheduled_send_at', 'asc')

@@ -59,6 +59,7 @@ class RujukanAutoSendDailyTelegram extends Command
             })
             ->whereNotNull('r.pdf_rujukan_bpjs_path')
             ->whereNull('r.pdf_sent_at')
+            ->where('r.approved', 1) // hanya yg approved (dr. Yoga 2026-11-27)
             ->where('r.created_at', '<', $todayWIB->toDateTimeString())
             // Jangan kirim rujukan lama yang menumpuk (sudah ditangani manual).
             ->where('r.created_at', '>=', $todayWIB->copy()->subDays((int) ($this->option('max-age-days') ?: 7))->toDateTimeString())
