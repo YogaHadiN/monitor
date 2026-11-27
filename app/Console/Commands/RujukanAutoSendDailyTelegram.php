@@ -171,6 +171,7 @@ class RujukanAutoSendDailyTelegram extends Command
                     'chat_sunat'     => 0,
                     'document_url'   => $signedUrl,
                     'flagged_intent' => 'rujukan_pdf_auto_send_tg',
+                    'channel'        => 'telegram', // dikirim via Telegram, jangan tampil di chat WA
                 ]);
             } catch (\Throwable $e) {
                 Log::warning('RUJUKAN_TG_MESSAGE_LOG_FAIL', [
