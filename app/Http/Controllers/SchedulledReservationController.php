@@ -95,7 +95,19 @@ class SchedulledReservationController extends Controller
 
         // b) Atau generate langsung dari data string (ENDROID)
         if (!$qrUrl) {
-            return 'Qr Code tidak ditemukan';
+            // dr. Yoga 2026-11-28: waitlist belum punya QR → tampilkan penjelasan, bukan "Qr Code tidak ditemukan"
+            $isWaitlist = (int) ($schedulled_reservation->waitlist_flag ?? 0) === 1;
+            $judul = $isWaitlist ? 'Masih dalam WAITLIST' : 'QR code belum tersedia';
+            $isi = $isWaitlist
+                ? 'Pendaftaran <b>' . e($pasienNama ?: 'Pasien') . '</b> ke <b>' . e($dokterNama ?: 'dokter') . '</b> masih di <b>waitlist</b> karena kuota sudah penuh (kode waitlist: ' . (int) $schedulled_reservation->id . ').<br><br>'
+                  . 'QR code baru dibuat kalau ada slot kosong dan Kakak membalas <b>ya</b> saat kami hubungi. '
+                  . 'Waitlist <b>belum bisa</b> dipakai untuk ambil antrian di klinik.'
+                : 'QR code untuk pendaftaran ini belum tersedia. Silakan hubungi petugas Klinik Jati Elok.';
+            return response('<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+                . '<title>' . $judul . '</title></head><body style="font-family:sans-serif;background:#f3f6f5;margin:0;padding:24px">'
+                . '<div style="max-width:480px;margin:40px auto;background:#fff;border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.08)">'
+                . '<h2 style="color:#3BAE85;margin-top:0">Klinik Jati Elok</h2><h3>' . $judul . '</h3><p style="font-size:16px;line-height:1.5">' . $isi . '</p>'
+                . '</div></body></html>');
         }
 
         return view('schedulled_reservations.qr-view', compact(

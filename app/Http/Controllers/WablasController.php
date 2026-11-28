@@ -9404,9 +9404,15 @@ private function parseTodayTime(string $timeStr, string $tz, \Carbon\Carbon $tod
             $this->chatBotLog(__LINE__);
 
             // Kirim balasan dengan reservasi lama
-            $message  = "Pendaftaran untuk {$existing->nama} ke {$existing->staf->nama_dengan_gelar} pada {$existing->tanggal} sudah ada.";
+            $tglExisting = \Carbon\Carbon::parse($existing->created_at)->locale('id')->translatedFormat('d M Y');
+            $message  = "Pendaftaran untuk {$existing->nama} ke {$existing->staf->nama_dengan_gelar} pada {$tglExisting} sudah ada.";
             $message .= PHP_EOL.PHP_EOL.'Sistem akan memakai reservasi yang lama.'.PHP_EOL.PHP_EOL;
-            $message .= $this->balasanReservasiTerjadwalDibuat($existing);
+            // dr. Yoga 2026-11-28: reservasi lama masih WAITLIST (belum punya QR) → jangan kirim link QR
+            if ((int) ($existing->waitlist_flag ?? 0) === 1 || empty($existing->qrcode)) {
+                $message .= $this->pesanWaitlistTercatat($existing);
+            } else {
+                $message .= $this->balasanReservasiTerjadwalDibuat($existing);
+            }
             $this->autoReply($message);
 
             // Hapus yang baru saja dibuat (bukan yang lama)
